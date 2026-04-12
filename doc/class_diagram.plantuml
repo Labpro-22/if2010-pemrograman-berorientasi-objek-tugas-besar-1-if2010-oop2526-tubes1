@@ -532,7 +532,7 @@ class LiquidationManager {
 }
 
 class BankruptcyManager {
-  - liquidationManager: LiquidationManager
+  - liquidationManager: LiquidationManager*
   + canRecoverDebt(player: Player, amount: int): bool
   + estimateMaxLiquidationValue(player: Player): int
   + resolveDebt(debtor: Player, amount: int, game: Game): void
@@ -682,8 +682,6 @@ CardTile *-- CardDeckType
 Player -- "0..3" AbilityCard
 
 
-BankruptcyManager *-- LiquidationManager
-
 ' ======================================================
 ' AGGREGATION
 ' ======================================================
@@ -723,6 +721,9 @@ CardTile ..> Game
 FestivalTile ..> Game
 TaxTile ..> Game
 StreetTile ..> Game
+BankruptcyManager ..> LiquidationManager
+Player ..> LiquidationManager
+PropertyTile ..> LiquidationManager
 
 
 @enduml
