@@ -75,4 +75,6 @@ GUIRenderer ..down..> GameEngine  : reads state
 
 DataLayer ..up..> GameEngine      : builds &\nserializes
 
+Player "0..1" -left- "0..*" Property  : owns Property\n(Property)
+
 @enduml
