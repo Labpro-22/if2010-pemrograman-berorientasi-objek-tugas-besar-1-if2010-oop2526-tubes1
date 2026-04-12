@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "Player.hpp"
-#include "PropertyTile.hpp"
+#include "../models/PropertyTile.hpp"
 
 class Auction {
 private:

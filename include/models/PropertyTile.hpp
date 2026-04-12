@@ -1,7 +1,7 @@
 #ifndef PROPERTY_TILE_HPP
 #define PROPERTY_TILE_HPP
 
-#include "Tile.hpp"
+#include "../models/Tile.hpp"
 #include <string>
 
 class PropertyTile : public Tile {

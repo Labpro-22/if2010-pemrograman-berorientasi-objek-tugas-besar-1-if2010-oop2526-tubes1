@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "Card.hpp"
+#include "../models/Card.hpp"
 
 using namespace std;
 

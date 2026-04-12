@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "Player.hpp"
+#include "../core/Player.hpp"
 using namespace std;
 #include <bits/stdc++.h>
 
