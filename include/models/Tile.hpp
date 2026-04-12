@@ -1,8 +1,6 @@
-#ifndef TILE_HPP
-#define TILE_HPP
-
+#pragma once
 #include <string>
-
+using namespace std;
 class Tile {
 protected:
     int id;
@@ -10,9 +8,6 @@ protected:
     std::string name;
 public:
     Tile();
-    // Method virtual murni
     virtual void onLanded() = 0; 
     virtual ~Tile();
 };
-
-#endif
