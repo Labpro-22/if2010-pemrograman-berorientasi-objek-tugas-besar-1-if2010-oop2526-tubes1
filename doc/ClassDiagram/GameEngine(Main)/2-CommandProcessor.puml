@@ -1,0 +1,70 @@
+@startuml CommandProcessor
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 30
+
+title Diagram Kelas CommandProcessor
+
+class CommandProcessor {
+    - engine : GameEngine*
+    - turnManager : TurnManager*
+    - commandMap : map<string, function<void(vector<string>)>>
+    __
+    + CommandProcessor(engine : GameEngine*, turnManager : TurnManager*)
+    + registerCommands() : void
+    + processInput(rawInput : string) : bool
+    + getAvailableCommands() : vector<string>
+    __
+    - parseCommand(input : string) : pair<string, vector<string>>
+    - validateCommand(cmd : string, args : vector<string>) : bool
+}
+
+class GameEngine <<Engine>> {
+    + executeGadai(player) : void
+    + executeTebus(player) : void
+    + executeBangun(player) : void
+    + executeGunakanKemampuan(player) : void
+}
+
+class TurnManager <<Engine>> {
+    + canRoll(player) : bool
+    + canUseSkill(player) : bool
+    + canSave() : bool
+    + getPhase() : TurnPhase
+}
+
+CommandProcessor --> GameEngine : dispatches to >
+CommandProcessor --> TurnManager : validates with >
+
+note right of CommandProcessor
+    <b>Command Dispatch Pattern</b>
+    Memetakan string perintah ke handler.
+
+    <b>Perintah yang didaftarkan:</b>
+    ┌──────────────────┬───────────────────┐
+    │ Perintah         │ Validasi          │
+    ├──────────────────┼───────────────────┤
+    │ CETAK_PAPAN      │ Kapan saja        │
+    │ LEMPAR_DADU      │ canRoll()         │
+    │ ATUR_DADU X Y    │ canRoll()         │
+    │ CETAK_AKTA       │ Kapan saja        │
+    │ CETAK_PROPERTI   │ Kapan saja        │
+    │ GADAI            │ Giliran aktif     │
+    │ TEBUS            │ Giliran aktif     │
+    │ BANGUN           │ Giliran aktif     │
+    │ SIMPAN <file>    │ canSave()         │
+    │ CETAK_LOG [n]    │ Kapan saja        │
+    │ GUNAKAN_KEMAMPUAN│ canUseSkill()     │
+    └──────────────────┴───────────────────┘
+
+    Perintah OTOMATIS (BELI, BAYAR_SEWA,
+    BAYAR_PAJAK, LELANG, FESTIVAL,
+    BANGKRUT, MENANG) tidak masuk di sini.
+    Mereka dipicu langsung oleh GameEngine
+    di dalam handleTileLanding().
+end note
+
+@enduml
