@@ -9,25 +9,26 @@ skinparam classAttributeFontSize 12
 skinparam groupInheritance 2
 
 abstract GameException {
-    - errorCode : int
-    - errorMessage : string
+    # errorCode : int
+    # errorMessage : string
     --
     + {abstract} what() : string
 }
 
 abstract PlayerTurnException {
-    - player : Player*
+    # player : Player*
 }
 
 abstract PropertyManagmentException {
-    - property : Property*
+    # property : Property*
 }
 
 abstract SkillTurnException {
-    - skillCard : SkillCard*
+    # skillCard : SkillCard*
 } 
 
 abstract InvalidEntryInputException {
+
 }
 
 
@@ -47,7 +48,7 @@ class InsufficientOwnedColorException {
     + what() : string
 }
 
-class NoMortgagedPropertyException {
+class PropertyNotMortgagedException {
     --
     + what() : string
 }
@@ -71,7 +72,7 @@ class InvalidTileException {
 }
 
 abstract InvalidFileException {
-    -filePath : string
+    #filePath : string
 }
 
 class FileNotFoundException {
@@ -111,7 +112,7 @@ PlayerTurnException <|-- InvalidTurnException
 PropertyManagmentException <|-- InsufficientMoneyException
 PropertyManagmentException <|-- InsufficientOwnedColorException
 PropertyManagmentException <|-- ExistingHotelException
-PropertyManagmentException <|-- NoMortgagedPropertyException
+PropertyManagmentException <|-- PropertyNotMortgagedException
 
 SkillTurnException <|-- SkillCardUsedException
 SkillTurnException <|-- DiceAlreadyRolledException
