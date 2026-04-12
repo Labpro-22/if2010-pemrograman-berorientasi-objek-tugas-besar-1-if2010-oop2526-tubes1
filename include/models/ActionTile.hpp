@@ -74,7 +74,7 @@ public:
 
  
 
-class SpecialTile : public Tile {
+class SpecialTile : public ActionTile {
 public:
     SpecialTile(int index, const std::string& code, const std::string& name);
  
