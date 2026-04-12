@@ -1,5 +1,5 @@
-@startuml CardsOverview
-title Overview Cards & Deck
+@startuml CardOverview
+title Overview Card & Deck
 
 skinparam classAttributeIconSize 0
 skinparam classFontSize 13
@@ -60,7 +60,7 @@ class CardDeck<T> {
     + size() : int
 }
 
-package "Action Cards" {
+package "Action Card" {
     class ChanceCard {
         - type : ChanceType
         --
@@ -78,7 +78,7 @@ package "Action Cards" {
     }
 }
 
-package "Skill Cards" {
+package "Skill Card" {
     class MoveCard {
         - steps : int
         --
