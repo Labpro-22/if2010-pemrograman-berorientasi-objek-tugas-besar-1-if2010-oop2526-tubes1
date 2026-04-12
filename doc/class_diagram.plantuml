@@ -253,7 +253,7 @@ package "Game Logic Layer" as Core_Layer {
     - die1: int
     - die2: int
     - manualMode: bool
-    + roll(): pair<int,int>
+    + roll(): void
     + setManual(x: int, y: int): void
     + getTotal(): int
     + isDouble(): bool
@@ -323,7 +323,7 @@ package "Game Logic Layer" as Core_Layer {
     - codeToIndex: map<string,int>
     + getTileByIndex(index: int): Tile
     + getTileByCode(code: string): Tile
-    + calculateNewPosition(currentPos: int, step: int, passedGo: bool): pair<int, bool>
+    + calculateNewPosition(currentPos: int, step: int, passedGo: bool&): int
     + getNearestRailroad(fromPos: int): RailroadTile
     + printBoard(players: vector<Player>, turnInfo: string): void
   }
