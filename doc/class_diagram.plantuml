@@ -1,3 +1,14 @@
+' ======================================================
+' CARA MELIHAT PREVIEW DI VSCODE
+' ======================================================
+' 1. Install extension PlantUML
+' 2. Buka file ini (.plantuml) di VSCode
+' 3. Klik kanan pada editor lalu pilih "Preview Current Diagram"
+'    atau bisa juga dengan menggunakan shortcut Alt + D
+' 4. Diagram akan muncul di panel preview
+' 5. Untuk export, gunakan "PlantUML: Export Current Diagram"
+' ======================================================
+
 @startuml a
 skinparam classAttributeIconSize 0
 skinparam monochrome true
