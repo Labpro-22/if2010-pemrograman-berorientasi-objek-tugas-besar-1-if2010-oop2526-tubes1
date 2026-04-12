@@ -581,6 +581,7 @@ AbilityCard <|-- LassoCard
 AbilityCard <|-- DemolitionCard
 
 GameException <|-- HandOverFlowException
+GameException <|-- BankcruptException
 
 ' ======================================================
 ' COMPOSITION
@@ -639,6 +640,8 @@ Player o-- Account
 ' DEPENDENCIES
 ' ======================================================
 
+Game ..> HandOverFlowException
+Game ..> BankcruptException
 ConfigLoader ..> Config
 AuctionManager ..> Player
 AuctionManager ..> PropertyTile
@@ -654,13 +657,19 @@ TaxTile ..> Game
 StreetTile ..> Game
 
 class GameException {
-  - message : string
+  # message : string
   + GameException(message: string)
 }
 
 class HandOverFlowException {
   - message : string
-  + HandOverFlowException(message: string)
+  + HandOverFlowException()
+}
+
+class BankcruptException {
+  - message: string
+  - bankcruptCode: int
+  + BankcruptException(code: int)
 }
 
 @enduml
