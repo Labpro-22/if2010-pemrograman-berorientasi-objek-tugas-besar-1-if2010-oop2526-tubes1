@@ -35,7 +35,7 @@ class Game <<Engine>> {
 class TransactionLogger <<Data>> {
 }
 
-class GameConfig <<struct>> {
+class GameConfig {
 }
 
 class Player <<Model>> {
@@ -45,10 +45,17 @@ class SkillCard <<Model>> {
 }
 
 class LogEntry {
-    + turn : int
-    + username : string
-    + actionType : string
-    + detail : string
+    - turn : int
+    - username : string
+    - actionType : string
+    - detail : string
+    __
+    + LogEntry(turn : int, username : string, actionType : string, detail : string)
+    + getTurn() : int
+    + getUsername() : string
+    + getActionType() : string
+    + getDetail() : string
+    + toString() : string
 }
 
 node "File System" as FS {
@@ -64,19 +71,5 @@ SaveLoadManager ..> SkillCard : deserializes >
 SaveLoadManager ..> LogEntry : creates on load >
 SaveLoadManager ..> fsave : reads / writes >
 
-note bottom of SaveLoadManager
-    <b>Stateless</b> — tidak menyimpan state internal.
-    Setiap operasi menerima parameter langsung.
-
-    <b>saveGame()</b>: Serialize Game + Logger → file
-    <b>loadGame()</b>: Deserialize file → Game*
-
-    Format file sesuai spesifikasi halaman 20-21:
-    - State turn, pemain, properti, deck, log
-
-    <b>Digunakan oleh:</b> GameEngine
-    - SIMPAN: saat awal giliran (belum ada aksi)
-    - MUAT: saat menu awal sebelum permainan dimulai
-end note
 
 @enduml

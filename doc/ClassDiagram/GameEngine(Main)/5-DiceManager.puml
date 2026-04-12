@@ -21,28 +21,4 @@ class DiceManager {
     + isDouble() : bool
 }
 
-note right of DiceManager
-    <b>Mengelola 2 dadu bersisi 6 (2d6)</b>
-
-    <b>rollRandom():</b>
-    die1 = rand(1..6), die2 = rand(1..6)
-    return {die1, die2}
-
-    <b>setManual(d1, d2):</b>
-    Validasi 1 ≤ d1,d2 ≤ 6
-    Untuk perintah ATUR_DADU X Y
-
-    <b>isDouble():</b>
-    return die1 == die2
-
-    <b>getTotal():</b>
-    return die1 + die2
-    Digunakan oleh:
-    · TurnManager → processMovement
-    · Game → setLastDiceTotal (untuk sewa Utility)
-
-    <b>Digunakan oleh:</b> GameEngine
-    (saat LEMPAR_DADU atau ATUR_DADU)
-end note
-
 @enduml

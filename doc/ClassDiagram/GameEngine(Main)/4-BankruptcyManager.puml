@@ -87,27 +87,4 @@ BankruptcyManager ..> StreetProperty : sells buildings >
 
 Property <|-- StreetProperty
 
-note bottom of BankruptcyManager
-    <b>handleInsufficientFunds(debtor, amount, creditor):</b>
-    1. canCoverDebt()? → hitung cash + maxLiquidation
-    2. Jika BISA → runLiquidationPanel()
-       · Pemain pilih: jual properti / gadai
-       · Loop sampai uang cukup
-       · Return true (berhasil bayar)
-    3. Jika TIDAK BISA → declareBankruptcy()
-       · creditor = Player? → transferAssetsToPlayer()
-       · creditor = Bank (null)? → returnAssetsToBank()
-         → Properti dikembalikan ke BANK
-         → Bangunan dihancurkan
-         → AuctionManager.runAuction() satu per satu
-       · Return false (bangkrut)
-
-    <b>sellPropertyToBank():</b>
-    Harga jual = purchasePrice + (½ × harga bangunan)
-
-    <b>mortgageProperty():</b>
-    Pemain terima uang = mortgageValue
-    Status properti → MORTGAGED
-end note
-
 @enduml

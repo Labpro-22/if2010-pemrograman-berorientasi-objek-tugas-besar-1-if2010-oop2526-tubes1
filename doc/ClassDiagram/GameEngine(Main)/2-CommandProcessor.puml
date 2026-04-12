@@ -39,32 +39,5 @@ class TurnManager <<Engine>> {
 CommandProcessor --> GameEngine : dispatches to >
 CommandProcessor --> TurnManager : validates with >
 
-note right of CommandProcessor
-    <b>Command Dispatch Pattern</b>
-    Memetakan string perintah ke handler.
-
-    <b>Perintah yang didaftarkan:</b>
-    ┌──────────────────┬───────────────────┐
-    │ Perintah         │ Validasi          │
-    ├──────────────────┼───────────────────┤
-    │ CETAK_PAPAN      │ Kapan saja        │
-    │ LEMPAR_DADU      │ canRoll()         │
-    │ ATUR_DADU X Y    │ canRoll()         │
-    │ CETAK_AKTA       │ Kapan saja        │
-    │ CETAK_PROPERTI   │ Kapan saja        │
-    │ GADAI            │ Giliran aktif     │
-    │ TEBUS            │ Giliran aktif     │
-    │ BANGUN           │ Giliran aktif     │
-    │ SIMPAN <file>    │ canSave()         │
-    │ CETAK_LOG [n]    │ Kapan saja        │
-    │ GUNAKAN_KEMAMPUAN│ canUseSkill()     │
-    └──────────────────┴───────────────────┘
-
-    Perintah OTOMATIS (BELI, BAYAR_SEWA,
-    BAYAR_PAJAK, LELANG, FESTIVAL,
-    BANGKRUT, MENANG) tidak masuk di sini.
-    Mereka dipicu langsung oleh GameEngine
-    di dalam handleTileLanding().
-end note
 
 @enduml

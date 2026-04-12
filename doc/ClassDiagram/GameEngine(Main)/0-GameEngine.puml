@@ -88,31 +88,5 @@ GameEngine *-down- TransactionLogger
 ' Dependency injection
 GameEngine -right-> IGUI : uses >
 
-note right of GameEngine
-    <b>Facade / Controller — Entry Point Program</b>
-
-    <b>run()</b> → Alur utama:
-    1. Tampilkan menu via IGUI
-    2. Init game (New/Load)
-    3. Masuk gameLoop()
-
-    <b>gameLoop()</b>:
-    for each turn:
-      for each active player:
-        processPlayerTurn(player)
-
-    <b>processPlayerTurn()</b>:
-    1. TurnManager.startTurn(player)
-    2. Loop: GUI.getCommand() → CommandProcessor
-    3. Jika LEMPAR_DADU → DiceManager → processMovement → handleTileLanding
-    4. TurnManager.endTurn(player)
-
-    <b>executePayment()</b>:
-    Cek canAfford → jika tidak cukup →
-    BankruptcyManager.handleInsufficientFunds()
-
-    <b>PENTING:</b> GameEngine tidak di-pass ke Model.
-    Yang di-pass adalah objek Game.
-end note
 
 @enduml

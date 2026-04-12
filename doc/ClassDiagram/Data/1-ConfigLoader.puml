@@ -34,29 +34,56 @@ class ConfigLoader {
     - buildSkillDeck() : CardDeck<SkillCard>*
 }
 
-class GameConfig <<struct>> {
-    + properties : vector<Property*>
-    + railroadRents : map<int, int>
-    + utilityMultipliers : map<int, int>
-    + tax : TaxConfig
-    + special : SpecialConfig
-    + misc : MiscConfig
+class GameConfig {
+    - properties : vector<Property*>
+    - railroadRents : map<int, int>
+    - utilityMultipliers : map<int, int>
+    - tax : TaxConfig
+    - special : SpecialConfig
+    - misc : MiscConfig
+    __
+    + GameConfig()
+    + getProperties() : vector<Property*>
+    + getRailroadRents() : const map<int, int>&
+    + getUtilityMultipliers() : const map<int, int>&
+    + getTax() : const TaxConfig&
+    + getSpecial() : const SpecialConfig&
+    + getMisc() : const MiscConfig&
+    + setProperties(properties : vector<Property*>) : void
+    + setRailroadRents(rents : map<int, int>) : void
+    + setUtilityMultipliers(multipliers : map<int, int>) : void
+    + setTax(tax : TaxConfig) : void
+    + setSpecial(special : SpecialConfig) : void
+    + setMisc(misc : MiscConfig) : void
 }
 
-class TaxConfig <<struct>> {
-    + pphFlat : int
-    + pphPercent : int
-    + pbmFlat : int
+class TaxConfig {
+    - pphFlat : int
+    - pphPercent : int
+    - pbmFlat : int
+    __
+    + TaxConfig(pphFlat : int, pphPercent : int, pbmFlat : int)
+    + getPphFlat() : int
+    + getPphPercent() : int
+    + getPbmFlat() : int
 }
 
-class SpecialConfig <<struct>> {
-    + goSalary : int
-    + jailFine : int
+class SpecialConfig {
+    - goSalary : int
+    - jailFine : int
+    __
+    + SpecialConfig(goSalary : int, jailFine : int)
+    + getGoSalary() : int
+    + getJailFine() : int
 }
 
-class MiscConfig <<struct>> {
-    + maxTurn : int
-    + initialBalance : int
+class MiscConfig {
+    - maxTurn : int
+    - initialBalance : int
+    __
+    + MiscConfig(maxTurn : int, initialBalance : int)
+    + getMaxTurn() : int
+    + getInitialBalance() : int
 }
 
 ' Relasi
@@ -105,15 +132,5 @@ ConfigLoader ..> f3 : reads
 ConfigLoader ..> f4 : reads
 ConfigLoader ..> f5 : reads
 ConfigLoader ..> f6 : reads
-
-note bottom of ConfigLoader
-    <b>Factory Pattern</b>
-    Satu-satunya kelas yang membaca file konfigurasi.
-    Menginstansiasi seluruh objek Model awal
-    (Board, Tiles, Properties, CardDecks)
-    lalu menyerahkan ke GameEngine.
-
-    <b>Digunakan oleh:</b> GameEngine (saat initNewGame)
-end note
 
 @enduml

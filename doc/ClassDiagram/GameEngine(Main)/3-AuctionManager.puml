@@ -67,23 +67,4 @@ AuctionManager ..> AuctionAction : uses >
 AuctionManager ..> Property : manipulates >
 AuctionManager ..> Player : manipulates >
 
-note bottom of AuctionManager
-    <b>Alur Lelang (runAuction):</b>
-    1. buildAuctionOrder() → urutan dari pemain
-       setelah triggeringPlayer
-    2. Loop: setiap pemain BID atau PASS
-       · BID harus > bid sebelumnya
-       · BID tidak boleh > uang pemain
-    3. Selesai jika (jumlahPemain-1) PASS berturut-turut
-    4. Minimal 1 pemain harus BID
-    5. finalizeAuction() → transfer uang & properti
-
-    <b>Dipicu oleh:</b>
-    · Pemain tolak beli Street → GameEngine
-    · Pemain bangkrut ke Bank → BankruptcyManager
-
-    <b>Giliran lelang BUKAN giliran permainan biasa</b>
-    Tidak mempengaruhi durasi efek atau counter turn.
-end note
-
 @enduml

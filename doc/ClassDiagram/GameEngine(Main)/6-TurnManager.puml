@@ -101,40 +101,5 @@ TurnManager ..> Board : via game.getBoard() >
 TurnManager ..> Property : via player.getOwnedProperties() >
 TurnManager ..> IGUI : for drop card input >
 
-note right of TurnManager
-    <b>Mengelola siklus hidup satu giliran</b>
-
-    <b>TIDAK duplikasi state Player!</b>
-    State berikut dibaca dari Player:
-    · hasRolled(), hasUsedSkill()
-    · consecutiveDoubles, jailAttempts
-
-    TurnManager hanya menyimpan:
-    · phase → fase giliran (khusus engine)
-    · hasActed → untuk validasi SIMPAN
-    · shieldActive → efek ShieldCard
-
-    <b>startTurn(player):</b>
-    1. player.startTurn() → reset flag
-    2. distributeSkillCard(player) → draw dari skillDeck
-    3. handleDropCard() → jika hand > 3
-    4. decrementFestivalDurations(player)
-    5. phase = PRE_ROLL
-
-    <b>canRoll(player):</b>
-    return !player.hasRolled()
-
-    <b>canUseSkill(player):</b>
-    return !player.hasRolled() && !player.hasUsedSkill()
-
-    <b>canSave():</b>
-    return !hasActed
-
-    <b>processMovement(player, diceTotal):</b>
-    1. newPos = board.getNextIndex(pos, total)
-    2. if board.passesGo() → player += goSalary
-    3. player.setPosition(newPos)
-    4. return board.getTile(newPos)
-end note
 
 @enduml

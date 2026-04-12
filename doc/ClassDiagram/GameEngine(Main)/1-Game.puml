@@ -110,26 +110,5 @@ class Card <<Model>> {
 Tile ..> Game : receives as param
 Card ..> Game : receives as param
 
-note right of Game
-    <b>Facade / Aggregate Container</b>
-    Memegang semua objek Model dan
-    menyediakan getter untuk akses.
-
-    <b>BUKAN controller</b> — tidak punya
-    logika permainan. Yang mengatur
-    alur permainan adalah GameEngine.
-
-    <b>Di-pass ke Model sebagai Game&:</b>
-    · Tile::onLanded(player, <b>game</b>)
-    · Card::execute(player, <b>game</b>)
-
-    Ini memungkinkan Model mengakses
-    Board, Decks, Players, dan config
-    tanpa coupling ke GameEngine.
-
-    <b>Dimiliki oleh:</b> GameEngine
-    <b>Direferensi oleh:</b> TurnManager,
-    AuctionManager, BankruptcyManager
-end note
 
 @enduml

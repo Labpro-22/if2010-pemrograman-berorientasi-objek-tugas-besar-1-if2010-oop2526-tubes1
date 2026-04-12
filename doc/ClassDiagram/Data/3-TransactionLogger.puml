@@ -21,38 +21,20 @@ class TransactionLogger {
 }
 
 class LogEntry {
-    + turn : int
-    + username : string
-    + actionType : string
-    + detail : string
+    - turn : int
+    - username : string
+    - actionType : string
+    - detail : string
     __
     + LogEntry(turn : int, username : string, actionType : string, detail : string)
+    + getTurn() : int
+    + getUsername() : string
+    + getActionType() : string
+    + getDetail() : string
     + toString() : string
 }
 
 ' Relasi
 TransactionLogger *-- "0..*" LogEntry : stores >
-
-note right of TransactionLogger
-    <b>Mencatat seluruh kejadian signifikan:</b>
-    DADU, BELI, SEWA, PAJAK, GADAI,
-    TEBUS, BANGUN, LELANG, FESTIVAL,
-    KARTU, BANGKRUT, SAVE, LOAD
-
-    <b>Digunakan oleh:</b>
-    - GameEngine: memanggil log() setiap aksi
-    - SaveLoadManager: serialize/deserialize log
-    - CommandProcessor: CETAK_LOG → getRecentLog()
-    - GUI: renderLog() untuk menampilkan
-end note
-
-note bottom of LogEntry
-    Data class sederhana.
-    Satu entri = satu kejadian dalam permainan.
-    Contoh:
-    turn=5, username="Uname1",
-    actionType="BELI",
-    detail="Beli Jakarta (JKT) seharga M400"
-end note
 
 @enduml
