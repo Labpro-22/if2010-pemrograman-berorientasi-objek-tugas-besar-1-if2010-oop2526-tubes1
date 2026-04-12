@@ -167,18 +167,6 @@ enum CardDeckType {
   COMMUNITY_CHEST
 }
 
-enum ColorGroup {
-  COKLAT
-  BIRU_MUDA
-  PINK
-  ORANGE
-  MERAH
-  KUNING
-  HIJAU
-  BIRU_TUA
-  DEFAULT
-  ABU_ABU
-}
 ' ======================================================
 ' CORE
 ' ======================================================
@@ -199,12 +187,10 @@ class Game {
   + endTurn(): void
   + handleLanding(player: Player): void
   + checkWinCondition(): void
-  + awardGoSalary(player: Player): void
 } 
 
 class GameManager {
   - currentGame: Game*
-  - configLoader:  ConfigLoader 
   + getCurrentGame(): Game
   + loadGame(folderName: string): void
   + saveGame(folderName: string): void
@@ -333,7 +319,7 @@ abstract class PropertyTile {
 }
 
 class StreetTile {
-  - colorGroup: ColorGroup
+  - colorGroup: string
   - landPrice: int
   - houseBuildCost: int
   - hotelBuildCost: int
@@ -513,32 +499,30 @@ class LogEntry {
 ' ======================================================
 
 class Config {
-  - propertyConfigs
-  - railroadRentTable
-  - utilityMultiplierTable
-  - taxConfig
-  - specialConfig
-  - miscConfig
-  + getPropertyConfig(code: string)
+  - propertyConfigs: vector<tuple<int, string, string, string, string, int, int, vector<int>>>
+  - railroadRentTable: map<int, int>
+  - utilityMultiplierTable: map<int, int>
+  - taxConfig: tuple<int, int, int>
+  - specialConfig: tuple<int, int>
+  - miscConfig: tuple<int, int>
+  + getPropertyConfig(code: string): tuple<int, string, string, string, string, int, int, vector<int>>
   + getRailroadRent(count: int): int
   + getUtilityMultiplier(count: int): int
 }
 
-class ConfigLoader {
-  + loadAll(): Config
-  + loadProperties(): void
-  + loadRailroads(): void
-  + loadUtilities(): void
-  + loadTax(): void
-  + loadSpecial(): void
-  + loadMisc(): void
-}
-
 class Loader {
-  + loadPlayers(filename: string): vector<Player>
-  + loadProperties(filename: string): vector<PropertyTile>
-  + loadDecks(filename: string): CardManager
-  + loadLogs(filename: string): vector<LogEntry>
+  - getIfstream(path: string): ifstream
+  + loadPlayers(path: string): vector<Player>
+  + loadProperties(path: string): vector<PropertyTile>
+  + loadDecks(path: string): CardManager
+  + loadLogs(path: string): vector<LogEntry>
+  + loadPropertiesConfig(path: string): vector<tuple<int, string, string, string, string, int, int, vector<int>>>
+  + loadRailroadsConfig(path: string): map<int, int>
+  + loadUtilitiesConfig(path: string): map<int, int>
+  + loadTaxConfig(path: string): tuple<int, int, int>
+  + loadSpecialConfig(path: string): tuple<int, int>
+  + loadMiscConfig(path: string): tuple<int, int>
+  + loadAccounts(path: string): vector<Account>
 }
 
 ' ======================================================
@@ -608,8 +592,6 @@ Game *-- AuctionManager
 Game *-- BankruptcyManager
 Game *-- Logger
 Game *-- Config
-GameManager *-- SaveLoadManager 
-GameManager *-- ConfigLoader
 GameManager *-- Game
 
 Board *-- "40" Tile
@@ -620,7 +602,12 @@ CardDeck *-- "0..*" DrawCard : "T = DrawCard"
 CardDeck *-- "0..*" AbilityCard : "T = AbilityCard"
 
 Player -- "0..*" PropertyTile
+Player *-- PlayerStatus
 PropertyTile -- "0..1" Player : owner
+PropertyTile *-- PropertyStatus
+SpecialTile *-- SpecialType
+TaxTile *-- TaxType
+CardTile *-- CardDeckType
 Player -- "0..3" AbilityCard
 
 ' ======================================================
@@ -639,7 +626,8 @@ Player o-- Account
 
 Game ..> HandOverFlowException
 Game ..> BankruptException
-ConfigLoader ..> Config
+GameManager ..> Loader
+AccountManager ..> Loader
 AuctionManager ..> Player
 AuctionManager ..> PropertyTile
 AuctionManager ..> Game
