@@ -201,15 +201,14 @@ class Game {
   + handleLanding(player: Player): void
   + checkWinCondition(): void
   + awardGoSalary(player: Player): void
-}
+} 
 
 class GameManager {
   - currentGame: Game*
-  - saveLoadGame: SaveLoadManager
-  - config:  ConfigLoader 
+  - configLoader:  ConfigLoader 
   + getCurrentGame(): Game
-  + LoadGame(): void
-  + saveGame(): void
+  + loadGame(folderName: string): void
+  + saveGame(folderName: string): void
   + startNewGame(): void
 }
 
@@ -281,6 +280,7 @@ class Player {
   + resetTurnFlags(): void
   + getTotalWealth(): int
   + isBankrupt(): bool
+  + toString(): string
 }
 
 ' ======================================================
@@ -324,6 +324,7 @@ abstract class PropertyTile {
   + applyFestival(): void
   + decrementFestivalDuration(): void
   + resetFestivalIfExpired(): void
+  + toString(): string
 }
 
 class StreetTile {
@@ -463,6 +464,7 @@ class CardManager {
   + giveTurnStartAbility(player: Player): void
   + handleHandOverflow(player: Player): void
   + discardAbilityCard(card: AbilityCard): void
+  + toString(): string
 }
 
 ' ======================================================
@@ -530,17 +532,11 @@ class ConfigLoader {
   + loadMisc(): void
 }
 
-class SaveLoadManager {
-  + save(game: Game, filename: string): void
-  + load(filename: string): void
-  + serializePlayers(): string
-  + serializeProperties(): string
-  + serializeDecks(): string
-  + serializeLogs(): string
-  + parsePlayers(): vector<Player>
-  + parseProperties(): vector<PropertyState>
-  + parseDecks(): CardManager
-  + parseLogs(): vector<LogEntry>
+class Loader {
+  + loadPlayers(filename: string): vector<Player>
+  + loadProperties(filename: string): vector<PropertyTile>
+  + loadDecks(filename: string): CardManager
+  + loadLogs(filename: string): vector<LogEntry>
 }
 
 ' ======================================================
