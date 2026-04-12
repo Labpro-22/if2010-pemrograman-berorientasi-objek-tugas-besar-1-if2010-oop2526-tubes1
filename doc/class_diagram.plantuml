@@ -564,6 +564,9 @@ AbilityCard <|-- DemolitionCard
 
 GameException <|-- HandOverFlowException
 GameException <|-- BankruptException
+GameException <|-- InsufficientFundsException
+GameException <|-- InvalidActionException
+GameException <|-- FileIOException
 
 ' ======================================================
 ' COMPOSITION
@@ -644,17 +647,31 @@ StreetTile ..> Game
 class GameException {
   # message : string
   + GameException(message: string)
+  + getMessage(): string
 }
 
 class HandOverFlowException {
-  - message : string
-  + HandOverFlowException()
+  + HandOverFlowException(message: string)
 }
 
 class BankruptException {
-  - message: string
   - bankruptCode: int
-  + BankruptException(code: int)
+  + BankruptException(code: int, message: string)
+}
+
+class InsufficientFundsException {
+  - requiredAmount: int
+  - currentAmount: int
+  + InsufficientFundsException(req: int, cur: int, message: string)
+  + getDeficit(): int
+}
+
+class InvalidActionException {
+  + InvalidActionException(message: string)
+}
+
+class FileIOException {
+  + FileIOException(message: string)
 }
 
 @enduml
