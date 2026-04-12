@@ -538,8 +538,8 @@ package "Game Logic Layer" as Core_Layer {
     - giver: Player
     - getter: Player
     + getTradeID(): int
-    + getPropGive(): vector<PropertyTile*>
-    + getPropGet(): vector<PropertyTile*> 
+    + getPropGive(): map<PropertyTile*>
+    + getPropGet(): map<PropertyTile*> 
   }
 
   class LiquidationManager {
