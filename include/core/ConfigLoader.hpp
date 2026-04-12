@@ -9,6 +9,8 @@ private:
     ifstream currentFile;
     string currentLine;
     int currentParsedIndex;
+    std::string configFilePath;
+    bool isConfigValid;
     ConfigLoader();
 public:
     static ConfigLoader* getInstance();
@@ -16,5 +18,7 @@ public:
     void loadAllConfigs(); 
     void parsePropertyConfig(); 
     void parseActionTileConfig(); 
-    void validateBoardLayout(); 
+    void validateBoardLayout();
+    void setConfigFilePath(const std::string& path);
+    bool getIsConfigValid() const;
 };
