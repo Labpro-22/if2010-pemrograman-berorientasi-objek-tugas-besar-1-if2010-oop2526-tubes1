@@ -1,0 +1,660 @@
+
+@startuml a
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+
+title Diagram Kelas Nimonspoli
+
+class Nimonspoli {
+    - sceneManager: SceneManager
+    - gameManager: GameManager
+    - accountManager: AccountManager
+    + setup(): void
+    + start(): void
+    + update(): void
+    + draw(): void
+}
+
+' ======================================================
+' UI Layer
+' ======================================================
+
+abstract class UIElement {
+    # boundingBox: Rectangle
+    + preferredWidth: float
+    + preferredHeight: float
+    + draw(): void
+    + update(): void
+    + setBoundary(newBound: Rectangle): void
+    + getBoundary(): Rectangle
+}
+
+class Label {
+    - text: string
+    - color: Color
+    - size: int
+    + draw(): void
+}
+
+class Button {
+    - text: string
+    - bgColor: Color
+    - textColor: Color
+    - onClick: function<void>
+    + disabled: bool
+    + draw(): void
+}
+
+class TextField {
+    - text: string
+    - isActive: bool
+    - cursorPos: int
+    + draw(): void
+    + update(): void
+    + getContent(): string
+}
+
+class GridItem {
+    - item: UIElement*
+    - row: int
+    - col: int
+    - rowSpan: int
+    - colSpan: int
+    + draw(): void
+    + update(): void
+    + layout(): void
+}
+
+class GridContainer {
+    - rows: int
+    - cols: int
+    - items: vector<GridItem>
+    + add(item: GridItem): void
+    + layout(): void
+    + draw(): void
+    + update(): void
+}
+
+abstract class Flexbox {
+    # children: vector<UIElement*>
+    + spacing: float
+    + padding: float
+    + alignment: Alignment 
+    + add(element: UIElement*): void
+    + layout(): void
+    + draw(): void
+    + update(): void
+}
+
+enum Alignment {
+    START
+    CENTER 
+    END 
+}
+
+class VerticalFlexbox {
+    + layout(): void
+}
+
+class HorizontalFlexbox {
+    + layout(): void
+}
+
+class Popup {
+    - container: VerticalFlexbox
+    + isActive: bool
+    + draw(): void
+    + update(): void
+    + add(element: UIElement*): void
+}
+
+class Scene {
+    # popups: map<string, Popup>
+    # root: VerticalFlexbox
+    # currentPopup: Popup*
+    # gameManager: GameManager*
+    # sceneManager: SceneManager*
+    # accountManager: AccountManager*
+    + draw(): void
+    + update(): void
+    + showPopup(key: string): void
+    + collapsePopup(): void
+}
+
+class MainMenuScene {}
+
+class InGameScene {}
+
+class SceneManager {
+    - currentScene: Scene*
+    - accountManager: AccountManager*
+    - gameManager: GameManager*
+    + setScene(newScene: Scene*): void
+    + update(): void
+    + draw(): void
+}
+
+' ======================================================
+' ENUMS
+' ======================================================
+
+enum PlayerStatus {
+  ACTIVE
+  JAILED
+  BANKRUPT
+}
+
+enum PropertyStatus {
+  BANK
+  OWNED
+  MORTGAGED
+}
+
+enum SpecialType {
+  GO
+  JAIL
+  FREE_PARKING
+  GO_TO_JAIL
+}
+
+enum TaxType {
+  PPH
+  PBM
+}
+
+enum CardDeckType {
+  CHANCE
+  COMMUNITY_CHEST
+}
+
+enum ColorGroup {
+  COKLAT
+  BIRU_MUDA
+  PINK
+  ORANGE
+  MERAH
+  KUNING
+  HIJAU
+  BIRU_TUA
+  DEFAULT
+  ABU_ABU
+}
+' ======================================================
+' CORE
+' ======================================================
+
+class Game {
+  - board: Board
+  - players: vector<Player>
+  - turnManager: TurnManager
+  - dice: Dice
+  - cardManager: CardManager
+  - auctionManager: AuctionManager
+  - bankruptcyManager: BankruptcyManager
+  - logger: Logger
+  - config: Config
+  - gameOver: bool
+  + run(): void
+  + startTurn(): void
+  + endTurn(): void
+  + handleLanding(player: Player): void
+  + checkWinCondition(): void
+  + awardGoSalary(player: Player): void
+}
+
+class GameManager {
+  - currentGame: Game*
+  - saveLoadGame: SaveLoadManager
+  - config:  ConfigLoader 
+  + getCurrentGame(): Game
+  + LoadGame(): void
+  + saveGame(): void
+  + startNewGame(): void
+}
+
+class TurnManager {
+  - turnOrder: vector<int>
+  - currentPlayerIndex: int
+  - currentTurn: int
+  - maxTurn: int
+  + getCurrentPlayerIndex(): int
+  + nextPlayer(): void
+  + grantExtraTurn(): void
+  + removePlayer(playerId: int): void
+  + isMaxTurnReached(): bool
+}
+
+class Dice {
+  - die1: int
+  - die2: int
+  - manualMode: bool
+  + roll(): pair<int,int>
+  + setManual(x: int, y: int): void
+  + getTotal(): int
+  + isDouble(): bool
+  + resetManualMode(): void
+}
+
+' ======================================================
+' PLAYER & ACCOUNT
+' ======================================================
+
+class Account {
+    - username: string
+    - password: string
+    - score: int
+    + addScore(num: int): void
+}
+
+class AccountManager {
+    - accounts: map<string, Account>
+    + addAccount(newAccount: Account): void
+    + getAccount(name: string, pass: string): Account*
+}
+
+class Player {
+  - account: Account
+  - money: int
+  - position: int
+  - status: PlayerStatus
+  - ownedProperties: vector<PropertyTile*>
+  - handCards: vector<AbilityCard*>
+  - jailTurnsAttempted: int
+  - usedAbilityThisTurn: bool
+  - shieldActive: bool
+  - discountPercent: int
+  - discountDuration: int
+  - consecutiveDoubleCount: int
+  + moveTo(position: int): void
+  + credit(amount: int): void
+  + debit(amount: int): void
+  + canAfford(amount: int): bool
+  + addProperty(property: PropertyTile): void
+  + removeProperty(property: PropertyTile): void
+  + addCard(card: AbilityCard): void
+  + dropCard(index: int): void
+  + useAbilityCard(index: int, game: Game): void
+  + enterJail(): void
+  + releaseFromJail(): void
+  + incrementJailAttempt(): void
+  + resetTurnFlags(): void
+  + getTotalWealth(): int
+  + isBankrupt(): bool
+}
+
+' ======================================================
+' BOARD & TILES
+' ======================================================
+
+class Board {
+  - tiles: vector<Tile*>
+  - codeToIndex: map<string,int>
+  + getTileByIndex(index: int): Tile
+  + getTileByCode(code: string): Tile
+  + calculateNewPosition(currentPos: int, step: int, passedGo: bool): pair<int, bool>
+  + getNearestRailroad(fromPos: int): RailroadTile
+  + printBoard(players: vector<Player>, turnInfo: string): void
+}
+
+abstract class Tile {
+  - id: int
+  - code: string
+  - name: string
+  + onLand(player: Player, game: Game): void
+  + getCode(): string
+  + getName(): string
+  + isOwnable(): bool
+}
+
+abstract class PropertyTile {
+  - owner: Player
+  - status: PropertyStatus
+  - mortgageValue: int
+  - festivalMultiplier: int
+  - festivalDuration: int
+  + onLand(player: Player, game: Game): void
+  + calculateRent(visitor: Player, game: Game): int
+  + setOwner(owner: Player): void
+  + getOwner(): Player
+  + mortgage(): void
+  + redeem(): void
+  + isOwned(): bool
+  + isMortgaged(): bool
+  + applyFestival(): void
+  + decrementFestivalDuration(): void
+  + resetFestivalIfExpired(): void
+}
+
+class StreetTile {
+  - colorGroup: ColorGroup
+  - landPrice: int
+  - houseBuildCost: int
+  - hotelBuildCost: int
+  - rentTable: vector<int>
+  - houseCount: int
+  - hasHotel: bool
+  + calculateRent(visitor: Player, game: Game): int
+  + hasMonopoly(game: Game): bool
+  + canBuildHouse(game: Game): bool
+  + canBuildHotel(game: Game): bool
+  + buildHouse(): void
+  + buildHotel(): void
+  + sellBuildingsToBank(): void
+  + getBuildingLevel(): int
+  + canBeMortgaged(game: Game): bool
+}
+
+class RailroadTile {
+  + calculateRent(visitor: Player, game: Game): int
+  + acquireAutomatically(player: Player): void
+}
+
+class UtilityTile {
+  + calculateRent(visitor: Player, game: Game): int
+  + acquireAutomatically(player: Player): void
+}
+
+abstract class ActionTile {
+  + onLand(player: Player, game: Game): void
+}
+
+class TaxTile {
+  - taxType: TaxType
+  + onLand(player: Player, game: Game): void
+  + calculatePPH(player: Player): int
+  + processPPH(player: Player, choice: int): void
+  + processPBM(player: Player): void
+}
+
+class FestivalTile {
+  + onLand(player: Player, game: Game): void
+  + activateFestivalOn(property: PropertyTile): void
+}
+
+class CardTile {
+  - deckType: CardDeckType
+  + onLand(player: Player, game: Game): void
+  + drawAndApplyCard(player: Player, game: Game): void
+}
+
+class SpecialTile {
+  - specialType: SpecialType
+  + onLand(player: Player, game: Game): void
+  + handleGo(player: Player, game: Game): void
+  + handleJail(player: Player, game: Game): void
+  + handleFreeParking(player: Player, game: Game): void
+  + handleGoToJail(player: Player, game: Game): void
+}
+
+' ======================================================
+' CARDS
+' ======================================================
+
+abstract class DrawCard {
+  - description: string
+  + apply(player: Player, game: Game): void
+  + getDescription(): string
+}
+
+class ChanceCard {
+  + apply(player: Player, game: Game): void
+}
+
+class CommunityChestCard {
+  + apply(player: Player, game: Game): void
+}
+
+abstract class AbilityCard {
+  - name: string
+  + canUse(player: Player, game: Game): bool
+  + use(player: Player, game: Game): void
+  + getName(): string
+  + serialize(): string
+}
+
+class MoveCard {
+  - steps: int
+  + use(player: Player, game: Game): void
+}
+
+class DiscountCard {
+  - percent: int
+  - duration: int
+  + use(player: Player, game: Game): void
+}
+
+class ShieldCard {
+  + use(player: Player, game: Game): void
+}
+
+class TeleportCard {
+  + use(player: Player, game: Game): void
+}
+
+class LassoCard {
+  + use(player: Player, game: Game): void
+}
+
+class DemolitionCard {
+  + use(player: Player, game: Game): void
+}
+
+class AbilityCardDeck {
+  - drawPile: vector<AbilityCard>
+  - discardPile: vector<AbilityCard>
+  + draw(): AbilityCard
+  + discard(card: AbilityCard): void 
+}
+
+class DrawCardDeck {
+  - pile: vector<*DrawCard>
+  + draw(): DrawCard
+}
+
+class CardManager {
+  - chanceDeck: DrawCardDeck
+  - communityDeck: DrawCardDeck
+  - abilityDeck: AbilityCardDeck
+  + drawChanceCard(): DrawCard
+  + drawCommunityCard(): DrawCard
+  + drawAbilityCard(): AbilityCard
+  + giveTurnStartAbility(player: Player): void
+  + handleHandOverflow(player: Player): void
+  + discardAbilityCard(card: AbilityCard): void
+}
+
+' ======================================================
+' SUPPORT
+' ======================================================
+
+class AuctionManager {
+  + runAuction(property: PropertyTile, bidders: vector<Player>, trigger: Player, game: Game): void
+  + validateBid(player: Player, amount: int): bool
+  + determineWinner(): Player
+  + finalizeAuction(): void
+}
+
+class BankruptcyManager {
+  + canRecoverDebt(player: Player, amount: int): bool
+  + estimateMaxLiquidationValue(player: Player): int
+  + resolveDebt(debtor: Player, amount: int, game: Game): void
+  + liquidateAssets(player: Player, targetAmount: int): void
+  + declareBankruptToBank(player: Player, game: Game): void
+  + declareBankruptToPlayer(player: Player, creditor: Player, game: Game): void
+  + transferAssets(from: Player, to: Player): void
+  + auctionBankReturnedProperties(game: Game): void
+}
+
+class Logger {
+  - entries: vector<LogEntry>
+  + log(turn: int, username: string, actionType: string, detail: string): void
+  + printLog(): void
+  + getEntries(): vector<LogEntry>
+  + clear(): void
+  + serialize(): string
+}
+
+class LogEntry {
+  - turn: int
+  - username: string
+  - actionType: string
+  - detail: string
+  + toString(): string
+}
+
+' ======================================================
+' CONFIG & PERSISTENCE
+' ======================================================
+
+class Config {
+  - propertyConfigs
+  - railroadRentTable
+  - utilityMultiplierTable
+  - taxConfig
+  - specialConfig
+  - miscConfig
+  + getPropertyConfig(code: string)
+  + getRailroadRent(count: int): int
+  + getUtilityMultiplier(count: int): int
+}
+
+class ConfigLoader {
+  + loadAll(): Config
+  + loadProperties(): void
+  + loadRailroads(): void
+  + loadUtilities(): void
+  + loadTax(): void
+  + loadSpecial(): void
+  + loadMisc(): void
+}
+
+class SaveLoadManager {
+  + save(game: Game, filename: string): void
+  + load(filename: string): void
+  + serializePlayers(): string
+  + serializeProperties(): string
+  + serializeDecks(): string
+  + serializeLogs(): string
+  + parsePlayers(): vector<Player>
+  + parseProperties(): vector<PropertyState>
+  + parseDecks(): CardManager
+  + parseLogs(): vector<LogEntry>
+}
+
+' ======================================================
+' INHERITANCE
+' ======================================================
+
+UIElement <|-- Label
+UIElement <|-- Button
+UIElement <|-- TextField
+UIElement <|-- GridItem
+UIElement <|-- GridContainer
+UIElement <|-- Flexbox
+Flexbox <|-- VerticalFlexbox
+Flexbox <|-- HorizontalFlexbox
+Scene <|-- MainMenuScene
+Scene <|-- InGameScene
+
+Tile <|-- PropertyTile
+Tile <|-- ActionTile
+Tile <|-- SpecialTile
+
+PropertyTile <|-- StreetTile
+PropertyTile <|-- RailroadTile
+PropertyTile <|-- UtilityTile
+
+ActionTile <|-- TaxTile
+ActionTile <|-- FestivalTile
+ActionTile <|-- CardTile
+
+DrawCard <|-- ChanceCard
+DrawCard <|-- CommunityChestCard
+
+AbilityCard <|-- MoveCard
+AbilityCard <|-- DiscountCard
+AbilityCard <|-- ShieldCard
+AbilityCard <|-- TeleportCard
+AbilityCard <|-- LassoCard
+AbilityCard <|-- DemolitionCard
+
+' ======================================================
+' COMPOSITION
+' ======================================================
+
+Nimonspoli *-- GameManager
+Nimonspoli *-- AccountManager
+Nimonspoli *-- SceneManager
+
+AccountManager *-- Account
+
+GridItem *-- UIElement
+GridContainer *-- GridItem
+Flexbox *-- UIElement
+Popup *-- VerticalFlexbox
+Scene *-- VerticalFlexbox
+Scene *-- Popup
+SceneManager *-- Scene
+
+Game *-- Board
+Game *-- "2..4" Player
+Game *-- TurnManager
+Game *-- Dice
+Game *-- CardManager
+Game *-- AuctionManager
+Game *-- BankruptcyManager
+Game *-- Logger
+Game *-- Config
+GameManager *-- SaveLoadManager 
+GameManager *-- ConfigLoader
+GameManager *-- Game
+
+Board *-- "40" Tile
+Logger *-- "0..*" LogEntry
+
+CardManager *-- "2" DrawCardDeck
+CardManager *-- "1" AbilityCardDeck
+
+Player -- "0..*" PropertyTile
+PropertyTile -- "0..1" Player : owner
+Player -- "0..3" AbilityCard
+
+' ======================================================
+' AGGREGATION
+' ======================================================
+
+Flexbox o-- Alignment
+Scene o-- SceneManager
+SceneManager o-- GameManager
+SceneManager o-- AccountManager
+Player o-- Account
+
+' ======================================================
+' DEPENDENCIES
+' ======================================================
+
+ConfigLoader ..> Config
+AuctionManager ..> Player
+AuctionManager ..> PropertyTile
+AuctionManager ..> Game
+BankruptcyManager ..> Player
+BankruptcyManager ..> PropertyTile
+BankruptcyManager ..> AuctionManager
+BankruptcyManager ..> Game
+CardTile ..> Game
+FestivalTile ..> Game
+TaxTile ..> Game
+StreetTile ..> Game
+
+class GameException {
+  - message : string
+  + GameException(message: string)
+}
+
+class HandOverFlowException {
+  - message : string
+  + HandOverFlowException(message: string)
+}
+
+@enduml
