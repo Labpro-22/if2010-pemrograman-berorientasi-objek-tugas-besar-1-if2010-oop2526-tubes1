@@ -19,7 +19,7 @@ public:
     Alignment alignment;
     void add(UIElement* element);
     virtual void layout() = 0;
-    virtual void draw() = 0;
+    virtual void draw();
     virtual void update();  
 };
 
