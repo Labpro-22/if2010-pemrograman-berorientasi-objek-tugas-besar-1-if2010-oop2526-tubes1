@@ -1,0 +1,21 @@
+#include "../../include/views/VerticalFlexbox.hpp"
+
+VerticalFlexbox::VerticalFlexbox() {
+    spacing = 10.0f;
+    padding = 10.0f;
+    alignment = Alignment::START;
+}
+
+void VerticalFlexbox::layout() {
+    float yOffset = boundingBox.y + padding;
+    for (auto& child : children) {
+        float xOffset = boundingBox.x + padding;
+        if (alignment == Alignment::CENTER) {
+            xOffset += (boundingBox.width - padding * 2 - child->preferredWidth) / 2;
+        } else if (alignment == Alignment::END) {
+            xOffset += boundingBox.width - padding * 2 - child->preferredWidth;
+        }
+        child->setBoundary({xOffset, yOffset, child->preferredWidth, child->preferredHeight});
+        yOffset += child->preferredHeight + spacing;
+    }
+}
