@@ -4,6 +4,40 @@
 
 Project Structure ini hanyalah referensi, Anda dapat menyesuaikannya dengan kebutuhan tim Anda
 
+## Project Structure
+
+```
+.
+├── README.md
+├── CMakeLists.txt
+├── assets/                     # Aset gambar/avatar
+├── build/                      # Build artifact and executable
+├── config/                     # Configuration files
+├── data/                       # Save/load files
+├── include/
+│   ├── core/                   # Domain entities
+│   │   └── Tiles.hpp
+│   ├── data/                   # Data Access Layer 
+│   │   └── ConfigReader.hpp 
+│   ├── logic/                  # Game logic
+│   │   └── Game.hpp
+│   └── ui/                     # GUI with SFML
+│       ├── GameWindow.hpp
+│       └── Widgets.hpp
+└── src/
+    ├── core/
+    │   └── Tiles.cpp
+    ├── data/
+    │   └── ConfigReader.cpp
+    ├── logic/
+    │   └── Game.cpp
+    ├── ui/
+    │   ├── GameWindow.cpp
+    │   └── Widgets.cpp
+    └── main.cpp                # Main Executables
+
+```
+
 ## How to Build
 
 ### Linux / WSL
@@ -15,13 +49,13 @@ Project Structure ini hanyalah referensi, Anda dapat menyesuaikannya dengan kebu
     # or
     sudo apt install clang
     ```
-  * CMake .16+
+  * CMake 3.16+
     ```sh
     sudo apt install cmake
     ```
   * SFML 2.5+
     ```
-    sudo get install libsfml-dev
+    sudo apt install libsfml-dev
     ```
 2. Build using CMake:
   ```sh
