@@ -3,18 +3,19 @@
 #include <exception>
 #include <string>
 
-class NimonspoliExeption :: public std::exception {
-    protected:
-        std::string message;
-    public:
-        explicit NimonspoliExeption(const std::string& msg) : message(msg) {}
-        virtual ~NimonspoliExeption() = default;
+class NimonspoliException : public std::exception {
+protected:
+    std::string message;
 
-        const char* what() const noexcept override {
-            return message.c_str();
-        }
+public:
+    explicit NimonspoliException(const std::string& msg) : message(msg) {}
+    virtual ~NimonspoliException() = default;
 
-        std::string getMessage() const {
-            return message;
-        }
-}
+    const char* what() const noexcept override {
+        return message.c_str();
+    }
+
+    std::string getMessage() const {
+        return message;
+    }
+};

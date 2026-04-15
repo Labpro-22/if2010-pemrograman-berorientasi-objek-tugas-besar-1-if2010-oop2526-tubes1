@@ -17,4 +17,3 @@ public:
     const std::string& getText() const;
     virtual void execute(Player& player, GameContext& gameContext) = 0;
 };
-

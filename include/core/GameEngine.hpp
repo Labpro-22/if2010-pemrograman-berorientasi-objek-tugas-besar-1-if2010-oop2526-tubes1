@@ -3,14 +3,14 @@
 #include <vector>
 #include <string>
 
-#include "../models/Player.hpp"
+#include "models/Player.hpp"
 #include "Board.hpp"
 #include "Dice.hpp"
 #include "TurnManager.hpp"
 #include "AuctionManager.hpp"
 #include "BankruptcyHandler.hpp"
 #include "GameContext.hpp"
-#include "../utils/CardDeck.hpp"
+#include "utils/CardDeck.hpp"
 
 class ActionCard;
 class SkillCard;
@@ -35,21 +35,18 @@ private:
     CardDeck<SkillCard> skillDeck;
 
     GameContext* context;
-    ConfigData* configData;
+    const ConfigData* configData;
 
     void buildBoard();
     void buildDecks();
     void randomizeTurnOrder();
-
-    void processCommand(const Command& cmd, Player& player);
-
     void applyGoSalary(Player& player);
 
 public:
     GameEngine(TransactionLogger* logger);
     ~GameEngine();
 
-    void initialize(ConfigData* configData, const std::vector<std::string>& playerNames);
+    void initialize(const ConfigData& configData, const std::vector<std::string>& playerNames);
 
     void startNewGame();
 
@@ -58,10 +55,11 @@ public:
     void runGameLoop();
 
     void processTurn(Player& player);
+    void processCommand(const Command& cmd, Player& player);
 
     bool checkGameEnd() const;
 
-    std::vector<Player*> determineWinner();
+    std::vector<Player*> determineWinner() const;
 
     void distributeSkillCards();
 };

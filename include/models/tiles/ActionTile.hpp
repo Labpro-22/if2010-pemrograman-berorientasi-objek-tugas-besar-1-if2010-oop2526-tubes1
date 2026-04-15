@@ -1,13 +1,12 @@
 #pragma once
+
 #include "Tile.hpp"
 
-class ActionTile: public Tile{
-private:
-
+class ActionTile : public Tile {
 public:
     ActionTile();
-    ActionTile(int index, string code, string name, TileCategory TileCategory);
-    virtual ~ActionTile();
+    ActionTile(int index, const std::string& code, const std::string& name, TileCategory category);
+    virtual ~ActionTile() = default;
 
-    virtual void onLanded(Player& player, GameContext& gameContext);
+    virtual void onLanded(Player& player, GameContext& gameContext) override = 0;
 };

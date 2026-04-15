@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/cards/ActionCard.hpp"
+#include "ActionCard.hpp"
 
 class MoveBackCard : public ActionCard {
 private:
@@ -13,5 +13,3 @@ public:
     int getSteps() const;
     void execute(Player& player, GameContext& gameContext) override;
 };
-
-

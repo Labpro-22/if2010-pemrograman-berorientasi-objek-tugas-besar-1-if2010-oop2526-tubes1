@@ -13,4 +13,3 @@ public:
     int getAmount() const;
     void execute(Player& player, GameContext& gameContext) override;
 };
-

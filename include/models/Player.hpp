@@ -4,10 +4,10 @@
 #include <vector>
 
 #include "models/Enums.hpp"
-#include "models/cards/SkillCard.hpp"
-#include "models/tiles/PropertyTile.hpp"
-#include "models/tiles/StreetTile.hpp"
 
+class PropertyTile;
+class StreetTile;
+class SkillCard;
 
 class Player {
 private:
@@ -33,7 +33,7 @@ public:
     bool operator<(const Player& other) const;
     bool operator>(const Player& other) const;
 
-    void moveTo(int newIndex);
+    bool moveTo(int newIndex);
     void addProperty(PropertyTile* tile);
     void removeProperty(PropertyTile* tile);
 

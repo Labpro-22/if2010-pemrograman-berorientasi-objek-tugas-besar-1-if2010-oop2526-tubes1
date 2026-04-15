@@ -6,6 +6,7 @@ class AuctionManager;
 class GameContext;
 
 class BankruptcyHandler {
+public:
     BankruptcyHandler() = default;
 
     void handleBankruptcy(Player& player, Player* creditor, int amount, GameContext& context);

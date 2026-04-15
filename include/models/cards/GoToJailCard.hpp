@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/cards/ActionCard.hpp"
+#include "ActionCard.hpp"
 
 class GoToJailCard : public ActionCard {
 public:
@@ -8,5 +8,3 @@ public:
 
     void execute(Player& player, GameContext& gameContext) override;
 };
-
-
