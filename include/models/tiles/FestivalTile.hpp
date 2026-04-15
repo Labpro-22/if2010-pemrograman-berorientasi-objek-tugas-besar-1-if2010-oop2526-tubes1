@@ -1,10 +1,12 @@
 #pragma once
+
 #include "ActionTile.hpp"
 
-class FestivalTile: public ActionTile{
+class FestivalTile : public ActionTile {
 public:
+    FestivalTile();
+    FestivalTile(int index, const std::string& code, const std::string& name);
 
-private:
     void onLanded(Player& player, GameContext& gameContext) override;
-    string getDisplayLabel() const override;
+    std::string getDisplayLabel() const override;
 };

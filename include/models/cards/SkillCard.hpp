@@ -22,5 +22,3 @@ public:
     virtual std::string getTypeName() const = 0;
     virtual void use(Player& player, GameContext& gameContext) = 0;
 };
-
-

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "NimonspoliException.hpp"
 #include <string>
+
+#include "NimonspoliException.hpp"
 
 class InvalidPropertyException : public NimonspoliException {
 private:
@@ -11,8 +12,9 @@ private:
 public:
     InvalidPropertyException(const std::string& code, const std::string& reason)
         : NimonspoliException("Properti '" + code + "' tidak valid: " + reason),
-            invalidCode(code), reason(reason) {}
+          invalidCode(code),
+          reason(reason) {}
 
-    const std::string& getInvalidCode() const {return invalidCode;}
-    const std::string& getReason() const {return reason;}
+    const std::string& getInvalidCode() const { return invalidCode; }
+    const std::string& getReason() const { return reason; }
 };

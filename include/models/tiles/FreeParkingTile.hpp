@@ -1,10 +1,12 @@
 #pragma once
+
 #include "ActionTile.hpp"
 
-class FreeParkingTile: public ActionTile{
+class FreeParkingTile : public ActionTile {
 public:
+    FreeParkingTile();
+    FreeParkingTile(int index, const std::string& code, const std::string& name);
 
-private:
     void onLanded(Player& player, GameContext& gameContext) override;
-    string getDisplayLabel() const override;
+    std::string getDisplayLabel() const override;
 };

@@ -8,5 +8,3 @@ public:
 
     void execute(Player& player, GameContext& gameContext) override;
 };
-
-

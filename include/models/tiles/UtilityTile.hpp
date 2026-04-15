@@ -1,13 +1,25 @@
 #pragma once
-#include "PropertyTile.hpp"
+
 #include <map>
 
-class UtilityTile: public PropertyTile{
+#include "PropertyTile.hpp"
+
+class UtilityTile : public PropertyTile {
 private:
-    map<int, int> multiplierTable;
+    std::map<int, int> multiplierTable;
+
 public:
+    UtilityTile();
+    UtilityTile(
+        int index,
+        const std::string& code,
+        const std::string& name,
+        int mortgageValue,
+        const std::map<int, int>& multiplierTable
+    );
+
     void onLanded(Player& player, GameContext& gameContext) override;
     int calculateRent(int diceTotal, const GameContext& gameContext) override;
     int getSellValueToBank() const override;
-    string getDisplayLabel() const override;
+    std::string getDisplayLabel() const override;
 };

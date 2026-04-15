@@ -9,5 +9,3 @@ public:
     std::string getTypeName() const override;
     void use(Player& player, GameContext& gameContext) override;
 };
-
-

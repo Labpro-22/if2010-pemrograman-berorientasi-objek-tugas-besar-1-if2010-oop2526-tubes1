@@ -1,28 +1,29 @@
 #pragma once
+
 #include <string>
-#include "../Enums.hpp"
-using namespace std;
+
+#include "models/Enums.hpp"
 
 class GameContext;
 class Player;
 
-class Tile{
+class Tile {
 private:
     int index;
-    string code;
-    string name;
+    std::string code;
+    std::string name;
     TileCategory category;
 
 public:
     Tile();
-    Tile(int index, string code, string name, TileCategory TileCategory);
+    Tile(int index, const std::string& code, const std::string& name, TileCategory category);
     virtual ~Tile() = default;
 
     int getIndex() const;
-    string getCode() const;
-    string getName() const;
+    const std::string& getCode() const;
+    const std::string& getName() const;
     TileCategory getCategory() const;
 
     virtual void onLanded(Player& player, GameContext& gameContext) = 0;
-    virtual string getDisplayLabel() const = 0;
+    virtual std::string getDisplayLabel() const = 0;
 };
