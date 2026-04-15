@@ -20,7 +20,7 @@ cmake --build cmake-build
 - Format kode sebelum push!!!
 
 ```bash
-clang-format -i src/**/*.cpp include/**/*.hpp
+clang-format -i src/**/*.cpp include/**/*.hpp test/**/*.cpp
 ```
 
 Jika shell tidak mendukung glob `**`, gunakan pendekatan `find`:
