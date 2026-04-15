@@ -10,6 +10,7 @@ build/
 obj/
 bin/
 
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -42,3 +43,17 @@ bin/
 
 # debug information files
 *.dwo
+
+# CMake build artifacts
+cmake-build*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+
+# class-design
+class-design/NIMONSPOLI_SPEC.md
+class-design/NIMONSPOLI_GROUND_TRUTH.md
