@@ -1,0 +1,9 @@
+#include "models/Card/SkillCard/SkillCard.hpp"
+
+class DiscountCard : public SkillCard {
+    public:
+        DiscountCard();
+        ~DiscountCard();
+        void activate();
+        void getDescription();
+};
