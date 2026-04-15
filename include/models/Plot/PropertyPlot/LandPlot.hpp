@@ -15,11 +15,11 @@ public:
     LandPlot();
     ~LandPlot() = default;
 
-    int getBuyPrice();
-    int getUpgHousePrice();
-    int getUpgHotelPrice();
+    int getBuyPrice() const;
+    int getUpgHousePrice() const;
+    int getUpgHotelPrice() const;
     int getRentPrice(int level) const;
-    int getLevel();
+    int getLevel() const;
 
     void build();
     void sellBuildings();
@@ -27,4 +27,5 @@ public:
     int calculateRentPrice() const override;
     std::string getType() const override;
     Color getColor() const override;
+    void startEvent() override;
 };

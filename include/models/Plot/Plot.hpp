@@ -18,7 +18,7 @@ public:
     std::string getCode() const;
 
     virtual std::string getType() const = 0;
-    virtual Color getColor() const = 0;
-    virtual void startEvent() = 0;
-    //TODO updateState method??
+    virtual Color getColor() const;
+    virtual void startEvent() = 0;  //TODO: add parameter
+    //TODO: updateState method??
 };

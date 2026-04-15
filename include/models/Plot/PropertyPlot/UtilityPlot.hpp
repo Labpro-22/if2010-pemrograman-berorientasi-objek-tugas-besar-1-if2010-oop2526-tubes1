@@ -11,8 +11,10 @@ public:
     ~UtilityPlot() = default;
     
     std::map<int, int> getRentPrice() const;
+    void setRentPrice(std::map<int, int> rentPriceTable);
 
     int calculateRentPrice() const override;
     std::string getType() const override;
     Color getColor() const override;
+    void startEvent() override;
 };

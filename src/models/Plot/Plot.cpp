@@ -9,3 +9,7 @@ std::string Plot::getName() const {
 std::string Plot::getCode() const {
     return code;
 }
+
+Color Plot::getColor() const {
+    return Color::DEFAULT;
+}
