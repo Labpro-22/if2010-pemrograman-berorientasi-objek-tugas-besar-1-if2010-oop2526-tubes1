@@ -22,7 +22,7 @@ private:
     bool shieldActive;
     int discountPercent;
     bool usedSkillThisTurn;
-    bool hasRolledThisTurn;
+    bool rolledThisTurn;
 
 public:
     Player();
