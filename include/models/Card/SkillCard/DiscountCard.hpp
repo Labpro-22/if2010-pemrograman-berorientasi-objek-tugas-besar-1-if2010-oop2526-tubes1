@@ -5,5 +5,6 @@ class DiscountCard : public SkillCard {
         DiscountCard();
         ~DiscountCard();
         void activate();
-        void getDescription();
+        string getName();
+        string getDescription();
 };

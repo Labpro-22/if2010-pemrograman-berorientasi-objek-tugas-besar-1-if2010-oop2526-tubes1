@@ -5,5 +5,6 @@ class DemolitionCard : public SkillCard {
         DemolitionCard();
         ~DemolitionCard();
         void activate();
-        void getDescription();
+        string getName();
+        string getDescription();
 };

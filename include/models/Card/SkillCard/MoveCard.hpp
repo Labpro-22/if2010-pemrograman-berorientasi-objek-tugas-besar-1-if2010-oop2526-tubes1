@@ -5,5 +5,6 @@ class MoveCard : public SkillCard {
         MoveCard();
         ~MoveCard();
         void activate();
-        void getDescription();
+        string getName();
+        string getDescription();
 };

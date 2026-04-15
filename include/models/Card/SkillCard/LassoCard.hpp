@@ -5,5 +5,6 @@ class LassoCard : public SkillCard {
         LassoCard();
         ~LassoCard();
         void activate();
-        void getDescription();
+        string getName();
+        string getDescription();
 };

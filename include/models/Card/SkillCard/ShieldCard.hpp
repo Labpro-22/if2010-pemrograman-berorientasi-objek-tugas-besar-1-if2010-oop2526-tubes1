@@ -5,5 +5,6 @@ class ShieldCard : public SkillCard {
         ShieldCard();
         ~ShieldCard();
         void activate();
-        void getDescription();
+        string getName();
+        string getDescription();
 };
