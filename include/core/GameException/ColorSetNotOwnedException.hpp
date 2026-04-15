@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core/GameException/GameException.hpp"
 
 class ColorSetNotOwnedException : public GameException{
