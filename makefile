@@ -1,63 +1,55 @@
-# Makefile for Nimonspoli
+# Makefile for C++ OOP Project (Optimized & Recursive)
 
 # Compiler settings
-CXX := g++
+CXX      := g++
 CXXFLAGS := -Wall -Wextra -std=c++17 -I include
 
 # Directories
-SRC_DIR := src
-OBJ_DIR := build
-BIN_DIR := bin
-DATA_DIR := data
-CONFIG_DIR := config
+SRC_DIR     := src
+OBJ_DIR     := build
+BIN_DIR     := bin
+INCLUDE_DIR := include
+DATA_DIR    := data
+CONFIG_DIR  := config
 
-# Target
+# Target executable
 TARGET := $(BIN_DIR)/game
 
-# Recursive wildcard helper
-rwildcard = $(wildcard $(1)/*.$(2)) $(foreach d,$(wildcard $(1)/*),$(call rwildcard,$(d),$(2)))
+# 1. Recursive Source Finding
+# Secara otomatis mencari semua file .cpp di dalam src/ dan semua sub-foldernya
+SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
 
-SRCS := $(call rwildcard,$(SRC_DIR),cpp)
-OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
+# 2. Dynamic Object Mapping
+# Mengubah path src/xxx/yyy.cpp menjadi build/xxx/yyy.o
+OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
-all: full
+# Main targets
+all: directories $(TARGET)
 
-full: directories $(TARGET)
-
+# Create necessary root directories
 directories:
-ifeq ($(OS),Windows_NT)
-	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
-	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
-	@if not exist $(DATA_DIR) mkdir $(DATA_DIR)
-	@if not exist $(CONFIG_DIR) mkdir $(CONFIG_DIR)
-else
 	@mkdir -p $(OBJ_DIR) $(BIN_DIR) $(DATA_DIR) $(CONFIG_DIR)
-endif
 
+# Link object files to create executable
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
-	@echo "Build successful: $(TARGET)"
+	@echo "Build successful! Executable is at $(TARGET)"
 
+# Compile source files into object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-ifeq ($(OS),Windows_NT)
-	@powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path '$(subst /,\,$(dir $@))' | Out-Null"
-else
 	@mkdir -p $(dir $@)
-endif
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-run: full
+# Run the game
+run: all
 	./$(TARGET)
 
+# Clean up generated files
 clean:
-ifeq ($(OS),Windows_NT)
-	@if exist $(OBJ_DIR) rmdir /s /q $(OBJ_DIR)
-	@if exist $(BIN_DIR) rmdir /s /q $(BIN_DIR)
-else
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
-endif
-	@echo "Cleaned $(OBJ_DIR) and $(BIN_DIR)"
+	@echo "Cleaned up $(OBJ_DIR) and $(BIN_DIR)"
 
-rebuild: clean full
+# Rebuild everything from scratch
+rebuild: clean all
 
-.PHONY: all full run clean rebuild directories
+.PHONY: all clean rebuild run directories

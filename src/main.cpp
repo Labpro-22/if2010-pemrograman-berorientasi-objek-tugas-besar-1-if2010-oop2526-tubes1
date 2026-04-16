@@ -33,7 +33,7 @@ int main() {
             ui.showMessage("Pilihan tidak valid.");
         }
     } catch (const std::exception& e) {
-        std::cerr << "Terjadi errror: " << e.what() << std::endl;
+        std::cerr << "Terjadi error: " << e.what() << std::endl;
         return 1; 
     }
 
