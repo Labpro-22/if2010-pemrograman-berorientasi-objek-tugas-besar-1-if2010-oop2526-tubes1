@@ -42,3 +42,6 @@ bin/
 
 # debug information files
 *.dwo
+
+# mac type shi
+*.DS_Store

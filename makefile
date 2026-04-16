@@ -1,8 +1,28 @@
 # Makefile for C++ OOP Project (Optimized & Recursive)
 
-# Compiler settings
-CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I include
+# Compiler settings (portable)
+UNAME_S := $(shell uname -s 2>/dev/null)
+
+ifeq ($(OS),Windows_NT)
+EXEEXT := .exe
+# Prefer g++ on Windows (assumes MSYS2/MinGW or WSL toolchain)
+ifeq ($(origin CXX),default)
+CXX = g++
+endif
+else ifeq ($(UNAME_S),Darwin)
+EXEEXT :=
+# Prefer Apple Clang on macOS (Homebrew GCC can miss SDK headers)
+ifeq ($(origin CXX),default)
+CXX = clang++
+endif
+else
+EXEEXT :=
+ifeq ($(origin CXX),default)
+CXX = g++
+endif
+endif
+
+CXXFLAGS ?= -Wall -Wextra -std=c++17 -I include
 
 # Directories
 SRC_DIR     := src
@@ -13,14 +33,14 @@ DATA_DIR    := data
 CONFIG_DIR  := config
 
 # Target executable
-TARGET := $(BIN_DIR)/game
+TARGET := $(BIN_DIR)/game$(EXEEXT)
 
-# 1. Recursive Source Finding
 # Secara otomatis mencari semua file .cpp di dalam src/ dan semua sub-foldernya
+# Catatan Windows: gunakan GNU Make lewat MSYS2/MinGW atau WSL agar perintah `find`, `rm`, `mkdir` tersedia.
 SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
 
-# 2. Dynamic Object Mapping
-# Mengubah path src/xxx/yyy.cpp menjadi build/xxx/yyy.o
+
+#src/xxx/yyy.cpp menjadi build/xxx/yyy.o
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Main targets
