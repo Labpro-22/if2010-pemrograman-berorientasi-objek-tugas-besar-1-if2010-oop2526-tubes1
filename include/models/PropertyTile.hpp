@@ -18,7 +18,7 @@ protected:
     PropertyStatus property_status;
 
 public:
-    PropertyTile(int index, std::string name, std::string code, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status);
+    PropertyTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status);
     virtual ~PropertyTile() = default;
     void onLand(Player& p) override;
     void applyFestival();
@@ -38,7 +38,7 @@ public:
 
 class RailroadTile : public PropertyTile {
 public:
-    RailroadTile(int index, std::string name, std::string code, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status);
+    RailroadTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status);
     int calculateRent() const override;
     void onLand(Player& p) override;
 };
@@ -48,7 +48,7 @@ private:
     int multiplier_factor;
 
 public:
-    UtilityTile(int index, std::string name, std::string code, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status, int multiplier_factor);
+    UtilityTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status, int multiplier_factor);
     int calculateRent() const override;
     void onLand(Player& p) override;
 };
