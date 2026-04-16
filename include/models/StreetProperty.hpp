@@ -8,20 +8,19 @@ class GameContext;
 
 class StreetProperty : public Property {
 private:
-    std::string   colorGroup_;
-    int houseCost_;
-    int hotelCost_;
-    std::vector<int> rentLevels_;   
-    BuildingLevel buildingLevel_;
+    std::string colorGroup;
+    int houseCost;
+    int hotelCost;
+    vector<int> rentLevels;   
+    BuildingLevel buildingLevel;
 public:
-    // rentLevels: 6 elemen [tanah, 1rumah, 2rumah, 3rumah, 4rumah, hotel]
     StreetProperty(const std::string&      code,
                    const std::string&      name,
                    const std::string&      colorGroup,
-                   int                     purchasePrice,
-                   int                     mortgageValue,
-                   int                     houseCost,
-                   int                     hotelCost,
+                   int  purchasePrice,
+                   int  mortgageValue,
+                   int  houseCost,
+                   int  hotelCost,
                    const std::vector<int>& rentLevels);
  
     int  calculateRent(const GameContext& ctx) const override;
@@ -32,7 +31,7 @@ public:
     void buildHotel(); // upgrade  HOUSE_4 → HOTEL
     void demolishBuildings();
     int getBuildingSellValue() const;
-    std::string  getColorGroup()    const;
+    string  getColorGroup()    const;
     BuildingLevel getBuildingLevel() const;
     int getHouseCost()     const;
     int getHotelCost()     const;

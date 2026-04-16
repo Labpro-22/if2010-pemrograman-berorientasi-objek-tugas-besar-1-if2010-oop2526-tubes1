@@ -28,14 +28,14 @@ enum class BuildingLevel {
 
 class Property {
 protected:
-    string code_;
-    string name_;
-    PropertyType type_;
-    Player* owner_;
-    OwnershipStatus status_;
-    int purchasePrice_;
-    int mortgageValue_;
-    int festivalMultiplier_;
+    string code;
+    string name;
+    PropertyType type;
+    Player* owner;
+    OwnershipStatus status;
+    int purchasePrice;
+    int mortgageValue;
+    int festivalMultiplier;
     int festivalDuration; // 0 = ga aktif, 1-3 = aktif
 public:
     Property(const std::string& code, const std::string& name,

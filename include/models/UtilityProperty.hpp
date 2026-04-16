@@ -7,7 +7,7 @@ class GameContext;
 
 class UtilityProperty : public Property {
 private:
-    std::map<int,int> multiplierByCount_; //map jumlah utility → faktor pengali
+    map<int,int> multiplierByCount; //map jumlah utility → faktor pengali
 public:
     UtilityProperty(const std::string& code, const std::string& name, int purchasePrice, int mortgageValue,
                     const std::map<int,int>& multiplierByCount);

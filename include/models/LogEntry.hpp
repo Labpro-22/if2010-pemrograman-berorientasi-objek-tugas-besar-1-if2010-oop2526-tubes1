@@ -5,7 +5,7 @@ using namespace std;
 class LogEntry {
 private:
     int turn_;
-    string username;
+    string username_;
     string action_;
     string detail_;
 public: 

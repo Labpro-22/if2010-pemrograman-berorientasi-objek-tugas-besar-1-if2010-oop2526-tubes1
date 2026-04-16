@@ -54,6 +54,45 @@ public:
         : GameException("Invalid card index: " + to_string(index)) {}
 };
 
+// exception for property
 
+class BuildNotAllowedException : public GameException {
+public:
+    explicit BuildNotAllowedException(const std::string& propCode)
+        : GameException("Building not allowed on property: " + propCode) {}
+};
+ 
+class MaxBuildingLevelException : public GameException {
+public:
+    explicit MaxBuildingLevelException(const std::string& propCode)
+        : GameException("Property '" + propCode + "' is already at max building level") {}
+};
+ 
+
+class AlreadyMortgagedException : public GameException {
+public:
+    explicit AlreadyMortgagedException(const std::string& propCode)
+        : GameException("Property '" + propCode + "' is already mortgaged") {}
+};
+
+// properti ga digadai tapi mau dilunasi
+class NotMortgagedException : public GameException {
+public:
+    explicit NotMortgagedException(const std::string& propCode)
+        : GameException("Property '" + propCode + "' is not mortgaged") {}
+};
+ 
+// masih ada bangunan saat mau digadai
+class HasBuildingsException : public GameException {
+public:
+    explicit HasBuildingsException(const std::string& propCode)
+        : GameException("Property '" + propCode + "' still has buildings; demolish first") {}
+};
+ 
+class NotOwnerException : public GameException {
+public:
+    explicit NotOwnerException(const std::string& username, const std::string& propCode)
+        : GameException("Player '" + username + "' does not own property '" + propCode + "'") {}
+};
 
 
