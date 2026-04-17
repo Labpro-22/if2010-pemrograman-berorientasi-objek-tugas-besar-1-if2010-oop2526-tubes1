@@ -18,7 +18,7 @@ class Property {
   std::string getCode() const { return ""; }
 };
 
-// ── Overload 1: player action with amount ──────────────────────────────────
+// Overload 1: player action with amount
 void TransactionLogger::log(int turnNumber, const std::string& actionType,
                             const Player& player, int amount) {
   data::LogEntry entry;
@@ -29,7 +29,7 @@ void TransactionLogger::log(int turnNumber, const std::string& actionType,
   entries_.push_back(entry);
 }
 
-// ── Overload 2: player action involving a property ─────────────────────────
+// Overload 2: player action involving a property
 void TransactionLogger::log(int turnNumber, const std::string& actionType,
                             const Player& player, const Property& property,
                             int amount) {

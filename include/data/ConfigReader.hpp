@@ -24,7 +24,7 @@ class ConfigReader {
   SpecialConfig readSpecial();
   MiscConfig readMisc();
 
-  // untuk Dynamic Board bonus: board.txt -> ordered tile list (20–60 tiles)
+  // untuk Dynamic Board bonus: board.txt -> ordered tile list (20-60 tiles)
   BoardConfig readBoardConfig();
 
  private:
