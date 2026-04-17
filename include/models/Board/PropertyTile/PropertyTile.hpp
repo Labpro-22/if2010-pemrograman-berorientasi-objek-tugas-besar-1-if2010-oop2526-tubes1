@@ -26,8 +26,8 @@ protected:
     int morgageValue;
     vector<int> rentPrices; 
 public:
-    virtual PropertyStatus land(Player &p) = 0; // override pure virtual function
-    PropertyTile(int idx, string code, string name, int price, int morgageValue, vector<int> rentPrices);
+    virtual void land(Player &p) = 0; // override pure virtual function
+    PropertyTile(int idx, const std::string code, const std::string name, int price, int morgageValue, vector<int> rentPrices);
     bool isOwned() const;
     void setOwner(Player *newOwner);
     void setStatus(PropertyStatus newStatus);

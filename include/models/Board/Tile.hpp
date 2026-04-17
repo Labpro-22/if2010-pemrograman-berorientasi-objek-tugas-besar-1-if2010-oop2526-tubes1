@@ -29,6 +29,5 @@ public:
     int getIdx() const;
     string getCode() const;
     string getName() const;
-    string getTotalTile() const;
     string getType() const;
 };
