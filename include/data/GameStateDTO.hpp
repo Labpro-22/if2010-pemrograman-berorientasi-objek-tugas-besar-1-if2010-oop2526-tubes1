@@ -40,9 +40,9 @@ class PropertyDTO {
 
 class StreetPropertyDTO : public PropertyDTO {
  public:
-  int level = 0;     // 0–4 = jumlah rumah; 5 = hotel
+  int level = 0;     // 0-4 = jumlah rumah; 5 = hotel
   int festMult = 1;  // 1 | 2 | 4 | 8  (1 = ga aktif)
-  int festDur = 0;   // 0–3 giliran tersisa (0 = ga aktif)
+  int festDur = 0;   // 0-3 giliran tersisa (0 = ga aktif)
 
   std::string getType() const override { return "street"; }
 };
