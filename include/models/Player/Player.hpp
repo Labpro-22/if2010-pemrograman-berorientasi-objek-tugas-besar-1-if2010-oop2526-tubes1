@@ -50,10 +50,13 @@ public:
     void addSkillCard(SkillCard* card);
     void removeSkillCard(SkillCard* card);
 
+    
     string getName();
     int getBalance();
     int getPosition();
     PlayerStatus getStatus();
     int getJailTurns();
+    int countOwnerRailroads() const; // Untuk railroad tapi perlu di bahas
+    int countOwnerUtilities() const; // Untuk utility tapi perlu di bahas
 };
 

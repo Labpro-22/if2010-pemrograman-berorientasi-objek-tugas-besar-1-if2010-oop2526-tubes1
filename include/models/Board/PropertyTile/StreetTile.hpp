@@ -4,7 +4,7 @@
 class StreetTile : public PropertyTile
 {
 private:
-    string colorGroup;  // warna harusnya ga perlu sudah turunan dari kelas Tile
+    // string colorGroup;  // warna harusnya ga perlu sudah turunan dari kelas Tile
     int houseCost;
     int hotelCost;
     int houseCount;
@@ -12,7 +12,7 @@ private:
 public:
     StreetTile(int idx, string code, string name, int price, 
         int morgageValue, vector<int> rentPrices, 
-        string colorGroup, int houseCost, int hotelCost);
+        int houseCost, int hotelCost);
     
     void land(Player &p) override;
 };

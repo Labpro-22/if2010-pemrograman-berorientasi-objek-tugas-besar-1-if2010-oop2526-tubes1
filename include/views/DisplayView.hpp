@@ -8,7 +8,7 @@ private:
     GameBoard* boardMap;
 public:
     void renderBoard();
-    void renderAkta();
+    void renderAkta(StreetTile &Street);
     void renderProperty();
     void showMenu();
 };
