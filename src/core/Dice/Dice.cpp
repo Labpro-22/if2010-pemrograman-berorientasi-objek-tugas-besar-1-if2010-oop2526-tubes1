@@ -1,4 +1,4 @@
-#include "models/dice.hpp"
+#include "Dice.hpp"
 #include <cstdlib> // Untuk fungsi rand()
 
 Dice::Dice() : daduVal1(0), daduVal2(0), playerConcecutiveDoubles(0) {}
