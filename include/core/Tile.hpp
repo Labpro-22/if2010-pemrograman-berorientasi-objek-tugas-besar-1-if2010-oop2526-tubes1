@@ -13,7 +13,7 @@ protected:
     std::string color;
 
 public:
-    Tile(int, const std::string&, const std::string&);
+    Tile(int index, const std::string& code, const std::string& color);
     virtual ~Tile() = default;
 
     int getIndex() const;
@@ -38,7 +38,7 @@ protected:
     PROPERTY_STATUS propertyStatus;
 
 public:
-    Property(int, const std::string&, const std::string&, int, int);
+    Property(int index, const std::string& code, const std::string& color, int landCost, int mortgageValue, int festivalMultiplier, int festivalDuration, Player* owner, PROPERTY_STATUS propertyStatus);
 
     int getLandCost() const;
     int getMortgageValue() const;
@@ -84,12 +84,12 @@ private:
     int currentLevel;
 
 public:
-    Street(int, const std::string&, const std::string&, int, int, int, int, const std::vector<int>&, int);
+    Street(int index, const std::string& code, const std::string& color, int landCost, int mortgageValue, int festivalMultiplier, int festivalDuration, Player* owner, PROPERTY_STATUS propertyStatus, int houseCost, int hotelCost, std::vector<int> rentCost, int currentLevel);
 
     int getHouseCost() const;
     int getHotelCost() const;
     int getCurrentLevel() const;
-    void setCurrentLevel(int);
+    void setCurrentLevel(int currentLevel);
 
     void runTile(Player*) override;
     int getRentCost() const override;
