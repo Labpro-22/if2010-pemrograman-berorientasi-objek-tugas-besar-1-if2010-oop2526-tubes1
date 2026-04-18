@@ -1,6 +1,10 @@
 #ifndef ENUMS_HPP
 #define ENUMS_HPP
 
+#include <string>
+
+using namespace std;
+
 const int maxPlayer = 4;
 
 // INI BUAT VARIABELS/ATRIBUT YG SCOPENYA UDAH TAU DAN BIAR BEST PRACTICE. JANGAN DI DEFINE DI HPP MASING2! (pake ini ya enumz)
@@ -61,6 +65,15 @@ enum class GameErrorCode {
     INVALID_PROPERTY = 4,
     GAME_STATE_ERROR = 5
 };
+
+enum class LogActionType { // Plis ini beda sama type" yang di class lain yak, ini khusus event yang sedang terjadi aja bukan semacam state suatu objek
+    ROLL, BUY, RENT, TAX, BUILD, SELL, MORTGAGE, 
+    UNMORTGAGE, CARD, RAILROAD, UTILITY, AUCTION, 
+    FESTIVAL, BANKRUPT, SAVE, LOAD, DOUBLE_ROLL, UNKNOWN
+};
+
+string actionTypeToString(LogActionType type);
+LogActionType stringToActionType(const string& str);
 
 
 #endif

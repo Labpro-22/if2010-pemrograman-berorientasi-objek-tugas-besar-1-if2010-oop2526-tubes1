@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include "Enums.hpp"
 
 using namespace std;
 
@@ -9,7 +10,7 @@ class LogEntry {
 public:
     int turn;
     string username;
-    string actionType;
+    LogActionType actionType;
     string detail;
 };
 
@@ -19,7 +20,7 @@ private:
 
 public:
     TransactionLogger();
-    void logEvent(int turn, const string& username, const string& actionType, const string& detail);
+    void logEvent(int turn, const string& username, LogActionType actionType, const string& detail);
     vector<LogEntry> getLogs(int limit = -1) const;
     void clearLogs();
     string serialize() const;
