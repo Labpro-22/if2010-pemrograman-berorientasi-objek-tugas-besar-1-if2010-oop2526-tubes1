@@ -2,6 +2,10 @@
 
 #include <string>
 #include <vector>
+#include "Tile.hpp"
+#include "Card.hpp"
+#include "Deck.hpp"
+
 using namespace std;
 
 enum PLAYER_STATUS { ACTIVE, BANKRUPT, JAILED };
