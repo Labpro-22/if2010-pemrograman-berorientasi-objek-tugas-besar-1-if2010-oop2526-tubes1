@@ -4,8 +4,6 @@
 class Railroad : public PropertyTile
 {
 public:
-    Railroad(int idx, string code, string name, int price, int morgageValue, vector<int> rentPrices);
-    PropertyStatus land(Player &p) override;
-
+    Railroad(int idx, string code, string name, int price, int morgageValue);
     PropertyStatus land(Player &p) override;
 };

@@ -16,18 +16,19 @@ enum PropertyType
     UTILITY
 };
 
+class Player;
+
 class PropertyTile : public Tile
 {
 protected:
     Player *owner;
     PropertyStatus status;
-    PropertyType PropertyType; // diubah dari Type menjadi PropertyType untuk membedakan dengan TileType di kelas Tile
+    PropertyType propertyType;
     int price; 
     int morgageValue;
-    vector<int> rentPrices; 
 public:
     virtual PropertyStatus land(Player &p) = 0; // override pure virtual function
-    PropertyTile(int idx, string code, string name, int price, int morgageValue, vector<int> rentPrices);
+    PropertyTile(int idx, string code, string name, int price, int morgageValue);
     bool isOwned() const;
     void setOwner(Player *newOwner);
     void setStatus(PropertyStatus newStatus);

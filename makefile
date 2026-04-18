@@ -2,7 +2,6 @@
 
 # Compiler settings
 CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I include
 
 # Directories
 SRC_DIR     := src
@@ -11,6 +10,10 @@ BIN_DIR     := bin
 INCLUDE_DIR := include
 DATA_DIR    := data
 CONFIG_DIR  := config
+
+# Include paths (all subdirectories under include/)
+INCLUDE_DIRS := $(shell find $(INCLUDE_DIR) -type d)
+CXXFLAGS := -Wall -Wextra -std=c++17 $(addprefix -I,$(INCLUDE_DIRS))
 
 # Target executable
 TARGET := $(BIN_DIR)/game
