@@ -13,9 +13,12 @@ private:
     int size;
  public : 
     Board(const vector<Tile*>& Tile, int Size);
-    Tile* getTile(int idx);
-    Tile* getNextTile(int cur, int next);
-    int getSize();
+    ~Board() = default;
+    Tile* getTile(int idx) const;
+    Tile* getNextTile(int cur, int next) const;
+    int getSize() const;
+    int findTileIndexByCode(const string &code) const;
+    Tile *findTileByCode(const string &code) const;
 };
 
 enum class TileType
@@ -70,6 +73,9 @@ enum class TileName
     IKN
 };
 
+string tileTypeToString(TileType type);
+string tileNameToString(TileName name);
+
 class Tile{
     protected:
          int id;
@@ -81,11 +87,11 @@ class Tile{
         Tile(int id, string display, TileType type, TileName name, string code);
         virtual void onLanded(Player& p, GameState& gs)= 0;
         virtual ~Tile() = default;
-        int getIndex();
-        string getCode();
-        string getTileName();
-        string getTileType();
-        string getDisp();
+        int getIndex() const;
+        string getCode() const;
+        string getTileName() const;
+        string getTileType() const;
+        string getDisp() const;
 };
 
 class ActionTile: public Tile{
@@ -98,26 +104,26 @@ class PropertyTile: public Tile{
         Property* prop;
     public:
         PropertyTile(int id, string display, TileType type, TileName name, string code);
-        Property* getProperty();
-        virtual int calculateRent(int diceTotal) = 0;
+        Property* getProperty() const;
+        virtual int calculateRent(int diceTotal) const = 0;
 };
 
 class StreetTile: public PropertyTile{
     public:
         StreetTile(int id, string display, TileType type, TileName name, string code);
-        int calculateRent(int diceTotal) override;
+        int calculateRent(int diceTotal) const override;
 };
 
 class RailroadTile: public PropertyTile{
     public:
         RailroadTile(int id, string display, TileType type, TileName name, string code);
-        int calculateRent(int diceTotal) override;
+        int calculateRent(int diceTotal) const override;
 };
 
 class UtilityTile: public PropertyTile{
     public:
         UtilityTile(int id, string display, TileType type, TileName name, string code);
-        int calculateRent(int diceTotal) override;
+        int calculateRent(int diceTotal) const override;
 };
 
 class GoTile: public ActionTile{
@@ -127,7 +133,7 @@ class GoTile: public ActionTile{
         GoTile(int id, string display, TileType type, TileName name, string code, int salary);
         void onLanded(Player&, GameState&) override;
         void onPassed(Player&, GameState&);
-        int getSalary();
+        int getSalary() const;
 };
 
 class JailTile: public ActionTile{
@@ -140,14 +146,14 @@ class JailTile: public ActionTile{
         JailTile(int id, string display, TileType type, TileName name, string code,  vector<Player *> inmates,
                  vector<Player *> visitor,
                  int jailFine);
-        int getJailFine();
+        int getJailFine() const;
         void onLanded(Player&, GameState&) override;
         void sendToJail(Player&);
         bool tryEscape(Player&, Dice&);
         void payFine(Player&, Bank&);
         void useJailCard(Player&);
         void release(Player&);
-        bool isInmate(Player&);
+        bool isInmate(Player&) const;
 };
 
 class GoToJail: public ActionTile{

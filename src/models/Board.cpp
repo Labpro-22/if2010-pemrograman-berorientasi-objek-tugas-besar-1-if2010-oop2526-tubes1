@@ -1,76 +1,225 @@
 #include "models/Board.hpp"
 
+string tileTypeToString(TileType type)
+{
+    switch (type)
+    {
+    case TileType::SPECIAL:
+        return "SPECIAL";
+    case TileType::STREET:
+        return "STREET";
+    case TileType::CARD:
+        return "CARD";
+    case TileType::TAX:
+        return "TAX";
+    case TileType::RAILROAD:
+        return "RAILROAD";
+    case TileType::FESTIVAL:
+        return "FESTIVAL";
+    case TileType::UTILITY:
+        return "UTILITY";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+string tileNameToString(TileName name)
+{
+    switch (name)
+    {
+    case TileName::GO:
+        return "GO";
+    case TileName::GARUT:
+        return "GARUT";
+    case TileName::COMMON_FUND:
+        return "DANA_UMUM";
+    case TileName::TASIKMALAYA:
+        return "TASIKMALAYA";
+    case TileName::INCOME_TAX:
+        return "PAJAK_PENGHASILAN";
+    case TileName::ST_GAMBIR:
+        return "STASIUN_GAMBIR";
+    case TileName::BOGOR:
+        return "BOGOR";
+    case TileName::FESTIVAL:
+        return "FESTIVAL";
+    case TileName::DEPOK:
+        return "DEPOK";
+    case TileName::BEKASI:
+        return "BEKASI";
+    case TileName::JAIL:
+        return "PENJARA";
+    case TileName::MAGELANG:
+        return "MAGELANG";
+    case TileName::PLN:
+        return "PLN";
+    case TileName::SOLO:
+        return "SOLO";
+    case TileName::YOGYAKARTA:
+        return "YOGYAKARTA";
+    case TileName::ST_BANDUNG:
+        return "STASIUN_BANDUNG";
+    case TileName::MALANG:
+        return "MALANG";
+    case TileName::SEMARANG:
+        return "SEMARANG";
+    case TileName::SURABAYA:
+        return "SURABAYA";
+    case TileName::FREE_PARK:
+        return "BEBAS_PARKIR";
+    case TileName::MAKASSAR:
+        return "MAKASSAR";
+    case TileName::CHANCE:
+        return "KESEMPATAN";
+    case TileName::BALIKPAPAN:
+        return "BALIKPAPAN";
+    case TileName::MANADO:
+        return "MANADO";
+    case TileName::ST_TUGU:
+        return "STASIUN_TUGU";
+    case TileName::PALEMBANG:
+        return "PALEMBANG";
+    case TileName::PEKANBARU:
+        return "PEKANBARU";
+    case TileName::PAM:
+        return "PAM";
+    case TileName::MEDAN:
+        return "MEDAN";
+    case TileName::GO_TO_JAIL:
+        return "PERGI_KE_PENJARA";
+    case TileName::BANDUNG:
+        return "BANDUNG";
+    case TileName::DENPASAR:
+        return "DENPASAR";
+    case TileName::MATARAM:
+        return "MATARAM";
+    case TileName::ST_GUBENG:
+        return "STASIUN_GUBENG";
+    case TileName::JAKARTA:
+        return "JAKARTA";
+    case TileName::LUX_GOODS:
+        return "PAJAK_BARANG_MEWAH";
+    case TileName::IKN:
+        return "IBU_KOTA_NUSANTARA";
+    default:
+        return "UNKNOWN";
+    }
+}
 
 Board::Board(const vector<Tile *> &Tile, int Size): tile(Tile), size(Size){}
-Tile* Board::getTile(int idx){
+Tile* Board::getTile const(int idx){
     if (idx < 0 || idx >= size)
         return nullptr;
     return tile[idx];
 }
-Tile* Board::getNextTile(int cur, int next)
+Tile* Board::getNextTile const(int cur, int next)
 {
-    int nextIdx = (cur + step) % size;
+    int nextIdx = (cur + next) % size;
     return tile[nextIdx];
 }
-int Board::getSize(){return size;}
+int Board::getSize() const{return size;}
+int Board::findTileIndexByCode(const string &code) const
+{
+    for (int i = 0; i < size; ++i)
+    {
+        if (tiles[i] && tiles[i]->getCode() == code)
+        {
+            return i;
+        }
+    }
+    return -1; 
+}
+Tile *Board::findTileByCode(const string &code) const
+{
+    int idx = findTileIndexByCode(code);
+    if (idx == -1)
+        return nullptr;
+    return tiles[idx];
+}
 
 Tile::Tile(int id, string display, TileType type, TileName name, string code):id(id), colorDisplay(display), type(type), name(name), code(code){}
-int Tile::getIndex(){return id;}
-string Tile::getCode(){return code;}
-string Tile::getTileName(){return to_string(name);}
-string Tile::getTileType(){return to_string(type);}
-string Tile::getDisp() { return colorDisplay; }
+int Tile::getIndex() const {return id;}
+string Tile::getCode() const{return code;}
+string Tile::getTileName() const
+{
+    return tileNameToString(name);
+}
+
+string Tile::getTileType() const
+{
+    return tileTypeToString(type);
+}
+string Tile::getDisp() const { return colorDisplay; }
 
 
 ActionTile::ActionTile(int id, string display, TileType type, tileName name, string code):Tile(id, display, type, name, code){}
 
 PropertyTile::PropertyTile(int id, string display, TileType type, tileName name, string code, *Propery prop) : Tile(id, display, type, name, code), prop(prop){}
-Property* PropertyTile::getProperty(){return prop;}
+Property* PropertyTile::getProperty() const {return prop;}
 virtual int calculateRent(int diceTotal) = 0;
 
 StreetTile::StreetTile(int id, string display, TileType type, tileName name, string code) : PropertyTile(id, display, type, name, code) {}
-int StreetTile::calculateRent(int diceTotal) override{
+int StreetTile::calculateRent(int diceTotal) {
     if (!prop)
         return 0;
-    return dynamic_cast<StreetProperty *>(prop)->calculateRentPrice(false);
+    StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
+    if (!sp)
+        return 0;
+    return static_cast<int>(sp->calculateRentPrice(false));
 }
 
 RailRoadTile::RailroadTile(int id, string display, TileType type, tileName name, string code) : PropertyTile(id, display, type, name, code) {}
 int calculateRent(int diceTotal) override{
-    return dynamic_cast<RailroadProperty *>(prop)->calculateRentPrice();
+    if (!prop)
+        return 0;
+    RailroadProperty *rp = dynamic_cast<RailroadProperty *>(prop);
+    if (!rp)
+        return 0;
+    return static_cast<int>(rp->calculateRentPrice());
 }
 
 UtilityTile::UtilityTile(int id, string display, TileType type, tileName name, string code) PropertyTile(id, display, type, name, code) {}
-int UtilityTile::calculateRent(int diceTotal) override{
-    return dynamic_cast<UtilityProperty *>(prop)->calculateRentPrice();
+int UtilityTile::calculateRent(int diceTotal) {
+    if (!prop)
+        return 0;
+    UtilityProperty *up = dynamic_cast<UtilityProperty *>(prop);
+    if (!up)
+        return 0;
+    return static_cast<int>(up->calculateRentPrice()) * diceTotal;
 }
 
 GoTile::GoTile(int id, string display, TileType type, tileName name, string code, int salary) : ActionTile(id, display, type, name, code), salary(salary){}
-void GoTile::onLanded(Player& p, GameState& gs) override{
+void GoTile::onLanded(Player& p, GameState& gs) {
     p + salary;
 }
 void GoTile::onPassed(Player& p, GameState& gs){
     p + salary;
 }
-int GoTile::getSalary(){
+int GoTile::getSalary() const{
     return salary;
 }
 
 JailTile::JailTile(int id, string display, TileType type, tileName name, string code, vector<Player *> inmates,
                    vector<Player *> visitor,
                    int jailFine) : ActionTile(id, display, type, name, code), inmates(inmates), visitor(visitor), jailFine(jailFine){}
-int JailTile::getJailFine(){return jailFine;}
-void JailTile::onLanded(Player& p, GameState& gs) override{
+int JailTile::getJailFine() const{return jailFine;}
+void JailTile::onLanded(Player& p, GameState& gs) {
     visitor.push_back(p);
 }
 void JailTile::sendToJail(Player& p){
+    visitor.erase(
+        remove(visitor.begin(), visitor.end(), &p),
+        visitor.end());
+    if (!isInmate(p))
+    {
+        inmates.push_back(&p);
+    }
     p.setStatus("JAILED");
-    inmates.push_back(p);
 }
 bool JailTile::tryEscape(Player& p, Dice& d){
-    int temp = d.getConsecutiveDoubles();
     d.rollRandom();
-    if (temp < d.getConsecutiveDoubles()){
+    if (d.getConsecutiveDoubles() > 0)
+    {
         release(p);
         return true;
     }
@@ -84,10 +233,11 @@ void JailTile::payFine(Player& p, Bank& b){
 }
 void JailTile::useJailCard(Player& p){
     // Kartu bebas penjara ada ketidaksamaan di spek. Pada JailTile dibilang ada tetapi saat di spek card tidak ada jenis tsb
+    release(p);
 }
 void JailTile::release(Player& p){
-    p.setStatus("ACTIVE");
     inmates.erase(std::remove(inmates.begin(), inmates.end(), &p), inmates.end());
+    p.setStatus("ACTIVE");
 }
 bool JailTile::isInmate(Player& p){
     for (auto inmate : inmates)
@@ -99,36 +249,51 @@ bool JailTile::isInmate(Player& p){
 }
 
 GoToJail::GoToJail(int id, string display, TileType type, tileName name, string code) : ActionTile(id, display, type, name, code) {}
-void GoToJail::onLanded(Player& p, GameState& gs) override{
-    Board* board = gs.getGameBoard();
-    JailTile* jail = dynamic_cast<JailTile*>(board->getTile(11)); //Biasanya indeks 11 pada papan monopoli angka tsb bisa menyesuaikan
-    if (jail != nullptr)
-    {
-        p.move(11 - p.getIndex()); 
+void GoToJail::onLanded(Player& p, GameState& gs) {
+    Board *board = gs.getGameBoard();
+    Tile *jailTilePtr = board->findTileByCode("PEN");
 
-        jail->sendToJail(p);
+    JailTile *jail = dynamic_cast<JailTile *>(jailTilePtr);
+    if (!jail)
+        return;
 
-        p.setStatus("JAILED");
-    }
+    int jailIdx = jail->getIndex();
+    p.moveTo(jailIdx);
+
+    jail->sendToJail(p);
 }
 
 FreeParkingTile::FreeParkingTile(int id, string display, TileType type, tileName name, string code): ActionTile(id, display, type, name, code){}
-void FreeParkingTile::onLanded(Player& p, GameState& gs) override{}
+void FreeParkingTile::onLanded(Player& p, GameState& gs) {
+    (void)p;
+    (void)gs;
+}
 
 TaxTile::TaxTile(int id, string display, TileType type, tileName name, string code) : ActionTile(id, display, type, name, code) {}
-void TaxTile::onLanded(Player& p, GameState& gs) override{
+void TaxTile::onLanded(Player& p, GameState& gs) {
 
     BayarPajakCommand cmdPajak(p, this, gs.getGameBank());
     cmdPajak.execute();
 }
 
 CardTile::CardTile(int id, string display, TileType type, tileName name, string code, CardDeck* cardDeck) : ActionTile(id, display, type, name, code), card(cardDeck){}
-void CardTile::onLanded(Player& p, GameState& gs) override{
-    Card kartu = card->draw();
-    kartu.execute(p);
+void CardTile::onLanded(Player& p, GameState& gs) {
+    if (!deck)
+        return;
+
+    Card *kartu = deck->draw();
+    if (!kartu)
+        return;
+
+    kartu->execute(p, gs.getGameMaster());
+
+  
+    deck->discard(kartu);
 }
 
 FestivalTile::FestivalTile(int id, string display, TileType type, tileName name, string code) : ActionTile(id, display, type, name, code) {}
-void FestivalTile::onLanded(Player &, GameState &) override{
-
+void FestivalTile::onLanded(Player &, GameState &) {
+    // Di laporan tidak ada yang handle ini, apakah harus dari kelas ini sendiri?
+    FestivalCommand cmdFestival(p, gs);
+    cmdFestival.execute(gs.getGameMaster());
 }
