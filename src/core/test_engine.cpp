@@ -5,6 +5,8 @@
 #include "core/TurnManager.hpp"
 #include "../../include/utils/GameException.hpp"
 
+void run_card_tests();
+
 // ─── Dice Tests ───────────────────────────────────────────────────────────────
 
 void test_dice_rollRandom_range() {
@@ -152,6 +154,8 @@ int main() {
     test_turnmanager_turnNumber_increments();
     test_turnmanager_extraTurn();
     test_turnmanager_removePlayer();
+
+    run_card_tests();
 
     std::cout << "\n✅ Semua test berhasil!\n";
     return 0;

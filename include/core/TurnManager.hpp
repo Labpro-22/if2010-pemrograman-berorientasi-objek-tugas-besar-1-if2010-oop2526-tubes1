@@ -18,5 +18,6 @@ class TurnManager {
         int getTurnNumber() const;
         void removePlayer(int playerIndex);
         void resetExtraTurn();
-        bool hasExtraTurn();
+        bool hasExtraTurn() const;
+        int orderSize() const;
 };

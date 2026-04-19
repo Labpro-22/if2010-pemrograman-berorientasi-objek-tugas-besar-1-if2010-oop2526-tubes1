@@ -1,4 +1,8 @@
 #include "../../include/core/GameEngine.hpp"
+#include "../../include/core/CardManager.hpp"
+#include "../../include/models/Board.hpp"
+#include "../../include/models/Player.hpp"
+#include "../../include/models/Tile.hpp"
 #include "../../include/utils/GameException.hpp"
 
 // ─── Header dari Orang 1 & 2 (uncomment saat sudah tersedia) ─────────────────
@@ -18,6 +22,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <stdexcept>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor / Destructor
@@ -39,9 +44,13 @@ GameEngine::GameEngine()
       logger(nullptr) {}
 
 GameEngine::~GameEngine() {
-    // Board dan players dimiliki oleh GameEngine — hapus jika diperlukan
-    // delete board;
-    // for (auto* p : players) delete p;
+    delete board;
+    board = nullptr;
+
+    for (Player* player : players) {
+        delete player;
+    }
+    players.clear();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,17 +70,26 @@ void GameEngine::setTransactionLogger(TransactionLogger* tl){ logger            
 // ─────────────────────────────────────────────────────────────────────────────
 
 void GameEngine::startNewGame(int nPlayers, std::vector<std::string> names) {
-    // TODO: Inisialisasi board dari ConfigLoader (Orang 1)
-    // TODO: Buat objek Player untuk setiap nama (Orang 1)
-    // TODO: Distribusikan saldo awal ke setiap Player
-    // TODO: initBoard() dengan definisi properti dari ConfigLoader
+    for (Player* player : players) {
+        delete player;
+    }
+    players.clear();
 
-    // Acak urutan giliran via TurnManager
-    turnManager.initializeOrder(nPlayers);
+    if (!board) {
+        board = new Board();
+    }
+
+    for (int i = 0; i < nPlayers && i < static_cast<int>(names.size()); ++i) {
+        players.push_back(new Player(names[i], 1000));
+    }
+
+    turnManager.initializeOrder(static_cast<int>(players.size()));
 
     gameOver = false;
 
-    // TODO: catat ke TransactionLogger (Orang 4)
+    if (cardManager) {
+        cardManager->initializeDecks();
+    }
 }
 
 void GameEngine::loadGame(const std::string& filename) {
@@ -96,39 +114,56 @@ void GameEngine::processCommand(const Command& cmd) {
 }
 
 void GameEngine::executeTurn() {
-    // TODO: Distribusi kartu skill di awal giliran (Orang 5)
-    // TODO: Panggil UI untuk menerima input perintah pemain
-    // TODO: Eksekusi perintah
-    // TODO: checkWinCondition()
-    // TODO: Jika tidak ada extra turn, lanjut ke pemain berikutnya
-    throw GameException("executeTurn: belum diimplementasikan (menunggu Player & Board)");
+    if (players.empty()) {
+        throw GameException("executeTurn: tidak ada pemain aktif");
+    }
+
+    Player& current = getCurrentPlayer();
+    if (cardManager) {
+        cardManager->drawSkillCard(current);
+    }
+
+    checkWinCondition();
+    turnManager.nextPlayer(buildBankruptFlags());
 }
 
 void GameEngine::moveCurrentPlayer(int steps) {
-    // TODO: Ambil pemain aktif
-    // Player& p = getCurrentPlayer();
-    // int oldPos = p.getPosition();
-    // p.move(steps, board->size());
+    if (!board) {
+        throw GameException("moveCurrentPlayer: board belum diinisialisasi");
+    }
 
-    // TODO: Deteksi apakah melewati GO (newPos < oldPos setelah wrap)
-    // if (p.getPosition() < oldPos) awardPassGoSalary(p);
+    Player& player = getCurrentPlayer();
+    const int oldPos = player.getPosition();
+    player.move(steps, board->size());
 
-    // TODO: handleLanding(p, board->getTileByIndex(p.getPosition()))
-    (void)steps;
-    throw GameException("moveCurrentPlayer: belum diimplementasikan (menunggu Player & Board)");
+    if (player.getPosition() < oldPos) {
+        awardPassGoSalary(player);
+    }
+
+    Tile& landing = board->getTileByIndex(player.getPosition());
+    handleLanding(player, landing);
 }
 
 void GameEngine::handleLanding(Player& p, Tile& t) {
-    // Polimorfisme — setiap tile mengurus logikanya sendiri
-    // t.onLand(p, *this);
-    (void)p; (void)t;
-    throw GameException("handleLanding: belum diimplementasikan (menunggu Tile hierarchy)");
+    t.onLand(p, *this);
 }
 
 void GameEngine::checkWinCondition() {
-    // TODO: Hitung pemain aktif; jika <= 1, panggil endGame()
-    // TODO: Jika maxTurn > 0 dan currentTurn >= maxTurn, panggil endGame()
-    throw GameException("checkWinCondition: belum diimplementasikan (menunggu Player)");
+    int activeCount = 0;
+    for (Player* player : players) {
+        if (player && !player->isBankrupt()) {
+            activeCount++;
+        }
+    }
+
+    if (activeCount <= 1) {
+        endGame();
+        return;
+    }
+
+    if (maxTurn > 0 && getCurrentTurn() >= maxTurn) {
+        endGame();
+    }
 }
 
 void GameEngine::endGame() {
@@ -151,8 +186,9 @@ Player& GameEngine::getCurrentPlayer() {
 
 Player* GameEngine::getPlayerByName(const std::string& name) {
     for (auto* p : players) {
-        // TODO: Ganti dengan p->getUsername() == name saat Player.hpp tersedia
-        (void)p; (void)name;
+        if (p && p->getUsername() == name) {
+            return p;
+        }
     }
     return nullptr;
 }
@@ -160,8 +196,9 @@ Player* GameEngine::getPlayerByName(const std::string& name) {
 std::vector<Player*> GameEngine::getActivePlayers() const {
     std::vector<Player*> active;
     for (auto* p : players) {
-        // TODO: if (!p->isBankrupt()) active.push_back(p);
-        (void)p;
+        if (p && !p->isBankrupt()) {
+            active.push_back(p);
+        }
     }
     return active;
 }
@@ -214,7 +251,9 @@ int  GameEngine::getCurrentTurn() const{ return turnManager.getTurnNumber(); }
 // ─────────────────────────────────────────────────────────────────────────────
 
 void GameEngine::initBoard() {
-    // TODO: Bangun Board dari std::vector<PropertyDef> hasil ConfigLoader (Orang 1 & 2)
+    if (!board) {
+        board = new Board();
+    }
 }
 
 void GameEngine::handleJailTurn(Player& p) {
@@ -225,14 +264,15 @@ void GameEngine::handleJailTurn(Player& p) {
 }
 
 void GameEngine::awardPassGoSalary(Player& p) {
-    // TODO: bank->paySalary(p, goSalary) saat Bank tersedia
-    (void)p;
+    p.addMoney(goSalary);
 }
 
 std::vector<bool> GameEngine::buildBankruptFlags() const {
     std::vector<bool> flags(players.size(), false);
     for (int i = 0; i < static_cast<int>(players.size()); ++i) {
-        // TODO: flags[i] = players[i]->isBankrupt();
+        if (players[i]) {
+            flags[i] = players[i]->isBankrupt();
+        }
     }
     return flags;
 }
