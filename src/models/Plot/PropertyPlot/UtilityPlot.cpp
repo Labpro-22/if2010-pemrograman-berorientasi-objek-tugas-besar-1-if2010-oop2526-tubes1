@@ -1,9 +1,8 @@
 #include "models/Plot/PropertyPlot/UtilityPlot.hpp"
 
-UtilityPlot::UtilityPlot(std::string name, std::string code, int mortgageValue,
+UtilityPlot::UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
                         std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, mortgageValue, propertyStatus),
-    rentPriceTable(rentPriceTable){}
+    PropertyPlot(name, code, color, mortgageValue, propertyStatus) {}
 
 std::map<int, int> UtilityPlot::getRentPriceTable() const {
     return rentPriceTable;
@@ -11,6 +10,10 @@ std::map<int, int> UtilityPlot::getRentPriceTable() const {
 
 int UtilityPlot::getRentPrice(int level) const {
     return rentPriceTable.at(level);
+}
+
+void UtilityPlot::setRentPriceTable(std::map<int, int> rentPriceTable){
+    this->rentPriceTable = rentPriceTable;
 }
 
 int UtilityPlot::calculateRentPrice() const {
@@ -21,8 +24,4 @@ int UtilityPlot::calculateRentPrice() const {
 
 std::string UtilityPlot::getType() const {
     return "Petak Utilitas";
-}
-
-Color UtilityPlot::getColor() const {
-    return Color::GRAY;
 }

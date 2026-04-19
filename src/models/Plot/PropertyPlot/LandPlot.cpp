@@ -1,10 +1,10 @@
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
 
-LandPlot::LandPlot(std::string name, std::string code, int mortgageValue,
-            Color color, int buyPrice, int upgHousePrice, int upgHotelPrice,
+LandPlot::LandPlot(std::string name, std::string code, Color color,
+            int mortgageValue, int buyPrice, int upgHousePrice, int upgHotelPrice,
             std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, mortgageValue, propertyStatus),
-    color(color), upgHousePrice(upgHousePrice), upgHotelPrice(upgHotelPrice),
+    PropertyPlot(name, code, color, mortgageValue, propertyStatus),
+    upgHousePrice(upgHousePrice), upgHotelPrice(upgHotelPrice),
     rentPriceTable(rentPriceTable) {}
 
 int LandPlot::getBuyPrice() const {
@@ -79,8 +79,4 @@ int LandPlot::calculateRentPrice() const {
 
 std::string LandPlot::getType() const {
     return "Petak Lahan";
-}
-
-Color LandPlot::getColor() const {
-    return color;
 }

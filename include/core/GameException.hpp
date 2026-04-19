@@ -6,6 +6,9 @@
 enum class GameErrorID{
     INVALIDINPUTEXCEPTION,
     FILENOTFOUNDEXCEPTION,
+    INVALIDFILEDATAEXCEPTION,
+    UNKNOWNTYPEEXCEPTION,
+    UNKNOWNCOLOREXCEPTION,
     INSUFFICIENTFUNDEXCEPTION,
     BUILDINGISFULLEXCEPTION,
     BUILDINGISEMPTYEXCEPTION,
@@ -42,6 +45,24 @@ class FileNotFoundException : public GameException{
 public:
     FileNotFoundException(std::string path): GameException(GameErrorID::FILENOTFOUNDEXCEPTION,
         "Tidak ditemukan file pada path: " + path) {}
+};
+
+class InvalidFileDataException : public GameException{
+public:
+    InvalidFileDataException(): GameException(GameErrorID::INVALIDFILEDATAEXCEPTION,
+        "Terdapat data yang tidak valid dalam file.") {}
+};
+
+class UnknownTypeException : public GameException{
+public:
+    UnknownTypeException(std::string type): GameException(GameErrorID::UNKNOWNTYPEEXCEPTION,
+        "Jenis property " + type + " tidak dikenali oleh program.") {}
+};
+
+class UnknownColorException : public GameException{
+public:
+    UnknownColorException(std::string color): GameException(GameErrorID::UNKNOWNCOLOREXCEPTION,
+        "Warna " + color + " tidak dikenali oleh program.") {}
 };
 
 class InsufficientFundException : public GameException{

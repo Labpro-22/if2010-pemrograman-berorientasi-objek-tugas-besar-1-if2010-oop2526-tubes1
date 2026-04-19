@@ -1,9 +1,8 @@
 #include "models/Plot/PropertyPlot/StationPlot.hpp"
 
-StationPlot::StationPlot(std::string name, std::string code, int mortgageValue,
+StationPlot::StationPlot(std::string name, std::string code, Color color, int mortgageValue,
                         std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, mortgageValue, propertyStatus),
-    rentPriceTable(rentPriceTable){}
+    PropertyPlot(name, code, color, mortgageValue, propertyStatus) {}
 
 std::map<int, int> StationPlot::getRentPriceTable() const {
     return rentPriceTable;
@@ -13,6 +12,9 @@ int StationPlot::getRentPrice(int level) const {
     return rentPriceTable.at(level);
 }
 
+void StationPlot::setRentPriceTable(std::map<int, int> rentPriceTable){
+    this->rentPriceTable = rentPriceTable;
+}
 
 int StationPlot::calculateRentPrice() const {
     int ownedStation = 0; //TODO: dummy
@@ -21,8 +23,4 @@ int StationPlot::calculateRentPrice() const {
 
 std::string StationPlot::getType() const {
     return "Petak Stasiun";
-}
-
-Color StationPlot::getColor() const {
-    return Color::DEFAULT;
 }
