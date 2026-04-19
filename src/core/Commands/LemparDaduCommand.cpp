@@ -1,7 +1,7 @@
 #include "LemparDaduCommand.hpp"
 #include "GameMaster.hpp"
 #include "Player.hpp"
-#include "dadu.hpp"
+#include "../Dice/Dice.hpp"
 #include <iostream>
 
 LemparDaduCommand::LemparDaduCommand(GameMaster& gm, Player* player, Dice& d)

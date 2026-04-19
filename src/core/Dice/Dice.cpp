@@ -1,13 +1,16 @@
 #include "Dice.hpp"
-#include <cstdlib> // Untuk fungsi rand()
+#include <random> // Untuk fungsi rand()
 
 Dice::Dice() : daduVal1(0), daduVal2(0), playerConcecutiveDoubles(0) {}
 
 void Dice::rollRandom()
 {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(1,6);
     // Menghasilkan angka acak antara 1 sampai 6
-    daduVal1 = (rand() % 6) + 1;
-    daduVal2 = (rand() % 6) + 1;
+    daduVal1 = distrib(gen);
+    daduVal2 = distrib(gen);
 
     // Cek apakah dadu double
     if (daduVal1 == daduVal2)

@@ -1,16 +1,8 @@
 #include "AturDaduCommand.hpp"
+#include "../Exceptions/DiceExceptions.hpp"
 #include "../Dice/Dice.hpp"
 #include <iostream>
 
-// --- Implementasi InvalidDiceValueException ---
-InvalidDiceValueException::InvalidDiceValueException(int v1, int v2) {
-    errorMessage = "Exception: Nilai dadu tidak valid (" + std::to_string(v1) + ", " + 
-                   std::to_string(v2) + ")! Kedua dadu harus bernilai antara 1 hingga 6.";
-}
-
-const char* InvalidDiceValueException::what() const noexcept {
-    return errorMessage.c_str();
-}
 
 // --- Implementasi AturDaduCommand ---
 AturDaduCommand::AturDaduCommand(Dice& d, int v1, int v2) 
