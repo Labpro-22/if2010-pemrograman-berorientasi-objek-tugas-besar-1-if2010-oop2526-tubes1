@@ -10,7 +10,7 @@ protected:
     PropertyStatus propertyStatus;
     // Player* ownedBy;
     int festivalDuration;
-    int festivalMultiplier;
+    int festivalMultiplier; //TODO: color disimpan di property, bukan di land
 
     bool isFestival() const;
 
