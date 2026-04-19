@@ -21,6 +21,5 @@ public:
     string getName() const;
 
     virtual void onLand(Player& player, GameEngine& engine) = 0;
-    virtual string getDisplayInfo() const = 0;
     virtual bool isProperty() const;    
 };

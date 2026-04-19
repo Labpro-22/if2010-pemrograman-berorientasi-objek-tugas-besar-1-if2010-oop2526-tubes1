@@ -10,7 +10,6 @@ public:
     int countInmates(const vector<Player*>& players) const;
     int countVisitors(const vector<Player*>& players) const;
     void sendToJail(Player& player);
-    
+
     void onLand(Player& player, GameEngine& engine) override;
-    string getDisplayInfo() const override;
 };

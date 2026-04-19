@@ -12,5 +12,4 @@ public:
     GoToJailTile(int index, JailTile& jailTile);
 
     void onLand(Player& player, GameEngine& engine) override;
-    string getDisplayInfo() const override;
 };

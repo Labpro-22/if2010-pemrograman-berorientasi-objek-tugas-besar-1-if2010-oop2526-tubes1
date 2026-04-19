@@ -16,5 +16,4 @@ public:
 
     bool isProperty() const override;
     void onLand(Player& player, GameEngine& engine) override;
-    string getDisplayInfo() const override;
 };

@@ -28,5 +28,4 @@ public:
     int getPercentage() const;
 
     void onLand(Player& player, GameEngine& engine) override;
-    string getDisplayInfo() const override;    
 };
