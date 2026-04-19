@@ -4,14 +4,15 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "src\core\Card\Card.hpp"
-#include "src\core\Property\Property.hpp"
+#include "../Card/Card.hpp"
+#include "../Property/Property.hpp"
+#include "../Board/Board.hpp"
 
 class Player {
 private: 
     std::string id;
     int money;
-    Petak* currPetak; // nanti ganti
+    Tile* currPetak; // nanti ganti
     std::vector<Property*> listProperty;
     std::vector<Card*> listCard;
     std::string status;
@@ -34,7 +35,7 @@ public:
 + setStatus(string): void
 + getStatus(): string
  */
-    Player(std::string id, int money, Petak* currPetak, std::vector<Property*> listProperty, std::vector<Card*> listCard, std::string status) 
+    Player(std::string id, int money, Tile* currPetak, std::vector<Property*> listProperty, std::vector<Card*> listCard, std::string status) 
         : id(id), money(money), currPetak(currPetak), listProperty(listProperty), listCard(listCard), status(status) {}
     
     std::string getID() const {return id;}
