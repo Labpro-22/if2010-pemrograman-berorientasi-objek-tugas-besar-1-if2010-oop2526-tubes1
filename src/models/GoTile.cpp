@@ -1,6 +1,6 @@
 #include "../../include/models/GoTile.hpp"
 
-GoTile::GoTile(int index, int salary) : Tile(index, "GO", "Petak Mulai") {}
+GoTile::GoTile(int index, int salary) : Tile(index, "GO", "Petak Mulai"), salary(salary) {}
 
 int GoTile::getSalary() const{
     return salary;

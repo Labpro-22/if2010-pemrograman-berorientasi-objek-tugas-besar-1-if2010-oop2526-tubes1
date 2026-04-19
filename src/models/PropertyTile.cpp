@@ -11,7 +11,7 @@ const Property& PropertyTile::getProperty() const{
 }
 
 bool PropertyTile::isProperty() const {
-    return isProperty;
+    return true;
 }
 
 void PropertyTile::onLand(Player& player, GameEngine& engine){

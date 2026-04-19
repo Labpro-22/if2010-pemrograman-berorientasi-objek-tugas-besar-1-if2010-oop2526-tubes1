@@ -4,7 +4,7 @@
 #include "../../include/models/StreetProperty.hpp"
 #include "../../include/utils/GameException.hpp"
 
-TaxTile::TaxTile(int index, TaxType taxType, int flatAmount, int percentage) : Tile (index, taxType == TaxType::PPH ? "PPH" : "PBM", taxType == TaxType::PPH ? "Pajak Penghasilan" : "Pajak Barang Mewah") {}
+TaxTile::TaxTile(int index, TaxType taxType, int flatAmount, int percentage) : Tile (index, taxType == TaxType::PPH ? "PPH" : "PBM", taxType == TaxType::PPH ? "Pajak Penghasilan" : "Pajak Barang Mewah"), taxType(taxType), flatAmount(flatAmount), percentage(percentage) {}
 
 TaxType TaxTile::getTaxType() const{
     return taxType;
