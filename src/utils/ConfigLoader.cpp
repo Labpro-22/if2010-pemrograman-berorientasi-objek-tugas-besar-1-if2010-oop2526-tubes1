@@ -3,7 +3,7 @@
 std::ifstream ConfigLoader::open(std::string path){
     std::ifstream file(path);
     if (!file){
-        // throw FileNotFoundException(path);
+        throw FileNotFoundException(path);
     }
     return file;
 }
@@ -20,7 +20,7 @@ std::map<int, int> ConfigLoader::loadIntMap(std::string path){
         }
     }
     catch (std::exception e){
-        // throw InvalidFileDataException();
+        throw InvalidFileDataException();
     } 
     return map;
 }
@@ -33,7 +33,7 @@ std::tuple<int, int> ConfigLoader::loadTuple2(std::string path){
         file >> num1 >> num2;
     }
     catch (std::exception e){
-        // throw InvalidFileDataException();
+        throw InvalidFileDataException();
     } 
     return std::make_tuple(num1, num2);
 }
@@ -46,7 +46,7 @@ std::tuple<int, int, int> ConfigLoader::loadTuple3(std::string path){
         file >> num1 >> num2 >> num3;
     }
     catch (std::exception e){
-        // throw InvalidFileDataException();
+        throw InvalidFileDataException();
     } 
     return std::make_tuple(num1, num2, num3);
 }
@@ -84,7 +84,7 @@ Color ConfigLoader::colorTypeToEnum(std::string color){
         return Color::DARKBLUE;
     }
     else{
-        // throw UnknownColorException(color);
+        throw UnknownColorException(color);
     }
 }
 
@@ -101,7 +101,7 @@ std::vector<std::pair<int, Plot*>> ConfigLoader::loadProperty(std::string path){
             file >> id >> code >> name >> type >> color;
 
             
-            //Ubah color (string) menjadi enum Color //TODO: color disimpan di property, bukan di land
+            //Ubah color (string) menjadi enum Color
             Color colorEnum = ConfigLoader::colorTypeToEnum(color);
 
             //Buat plot sesuai tipenya
@@ -131,17 +131,17 @@ std::vector<std::pair<int, Plot*>> ConfigLoader::loadProperty(std::string path){
                 plot = new UtilityPlot(name, code, colorEnum, mortgageValue);
             }
             else{
-                // throw UnknownTypeException(type);
+                throw UnknownTypeException(type);
             }
 
             tiles.push_back(std::make_pair(id, plot));
         }
     }
-    // catch (GameException e){
-    //     throw e;
-    // }
+    catch (GameException e){
+        throw e;
+    }
     catch (std::exception e){
-        // throw InvalidFileDataException();
+        throw InvalidFileDataException();
     } 
 
     return tiles;

@@ -9,8 +9,6 @@ private:
 public:
     UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
             PropertyStatus propertyStatus = PropertyStatus::BANK);
-    UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
-            std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK);
     ~UtilityPlot() = default;
     
     std::map<int, int> getRentPriceTable() const override;

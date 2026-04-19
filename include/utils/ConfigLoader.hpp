@@ -5,7 +5,7 @@
 #include <map>
 #include <tuple>
 #include <utility>
-// #include "core/GameException.hpp"
+#include "core/GameException.hpp"
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
 #include "models/Plot/PropertyPlot/StationPlot.hpp"
 #include "models/Plot/PropertyPlot/UtilityPlot.hpp"

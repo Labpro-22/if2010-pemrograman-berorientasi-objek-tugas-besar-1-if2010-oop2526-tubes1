@@ -3,10 +3,6 @@
 UtilityPlot::UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
                         std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
     PropertyPlot(name, code, color, mortgageValue, propertyStatus) {}
-UtilityPlot::UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
-                        std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, color, mortgageValue, propertyStatus),
-    rentPriceTable(rentPriceTable){}
 
 std::map<int, int> UtilityPlot::getRentPriceTable() const {
     return rentPriceTable;
