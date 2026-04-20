@@ -9,39 +9,39 @@ protected:
     std::string message;
 
 public:
-    NimonspoliException(std::string message);
+    NimonspoliException(const std::string& message);
     virtual const char* what() const noexcept override;
 };
 
 
 class InsufficientFundsException : public NimonspoliException {
 public:
-    InsufficientFundsException();
+    InsufficientFundsException(const std::string& message);
 };
 
 class InvalidActionException : public NimonspoliException {
 public:
-    InvalidActionException();
+    InvalidActionException(const std::string& message);
 };
 
 class CardSlotFullException : public NimonspoliException {
 public:
-    CardSlotFullException();
+    CardSlotFullException(const std::string& message);
 };
 
 class PropertyNotOwnedException : public NimonspoliException {
 public:
-    PropertyNotOwnedException();
+    PropertyNotOwnedException(const std::string& message);
 };
 
 class FileNotFoundException : public NimonspoliException {
 public:
-    FileNotFoundException();
+    FileNotFoundException(const std::string& message);
 };
 
 class InvalidInputException : public NimonspoliException {
 public:
-    InvalidInputException();
+    InvalidInputException(const std::string& message);
 };
 
 #endif

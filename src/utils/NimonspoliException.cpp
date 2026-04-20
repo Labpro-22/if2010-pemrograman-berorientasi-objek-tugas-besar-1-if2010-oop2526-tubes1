@@ -1,26 +1,26 @@
 #include "../../include/utils/NimonspoliException.hpp"
 
-NimonspoliException::NimonspoliException(std::string message) 
+NimonspoliException::NimonspoliException(const std::string& message) 
     : message(message) {}
 
 const char* NimonspoliException::what() const noexcept {
     return message.c_str();
 }
 
-InsufficientFundsException::InsufficientFundsException() 
-    : NimonspoliException("Error: Uang tidak cukup!") {}
+InsufficientFundsException::InsufficientFundsException(const std::string& message) 
+    : NimonspoliException(message) {}
 
-InvalidActionException::InvalidActionException() 
-    : NimonspoliException("Error: Aksi tidak valid!") {}
+InvalidActionException::InvalidActionException(const std::string& message) 
+    : NimonspoliException(message) {}
 
-CardSlotFullException::CardSlotFullException() 
-    : NimonspoliException("Error: Slot kartu penuh!") {}
+CardSlotFullException::CardSlotFullException(const std::string& message) 
+    : NimonspoliException(message) {}
 
-PropertyNotOwnedException::PropertyNotOwnedException() 
-    : NimonspoliException("Error: Properti tidak dimiliki!") {}
+PropertyNotOwnedException::PropertyNotOwnedException(const std::string& message) 
+    : NimonspoliException(message) {}
 
-FileNotFoundException::FileNotFoundException() 
-    : NimonspoliException("Error: File tidak ditemukan!") {}
+FileNotFoundException::FileNotFoundException(const std::string& message) 
+    : NimonspoliException(message) {}
 
-InvalidInputException::InvalidInputException() 
-    : NimonspoliException("Error: Input tidak valid!") {}
+InvalidInputException::InvalidInputException(const std::string& message) 
+    : NimonspoliException(message) {}
