@@ -4,8 +4,8 @@ using namespace std;
 
 enum CardType
 {
-    ACTION,
-    SKILL
+    DANA_UMUM,
+    KESEMPATAN,
 };
 
 class Card

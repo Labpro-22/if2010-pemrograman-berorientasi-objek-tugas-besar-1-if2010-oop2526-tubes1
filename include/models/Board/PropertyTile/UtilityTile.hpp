@@ -6,6 +6,6 @@ class UtilityTile : public PropertyTile
 { 
 public:
     UtilityTile(int idx, string code, string name, int price, 
-        int morgageValue, vector<int> rentPrices);
-    void land(Player &p) override;
+        int morgageValue);
+    PropertyStatus land(Player &p) override;
 };

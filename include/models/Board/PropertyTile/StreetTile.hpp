@@ -9,6 +9,8 @@ private:
     int hotelCost;
     int houseCount;
     bool hasHotel;
+    vector<int> rentPrices; 
+
 public:
     StreetTile(int idx, string code, string name, int price, 
         int morgageValue, vector<int> rentPrices, 
