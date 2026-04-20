@@ -1,6 +1,6 @@
 #pragma once
 #include "Petak.hpp"
-#include "Properti/Properti.hpp"
+#include "models/Properti/Properti.hpp"
 #include <string>
 
 class PetakProperti : public Petak{
