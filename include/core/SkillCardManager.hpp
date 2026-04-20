@@ -3,6 +3,8 @@
 
 #include <cstddef>
 #include <vector>
+
+#include "../utils/CardDeck.hpp"
 using namespace std;
 
 class Player;
@@ -12,10 +14,14 @@ class GameContext;
 class SkillCardManager {
 private:
     size_t maxHandSize;
+    CardDeck<SkillCard*> skillDeck;
+
     bool isValidIndex(Player* player, int idx);
+    void populateDeck(size_t cardCount);
 
 public:
     SkillCardManager(int maxSize);
+    ~SkillCardManager();
 
     void distributeCardToAll(vector<Player*> players);
     void distributeCardTo(Player* player);

@@ -7,6 +7,12 @@
 
 SkillCardManager::SkillCardManager(int maxSize) {
     maxHandSize = (maxSize > 0) ? static_cast<size_t>(maxSize) : static_cast<size_t>(0);
+    populateDeck(36);
+    skillDeck.shuffle();
+}
+
+SkillCardManager::~SkillCardManager() {
+    skillDeck.deleteAllCards();
 }
 
 bool SkillCardManager::isValidIndex(Player* player, int idx) {
@@ -28,9 +34,15 @@ void SkillCardManager::distributeCardTo(Player* player) {
         return;
     }
 
-    if (player->getHand().size() >= maxHandSize) return;
+    if (player->getHand().size() >= maxHandSize) {
+        return;
+    }
 
-    SkillCard* card = generateCard();
+    SkillCard* card = skillDeck.drawTop();
+    if (card == nullptr) {
+        return;
+    }
+
     player->receiveCard(card);
 }
 
@@ -54,14 +66,16 @@ void SkillCardManager::useCard(Player* player, int idx, GameContext* ctx) {
 
     player->markCardUsed();
 
-    delete card;
+    skillDeck.discard(card);
 }
 
 void SkillCardManager::dropCard(Player* player, int idx) {
-    if (!isValidIndex(player, idx)) return;
+    if (!isValidIndex(player, idx)) {
+        return;
+    }
 
     SkillCard* card = player->removeCard(idx);
-    delete card;
+    skillDeck.discard(card);
 }
 
 void SkillCardManager::decrementDurations(Player* player) {
@@ -77,10 +91,18 @@ void SkillCardManager::decrementDurations(Player* player) {
 }
 
 SkillCard* SkillCardManager::generateCard() {
-    int r = rand() % 3;
-
+    int r = rand() % 6;
+    //blom final
     if (r == 0) return new MoveCard(rand() % 6 + 1);
     if (r == 1) return new ShieldCard();
-    // Placeholder: 40 ngikut default board size yg placeholder juga, nanti gunakan ukuran board asli dari config
-    return new TeleportCard(rand() % 40);
+    if (r == 2) return new TeleportCard(rand() % 40);
+    if (r == 3) return new DiscountCard((rand() % 41) + 10); 
+    if (r == 4) return new LassoCard();
+    return new DemolitionCard();
+}
+
+void SkillCardManager::populateDeck(size_t cardCount) {
+    for (size_t i = 0; i < cardCount; ++i) {
+        skillDeck.addToDeck(generateCard());
+    }
 }
