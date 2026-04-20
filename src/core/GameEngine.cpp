@@ -1,8 +1,20 @@
 #include "../../include/core/GameEngine.hpp"
 #include "../../include/core/CardManager.hpp"
 #include "../../include/models/Board.hpp"
+#include "../../include/models/CardTile.hpp"
+#include "../../include/models/FestivalTile.hpp"
+#include "../../include/models/FreeParkingTile.hpp"
+#include "../../include/models/GoTile.hpp"
+#include "../../include/models/GoToJailTile.hpp"
+#include "../../include/models/JailTile.hpp"
 #include "../../include/models/Player.hpp"
+#include "../../include/models/PropertyTile.hpp"
+#include "../../include/models/RailroadProperty.hpp"
+#include "../../include/models/StreetProperty.hpp"
+#include "../../include/models/TaxTile.hpp"
 #include "../../include/models/Tile.hpp"
+#include "../../include/models/UtilityProperty.hpp"
+#include "../../include/utils/ConfigLoader.hpp"
 #include "../../include/utils/GameException.hpp"
 
 // ─── Header dari Orang 1 & 2 (uncomment saat sudah tersedia) ─────────────────
@@ -21,8 +33,31 @@
 // #include "../../include/core/SaveLoadManager.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_map>
+
+namespace {
+std::string normalizeColorGroup(const std::string& raw) {
+    if (raw == "COKLAT") return "CK";
+    if (raw == "BIRU_MUDA") return "BM";
+    if (raw == "MERAH_MUDA") return "PK";
+    if (raw == "ORANGE") return "OR";
+    if (raw == "MERAH") return "MR";
+    if (raw == "KUNING") return "KN";
+    if (raw == "HIJAU") return "HJ";
+    if (raw == "BIRU_TUA") return "BT";
+    return raw;
+}
+
+const std::vector<std::string> kBoardOrder = {
+    "GO",  "GRT", "DNU", "TSK", "PPH", "GBR", "BGR", "FES", "DPK", "BKS",
+    "PEN", "MGL", "PLN", "SOL", "YOG", "STB", "MAL", "DNU", "SMG", "SBY",
+    "BBP", "MKS", "KSP", "BLP", "MND", "TUG", "PLB", "PKB", "PAM", "MED",
+    "PPJ", "BDG", "DEN", "FES", "MTR", "GUB", "KSP", "JKT", "PBM", "IKN"
+};
+} // namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constructor / Destructor
@@ -32,6 +67,7 @@ GameEngine::GameEngine()
     : board(nullptr),
       gameOver(false),
       maxTurn(0),
+            initialBalance(1000),
       goSalary(200),
       jailFine(50),
       dice(6),
@@ -78,12 +114,10 @@ CommandResult GameEngine::startNewGame(int nPlayers, std::vector<std::string> na
     }
     players.clear();
 
-    if (!board) {
-        board = new Board();
-    }
+    initBoard();
 
     for (int i = 0; i < nPlayers && i < static_cast<int>(names.size()); ++i) {
-        players.push_back(new Player(names[i], 1000));
+        players.push_back(new Player(names[i], initialBalance));
     }
 
     turnManager.initializeOrder(static_cast<int>(players.size()));
@@ -120,6 +154,118 @@ void GameEngine::run() {
 CommandResult GameEngine::processCommand(const Command& cmd) {
     CommandResult result;
 
+    auto resolveDiceFlow = [&](CommandResult& flowResult) {
+        Player& current = getCurrentPlayer();
+        const bool rolledDouble = dice.isDouble();
+        const int total = dice.getTotal();
+
+        // Alur pemain yang sedang berada di penjara.
+        if (current.isJailed()) {
+            if (current.getJailTurns() >= 3) {
+                if (!current.canAfford(jailFine)) {
+                    current.setStatus(PlayerStatus::BANKRUPT);
+                    flowResult.addEvent(
+                        GameEventType::BANKRUPTCY,
+                        UiTone::ERROR,
+                        "Bangkrut di Penjara",
+                        current.getUsername() +
+                            " tidak mampu membayar denda penjara sebesar M" +
+                            std::to_string(jailFine) + ".");
+                    current.resetConsecutiveDoubles();
+                    flowResult.append(executeTurn());
+                    return;
+                }
+
+                current.deductMoney(jailFine);
+                current.setStatus(PlayerStatus::ACTIVE);
+                current.setJailTurns(0);
+                flowResult.addEvent(
+                    GameEventType::MONEY,
+                    UiTone::WARNING,
+                    "Keluar Penjara",
+                    current.getUsername() +
+                        " wajib membayar denda M" + std::to_string(jailFine) +
+                        " pada percobaan ke-4.");
+            } else {
+                if (!rolledDouble) {
+                    current.incrementJailTurns();
+                    current.resetConsecutiveDoubles();
+                    flowResult.addEvent(
+                        GameEventType::TURN,
+                        UiTone::WARNING,
+                        "Masih Dipenjara",
+                        current.getUsername() +
+                            " gagal mendapatkan double dan tetap di penjara "
+                            "pada giliran ini.");
+                    flowResult.append(executeTurn());
+                    return;
+                }
+
+                current.setStatus(PlayerStatus::ACTIVE);
+                current.setJailTurns(0);
+                current.resetConsecutiveDoubles();
+                flowResult.addEvent(
+                    GameEventType::SYSTEM,
+                    UiTone::SUCCESS,
+                    "Double Penjara",
+                    current.getUsername() +
+                        " mendapatkan double dan keluar dari penjara.");
+
+                flowResult.append(moveCurrentPlayer(total));
+                current.resetConsecutiveDoubles();
+                flowResult.append(executeTurn());
+                return;
+            }
+        }
+
+        if (rolledDouble) {
+            current.incrementConsecutiveDoubles();
+            if (current.getConsecutiveDoubles() >= 3) {
+                if (!board) {
+                    throw GameException("processCommand: board belum diinisialisasi");
+                }
+
+                current.setPosition(board->getIndexOf("PEN"));
+                current.setStatus(PlayerStatus::JAILED);
+                current.setJailTurns(0);
+                current.resetConsecutiveDoubles();
+
+                flowResult.addEvent(
+                    GameEventType::DICE,
+                    UiTone::WARNING,
+                    "Triple Double",
+                    current.getUsername() +
+                        " melempar double 3 kali berturut-turut. Bidak langsung "
+                        "dipindah ke penjara dan giliran berakhir.");
+
+                flowResult.append(executeTurn());
+                return;
+            }
+        } else {
+            current.resetConsecutiveDoubles();
+        }
+
+        flowResult.append(moveCurrentPlayer(total));
+
+        if (current.isJailed()) {
+            current.resetConsecutiveDoubles();
+            flowResult.append(executeTurn());
+            return;
+        }
+
+        if (rolledDouble) {
+            flowResult.addEvent(
+                GameEventType::TURN,
+                UiTone::INFO,
+                "Double",
+                current.getUsername() +
+                    " mendapatkan giliran tambahan karena melempar double.");
+            return;
+        }
+
+        flowResult.append(executeTurn());
+    };
+
     switch (cmd.type) {
     case CommandType::HELP:
         result.commandName = "BANTUAN";
@@ -127,7 +273,7 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
             GameEventType::SYSTEM,
             UiTone::INFO,
             "Daftar Perintah",
-            "LEMPAR_DADU, ATUR_DADU X Y, CETAK_PAPAN, CETAK_LOG [N], SIMPAN <file>, MUAT <file>, AKHIRI_GILIRAN, KELUAR"
+            "LEMPAR_DADU, ATUR_DADU X Y, CETAK_PAPAN, CETAK_LOG [N], SIMPAN <file>, MUAT <file>, KELUAR"
         );
         return result;
 
@@ -140,7 +286,7 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
             "Hasil Dadu",
             std::to_string(roll.first) + " + " + std::to_string(roll.second) + " = " + std::to_string(dice.getTotal())
         );
-        result.append(moveCurrentPlayer(dice.getTotal()));
+        resolveDiceFlow(result);
         return result;
     }
 
@@ -166,7 +312,7 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
             "Dadu Manual",
             std::to_string(roll.first) + " + " + std::to_string(roll.second) + " = " + std::to_string(dice.getTotal())
         );
-        result.append(moveCurrentPlayer(dice.getTotal()));
+        resolveDiceFlow(result);
         return result;
     }
 
@@ -206,7 +352,14 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
 
     case CommandType::END_TURN:
         result.commandName = "AKHIRI_GILIRAN";
-        return executeTurn();
+        result.success = false;
+        result.addEvent(
+            GameEventType::SYSTEM,
+            UiTone::WARNING,
+            "Perintah Dinonaktifkan",
+            "Giliran kini berpindah otomatis setelah aksi dadu selesai diproses."
+        );
+        return result;
 
     case CommandType::START_GAME:
         return startNewGame(2, {"Pemain1", "Pemain2"});
@@ -229,14 +382,14 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
 
 CommandResult GameEngine::executeTurn() {
     CommandResult result;
-    result.commandName = "AKHIRI_GILIRAN";
+    result.commandName = "TRANSISI_GILIRAN";
 
     if (players.empty()) {
         throw GameException("executeTurn: tidak ada pemain aktif");
     }
 
     Player& current = getCurrentPlayer();
-    if (cardManager) {
+    if (cardManager && !current.isBankrupt()) {
         cardManager->drawSkillCard(current);
         result.addEvent(
             GameEventType::CARD,
@@ -281,6 +434,9 @@ CommandResult GameEngine::moveCurrentPlayer(int steps) {
     Player& player = getCurrentPlayer();
     const int oldPos = player.getPosition();
     player.move(steps, board->size());
+    const bool crossedGo = (player.getPosition() < oldPos);
+    Tile& landing = board->getTileByIndex(player.getPosition());
+    const bool landedOnGoToJail = (landing.getCode() == "PPJ");
 
     result.addEvent(
         GameEventType::MOVEMENT,
@@ -289,7 +445,7 @@ CommandResult GameEngine::moveCurrentPlayer(int steps) {
         player.getUsername() + " maju " + std::to_string(steps) + " petak."
     );
 
-    if (player.getPosition() < oldPos) {
+    if (crossedGo && !landedOnGoToJail) {
         awardPassGoSalary(player);
         result.addEvent(
             GameEventType::MONEY,
@@ -299,7 +455,6 @@ CommandResult GameEngine::moveCurrentPlayer(int steps) {
         );
     }
 
-    Tile& landing = board->getTileByIndex(player.getPosition());
     result.addEvent(
         GameEventType::LANDING,
         UiTone::INFO,
@@ -421,8 +576,101 @@ int  GameEngine::getCurrentTurn() const{ return turnManager.getTurnNumber(); }
 // ─────────────────────────────────────────────────────────────────────────────
 
 void GameEngine::initBoard() {
-    if (!board) {
-        board = new Board();
+    delete board;
+    board = new Board();
+
+    ConfigLoader loader;
+    const std::vector<PropertyDef> propertyDefs = loader.loadProperties("config/property.txt");
+    const std::map<int, int> railroadRent = loader.loadRailroadConfig("config/railroad.txt");
+    const std::map<int, int> utilityMultiplier = loader.loadUtilityConfig("config/utility.txt");
+    const TaxConfig taxConfig = loader.loadTaxConfig("config/tax.txt");
+    const SpecialConfig specialConfig = loader.loadSpecialConfig("config/special.txt");
+    const MiscConfig miscConfig = loader.loadMiscConfig("config/misc.txt");
+
+    goSalary = specialConfig.getGoSalary();
+    jailFine = specialConfig.getJailFine();
+    maxTurn = miscConfig.getMaxTurn();
+    initialBalance = miscConfig.getInitialBalance();
+
+    std::unordered_map<std::string, PropertyDef> propertyByCode;
+    for (const PropertyDef& def : propertyDefs) {
+        propertyByCode[def.getCode()] = def;
+    }
+
+    JailTile* jailTile = nullptr;
+    for (int idx = 0; idx < static_cast<int>(kBoardOrder.size()); ++idx) {
+        const std::string& code = kBoardOrder[idx];
+
+        const auto propertyIt = propertyByCode.find(code);
+        if (propertyIt != propertyByCode.end()) {
+            const PropertyDef& def = propertyIt->second;
+            std::shared_ptr<Property> property;
+
+            if (def.getTypeName() == "STREET") {
+                property = std::make_shared<StreetProperty>(
+                    def.getCode(),
+                    def.getName(),
+                    normalizeColorGroup(def.getColorGroup()),
+                    def.getPurchasePrice(),
+                    def.getMortgageValue(),
+                    def.getHouseCost(),
+                    def.getHotelCost(),
+                    def.getRentLevels());
+            } else if (def.getTypeName() == "RAILROAD") {
+                property = std::make_shared<RailroadProperty>(
+                    def.getCode(),
+                    def.getName(),
+                    def.getPurchasePrice(),
+                    def.getMortgageValue(),
+                    railroadRent);
+            } else if (def.getTypeName() == "UTILITY") {
+                property = std::make_shared<UtilityProperty>(
+                    def.getCode(),
+                    def.getName(),
+                    def.getPurchasePrice(),
+                    def.getMortgageValue(),
+                    utilityMultiplier);
+            } else {
+                throw GameException("Jenis properti tidak dikenal untuk kode '" + code + "'.");
+            }
+
+            board->addTile(std::make_unique<PropertyTile>(idx, property));
+            continue;
+        }
+
+        if (code == "GO") {
+            board->addTile(std::make_unique<GoTile>(idx, goSalary));
+        } else if (code == "DNU") {
+            board->addTile(std::make_unique<CardTile>(idx, code, CardDrawType::COMMUNITY));
+        } else if (code == "KSP") {
+            board->addTile(std::make_unique<CardTile>(idx, code, CardDrawType::CHANCE));
+        } else if (code == "FES") {
+            board->addTile(std::make_unique<FestivalTile>(idx, code));
+        } else if (code == "PPH") {
+            board->addTile(std::make_unique<TaxTile>(
+                idx,
+                TaxType::PPH,
+                taxConfig.getPphFlat(),
+                taxConfig.getPphPercentage()));
+        } else if (code == "PBM") {
+            board->addTile(std::make_unique<TaxTile>(
+                idx,
+                TaxType::PBM,
+                taxConfig.getPbmFlat()));
+        } else if (code == "PEN") {
+            auto jail = std::make_unique<JailTile>(idx);
+            jailTile = jail.get();
+            board->addTile(std::move(jail));
+        } else if (code == "PPJ") {
+            if (!jailTile) {
+                throw GameException("Konfigurasi papan tidak valid: tile PPJ muncul sebelum PEN.");
+            }
+            board->addTile(std::make_unique<GoToJailTile>(idx, *jailTile));
+        } else if (code == "BBP") {
+            board->addTile(std::make_unique<FreeParkingTile>(idx));
+        } else {
+            throw GameException("Kode tile tidak dikenali saat inisialisasi papan: '" + code + "'.");
+        }
     }
 }
 

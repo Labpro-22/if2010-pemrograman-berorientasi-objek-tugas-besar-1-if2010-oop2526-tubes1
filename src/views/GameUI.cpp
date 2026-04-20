@@ -13,7 +13,7 @@ GameUI::GameUI(GameEngine& engine)
 
 void GameUI::displayWelcome() const {
     std::cout << AnsiTheme::clearScreen();
-    std::cout << AnsiTheme::apply(AnsiTheme::bold(), "Nimonspoli CLI - MVP") << "\n";
+    std::cout << AnsiTheme::apply(AnsiTheme::bold(), "Nimonspoli CLI - FRP") << "\n";
     std::cout << "Ketik BANTUAN untuk melihat daftar perintah.\n";
     std::cout << "Ketik KELUAR untuk menutup program.\n\n";
 }
@@ -23,7 +23,7 @@ void GameUI::bootstrapIfNeeded() {
         return;
     }
 
-    CommandResult startResult = engine.startNewGame(2, {"Pemain1", "Pemain2"});
+    CommandResult startResult = engine.startNewGame(4, {"P1", "P2", "P3", "P4"});
     std::cout << formatter.format(startResult) << "\n";
     started = true;
 }

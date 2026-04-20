@@ -18,7 +18,7 @@ private:
     static constexpr int cellWidth = 10;
 
     std::string fitCell(const std::string& text) const;
+    std::string buildCellStatus(const Board& board, const std::vector<Player*>& players, int boardIndex) const;
     std::string buildCellLabel(const Board& board,
-                               const std::vector<Player*>& players,
                                int boardIndex) const;
 };

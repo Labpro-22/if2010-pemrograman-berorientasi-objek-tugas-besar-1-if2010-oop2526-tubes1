@@ -27,6 +27,7 @@ class GameEngine{
         vector<Player*> players;
         bool gameOver;
         int maxTurn;
+        int initialBalance;
         int goSalary;
         int jailFine;
         TurnManager turnManager;
