@@ -3,10 +3,8 @@
 
 class SkillCard {
     public:
-        SkillCard();
-        ~SkillCard();
-        virtual void activate();
-        virtual string getName();
-        virtual string getDescription();
+        virtual void activate() = 0;
+        virtual string getName() = 0;
+        virtual string getDescription() = 0;
 };
 
