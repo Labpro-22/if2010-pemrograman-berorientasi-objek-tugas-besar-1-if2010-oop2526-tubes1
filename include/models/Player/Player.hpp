@@ -2,10 +2,11 @@
 #include <string>
 #include <list>
 #include <vector>
-#include "PropertyTile.hpp"
-#include "SkillCard.hpp"
 
 using namespace std;
+
+class PropertyTile;
+class SkillCard;
 
 enum PlayerStatus
 {

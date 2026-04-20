@@ -11,11 +11,16 @@ private:
     int currentPlayerIndex;
     int currentTurn;
     int maxTurns;
+    int startingMoney;
 public:
     void nextTurn();
-    void executeAction(Action a);
+    
+    void setMaxTurns(int maxTurns);
+    void setStartingMoney(int startingMoney);
+    
     int getCurrentTurn();
     bool checkWinCondition();
     void exportGameState(); 
+    void executeAction();
 };
 

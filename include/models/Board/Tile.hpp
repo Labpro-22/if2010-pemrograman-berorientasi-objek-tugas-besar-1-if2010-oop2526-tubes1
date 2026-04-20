@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include "Player.hpp"
 using namespace std;
 
 enum TileType
@@ -17,7 +16,7 @@ protected:
     string code;
     string name;
     TileType type; 
-    string color = "White"; // default color, bisa diubah untuk property tile @suggestion by me
+    string color = "DEFAULT"; // default color, bisa diubah untuk property tile @suggestion by me
 public:
     // virtual land(Player &p) = default; 
     // harusnya ga perlu pure virtual function karena tidak semua tile harus 
