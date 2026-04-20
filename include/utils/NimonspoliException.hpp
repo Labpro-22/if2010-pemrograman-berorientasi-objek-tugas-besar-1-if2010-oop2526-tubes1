@@ -16,32 +16,32 @@ public:
 
 class InsufficientFundsException : public NimonspoliException {
 public:
-    InsufficientFundsException();
+    InsufficientFundsException(std::string message);
 };
 
 class InvalidActionException : public NimonspoliException {
 public:
-    InvalidActionException();
+    InvalidActionException(std::string message);
 };
 
 class CardSlotFullException : public NimonspoliException {
 public:
-    CardSlotFullException();
+    CardSlotFullException(std::string message);
 };
 
 class PropertyNotOwnedException : public NimonspoliException {
 public:
-    PropertyNotOwnedException();
+    PropertyNotOwnedException(std::string message);
 };
 
 class FileNotFoundException : public NimonspoliException {
 public:
-    FileNotFoundException();
+    FileNotFoundException(std::string message);
 };
 
 class InvalidInputException : public NimonspoliException {
 public:
-    InvalidInputException();
+    InvalidInputException(std::string message);
 };
 
 #endif
