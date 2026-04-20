@@ -6,14 +6,14 @@ int Petak::getIndeks() const{
     return indeks;
 }
 
-const std::string Petak::getKode() const{
+const std::string& Petak::getKode() const{
     return kode;
 }
 
-const std::string Petak::getNama() const{
+const std::string& Petak::getNama() const{
     return nama;
 }
 
 const std::string Petak::getDisplayInfo() const{
-    return std::to_string(getIndeks()) + " " + getKode() + " " + getNama(); 
+    return std::to_string(indeks) + " " + kode + " " + nama; 
 }

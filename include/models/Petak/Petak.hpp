@@ -18,7 +18,7 @@ public:
 
     const std::string& getNama() const;
 
-    const std::string& getDisplayInfo() const;
+    const std::string getDisplayInfo() const;
 
     virtual void onLanded(Pemain& pemain, PlayerActionService& actionService) = 0;
 
