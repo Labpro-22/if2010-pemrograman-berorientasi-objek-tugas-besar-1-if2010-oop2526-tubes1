@@ -1,4 +1,4 @@
-#include "models/Petak.hpp"
+#include "models/Petak/Petak.hpp"
 
 Petak::Petak(int indeks, const std::string& kode, const std::string& nama) : indeks(indeks), kode(kode), nama(nama){}
 
