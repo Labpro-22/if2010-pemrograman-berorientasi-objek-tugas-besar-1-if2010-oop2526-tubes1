@@ -1,7 +1,7 @@
 #include "AuctionManager.hpp"
-#include "Player.hpp"
-#include "Property.hpp"
-#include "Bank.hpp"
+#include "../Player/Player.hpp"
+#include "../Property/Property.hpp"
+#include "../Bank/Bank.hpp"
 #include <iostream>
 
 AuctionManager::AuctionManager() 

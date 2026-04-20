@@ -17,7 +17,7 @@ public:
     // Memberikan uang kepada player (misal saat gadai properti atau lewat petak GO)
     void payPlayer(Player* p, int amount);
 
-    // Menerima uang dari player (misal saat bayar pajak atau beli properti)
+    // Menerima uang dari player 
     void receiveFromPlayer(Player* p, int amount);
 
     // Menyita aset dan melelang properti pemain yang bangkrut
