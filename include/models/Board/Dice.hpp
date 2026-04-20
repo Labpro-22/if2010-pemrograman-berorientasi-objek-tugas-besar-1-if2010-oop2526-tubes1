@@ -1,23 +1,22 @@
 #pragma once
-
 #include <random>
-#include <utility>
-
+using namespace std;
 class Dice {
 private:
-    int die1;
-    int die2;
-    bool manualSet;
-    std::mt19937 rng;
+    int dice1;
+    int dice2;
+    bool isManual;
 
 public:
     Dice();
+    ~Dice();
 
-    std::pair<int, int> roll();
-    void setManual(int d1, int d2);
-
-    int getDie1() const;
-    int getDie2() const;
-    int getTotal() const;
+    int roll();
+    void setDiceManual(int d1, int d2);
+    void resetManual();
     bool isDouble() const;
+    int getDice1() const;
+    int getDice2() const;
+    int getTotal() const;
+    bool getIsManual() const;
 };
