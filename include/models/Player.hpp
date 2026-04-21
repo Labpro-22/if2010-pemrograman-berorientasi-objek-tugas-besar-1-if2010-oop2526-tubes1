@@ -25,6 +25,7 @@ private:
     vector<std::shared_ptr<SkillCard>> handCards;
     bool hasUsedSkillThisTurn_;
     bool shieldActive;
+    int  jailFreeCards;
     int  jailTurns;
     int  consecutiveDoubles;
     int  discountPercent;
@@ -77,6 +78,11 @@ public:
 
     int  getDiscountPercent() const;
     void setDiscountPercent(int pct);
+
+    int  getJailFreeCardCount() const;
+    bool hasJailFreeCard() const;
+    void addJailFreeCard();
+    bool consumeJailFreeCard();
 
     int getTotalWealth() const;
     string getUsername() const;

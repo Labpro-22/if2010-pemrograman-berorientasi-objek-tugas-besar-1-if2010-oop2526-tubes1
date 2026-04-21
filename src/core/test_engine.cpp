@@ -16,6 +16,7 @@
 #include "../../include/utils/Gamestateserializer.hpp"
 
 using std::cout;
+using std::map;
 using std::string;
 using std::vector;
 
@@ -31,9 +32,18 @@ struct PrimitivePlayer {
 struct PrimitiveHarness {
     bool initialized = false;
     int maxTurn = 15;
+    int initialBalance = 1000;
+    int goSalary = 200;
+    int jailFine = 50;
+    int pphFlat = 150;
+    int pphPercentage = 10;
+    int pbmFlat = 200;
 
     TurnManager turnManager;
     Dice dice;
+
+    map<int, int> railroadRentByCount;
+    map<int, int> utilityMultiplierByCount;
 
     vector<PrimitivePlayer> players;
     vector<string> boardCodes;
@@ -102,6 +112,41 @@ void loadPropertyDefaults(PrimitiveHarness& h) {
     }
 }
 
+void loadAllConfigs(PrimitiveHarness& h) {
+    ConfigLoader loader;
+
+    const MiscConfig misc = loader.loadMiscConfig("config/misc.txt");
+    const SpecialConfig special = loader.loadSpecialConfig("config/special.txt");
+    const TaxConfig tax = loader.loadTaxConfig("config/tax.txt");
+
+    h.maxTurn = misc.getMaxTurn();
+    h.initialBalance = misc.getInitialBalance();
+    h.goSalary = special.getGoSalary();
+    h.jailFine = special.getJailFine();
+    h.pphFlat = tax.getPphFlat();
+    h.pphPercentage = tax.getPphPercentage();
+    h.pbmFlat = tax.getPbmFlat();
+
+    h.railroadRentByCount = loader.loadRailroadConfig("config/railroad.txt");
+    h.utilityMultiplierByCount = loader.loadUtilityConfig("config/utility.txt");
+    loadPropertyDefaults(h);
+}
+
+void printConfigSummary(const PrimitiveHarness& h) {
+    cout << "\n=== CONFIG SUMMARY ===\n";
+    cout << "MAX_TURN      : " << h.maxTurn << "\n";
+    cout << "SALDO_AWAL    : " << h.initialBalance << "\n";
+    cout << "GO_SALARY     : " << h.goSalary << "\n";
+    cout << "JAIL_FINE     : " << h.jailFine << "\n";
+    cout << "PPH_FLAT      : " << h.pphFlat << "\n";
+    cout << "PPH_%         : " << h.pphPercentage << "\n";
+    cout << "PBM_FLAT      : " << h.pbmFlat << "\n";
+    cout << "PROPERTY_DEF  : " << h.properties.size() << "\n";
+    cout << "RAILROAD_DEF  : " << h.railroadRentByCount.size() << "\n";
+    cout << "UTILITY_DEF   : " << h.utilityMultiplierByCount.size() << "\n";
+    cout << "======================\n\n";
+}
+
 void printHelp() {
     cout << "\n=== COMMAND LIST ===\n";
     cout << "HELP                                 : tampilkan bantuan\n";
@@ -114,6 +159,8 @@ void printHelp() {
     cout << "SET_STATUS <USERNAME> <STATUS>       : ubah status pemain (ACTIVE/JAILED/BANKRUPT)\n";
     cout << "SET_MONEY <USERNAME> <NOMINAL>       : ubah uang pemain\n";
     cout << "SET_POS <USERNAME> <KODE_PETAK>      : ubah posisi pemain ke kode petak\n";
+    cout << "CONFIG                               : tampilkan ringkasan config aktif\n";
+    cout << "RELOAD_CONFIG                        : reload semua file config/*.txt\n";
     cout << "SAVE [NAMA_FILE.txt]                 : simpan snapshot (default: file_save.txt)\n";
     cout << "LOAD [NAMA_FILE.txt]                 : muat snapshot (default: file_save.txt)\n";
     cout << "SHOW_SAVE [NAMA_FILE.txt]            : tampilkan isi file save\n";
@@ -166,7 +213,7 @@ void initializeHarness(PrimitiveHarness& h) {
 
         PrimitivePlayer p;
         p.username = name;
-        p.money = 1000;
+        p.money = h.initialBalance;
         p.positionIndex = 0;
         p.status = "ACTIVE";
         h.players.push_back(p);
@@ -329,7 +376,7 @@ void applySnapshot(PrimitiveHarness& h, const GameSnapshot& s) {
 
 void saveSnapshotToFile(const GameSnapshot& snapshot,
                         const string& filename,
-                        const GameStateSerializer& serializer) {
+                        const Gamestateserializer& serializer) {
     if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".txt") {
         throw GameException("Nama file save harus berekstensi .txt");
     }
@@ -345,7 +392,7 @@ void saveSnapshotToFile(const GameSnapshot& snapshot,
 }
 
 GameSnapshot loadSnapshotFromFile(const string& filename,
-                                  const GameStateSerializer& serializer) {
+                                  const Gamestateserializer& serializer) {
     if (filename.size() < 4 || filename.substr(filename.size() - 4) != ".txt") {
         throw GameException("Nama file save harus berekstensi .txt");
     }
@@ -379,15 +426,20 @@ void showSaveFile(const string& filename) {
 
 int main() {
     PrimitiveHarness harness;
-    GameStateSerializer serializer;
+    Gamestateserializer serializer;
 
     try {
         initBoardCodes(harness);
         harness.dice.setManual(1, 1);
-        harness.maxTurn = ConfigLoader().loadMiscConfig("config/misc.txt").getMaxTurn();
+        loadAllConfigs(harness);
     } catch (const std::exception& e) {
-        cout << "[WARN] Gagal preload config misc/board: " << e.what() << "\n";
+        cout << "[WARN] Gagal preload config: " << e.what() << "\n";
         cout << "[WARN] Program tetap jalan dengan nilai default.\n";
+        try {
+            loadPropertyDefaults(harness);
+        } catch (...) {
+            // Biarkan harness tetap bisa jalan walau tanpa config properti.
+        }
     }
 
     cout << "=== Primitive Test Engine (Serializer Harness) ===\n";
@@ -488,6 +540,12 @@ int main() {
                 }
                 harness.players[idx].positionIndex = pos;
                 cout << "[OK] Posisi " << args[1] << " = " << upper(args[2]) << "\n";
+            } else if (cmd == "CONFIG") {
+                printConfigSummary(harness);
+            } else if (cmd == "RELOAD_CONFIG") {
+                loadAllConfigs(harness);
+                cout << "[OK] Semua config berhasil di-reload dari folder config/.\n";
+                printConfigSummary(harness);
             } else if (cmd == "SAVE") {
                 if (!harness.initialized) {
                     cout << "[WARN] Jalankan INIT dulu.\n";
@@ -512,6 +570,5 @@ int main() {
             cout << "[ERR] " << e.what() << "\n";
         }
     }
-
     return 0;
 }

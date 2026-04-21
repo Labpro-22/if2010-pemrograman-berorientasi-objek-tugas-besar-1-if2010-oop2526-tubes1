@@ -84,7 +84,7 @@ void TurnManager::resetExtraTurn(){
     extraTurnGranted = false;
 }
 
-bool TurnManager::hasExtraTurn(){
+bool TurnManager::hasExtraTurn() const {
     return extraTurnGranted;
 }
 
@@ -114,4 +114,8 @@ void TurnManager::restoreState(const vector<int>& order,
     currentIndex = currentOrderIndex;
     currentTurnNumber = turnNumber;
     extraTurnGranted = extraTurn;
+}
+
+int TurnManager::orderSize() const {
+    return static_cast<int>(turnOrder.size());
 }

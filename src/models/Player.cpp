@@ -8,6 +8,7 @@ Player::Player(const string& username, int initialMoney)
       status(PlayerStatus::ACTIVE),
       hasUsedSkillThisTurn_(false),
       shieldActive(false),
+      jailFreeCards(0),
       jailTurns(0),
       consecutiveDoubles(0),
       discountPercent(0) {}
@@ -125,6 +126,15 @@ void Player::setUsedSkillThisTurn(bool val) { hasUsedSkillThisTurn_ = val;  }
 
 int  Player::getDiscountPercent() const { return discountPercent; }
 void Player::setDiscountPercent(int percent) { discountPercent = percent; }
+
+int Player::getJailFreeCardCount() const { return jailFreeCards; }
+bool Player::hasJailFreeCard() const { return jailFreeCards > 0; }
+void Player::addJailFreeCard() { jailFreeCards++; }
+bool Player::consumeJailFreeCard() {
+    if (jailFreeCards <= 0) return false;
+    jailFreeCards--;
+    return true;
+}
 
 int Player::getTotalWealth() const {
     int total = money;
