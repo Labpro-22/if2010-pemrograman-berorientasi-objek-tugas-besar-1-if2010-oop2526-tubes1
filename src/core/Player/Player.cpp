@@ -1,4 +1,4 @@
-#include "include\models\Player.hpp"
+#include "Player.hpp"
 
 int Player::getWealth() const 
 {
@@ -45,4 +45,3 @@ void Player::setStatus(std::string newStatus)
 {
     status = newStatus;
 }
-

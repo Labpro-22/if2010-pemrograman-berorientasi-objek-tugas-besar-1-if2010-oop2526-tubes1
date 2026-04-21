@@ -1,7 +1,7 @@
 #ifndef CARDDECK_HPP
 #define CARDDECK_HPP
 
-
+#include <vector>
 
 template <class T>
 class CardDeck
