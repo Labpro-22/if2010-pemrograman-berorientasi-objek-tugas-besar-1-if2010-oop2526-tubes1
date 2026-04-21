@@ -25,4 +25,5 @@ public:
     virtual void executeSpecial(Player* player) = 0;
 
     void executeAction(Player* player) override;
+    virtual void onPass(Player* player) override;  
 };

@@ -27,5 +27,5 @@ public:
     virtual void executeAction(Player* player) = 0;
 
     void onLand(Player* player) override;
-    void onPass(Player* player) override;
+    virtual void onPass(Player* player) override;
 };
