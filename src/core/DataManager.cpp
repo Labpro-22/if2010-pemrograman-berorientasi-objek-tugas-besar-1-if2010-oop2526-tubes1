@@ -34,8 +34,10 @@ void DataManager::loadProperties(GameManager& game, const vector<int>& utilityRe
 
     int id, landCost, mortgageValue, houseCost, hotelCost;
     string code, name, type, color;
-
+    // need some kind of wrapper here to add properties tile into the game manager via board
 }
+
+
 
 vector<int> DataManager::loadRailroadConfig() {
     ifstream file(configRailroad);
@@ -63,5 +65,33 @@ void DataManager::loadTax(GameManager& game) {
     string header;
     getline(file, header);
 
-    
+    int pphFlat, pphPercentage, pbmFlat;
+        
+    file >> pphFlat >> pphPercentage >> pbmFlat;
+
+    PPH* pph = new PPH(5, "PPH", "DEFAULT", pphFlat, pphPercentage);
+    PBM* pbm = new PBM(39, "PBM", "DEFAULT", pbmFlat);    
+
+    // again, need some kind of wrapper here to add the tax tile into the game manager via board
 }
+
+
+vector<int> DataManager::loadUtilityConfig() {
+    ifstream file(configUtility);
+    if (!file.is_open()) {       
+        return;
+    }    
+    string header;
+    getline(file, header);
+
+        
+    vector<int> multiplyFactor;
+
+    int totalUtility, factor;
+    while (file >> totalUtility >> factor){
+        multiplyFactor.push_back(factor);
+    }
+
+    return multiplyFactor;
+    
+} 
