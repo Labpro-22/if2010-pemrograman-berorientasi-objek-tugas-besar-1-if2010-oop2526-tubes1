@@ -4,7 +4,6 @@
 #include "./Player.hpp"
 #include "./Property.hpp"
 #include "../logic/Game.hpp" 
-using namespace std; 
 
 namespace core {
 
@@ -29,11 +28,11 @@ class ActionTile : public Tile {
 
 class PropertyTile : public Tile { 
 	public: 
-		virtual Property getProperty(); 
+		virtual Property* getProperty(); 
 		virtual void onLanded(Player& p, logic::Game& g); 
 
 	protected:  						
-		Property property_; 	
+		Property* property_; 	
 }; 
 
 class UtilityTile : public PropertyTile { 

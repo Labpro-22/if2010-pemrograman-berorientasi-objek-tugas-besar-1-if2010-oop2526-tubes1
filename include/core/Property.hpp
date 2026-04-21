@@ -7,7 +7,6 @@
 #include <vector> 
 #include <map>
 
-using namespace std; 
 namespace logic {class Game;}
 namespace core {class Player;}
 namespace core { 
@@ -21,10 +20,10 @@ class Property {
 		int mortgageValue_; 
 	public: 
 		Property();
-		Property(string name, int price, int mortgageValue);
+		Property(const std::string& name, int price, int mortgageValue);
 
 		virtual int calculateRent(logic::Game& g) = 0; 
-		virtual string getType() const = 0; 
+		virtual std::string getType() const = 0; 
 		void mortgage(); 
 		void unmortgage(); 
 		void setOwner(Player* p); 
@@ -32,7 +31,7 @@ class Property {
 		bool isOwned() const; 
 		bool isAvailable() const; 
 		bool isMortgagedStatus() const;
-		string getName() const;
+		std::string getName() const;
 		int getPrice() const;
 		int getMortgageValue() const;
 		virtual ~Property() = default;
@@ -48,9 +47,9 @@ class Street : public Property {
 		int festivalMultiplier_;
 		int festivalDuration_;
 	public: 
-		Street(string name, int price, int mortgageValue, ColorGroup colorGroup, vector<int> rentValues, int houseCost, int hotelCost);
+		Street(const std::string& name, int price, int mortgageValue, ColorGroup colorGroup, std::vector<int> rentValues, int houseCost, int hotelCost);
 		int calculateRent(logic::Game& g) override; 
-		string getType() const override ; 
+		std::string getType() const override ; 
 		void buildHouse(); 
 		void buildHotel(); 
 		void demolish(int n);
@@ -71,7 +70,7 @@ class Railroad : public Property {
 	private: 
 		int baseFare_; 
 	public: 
-		Railroad(string name, int mortgageValue, int baseFare);
+		Railroad(std::string& name, int mortgageValue, int baseFare);
 		int calculateRent(logic::Game& g) override; 
 		string getType() const override ; 
 		int getBaseFare() const;
@@ -84,7 +83,7 @@ class Utility : public Property {
 	public: 
 		Utility(string name, int mortgageValue, map<int, int> multiplierTable);
 		int calculateRent(logic::Game& g) override; 
-		string getType() const override ; 
+		std::string getType() const override ; 
 		int getCurrentMultiplier(logic::Game& g) const;
 	
 

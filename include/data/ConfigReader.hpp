@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "data/ConfigStructs.hpp"
-#include "data/PropertyConfig.hpp"
+#include "ConfigStructs.hpp"
+#include "PropertyConfig.hpp"
 
 namespace data {
 class ConfigReader {
