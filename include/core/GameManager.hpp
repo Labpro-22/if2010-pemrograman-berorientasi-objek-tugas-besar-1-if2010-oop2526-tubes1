@@ -49,8 +49,10 @@ public:
 			}
 		}
 	}
+	void addTile(Tile* tile) {
+	    Board::addTile(tile);
+	}	
 
-	
 	bool isGameValid();
 	void runGame();
 	void auction(Tile*);

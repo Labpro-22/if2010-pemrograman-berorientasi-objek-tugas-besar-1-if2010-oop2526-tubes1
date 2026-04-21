@@ -139,13 +139,15 @@ public:
     PBM(int, const std::string&, const std::string&, int fixedTax);
     int getFixedTax() const;
     void setFixedTax(int fixedTax) { this->fixedTax = fixedTax; };
-        
+
     void payTax(Player*) override;
 };
 
 class Go : public Tile {
+private:
+    int payment;
 public:
-    Go(int, const std::string&, const std::string&);
+    Go(int, const std::string&, const std::string&, int payment);
     void givePayments(Player*);
     void runTile(Player*) override;
 };
