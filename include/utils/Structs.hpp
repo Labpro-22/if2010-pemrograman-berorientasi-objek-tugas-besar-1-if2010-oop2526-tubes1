@@ -6,6 +6,7 @@
 #include "models/Money.hpp"
 #include "utils/Enums.hpp"
 
+
 class Bank;
 class FestivalManager;
 class TransactionLogger;
@@ -21,7 +22,7 @@ struct GameContext {
     TransactionLogger& logger;
     GameConfig& config;
     Dice& dice;
-    std::vector<Player*>& players;
+    vector<Player*>& players;
     Board& board;
     int currentTurn;
 };
@@ -35,9 +36,9 @@ struct LandingResult {
 
 struct LogEntry {
     int turn;
-    std::string username;
-    std::string actionType;
-    std::string detail;
+    string username;
+    string actionType;
+    string detail;
 };
 
 struct AuctionResult {
@@ -54,7 +55,7 @@ struct FestivalEffect {
 };
 
 struct PlayerView {
-    std::string username;
+    string username;
     Money money;
     int position;
     PlayerStatus status;
@@ -63,9 +64,9 @@ struct PlayerView {
 };
 
 struct PropertyView {
-    std::string code;
-    std::string name;
-    std::string ownerName;
+    string code;
+    string name;
+    string ownerName;
     PropertyStatus status;
     int buildingLevel;
 };

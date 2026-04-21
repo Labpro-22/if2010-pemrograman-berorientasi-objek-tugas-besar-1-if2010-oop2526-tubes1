@@ -1,7 +1,8 @@
 #pragma once
 
 #include <cstdint>
-
+#include <iostream>
+using namespace std;
 
 /**
  * @brief
@@ -9,7 +10,7 @@
  */
 
 
-enum class TileType : std::uint8_t {
+enum class TileType : uint8_t {
     STREET,
     RAILROAD,
     UTILITY,
@@ -24,19 +25,19 @@ enum class TileType : std::uint8_t {
     GO_TO_JAIL,
 };
 
-enum class PropertyStatus : std::uint8_t {
+enum class PropertyStatus : uint8_t {
     BANK,
     OWNED,
     MORTGAGED,
 };
 
-enum class PlayerStatus : std::uint8_t {
+enum class PlayerStatus : uint8_t {
     ACTIVE,
     BANKRUPT,
     JAILED,
 };
 
-enum class Color : std::uint8_t {
+enum class Color : uint8_t {
     BROWN,
     LIGHT_BLUE,
     PINK,
@@ -49,7 +50,7 @@ enum class Color : std::uint8_t {
     GRAY,
 };
 
-enum class SkillCardType : std::uint8_t {
+enum class SkillCardType : uint8_t {
     MOVE,
     DISCOUNT,
     SHIELD,
@@ -58,7 +59,7 @@ enum class SkillCardType : std::uint8_t {
     DEMOLITION,
 };
 
-enum class LandingAction : std::uint8_t {
+enum class LandingAction : uint8_t {
     BUY_PROMPT,
     PAY_RENT,
     PAY_TAX,
@@ -71,17 +72,17 @@ enum class LandingAction : std::uint8_t {
     BANKRUPT_CHECK,
 };
 
-enum class TaxChoice : std::uint8_t {
+enum class TaxChoice : uint8_t {
     FLAT,
     PERCENTAGE,
 };
 
-enum class AuctionAction : std::uint8_t {
+enum class AuctionAction : uint8_t {
     BID,
     PASS,
 };
 
-enum class AILevel : std::uint8_t {
+enum class AILevel : uint8_t {
     BASIC,
     SMART,
 };
@@ -91,7 +92,7 @@ enum class AILevel : std::uint8_t {
  * one value per concrete GameEvent subclass
  * concrete values can be finalized when events are implemented
  */
-enum class EventType : std::uint16_t {
+enum class EventType : uint16_t {
     PLAYER_MOVED,
     MONEY_CHANGED,
     PROPERTY_ACQUIRED,

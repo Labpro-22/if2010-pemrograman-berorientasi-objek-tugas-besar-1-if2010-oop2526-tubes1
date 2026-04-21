@@ -2,17 +2,19 @@
 
 #include <exception>
 #include <string>
+#include <iostream>
+using namespace std;
 
 #include "models/Money.hpp"
 
-class NimonopoliException : public std::exception {
+class NimonopoliException : public exception {
 public:
-    explicit NimonopoliException(std::string message);
+    explicit NimonopoliException(string message);
 
     const char* what() const noexcept override;
 
 private:
-    std::string message;
+    string message;
 };
 
 class InsufficientFundsException final : public NimonopoliException {
@@ -29,12 +31,12 @@ private:
 
 class InvalidCommandException final : public NimonopoliException {
 public:
-    explicit InvalidCommandException(std::string message);
+    explicit InvalidCommandException(string message);
 };
 
 class InvalidPropertyException final : public NimonopoliException {
 public:
-    explicit InvalidPropertyException(std::string message);
+    explicit InvalidPropertyException(string message);
 };
 
 class CardSlotFullException final : public NimonopoliException {
@@ -49,22 +51,22 @@ private:
 
 class InvalidBidException final : public NimonopoliException {
 public:
-    InvalidBidException(int bidAmount, std::string reason);
+    InvalidBidException(int bidAmount, string reason);
 
     int getBidAmount() const;
-    const std::string& getReason() const;
+    const string& getReason() const;
 
 private:
     int bidAmount;
-    std::string reason;
+    string reason;
 };
 
 class SaveLoadException final : public NimonopoliException {
 public:
-    explicit SaveLoadException(std::string message);
+    explicit SaveLoadException(string message);
 };
 
 class InvalidBoardConfigException final : public NimonopoliException {
 public:
-    explicit InvalidBoardConfigException(std::string message);
+    explicit InvalidBoardConfigException(string message);
 };

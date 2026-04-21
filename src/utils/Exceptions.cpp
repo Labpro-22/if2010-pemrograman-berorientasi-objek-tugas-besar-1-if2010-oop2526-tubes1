@@ -1,8 +1,9 @@
 #include "utils/Exceptions.hpp"
 
 #include <utility>
+using namespace std;
 
-NimonopoliException::NimonopoliException(std::string message) : message(std::move(message)) {}
+NimonopoliException::NimonopoliException(string message) : message(std::move(message)) {}
 
 const char* NimonopoliException::what() const noexcept {
     return message.c_str();
@@ -22,21 +23,21 @@ Money InsufficientFundsException::getAvailable() const {
     return available;
 }
 
-InvalidCommandException::InvalidCommandException(std::string message)
+InvalidCommandException::InvalidCommandException(string message)
     : NimonopoliException("Invalid command: " + std::move(message)) {}
 
-InvalidPropertyException::InvalidPropertyException(std::string message)
+InvalidPropertyException::InvalidPropertyException(string message)
     : NimonopoliException("Invalid property: " + std::move(message)) {}
 
 CardSlotFullException::CardSlotFullException(int maxSlots)
-    : NimonopoliException("Card slots full (max " + std::to_string(maxSlots) + ")"), maxSlots(maxSlots) {}
+    : NimonopoliException("Card slots full (max " + to_string(maxSlots) + ")"), maxSlots(maxSlots) {}
 
 int CardSlotFullException::getMaxSlots() const {
     return maxSlots;
 }
 
-InvalidBidException::InvalidBidException(int bidAmount, std::string reason)
-    : NimonopoliException("Invalid bid " + std::to_string(bidAmount) + ": " + reason),
+InvalidBidException::InvalidBidException(int bidAmount, string reason)
+    : NimonopoliException("Invalid bid " + to_string(bidAmount) + ": " + reason),
       bidAmount(bidAmount),
       reason(std::move(reason)) {}
 
@@ -44,11 +45,11 @@ int InvalidBidException::getBidAmount() const {
     return bidAmount;
 }
 
-const std::string& InvalidBidException::getReason() const {
+const string& InvalidBidException::getReason() const {
     return reason;
 }
 
-SaveLoadException::SaveLoadException(std::string message) : NimonopoliException("Save/Load: " + std::move(message)) {}
+SaveLoadException::SaveLoadException(string message) : NimonopoliException("Save/Load: " + std::move(message)) {}
 
-InvalidBoardConfigException::InvalidBoardConfigException(std::string message)
+InvalidBoardConfigException::InvalidBoardConfigException(string message)
     : NimonopoliException("Invalid board config: " + std::move(message)) {}
