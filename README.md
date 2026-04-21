@@ -1,12 +1,8 @@
-# Nimonspoli  **IF2010 Pemrograman Berorientasi Objek — Tugas Besar 1**
-
----
+# Nimonspoli  **IF2010 Pemrograman Berorientasi Objek Tugas Besar 1**
 
 ## Deskripsi
 
 Nimonspoli adalah permainan papan (board game) bertema monopoli yang memungkinkan 2–4 pemain untuk saling berkompetisi dalam membeli properti, membayar sewa, mengikuti lelang, dan mengelola kekayaan. Permainan ini mensimulasikan seluruh mekanisme permainan monopoli, termasuk kartu kemampuan spesial, efek festival, sistem gadai, dan mekanisme kebangkrutan.
-
----
 
 ## Fitur Utama
 
@@ -29,7 +25,6 @@ Nimonspoli adalah permainan papan (board game) bertema monopoli yang memungkinka
 ---
 
 ## Struktur Proyek
-
 ```
 tugas-besar-1-omb/
 ├── config/                  # File konfigurasi permainan
@@ -79,7 +74,6 @@ tugas-besar-1-omb/
 ├── makefile
 └── README.md
 ```
-
 ---
 
 ## Arsitektur (Layered Architecture)
@@ -92,7 +86,6 @@ Program mengimplementasikan **3-layer architecture**:
 | **Core Layer** | `include/core/`, `src/core/` | Aturan permainan, state management (`Game`, `Board`, `Player`, `Tile`, `Card`, `Dice`, `Bank`) |
 | **Data Layer** | `include/data/`, `src/data/` | Baca/tulis file konfigurasi dan save/load (`ConfigLoader`, `SaveManager`) |
 
----
 
 ## Konsep OOP yang Diimplementasikan
 
@@ -105,7 +98,6 @@ Program mengimplementasikan **3-layer architecture**:
 | 5 | **Generic Class (Template)** | `CardDeck<T>` untuk tumpukan kartu Chance, Community, dan Skill |
 | 6 | **STL** | `vector` (pemain, petak, kartu), `map` (properti, rent table, multiplier table) |
 
----
 
 ## Prasyarat
 
@@ -113,7 +105,6 @@ Program mengimplementasikan **3-layer architecture**:
 - **OS**: Linux / WSL / macOS
 - **Tools**: `make`
 
----
 
 ## Cara Kompilasi & Menjalankan
 
@@ -129,9 +120,11 @@ make clean
 
 # Rebuild dari awal
 make rebuild
-```
 
----
+# Kalau dari windows, ke root
+g++ -Wall -Wextra -std=c++17 -I include (Get-ChildItem -Path src -Recurse -Filter *.cpp | ForEach-Object { $_.FullName }) -o bin/game.exe
+.\bin\game.exe
+```
 
 ## Daftar Perintah
 
@@ -153,7 +146,6 @@ make rebuild
 | `SELESAI` | Akhiri giliran |
 | `BANTUAN` | Tampilkan daftar perintah |
 
----
 
 ## Anggota Kelompok
 
@@ -164,7 +156,3 @@ make rebuild
 | — | — |
 | — | — |
 | — | — |
-
----
-
-*Tugas Besar 1 — IF2010 Pemrograman Berorientasi Objek — 2025/2026*
