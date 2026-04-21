@@ -11,11 +11,11 @@ enum class CommunityChestType {
 class CommunityChestCard {
 private:
     CommunityChestType type;
-    std::string name;
-    std::string description;
+    string name;
+    string description;
  
 public:
-    CommunityChestCard(CommunityChestType type, const std::string& name, const std::string& desc);
+    CommunityChestCard(CommunityChestType type, const string& name, const string& desc);
  
     CommunityChestCard();
  
@@ -24,8 +24,8 @@ public:
     void activate();
  
     CommunityChestType getType() const;
-    std::string getName() const;
-    std::string getDescription() const;
+    string getName() const;
+    string getDescription() const;
  
     bool operator==(const CommunityChestCard& other) const;
 };
