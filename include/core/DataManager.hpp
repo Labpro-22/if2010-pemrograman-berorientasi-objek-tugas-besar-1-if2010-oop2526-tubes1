@@ -19,7 +19,7 @@ private:
     string configSpecial;
 
 public:
-    DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad);
+    DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad,const std::string& configSpecial);
     void loadMisc(GameManager& game);
     void loadTax(GameManager& game);
     vector<int> loadUtilityConfig();

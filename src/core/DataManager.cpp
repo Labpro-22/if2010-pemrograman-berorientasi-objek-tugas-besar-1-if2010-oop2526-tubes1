@@ -4,7 +4,7 @@
 #include "../../include/core/GameManager.hpp"
 
 
-DataManager::DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad) : configMisc(configMisc), configProperty(configProperty), configRailroad(configRailroad), configTax(configTax), configUtility(configUtility) {}
+DataManager::DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad, const std::string& configSpecial) : configMisc(configMisc), configProperty(configProperty), configRailroad(configRailroad), configTax(configTax), configUtility(configUtility), configSpecial(configSpecial){}
 
 void DataManager::loadMisc(GameManager& game) {
     ifstream file(configMisc);
@@ -34,6 +34,23 @@ void DataManager::loadProperties(GameManager& game, const vector<int>& utilityRe
 
     int id, landCost, mortgageValue, houseCost, hotelCost;
     string code, name, type, color;
+    while (file >> id >> code >> name >> type >> color >> landCost >> mortgageValue >> houseCost >> hotelCost) {
+        vector<int> rentCost(6);
+        for (int i = 0; i < 6; i++){
+            file >> rentCost[i];
+        }        
+
+        if (type == "STREET") {
+            Street* streetTile = new Street(id,code,color,landCost,mortgageValue,1,0,nullptr,BANK,houseCost,hotelCost,rentCost,0);
+            game.addTile(streetTile);
+        } else if (type == "RAILROAD"){
+            Railroad* railroadTile = new Railroad(id,code,color,landCost,mortgageValue,1,0,nullptr,BANK,railroadRent);
+            game.addTile(railroadTile);
+        } else if (type == "UTILITY"){
+            Utility* utilityTile = new Utility(id,code,color,landCost,mortgageValue,1,0,nullptr,BANK,utilityRent);
+            game.addTile(utilityTile);
+        }
+    }
     // need some kind of wrapper here to add properties tile into the game manager via board
 }
 
@@ -72,6 +89,8 @@ void DataManager::loadTax(GameManager& game) {
     PPH* pph = new PPH(5, "PPH", "DEFAULT", pphFlat, pphPercentage);
     PBM* pbm = new PBM(39, "PBM", "DEFAULT", pbmFlat);    
 
+    game.addTile(pph);
+    game.addTile(pbm);
     // again, need some kind of wrapper here to add the tax tile into the game manager via board
 }
 
@@ -107,6 +126,22 @@ vector<int> DataManager::loadUtilityConfig() {
     int goSalary, jail_fine;
 
     file >> goSalary >> jail_fine;    
+
+    Go* go = new Go(1, "GO", "DEFAULT", goSalary);
+    Prison* prison = new Prison(11, "PEN", "DEFAULT", jail_fine);
+
+    game.addTile(go);
+    game.addTile(prison);
     // again (2x), need some kind of wrapper here to add the special tile into the game manager via board
 }
  
+void DataManager::load(GameManager& game) {
+    loadMisc(game);
+
+    vector<int> utilityRent = loadUtilityConfig();
+    vector<int> railroadRent = loadRailroadConfig();
+
+    loadProperties(game, utilityRent, railroadRent);
+    loadTax(game);
+    loadSpecial(game);
+}
