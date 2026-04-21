@@ -3,7 +3,11 @@
 #include <stdexcept>
 
 GameState::GameState(int maxTurn)
-    : currentPlayerIdx(0), maxTurn(maxTurn), currentTurn(1), gameOver(false) {
+    : currentPlayerIdx(0),
+      maxTurn(maxTurn),
+      currentTurn(1),
+      gameOver(false),
+      board(std::make_shared<Board>()) {
     if (maxTurn <= 0) {
         throw std::invalid_argument("maxTurn harus lebih dari 0.");
     }
@@ -64,10 +68,19 @@ void GameState::setCurrentTurn(int turn) {
         throw std::invalid_argument("currentTurn harus lebih dari 0.");
     }
     currentTurn = turn;
+    if (currentTurn > maxTurn) {
+        gameOver = true;
+    }
 }
 
 void GameState::nextPlayer() {
     if (players.empty()) {
+        gameOver = true;
+        return;
+    }
+
+    if (countActivePlayers() <= 1) {
+        gameOver = true;
         return;
     }
 
@@ -88,6 +101,7 @@ void GameState::nextPlayer() {
 
 std::vector<Player> GameState::getActivePlayers() const {
     std::vector<Player> activePlayers;
+    activePlayers.reserve(static_cast<std::size_t>(countActivePlayers()));
     for (const Player& player : players) {
         if (!player.isBankrupt()) {
             activePlayers.push_back(player);
@@ -97,16 +111,7 @@ std::vector<Player> GameState::getActivePlayers() const {
 }
 
 bool GameState::hasSingleActivePlayer() const {
-    int activeCount = 0;
-    for (const Player& player : players) {
-        if (!player.isBankrupt()) {
-            ++activeCount;
-            if (activeCount > 1) {
-                return false;
-            }
-        }
-    }
-    return activeCount == 1;
+    return countActivePlayers() == 1;
 }
 
 void GameState::addLog(const std::string& entry) {
@@ -125,6 +130,38 @@ const Dice& GameState::getDice() const {
     return dice;
 }
 
+Board& GameState::getBoard() {
+    if (!board) {
+        throw std::runtime_error("Board belum diinisialisasi.");
+    }
+    return *board;
+}
+
+const Board& GameState::getBoard() const {
+    if (!board) {
+        throw std::runtime_error("Board belum diinisialisasi.");
+    }
+    return *board;
+}
+
+void GameState::setBoard(const std::shared_ptr<Board>& newBoard) {
+    if (!newBoard) {
+        throw std::invalid_argument("Board tidak boleh null.");
+    }
+    board = newBoard;
+}
+
+int GameState::getBoardSizeOrDefault(int defaultSize) const {
+    if (defaultSize <= 0) {
+        throw std::invalid_argument("defaultSize harus lebih dari 0.");
+    }
+
+    if (!board || board->getSize() <= 0) {
+        return defaultSize;
+    }
+    return board->getSize();
+}
+
 bool GameState::isGameOver() const {
     return gameOver;
 }
@@ -141,4 +178,14 @@ void GameState::clampCurrentPlayerIndex() {
     if (currentPlayerIdx < 0 || currentPlayerIdx >= static_cast<int>(players.size())) {
         currentPlayerIdx = 0;
     }
+}
+
+int GameState::countActivePlayers() const {
+    int activeCount = 0;
+    for (const Player& player : players) {
+        if (!player.isBankrupt()) {
+            ++activeCount;
+        }
+    }
+    return activeCount;
 }
