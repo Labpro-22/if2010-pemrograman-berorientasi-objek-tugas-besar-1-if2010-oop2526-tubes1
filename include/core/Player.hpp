@@ -21,7 +21,8 @@ private:
     string username;
     int money;
     int position;
-    vector<int> ownedProperties;
+    PlayerStatus status;
+    vector<PropertyTile*> ownedProperties;
     vector<SkillCard*> handCards;
 
     int jailTurnsLeft;
