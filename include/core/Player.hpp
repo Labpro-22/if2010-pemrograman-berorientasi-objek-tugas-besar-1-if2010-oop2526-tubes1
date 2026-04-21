@@ -55,4 +55,5 @@ class Player {
         Player* operator-=(int money); // untuk proses pengurangan currency
         void moveTo(Tile* destination, bool getPayment);
         void mortgageProperty(Tile* property); // ubah status Tile jadi mortgaged
+        void setToJailed();
 };

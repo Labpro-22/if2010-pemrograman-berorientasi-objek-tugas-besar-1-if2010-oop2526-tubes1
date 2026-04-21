@@ -19,7 +19,7 @@ private:
 	int activePlayerCount;
 	int playerCount;
 	std::vector<Player*> players;
-	Board tiles;
+	Board board;
 	CardDeck<SkillCard> deckSkill;
 	CardDeck<AutoUseCard> deckChance;
 	CardDeck<AutoUseCard> deckCurrency;
@@ -29,6 +29,10 @@ private:
 
 public:
 	GameManager();
+	static GameManager& getInstance() {
+		static GameManager instance;
+		return instance;
+	}
 
 	void setTurn(int turn) { this->turn = turn; };
 	void setMaxTurn(int maxTurn) { this->maxTurn = maxTurn; };
@@ -60,6 +64,11 @@ public:
 	void initPlayers();
 	void initStateLogs();
 	void initSkillDeck();
-
+	Board& getBoard() {
+		return board;
+	}
+	const Board& getBoard() const {
+		return board;
+	}
     Logger& getLogger();
 };
