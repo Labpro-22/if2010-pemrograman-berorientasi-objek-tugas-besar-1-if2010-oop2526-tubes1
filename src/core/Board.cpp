@@ -8,7 +8,9 @@
 #include "../../include/core/Tile.hpp"
 using namespace std;
 
-Board::Board(int size = 10): tiles(size, nullptr) {}
+Board::Board(int size): tiles() {
+    tiles.reserve(size);
+}
 
 Tile* Board::getTile(string code) const {
     auto it = std::find_if(tiles.begin(), tiles.end(), [&code](const Tile* tile){
@@ -50,4 +52,37 @@ std::vector<Tile*> Board::getColorGroup(const std::string& color) const {
 
 void Board::addTile(Tile* newTile){
     tiles.push_back(newTile);
+}
+
+bool Board::canBuildHouse(Player player, Tile* tile) {
+    // TODO: Implement check for building house
+    return false;
+}
+
+int Board::getRailroadLevel(Tile* tile) {
+    // TODO: Implement get railroad level
+    return 0;
+}
+
+int Board::getUtilityLevel(Tile* tile) {
+    // TODO: Implement get utility level
+    return 0;
+}
+
+Player* Board::getNextPlayer(int currentIndex) {
+    // TODO: Implement get next player logic
+    return nullptr;
+}
+
+int Board::stringToIndex(const std::string& str) {
+    // TODO: Implement string to index conversion
+    return 0;
+}
+
+Tile* Board::goToTile(const std::string& code, int moveAmount) {
+    Tile* currentTile = getTile(code);
+    if (currentTile != nullptr) {
+        return goToTile(*currentTile, moveAmount);
+    }
+    return nullptr;
 }

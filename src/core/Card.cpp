@@ -175,7 +175,7 @@ void TeleportCard::useCard(Player *currentPlayer, std::vector<Player *>)
         return;
     }
 
-    Tile *destination;
+    Tile *destination = nullptr;
     if (destination != nullptr)
     {
         currentPlayer->moveTo(destination, false);

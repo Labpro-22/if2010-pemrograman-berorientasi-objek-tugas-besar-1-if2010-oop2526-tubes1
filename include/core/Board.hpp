@@ -20,6 +20,7 @@ public:
 
 	Tile* getTile(std::string code) const; // done
 	Tile* getJailTile() const;
+	std::vector<Tile*> getTiles() const{return this->tiles;};
 	Tile* goToTile(Tile& current, int moveAmount) const;
 	void setGoIndex(int index){ this->goIndex = index; }
 	void setJailIndex(int index){ this->jailIndex = index; }

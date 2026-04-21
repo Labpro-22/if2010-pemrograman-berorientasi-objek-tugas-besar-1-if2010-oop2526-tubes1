@@ -4,7 +4,7 @@
 #include "../../include/core/GameManager.hpp"
 
 
-DataManager::DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad, const std::string& configSpecial) : configMisc(configMisc), configProperty(configProperty), configRailroad(configRailroad), configTax(configTax), configUtility(configUtility), configSpecial(configSpecial){}
+DataManager::DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad, const std::string& configSpecial) : configMisc(configMisc), configProperty(configProperty), configTax(configTax), configUtility(configUtility), configRailroad(configRailroad), configSpecial(configSpecial){}
 
 void DataManager::loadMisc(GameManager& game) {
     ifstream file(configMisc);
@@ -51,7 +51,7 @@ void DataManager::loadProperties(GameManager& game, const vector<int>& utilityRe
             game.addTile(utilityTile);
         }
     }
-    // need some kind of wrapper here to add properties tile into the game manager via board
+    file.close();
 }
 
 
@@ -59,7 +59,7 @@ void DataManager::loadProperties(GameManager& game, const vector<int>& utilityRe
 vector<int> DataManager::loadRailroadConfig() {
     ifstream file(configRailroad);
     if (!file.is_open()) {       
-        return;
+        return vector<int>();
     }
 
     vector<int> mortgageRange;
@@ -91,14 +91,14 @@ void DataManager::loadTax(GameManager& game) {
 
     game.addTile(pph);
     game.addTile(pbm);
-    // again, need some kind of wrapper here to add the tax tile into the game manager via board
+    file.close();
 }
 
 
 vector<int> DataManager::loadUtilityConfig() {
     ifstream file(configUtility);
     if (!file.is_open()) {       
-        return;
+        return vector<int>();
     }    
     string header;
     getline(file, header);
@@ -132,7 +132,7 @@ vector<int> DataManager::loadUtilityConfig() {
 
     game.addTile(go);
     game.addTile(prison);
-    // again (2x), need some kind of wrapper here to add the special tile into the game manager via board
+    file.close();
 }
  
 void DataManager::load(GameManager& game) {
