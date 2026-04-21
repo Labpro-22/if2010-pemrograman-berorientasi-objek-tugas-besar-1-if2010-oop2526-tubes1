@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
+#include "models/Board/Board.hpp"
 #include "models/Board/Dice.hpp"
 #include "models/Player/Player.hpp"
 
@@ -14,8 +16,10 @@ private:
     bool gameOver;
     std::vector<std::string> logs;
     Dice dice;
+    std::shared_ptr<Board> board;
 
     void clampCurrentPlayerIndex();
+    int countActivePlayers() const;
 
 public:
     explicit GameState(int maxTurn = 100);
@@ -43,6 +47,10 @@ public:
     const std::vector<std::string>& getLogs() const;
     Dice& getDice();
     const Dice& getDice() const;
+    Board& getBoard();
+    const Board& getBoard() const;
+    void setBoard(const std::shared_ptr<Board>& newBoard);
+    int getBoardSizeOrDefault(int defaultSize = Board::DEFAULT_BOARD_SIZE) const;
 
     bool isGameOver() const;
     void setGameOver(bool value);

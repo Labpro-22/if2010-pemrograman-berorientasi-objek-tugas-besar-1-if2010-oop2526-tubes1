@@ -18,9 +18,10 @@ bool RollDiceCommand::execute(GameState& state, EffectResolver& effectResolver, 
     Player& player = state.getCurrentPlayer();
     const std::pair<int, int> dicePair = state.getDice().roll();
     const int steps = dicePair.first + dicePair.second;
+    const int effectiveBoardSize = state.getBoardSizeOrDefault(boardSize);
 
     state.addLog(player.getUsername() + " melempar dadu: " + std::to_string(dicePair.first) + " dan " + std::to_string(dicePair.second) + ".");
-    player.move(steps, boardSize);
+    player.move(steps, effectiveBoardSize);
     effectResolver.resolveLanding(player, player.getPosition(), state);
 
     turnManager.handleExtraTurn(player, state.getDice().isDouble(), state);
@@ -36,7 +37,11 @@ bool SetDiceCommand::execute(GameState& state, EffectResolver&, TurnManager&) co
 }
 
 bool PrintBoardCommand::execute(GameState& state, EffectResolver&, TurnManager&) const {
-    state.addLog("Perintah PRINT_BOARD dijalankan.");
+    const Board& board = state.getBoard();
+    state.addLog(
+        "Perintah PRINT_BOARD dijalankan. Jumlah tile board: " +
+        std::to_string(board.getSize()) + "."
+    );
     return true;
 }
 
