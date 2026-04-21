@@ -95,3 +95,18 @@ vector<int> DataManager::loadUtilityConfig() {
     return multiplyFactor;
     
 } 
+
+ void DataManager::loadSpecial(GameManager& game) {
+    ifstream file(configSpecial);
+    if (!file.is_open()) {       
+        return;
+    }    
+    string header;
+    getline(file, header);
+
+    int goSalary, jail_fine;
+
+    file >> goSalary >> jail_fine;    
+    // again (2x), need some kind of wrapper here to add the special tile into the game manager via board
+}
+ 

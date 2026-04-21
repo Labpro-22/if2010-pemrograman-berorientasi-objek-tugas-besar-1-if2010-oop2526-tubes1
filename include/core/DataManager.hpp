@@ -16,6 +16,7 @@ private:
     string configTax;
     string configUtility;
     string configRailroad;
+    string configSpecial;
 
 public:
     DataManager(const std::string& configMisc, const std::string& configProperty, const std::string& configTax, const std::string& configUtility, const std::string& configRailroad);
@@ -24,6 +25,7 @@ public:
     vector<int> loadUtilityConfig();
     vector<int> loadRailroadConfig();
     void loadProperties(GameManager& game, const vector<int>& utilityRent, const std::vector<int>& railroadRent);
+    void loadSpecial(GameManager& game);
 
     void load(GameManager& game);
     void save(GameManager& game);
