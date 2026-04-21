@@ -13,7 +13,8 @@ int main() {
         defaultConfigPath + "property.txt",
         defaultConfigPath + "tax.txt",
         defaultConfigPath + "utility.txt",
-        defaultConfigPath + "railroad.txt"
+        defaultConfigPath + "railroad.txt",
+        defaultConfigPath + "special.txt"
     );
 
 }

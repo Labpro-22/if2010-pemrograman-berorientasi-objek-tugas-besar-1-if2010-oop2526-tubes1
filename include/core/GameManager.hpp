@@ -39,7 +39,7 @@ public:
 	void setActivePlayerCount(int activePlayerCount) { this->activePlayerCount = activePlayerCount; };
 	void setPlayerCount(int playerCount) { this->playerCount = playerCount; };
 	void setPlayers(std::vector<Player*> players) { this->players = players; };
-	void setTiles(Board tiles) { this->tiles = tiles; };
+	void setTiles(Board tiles) { this->board = tiles; };
 	void setDeckSkill(CardDeck<SkillCard> deckSkill) { this->deckSkill = std::move(deckSkill); };
 	void setDeckChance(CardDeck<AutoUseCard> deckChance) { this->deckChance = std::move(deckChance); };
 	void setDeckCurrency(CardDeck<AutoUseCard> deckCurrency) { this->deckCurrency = std::move(deckCurrency); };
