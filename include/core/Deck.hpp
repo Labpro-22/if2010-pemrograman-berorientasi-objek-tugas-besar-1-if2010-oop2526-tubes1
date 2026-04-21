@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 
 template <typename T>
@@ -10,6 +11,8 @@ private:
 
 public:
 	CardDeck() = default;
+	CardDeck(CardDeck&&) noexcept = default;
+	CardDeck& operator=(CardDeck&&) noexcept = default;
 	virtual ~CardDeck() = default;
 
 	void shuffleDeck();
