@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string> 
-#include "./Player.hpp"
-#include "./Property.hpp"
-#include "../logic/Game.hpp" 
+#include "core/Player.hpp"
+#include "core/Property.hpp"
+#include "logic/Game.hpp" 
 
 namespace core {
 
@@ -14,9 +14,9 @@ class Tile {
 		virtual ~Tile() = default; 
 		virtual void onLanded(Player&p, logic::Game& g) = 0; 
 		virtual void onPassed(Player& p, logic::Game& g); 
-		virtual string getName(); 
-		virtual string getType(); 
-		virtual int getPosition(); 
+		virtual string getName() const; 
+		virtual string getType() const ; 
+		virtual int getPosition() const; 
 
 	protected: 
 		int position_;
@@ -32,7 +32,7 @@ class ActionTile : public Tile {
 class PropertyTile : public Tile { 
 	public: 
 		PropertyTile(int position, const std::string& name, Property* property); 
-		virtual Property* getProperty(); 
+		virtual Property* getProperty() const; 
 		virtual void onLanded(Player& p, logic::Game& g); 
 
 	protected:  						
@@ -43,14 +43,14 @@ class UtilityTile : public PropertyTile {
 	public: 
 		UtilityTile(int position, const std::string& name, Property* property); 
 		void onLanded(Player& p, logic::Game& g) override ; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 }; 
 
 class RailroadTile : public PropertyTile { 
 	public: 
 		RailroadTile(int position, const std::string& name, Property* property); 
 		void onLanded(Player&, logic::Game&) override;
-		virtual string getType() override; 
+		virtual string getType() const override; 
 
 };
 
@@ -59,14 +59,14 @@ class GoTile : public ActionTile {
 		GoTile(int position, const std::string& name);
 		void onPassed(Player&, logic::Game&) override; 
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 };
 
 class JailTile : public ActionTile { 
 	public: 
 		JailTile(int position, const std::string& name);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const  override; 
 };
 
 
@@ -74,7 +74,7 @@ class FreeParkingTile : public ActionTile {
 	public: 
 		FreeParkingTile(int position, const std::string& name);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 };
 
 
@@ -82,7 +82,7 @@ class GoToJailTile: public ActionTile {
 	public: 
 		GoToJailTile(int position, const std::string& name);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 };
 
 
@@ -95,14 +95,14 @@ class TaxTile: public ActionTile {
 	public: 
 		TaxTile(int position, const std::string& name, int rate, bool isPercentage);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 }; 
 class FestivalTile: public ActionTile { 
 	public: 
 
 		FestivalTile(int position, const std::string& name);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 };
 
 class CardTile: public ActionTile { 
@@ -113,7 +113,7 @@ class CardTile: public ActionTile {
 	public: 
 		CardTile(int position, const std::string& name, bool isChance);
 		void onLanded(Player&, logic::Game&) override; 
-		virtual string getType() override; 
+		virtual string getType() const override; 
 };
 
 }  // namespace core
