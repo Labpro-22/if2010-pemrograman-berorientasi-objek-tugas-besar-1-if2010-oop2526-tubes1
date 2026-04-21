@@ -3,8 +3,9 @@
 #include "models/tiles/PropertyTile.hpp"
 #include "models/tiles/StreetTile.hpp"
 #include "models/tiles/RailroadTile.hpp"
-#include "models/tiles/UtilityTile.hpp"
 #include "models/Player.hpp"
+#include "models/Enums.hpp"
+#include "models/tiles/UtilityTile.hpp"
 
 Board::Board() = default;
 
@@ -12,14 +13,16 @@ Board::~Board() {
     for (Tile* tile : tiles) {
         delete tile;
     }
-    tiles.clear();
-    propertyIndex.clear();
 }
 
 void Board::buildBoard(const std::vector<Tile*>& boardTiles) {
-    tiles = boardTiles;
     for (Tile* tile : tiles) {
-        if (tile && tile->getCategory() == TileCategory::PROPERTY) {
+        delete tile;
+    }
+    tiles = boardTiles;
+    propertyIndex.clear();
+    for (Tile* tile : tiles) {
+        if (tile->getCategory() == TileCategory::PROPERTY) {
             PropertyTile* prop = dynamic_cast<PropertyTile*>(tile);
             if (prop) {
                 propertyIndex[prop->getCode()] = prop;
@@ -29,7 +32,7 @@ void Board::buildBoard(const std::vector<Tile*>& boardTiles) {
 }
 
 Tile* Board::getTile(int index) const {
-    if (index >= 0 && index < static_cast<int>(tiles.size())) {
+    if (index >= 0 && index < tiles.size()) {
         return tiles[index];
     }
     return nullptr;
@@ -53,23 +56,28 @@ std::vector<PropertyTile*> Board::getProperties() const {
 }
 
 std::vector<StreetTile*> Board::getProperties(ColorGroup colorGroup) const {
-    std::vector<StreetTile*> groupProps;
-    for (auto const& pair : propertyIndex) {
+    std::vector<StreetTile*> streets;
+    for (const auto& pair : propertyIndex) {
         StreetTile* street = dynamic_cast<StreetTile*>(pair.second);
         if (street && street->getColorGroup() == colorGroup) {
-            groupProps.push_back(street);
+            streets.push_back(street);
         }
     }
-    return groupProps;
+    return streets;
 }
 
 RailroadTile* Board::getNearestRailroad(int fromIndex) const {
     if (tiles.empty()) return nullptr;
-    int size = tiles.size();
-    for (int i = 1; i <= size; ++i) {
-        int checkIndex = (fromIndex + i) % size;
-        RailroadTile* rr = dynamic_cast<RailroadTile*>(tiles[checkIndex]);
-        if (rr) return rr;
+    int n = tiles.size();
+    for (int i = 1; i <= n; ++i) {
+        int idx = (fromIndex + i) % n;
+        Tile* tile = tiles[idx];
+        if (tile && tile->getCategory() == TileCategory::PROPERTY) {
+            RailroadTile* rr = dynamic_cast<RailroadTile*>(tile);
+            if (rr) {
+                return rr;
+            }
+        }
     }
     return nullptr;
 }
