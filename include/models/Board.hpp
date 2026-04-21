@@ -11,7 +11,7 @@ class Board {
 private:
     static Board* instance;
     vector<Tile*> tiles;
-    map<string, int> tileMap;
+    map<std::string, int> tileMap;
     int jailPositionIndex;
     Board();
 
@@ -27,4 +27,7 @@ public:
 
     void printBoardStatus();
     void resetBoard();
+    Tile* getTileAt(int index); 
+    Tile* getTileByKode(const std::string& kode);
+    int getJailPosition() const;
 };
