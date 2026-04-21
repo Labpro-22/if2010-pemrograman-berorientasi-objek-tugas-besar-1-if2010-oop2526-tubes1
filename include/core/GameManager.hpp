@@ -54,7 +54,7 @@ public:
 		}
 	}
 	void addTile(Tile* tile) {
-	    Board::addTile(tile);
+	    board.addTile(tile);
 	}	
 
 	bool isGameValid();

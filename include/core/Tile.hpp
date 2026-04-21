@@ -16,9 +16,9 @@ public:
     Tile(int index, const std::string& code, const std::string& color);
     virtual ~Tile() = default;
 
-    int getIndex() const;
-    std::string getCode() const;
-    std::string getColor() const;
+    int getIndex() const { return index; }
+    std::string getCode() const { return code; }
+    std::string getColor() const { return color; }
     virtual void runTile(Player*) = 0;
 };
 
