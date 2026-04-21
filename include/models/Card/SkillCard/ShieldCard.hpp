@@ -3,8 +3,8 @@
 
 class ShieldCard : public SkillCard {
     public:
-        ShieldCard();
-        ~ShieldCard();
+        ShieldCard() = default;
+        ~ShieldCard() = default;
         void activate(GameEngine&);
         string getName();
         string getDescription();

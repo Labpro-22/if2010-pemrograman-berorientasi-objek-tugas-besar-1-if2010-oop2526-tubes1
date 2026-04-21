@@ -3,8 +3,8 @@
 
 class LassoCard : public SkillCard {
     public:
-        LassoCard();
-        ~LassoCard();
+        LassoCard() = default;
+        ~LassoCard() = default;
         void activate(GameEngine&);
         string getName();
         string getDescription();

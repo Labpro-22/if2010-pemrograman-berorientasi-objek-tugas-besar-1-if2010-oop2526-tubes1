@@ -3,8 +3,8 @@
 
 class PrisonCard : public ChanceCard{
     public:
-        PrisonCard();
-        ~PrisonCard();
+        PrisonCard() = default;
+        ~PrisonCard() = default;
         string getName();
         string getDescription();
         void activate(GameEngine&);

@@ -3,8 +3,8 @@
 
 class StationCard : public ChanceCard{
     public:
-        StationCard();
-        ~StationCard();
+        StationCard() = default;
+        ~StationCard() = default;
         string getName();
         string getDescription();
         void activate(GameEngine&);

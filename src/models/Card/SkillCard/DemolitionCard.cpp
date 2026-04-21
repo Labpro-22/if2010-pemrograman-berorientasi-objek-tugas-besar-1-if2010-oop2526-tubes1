@@ -1,13 +1,5 @@
 #include "models/Card/SkillCard/DemolitionCard.hpp"
 
-DemolitionCard::DemolitionCard() {
-
-}
-
-DemolitionCard::~DemolitionCard() {
-
-}
-
 void DemolitionCard::activate(GameEngine& ge) {
     // TODO: 
 }

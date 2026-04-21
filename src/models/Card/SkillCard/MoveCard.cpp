@@ -1,13 +1,5 @@
 #include "models/Card/SkillCard/MoveCard.hpp"
 
-MoveCard::MoveCard() {
-
-}
-
-MoveCard::~MoveCard() {
-
-}
-
 void MoveCard::activate(GameEngine& ge) {
     random_device random;
     mt19937 g(random());
@@ -15,7 +7,10 @@ void MoveCard::activate(GameEngine& ge) {
     int moveNumber = number(g);
 
     Player currPlayer = ge.getState().getCurrentPlayer();
-    currPlayer.move(moveNumber, 40);
+    int boardSize = ge.getState().getBoard().getSize();
+    
+    currPlayer.move(moveNumber, boardSize);
+    currPlayer.setUsedSkillThisTurn(true);
 }
 
 string MoveCard::getName() {

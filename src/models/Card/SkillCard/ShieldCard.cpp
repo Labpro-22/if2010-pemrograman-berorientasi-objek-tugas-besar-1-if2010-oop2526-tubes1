@@ -1,13 +1,5 @@
 #include "models/Card/SkillCard/ShieldCard.hpp"
 
-ShieldCard::ShieldCard() {
-
-}
-
-ShieldCard::~ShieldCard() {
-
-}
-
 void ShieldCard::activate(GameEngine& ge) {
      // TODO: 
 }

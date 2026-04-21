@@ -4,8 +4,10 @@
 using namespace std;
 
 class TeleportCard : public SkillCard {
+    private:
+        int targetIndex;
     public:
-        TeleportCard();
+        TeleportCard(int targetIndex);
         ~TeleportCard();
         void activate(GameEngine&);
         string getName();

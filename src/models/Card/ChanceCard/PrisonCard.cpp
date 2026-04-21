@@ -1,13 +1,5 @@
 #include "models/Card/ChanceCard/PrisonCard.hpp"
 
-PrisonCard::PrisonCard(){
-
-}
-
-PrisonCard::~PrisonCard() {
-
-}
-
 string PrisonCard::getName() {
     return "PrisonCard";
 }
@@ -17,8 +9,12 @@ string PrisonCard::getDescription() {
 }
 
 void PrisonCard::activate(GameEngine& ge) {
-     // TODO: Sesuaikan dengan implementasi (Di spesifikasi Penjara index 11)
-     ge.getState().setCurrentPlayerIdx(11);
+     Player& currPlayer = ge.getState().getCurrentPlayer();
+     int boardSize = ge.getState().getBoard().getSize();
+
+     int index = ge.getState().getBoard().findPlotIndex("PEN");
+     currPlayer.moveTo(index, boardSize);
+     currPlayer.setJailTurns(3);
 }
 
 

@@ -1,26 +1,20 @@
 #include "models/Card/SkillCard/LassoCard.hpp"
 
-LassoCard::LassoCard() {
-
-}
-
-LassoCard::~LassoCard() {
-
-}
-
 void LassoCard::activate(GameEngine& ge) {
     vector<Player>& players = ge.getState().getPlayers();
-    int currPlayerPosition = ge.getState().getCurrentPlayerIdx();
+    int currPlayerPosition = ge.getState().getCurrentPlayer().getPosition();
+    int boardSize = ge.getState().getBoard().getSize();
 
     // Asumsi hanya bisa narik player 1 index setelah current player
     auto it = find_if(players.begin(), players.end(), [&](const Player& p) {
-        return p.getPosition() - currPlayerPosition == 1 && p.getPosition() > currPlayerPosition;
+        return (p.getPosition() - currPlayerPosition + boardSize) % boardSize == 1;
     });
 
     if (it != players.end()) {
-        it->moveTo(currPlayerPosition, 40);
+        it->moveTo(currPlayerPosition, boardSize);
+        it->setUsedSkillThisTurn(true);
     } else {
-        // throw somethin
+        throw std::runtime_error("Tidak ada player didepan");
     }
 }
 

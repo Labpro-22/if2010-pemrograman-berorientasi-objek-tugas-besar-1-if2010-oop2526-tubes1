@@ -3,8 +3,8 @@
 
 class DemolitionCard : public SkillCard {
     public:
-        DemolitionCard();
-        ~DemolitionCard();
+        DemolitionCard() = default;
+        ~DemolitionCard() = default;
         void activate(GameEngine&);
         string getName();
         string getDescription();

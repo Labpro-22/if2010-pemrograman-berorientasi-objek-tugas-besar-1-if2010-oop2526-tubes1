@@ -1,20 +1,15 @@
 #include "models/Card/SkillCard/TeleportCard.hpp"
 
-TeleportCard::TeleportCard() {
+TeleportCard::TeleportCard(int targetIndex) : targetIndex(targetIndex){}
 
-}
-
-TeleportCard::~TeleportCard() {
-
-}
+TeleportCard::~TeleportCard() {}
 
 void TeleportCard::activate(GameEngine& ge) {
-    // TODO: Sesuaikan dengan implementasi 
-    int indexTarget;
-    cout << "Index tujuan: ";
-    cin >> indexTarget;
-    cout << endl;
-    ge.getState().setCurrentPlayerIdx(indexTarget);
+    Player& currPlayer = ge.getState().getCurrentPlayer();
+    int boardSize = ge.getState().getBoard().getSize();
+    
+    currPlayer.moveTo(targetIndex, boardSize);
+    currPlayer.setUsedSkillThisTurn(true);
 }
 
 string TeleportCard::getName() {

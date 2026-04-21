@@ -1,13 +1,5 @@
 #include "models/Card/ChanceCard/StationCard.hpp"
 
-StationCard::StationCard(){
-
-}
-
-StationCard::~StationCard() {
-
-}
-
 string StationCard::getName() {
     return "StationCard";
 }
@@ -18,14 +10,18 @@ string StationCard::getDescription() {
 
 void StationCard::activate(GameEngine& ge) {
     int playerPosition = ge.getState().getCurrentPlayerIdx();
-    GameState& state = ge.getState();
+    Player& currPlayer = ge.getState().getCurrentPlayer();
+    Board& board = ge.getState().getBoard();
+    int boardSize = board.getSize();
+    const vector<unique_ptr<Plot>>& plots = board.getPlots();
+    
     // TODO: Index masih sama seperti spesifikasi, sesuaikan sama implementasi
-    if (playerPosition >= 26) {
-        state.setCurrentPlayerIdx(6);
-    } else if (playerPosition >= 16) {
-        state.setCurrentPlayerIdx(26);
-    } else if (playerPosition >= 6) {
-        state.setCurrentPlayerIdx(16);
+    if (playerPosition >= board.findPlotIndex("TUG")) {
+        currPlayer.moveTo(board.findPlotIndex("GBR"), boardSize);
+    } else if (playerPosition >= board.findPlotIndex("STB")) {
+        currPlayer.moveTo(board.findPlotIndex("TUG"), boardSize);
+    } else if (playerPosition >= board.findPlotIndex("GBR")) {
+        currPlayer.moveTo(board.findPlotIndex("STB"), boardSize);
     }
 }
 

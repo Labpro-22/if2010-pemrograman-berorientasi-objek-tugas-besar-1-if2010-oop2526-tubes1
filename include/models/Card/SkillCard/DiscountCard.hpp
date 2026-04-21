@@ -3,8 +3,8 @@
 
 class DiscountCard : public SkillCard {
     public:
-        DiscountCard();
-        ~DiscountCard();
+        DiscountCard() = default;
+        ~DiscountCard() = default;
         void activate(GameEngine&);
         string getName();
         string getDescription();
