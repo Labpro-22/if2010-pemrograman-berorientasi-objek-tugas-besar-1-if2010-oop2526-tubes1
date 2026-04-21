@@ -1,14 +1,15 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Board.hpp"
 #include "Card.hpp"
 #include "Deck.hpp"
 #include "Logger.hpp"
+#include "Player.hpp"
 
-class Player;
 class Tile;
 
 class GameManager {
@@ -29,6 +30,29 @@ private:
 public:
 	GameManager();
 
+	void setTurn(int turn) { this->turn = turn; };
+	void setMaxTurn(int maxTurn) { this->maxTurn = maxTurn; };
+	void setActivePlayerCount(int activePlayerCount) { this->activePlayerCount = activePlayerCount; };
+	void setPlayerCount(int playerCount) { this->playerCount = playerCount; };
+	void setPlayers(std::vector<Player*> players) { this->players = players; };
+	void setTiles(Board tiles) { this->tiles = tiles; };
+	void setDeckSkill(CardDeck<SkillCard> deckSkill) { this->deckSkill = std::move(deckSkill); };
+	void setDeckChance(CardDeck<AutoUseCard> deckChance) { this->deckChance = std::move(deckChance); };
+	void setDeckCurrency(CardDeck<AutoUseCard> deckCurrency) { this->deckCurrency = std::move(deckCurrency); };
+	void setLogger(Logger logger) { this->logger = logger; };
+	void setCurrentTurnPlayer(Player* currentTurnPlayer) { this->currentTurnPlayer = currentTurnPlayer; };
+	static void setDice(std::vector<int> dice) { GameManager::dice = dice; };
+	void setAllPlayersCurrency(int currency) {
+		for (Player* player : players) {
+			if (player != nullptr) {
+				player->setCurrency(currency);
+			}
+		}
+	}
+	void addTile(Tile* tile) {
+	    Board::addTile(tile);
+	}	
+
 	bool isGameValid();
 	void runGame();
 	void auction(Tile*);
@@ -36,5 +60,6 @@ public:
 	void initPlayers();
 	void initStateLogs();
 	void initSkillDeck();
+
     Logger& getLogger();
 };
