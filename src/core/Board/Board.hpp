@@ -9,6 +9,7 @@
 #include "../Dice/Dice.hpp"
 #include "../Bank/Bank.hpp"
 #include "../GameState/GameState.hpp"
+#include "../Card/CardDeck.hpp"
 using namespace std;
 class Board
 {

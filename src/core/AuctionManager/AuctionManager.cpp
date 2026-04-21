@@ -17,7 +17,7 @@ void AuctionManager::setupAuction(Property* prop, const std::vector<Player*>& pl
     
     // Berdasarkan spesifikasi, lelang dimulai dari harga minimal tertentu 
     // Misal 10% dari harga dasar tanah (getLandPrice())
-    currentBid = prop->getLandPrice() * 0.1; 
+    currentBid = prop->getPurchasePrice() * 0.1; 
     
     // Filter hanya pemain yang tidak bangkrut untuk ikut lelang
     activeParticipants.clear();
@@ -49,12 +49,12 @@ void AuctionManager::closeAuction(Bank& centralBank) {
         centralBank.receiveFromPlayer(highestBidder, currentBid);
         
         // Atur kepemilikan properti ke pemenang lelang
-        auctionedProperty->setOwner(highestBidder);
+        auctionedProperty->setOwner(highestBidder->getID());
         
         // Tambahkan properti ke daftar aset pemain (menggunakan method di Player)
         highestBidder->addProperty(auctionedProperty);
         
-        std::cout << "Lelang berakhir! " << highestBidder->getName() 
+        std::cout << "Lelang berakhir! " << highestBidder->getID() 
                   << " memenangkan " << auctionedProperty->getName() 
                   << " seharga " << currentBid << std::endl;
     } else {

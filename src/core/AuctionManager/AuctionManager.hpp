@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "../Player.hpp"
+#include "../Player/Player.hpp"
 #include "../Bank/Bank.hpp"
 #include "../Property/Property.hpp"
 

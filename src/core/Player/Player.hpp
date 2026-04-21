@@ -64,6 +64,11 @@ public:
     Card* removeCardAt(int pos);
     void setStatus(std::string newStatus);
     std::string getStatus() const {return status;}
+    void addProperty(Property* p){
+        listProperty.push_back(p);
+    }
     };
+
+    
 
 #endif
