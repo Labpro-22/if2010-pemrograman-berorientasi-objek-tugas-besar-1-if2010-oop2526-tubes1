@@ -1,6 +1,6 @@
 #pragma once
 #include "core/player.h"
-using n
+using namespace std;
 namespace Nimonspoli {
 
 // Dari sini semua transaksi biar gampang dilog, itu aja sebenarnya

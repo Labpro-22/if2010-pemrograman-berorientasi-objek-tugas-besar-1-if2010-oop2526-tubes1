@@ -56,7 +56,9 @@ public:
         auto it = find(properties_.begin(), properties_.end(), p);
         if (it != properties_.end()) properties_.erase(it);
     }
+    void clearProperties()                         { properties_.clear(); }
     const vector<Property*>& properties() const { return properties_; }
+    vector<Property*>&       properties()       { return properties_; }
 
     bool handFull()    const { return (int)hand_.size() >= MAX_HAND_SIZE; }
     int  handSize()    const { return (int)hand_.size(); }

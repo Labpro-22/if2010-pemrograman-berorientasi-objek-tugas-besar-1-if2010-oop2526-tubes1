@@ -52,4 +52,4 @@ private:
     const char* groupColor(ColorGroup cg) const;
 };
 
-} -
+}
