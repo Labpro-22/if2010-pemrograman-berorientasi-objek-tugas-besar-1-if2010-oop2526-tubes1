@@ -43,6 +43,8 @@ bin/
 # debug information files
 *.dwo
 
+
 /html
 /latex
-/Doxyfile
+
+*Doxyfile
