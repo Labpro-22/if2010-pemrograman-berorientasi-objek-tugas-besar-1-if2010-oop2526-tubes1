@@ -130,9 +130,6 @@ std::string ShieldCard::getValueString() const {
 }
 
 
-// =============================================================================
-// TeleportCard  — pindah ke petak manapun di papan
-// =============================================================================
 
 TeleportCard::TeleportCard()
     : SkillCard("TeleportCard",
