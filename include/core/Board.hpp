@@ -19,6 +19,7 @@ public:
 	Board(int size);
 
 	Tile* getTile(std::string code) const; // done
+	Tile* getTile(int index) const; 
 	Tile* getJailTile() const;
 	std::vector<Tile*> getTiles() const{return this->tiles;};
 	Tile* goToTile(Tile& current, int moveAmount) const;

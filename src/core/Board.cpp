@@ -8,8 +8,7 @@
 #include "../../include/core/Tile.hpp"
 using namespace std;
 
-Board::Board(int size): tiles() {
-    tiles.reserve(size);
+Board::Board(int size): tiles(size, nullptr) {
 }
 
 Tile* Board::getTile(string code) const {
@@ -22,6 +21,10 @@ Tile* Board::getTile(string code) const {
     } else {
         return nullptr;
     }
+}
+
+Tile* Board::getTile(int index) const{
+    return tiles.at(index);
 }
 
 Tile* Board::getJailTile() const {
@@ -51,7 +54,9 @@ std::vector<Tile*> Board::getColorGroup(const std::string& color) const {
 }
 
 void Board::addTile(Tile* newTile){
-    tiles.push_back(newTile);
+    if (newTile != nullptr && newTile->getIndex() < (int)tiles.size()) {
+        tiles[newTile->getIndex()] = newTile;
+    }
 }
 
 bool Board::canBuildHouse(Player player, Tile* tile) {
