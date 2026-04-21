@@ -13,32 +13,33 @@ void GameMaster::handleTurn(std::string cmd)
 
 }
 
-void GameMaster::nextTurn();
+void GameMaster::nextTurn()
 {
 
 }
 
-bool GameMaster::isCompleted() const;
+bool GameMaster::isCompleted() const
 {
     return false; // nanti fix based on wincon
 }
 
-GameState GameMaster::getGameState() const;
+GameState GameMaster::getGameState() const
 {
-    return this.gameState;
+    // Di-command dulu yak biar testingnya bisa jalan
+    //return gameState;
 }
 
-void GameMaster::handle(GameState state);
-{
-
-}
-
-void GameMaster::handleBankruptcy(Player* from, Player* to);
+void GameMaster::handle(GameState state)
 {
 
 }
 
-void GameMaster::handleBankruptcy(Player* from, Bank* to);
+void GameMaster::handleBankruptcy(Player* from, Player* to)
+{
+
+}
+
+void GameMaster::handleBankruptcy(Player* from, Bank* to)
 {
 
 }

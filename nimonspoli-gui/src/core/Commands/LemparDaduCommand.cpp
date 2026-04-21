@@ -1,6 +1,6 @@
 #include "LemparDaduCommand.hpp"
 #include "../GameMaster/GameMaster.hpp"
-#include "Player.hpp"
+#include "../Player/Player.hpp"
 #include "../Dice/Dice.hpp"
 #include <iostream>
 
@@ -13,7 +13,7 @@ void LemparDaduCommand::execute(GameMaster& gm) {
         return;
     }
 
-    std::cout << currentPlayer->getName() << " melempar dadu..." << std::endl;
+    std::cout << currentPlayer->getID() << " melempar dadu..." << std::endl;
 
     // Lakukan pengacakan dadu
     dice.rollRandom();
@@ -27,30 +27,42 @@ void LemparDaduCommand::execute(GameMaster& gm) {
 
     // Cek kondisi double berturut-turut (aturan Monopoli: 3x double masuk penjara)
     if (dice.getConsecutiveDoubles() == 3) {
-        std::cout << "Tiga kali double berturut-turut! " << currentPlayer->getName() 
+        std::cout << "Tiga kali double berturut-turut! " << currentPlayer->getId() 
                   << " langsung dijebloskan ke Penjara!" << std::endl;
         
         // Pindahkan pemain ke penjara (Asumsi: ada method sendToJail di GameMaster atau Player)
-        gameMaster.sendPlayerToJail(currentPlayer);
+        // START OF SOON TO IMPLEMENT =========
+        //gameMaster.sendPlayerToJail(currentPlayer);
+        // END OF SOON TO IMPLEMENT =========
+
         
         // Reset counter double setelah masuk penjara
         dice.resetConsecutiveDouvles(); 
         
         // Akhiri giliran (pemain tidak boleh jalan lagi)
-        gameMaster.endCurrentTurn();
+        // START OF SOON TO IMPLEMENT =========
+        //gameMaster.endCurrentTurn();
+        // END OF SOON TO IMPLEMENT =========
     } else {
         if (val1 == val2) {
             std::cout << "DOUBLE! Anda mendapat kesempatan untuk melempar dadu lagi setelah ini." << std::endl;
             // Set flag di GameMaster bahwa pemain ini punya giliran ekstra
-            gameMaster.setExtraTurn(true); 
+            // START OF SOON TO IMPLEMENT =========
+            //gameMaster.setExtraTurn(true); 
+            // END OF SOON TO IMPLEMENT =========
+
         } else {
             // Jika tidak double, pastikan flag giliran ekstra dimatikan dan counter reset
-            gameMaster.setExtraTurn(false);
+            // START OF SOON TO IMPLEMENT =========
+            //gameMaster.setExtraTurn(false);
+            // END OF SOON TO IMPLEMENT =========
             dice.resetConsecutiveDouvles();
         }
 
         // Pindahkan pemain sesuai dengan total dadu
         // Asumsi: gameMaster menangani perpindahan dan efek petak yang diinjak
-        gameMaster.movePlayer(currentPlayer, total);
+        // START OF SOON TO IMPLEMENT =========
+        //gameMaster.movePlayer(currentPlayer, total);
+        // END OF SOON TO IMPLEMENT =========
     }
 }

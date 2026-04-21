@@ -25,12 +25,12 @@ Player* GameState::getPlayer() const {
     return players.front().get();
 }
 
-Player* GameState::getPlayerById(string id) const {
-    for (auto& p : players) {
-        if (p->getId() == id) return p.get();
-    }
-    return nullptr;
-}
+// Player* GameState::getPlayerById(string id) const {
+//     for (auto& p : players) {
+//         if (p->getId() == id) return p.get();
+//     }
+//     return nullptr;
+// }
 
 const std::vector<std::shared_ptr<Player>>& GameState::getPlayers() const {
     return players;
@@ -58,9 +58,9 @@ Board* GameState::getGameBoard() const {
 }
 
 // ── Card decks ────────────────────────────────────────────────────────────────
-CardDeck* GameState::getChanceDeck() const {
+CardDeck<Card>* GameState::getChanceDeck() const {
     return chanceDeck.get();
 }
-CardDeck* GameState::getCommunityChestDeck() const {
-    return communityChestDeck.get();
-}
+// CardDeck* GameState::getCommunityChestDeck() const {
+//     return communityChestDeck.get();
+// }

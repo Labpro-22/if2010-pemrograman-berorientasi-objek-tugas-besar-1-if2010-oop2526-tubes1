@@ -6,8 +6,9 @@
 #include <memory>
 #include "../GameState/GameState.hpp" 
 #include "../utils/TransactionLogger.hpp"
+#include "../Bank/Bank.hpp"
 
-class GameState {
+class GameMaster {
 private:
     GameState gameState; // erm ga paham
     TransactionLogger logger;
