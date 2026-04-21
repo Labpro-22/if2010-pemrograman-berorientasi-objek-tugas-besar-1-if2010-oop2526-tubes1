@@ -5,7 +5,7 @@ class DiscountCard : public SkillCard {
     public:
         DiscountCard();
         ~DiscountCard();
-        void activate();
+        void activate(GameEngine&);
         string getName();
         string getDescription();
 };

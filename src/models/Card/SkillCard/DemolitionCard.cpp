@@ -8,7 +8,7 @@ DemolitionCard::~DemolitionCard() {
 
 }
 
-void DemolitionCard::activate() {
+void DemolitionCard::activate(GameEngine& ge) {
     // TODO: 
 }
 

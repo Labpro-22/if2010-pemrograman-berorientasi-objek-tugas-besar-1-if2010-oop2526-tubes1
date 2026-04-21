@@ -16,6 +16,7 @@ string BackwardMoveCard::getDescription() {
     return "Mundur 3 petak";
 }
 
-void BackwardMoveCard::activate() {
-    // TODO: 
+void BackwardMoveCard::activate(GameEngine& ge) {
+    Player currPlayer = ge.getState().getCurrentPlayer();
+    currPlayer.move(-3, 40);
 }

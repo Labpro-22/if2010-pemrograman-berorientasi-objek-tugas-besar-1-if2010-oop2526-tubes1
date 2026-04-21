@@ -7,5 +7,5 @@ class PrisonCard : public ChanceCard{
         ~PrisonCard();
         string getName();
         string getDescription();
-        void activate();
+        void activate(GameEngine&);
 };

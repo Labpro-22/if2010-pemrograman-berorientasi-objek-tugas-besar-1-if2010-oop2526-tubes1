@@ -8,8 +8,13 @@ DiscountCard::~DiscountCard() {
 
 }
 
-void DiscountCard::activate() {
-     // TODO: 
+void DiscountCard::activate(GameEngine& ge) {
+    random_device random;
+    mt19937 g(random());
+    uniform_int_distribution<> number(1,100);
+
+    int discountPercent = number(g);
+
 }
 
 string DiscountCard::getName() {

@@ -8,8 +8,20 @@ LassoCard::~LassoCard() {
 
 }
 
-void LassoCard::activate() {
-     // TODO: 
+void LassoCard::activate(GameEngine& ge) {
+    vector<Player>& players = ge.getState().getPlayers();
+    int currPlayerPosition = ge.getState().getCurrentPlayerIdx();
+
+    // Asumsi hanya bisa narik player 1 index setelah current player
+    auto it = find_if(players.begin(), players.end(), [&](const Player& p) {
+        return p.getPosition() - currPlayerPosition == 1 && p.getPosition() > currPlayerPosition;
+    });
+
+    if (it != players.end()) {
+        it->moveTo(currPlayerPosition, 40);
+    } else {
+        // throw somethin
+    }
 }
 
 string LassoCard::getName() {

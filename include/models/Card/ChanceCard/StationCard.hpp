@@ -7,5 +7,5 @@ class StationCard : public ChanceCard{
         ~StationCard();
         string getName();
         string getDescription();
-        void activate();
+        void activate(GameEngine&);
 };

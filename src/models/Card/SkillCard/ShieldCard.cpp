@@ -8,7 +8,7 @@ ShieldCard::~ShieldCard() {
 
 }
 
-void ShieldCard::activate() {
+void ShieldCard::activate(GameEngine& ge) {
      // TODO: 
 }
 

@@ -5,7 +5,7 @@ class ShieldCard : public SkillCard {
     public:
         ShieldCard();
         ~ShieldCard();
-        void activate();
+        void activate(GameEngine&);
         string getName();
         string getDescription();
 };

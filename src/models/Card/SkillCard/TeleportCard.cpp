@@ -8,8 +8,13 @@ TeleportCard::~TeleportCard() {
 
 }
 
-void TeleportCard::activate() {
-     // TODO: 
+void TeleportCard::activate(GameEngine& ge) {
+    // TODO: Sesuaikan dengan implementasi 
+    int indexTarget;
+    cout << "Index tujuan: ";
+    cin >> indexTarget;
+    cout << endl;
+    ge.getState().setCurrentPlayerIdx(indexTarget);
 }
 
 string TeleportCard::getName() {

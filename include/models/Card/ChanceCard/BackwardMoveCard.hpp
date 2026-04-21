@@ -7,6 +7,6 @@ class BackwardMoveCard : public ChanceCard{
         ~BackwardMoveCard();
         string getName();
         string getDescription();
-        void activate();
+        void activate(GameEngine&);
 };
 
