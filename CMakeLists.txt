@@ -12,7 +12,7 @@ else()
     add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
-find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
+find_package(SFML 3.0 REQUIRED COMPONENTS System Window Graphics REQUIRED)
 
 add_library(
   nimonspoli_core STATIC
@@ -52,6 +52,6 @@ target_include_directories(nimonspoli_ui PUBLIC include)
 target_link_libraries(nimonspoli_data PUBLIC nimonspoli_core)
 target_link_libraries(nimonspoli_logic PUBLIC nimonspoli_core nimonspoli_data)
 target_link_libraries(nimonspoli_ui PUBLIC nimonspoli_core nimonspoli_data nimonspoli_logic)
-target_link_libraries(nimonspoli_ui PUBLIC sfml-system sfml-window sfml-graphics)
+target_link_libraries(nimonspoli_ui PUBLIC SFML::System SFML::Window SFML::Graphics)
 
 target_link_libraries(nimonspoli PRIVATE nimonspoli_ui)
