@@ -16,5 +16,4 @@ public:
     int getIndex();
     string getKode();
     string getName();
-
 };
