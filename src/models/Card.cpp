@@ -1,7 +1,7 @@
-#include "Card.hpp"
-#include "Player.hpp"
-#include "GameEngine.hpp"
-#include "Exceptions.hpp"
+#include "../../include/models/Card.hpp"
+#include "../../include/core/Player.hpp"
+#include "../../include/core/GameEngine.hpp"
+#include "../../include/core/Exceptions.hpp"
 #include <iostream>
 #include <random>
 

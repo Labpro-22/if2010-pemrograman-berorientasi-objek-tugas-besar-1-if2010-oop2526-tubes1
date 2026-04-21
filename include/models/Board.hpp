@@ -27,7 +27,4 @@ public:
 
     void printBoardStatus();
     void resetBoard();
-    Tile* getTileAt(int index); 
-    Tile* getTileByKode(const std::string& kode);
-    int getJailPosition() const;
 };

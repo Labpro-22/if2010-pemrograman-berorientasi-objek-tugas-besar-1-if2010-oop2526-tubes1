@@ -13,7 +13,7 @@ public:
     Tile(int id, string kode, string name);
     virtual void onLanded(Player& player) = 0; 
     virtual ~Tile();
-    int getIndex();
-    string getKode();
-    string getName();
+    int getIndex() const;
+    string getKode() const;
+    string getName() const;
 };

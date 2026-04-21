@@ -2,14 +2,14 @@
 
 Tile:: Tile(int id, string kode, string name) : id(id), kode(kode), name(name){}
 
-int Tile:: getIndex(){
+int Tile::getIndex() const {
     return this->id;
 }
 
-string Tile:: getKode(){
+string Tile::getKode() const {
     return this->kode;
 }
 
-string Tile:: getName(){
+string Tile::getName() const {
     return this->name;
 }

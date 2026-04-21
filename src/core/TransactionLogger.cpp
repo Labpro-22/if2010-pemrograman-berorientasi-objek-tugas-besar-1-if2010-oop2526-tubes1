@@ -7,7 +7,7 @@ void TransactionLogger::logEvent(int turn, const string& username, LogActionType
     logs.push_back({turn, username, actionType, detail});
 }
 
-vector<LogEntry> TransactionLogger::getLogs(int limit = -1) const {
+vector<LogEntry> TransactionLogger::getLogs(int limit) const {
     if (limit == -1 || limit >= static_cast<int>(logs.size())) {
         return logs;
     }

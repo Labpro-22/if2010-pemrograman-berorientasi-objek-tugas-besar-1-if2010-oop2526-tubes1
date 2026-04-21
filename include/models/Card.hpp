@@ -93,7 +93,7 @@ public:
     SkillCard(const std::string& name,
               const std::string& description,
               SkillCardType type);
-    ~SkillCard() ;
+    virtual ~SkillCard();
     virtual void use(Player& player, GameEngine& engine);
 
     std::string  getCardName() const ;
