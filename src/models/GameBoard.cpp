@@ -1,4 +1,5 @@
-#include "../include/models/GameBoard.hpp"
+#include ".\./include/models/GameBoard.hpp"
+#include ".\./include/models/Player.hpp"
 
 
 GameBoard::GameBoard() : currentPlayerIndex(0) {

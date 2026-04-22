@@ -55,9 +55,9 @@ void TeleportCard::activate(Player* player, GameContext* ctx) {
     if (!player || !ctx || !ctx->movementHandler) return;
     if (player->getStatus() == JAILED) return;
 
-    // TODO: value seharusnya dari input user saat kartu dipakai
-    // Nanti UI layer set value sebelum activate() dipanggil
-    // atau tambah parameter input ke activate()
+    // TODO: value seharusnya dari input user saat kartu dipakai.
+    // Reminder: teleport harus tetap trigger onLand() dan jika lintasan melewati GO,
+    // MovementHandler::teleportPlayer wajib memberi gaji GO.
     ctx->movementHandler->teleportPlayer(player, value);
 }
 
@@ -85,8 +85,9 @@ LassoCard::LassoCard()
     : SkillCard("LASSO", 0, 0) {}
 
 void LassoCard::activate(Player* player, GameContext* ctx) {
-    // TODO: tunggu implementasi pemilihan target player dari CLI
-    // panggil MovementHandler::pullPlayer() buat narik  lawan.
+    // TODO: implementasi pemilihan target player dari CLI.
+    // Reminder: target tidak boleh JAILED dan definisi "di depan" pakai wrap-around board.
+    // Reminder: setelah ditarik, target harus trigger efek onLand() via pullPlayer().
 }
 
 string LassoCard::getDescription() {

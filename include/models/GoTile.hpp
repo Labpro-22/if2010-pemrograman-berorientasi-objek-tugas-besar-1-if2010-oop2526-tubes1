@@ -14,5 +14,6 @@ public:
     void setSalary(int amount);
 
     void giveSalary(Player* player);
+    void executeSpecial(Player* player, GameContext* ctx) override;
     void onPass(Player* player) override;
 };

@@ -14,9 +14,9 @@ SkillCardManager::SkillCardManager(int maxSize) {
 void SkillCardManager::initDeck() {
     // Stok sesuai spec
     for (int i = 0; i < 4; i++) 
-        skillDeck.addCard(new MoveCard(rand() % 6 + 1));
+        skillDeck.addCard(new MoveCard(rand() % 12 + 1));
     for (int i = 0; i < 3; i++) 
-        skillDeck.addCard(new DiscountCard(rand() % 30 + 10));
+        skillDeck.addCard(new DiscountCard(rand() % 100 + 1));
     for (int i = 0; i < 2; i++) 
         skillDeck.addCard(new ShieldCard());
     for (int i = 0; i < 2; i++) 

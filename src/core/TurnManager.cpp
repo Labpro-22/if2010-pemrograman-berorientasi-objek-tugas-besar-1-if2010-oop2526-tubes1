@@ -1,6 +1,25 @@
 #include "../../include/core/TurnManager.hpp"
 #include "../../include/models/Player.hpp"
 
+namespace {
+int findNextActiveIndex(const vector<Player*>& players, int startIndex) {
+    if (players.empty()) {
+        return -1;
+    }
+
+    int size = static_cast<int>(players.size());
+    for (int offset = 1; offset <= size; ++offset) {
+        int nextIndex = (startIndex + offset) % size;
+        Player* candidate = players[nextIndex];
+        if (candidate != nullptr && candidate->getStatus() != BANKRUPT) {
+            return nextIndex;
+        }
+    }
+
+    return -1;
+}
+}
+
 TurnManager::TurnManager(vector<Player*> p, int maxT) {
     players = p;
     turnOrder.clear();
@@ -17,21 +36,17 @@ TurnManager::TurnManager(vector<Player*> p, int maxT) {
 Player* TurnManager::getCurrentPlayer() {
     if (players.empty()) return nullptr;
 
-    // Cek dulu player sekarang
-    if (players[currentIndex] != nullptr &&
-        players[currentIndex]->getStatus() != BANKRUPT) {
-        return players[currentIndex];
+    if (currentIndex >= 0 && currentIndex < static_cast<int>(players.size())) {
+        Player* current = players[currentIndex];
+        if (current != nullptr && current->getStatus() != BANKRUPT) {
+            return current;
+        }
     }
 
-    // Cari player aktif berikutnya
-    int checked = 0;
-    while (checked < (int)players.size()) {
-        if (players[currentIndex] != nullptr &&
-            players[currentIndex]->getStatus() != BANKRUPT) {
-            return players[currentIndex];
-        }
-        currentIndex = (currentIndex + 1) % players.size();
-        checked++;
+    int nextIndex = findNextActiveIndex(players, currentIndex);
+    if (nextIndex >= 0) {
+        currentIndex = nextIndex;
+        return players[currentIndex];
     }
 
     return nullptr; // semua bankrupt
@@ -40,20 +55,16 @@ Player* TurnManager::getCurrentPlayer() {
 void TurnManager::advanceToNextPlayer() {
     if (players.empty()) return;
 
-    int startIndex = currentIndex;
-    currentIndex = (currentIndex + 1) % (int)players.size();
-
-    // Cek apakah sudah satu putaran penuh (wrap ke index 0)
-    if (currentIndex == 0) currentTurnNumber++;
-
-    int visited = 0;
-    while (visited < (int)players.size() &&
-           (players[currentIndex] == nullptr ||
-            players[currentIndex]->getStatus() == BANKRUPT)) {
-        currentIndex = (currentIndex + 1) % (int)players.size();
-        // Jangan increment di sini — hanya geser index
-        visited++;
+    int nextIndex = findNextActiveIndex(players, currentIndex);
+    if (nextIndex < 0) {
+        return;
     }
+
+    if (nextIndex <= currentIndex) {
+        currentTurnNumber++;
+    }
+
+    currentIndex = nextIndex;
 }
 
 int TurnManager::getCurrentTurnNumber() { return currentTurnNumber; }

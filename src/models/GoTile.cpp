@@ -21,6 +21,11 @@ void GoTile::giveSalary(Player* player) {
     }
 }
 
+void GoTile::executeSpecial(Player* player, GameContext* ctx) {
+    (void)ctx;
+    giveSalary(player);
+}
+
 void GoTile::onPass(Player* player) {
     if (player != nullptr) {
         giveSalary(player);

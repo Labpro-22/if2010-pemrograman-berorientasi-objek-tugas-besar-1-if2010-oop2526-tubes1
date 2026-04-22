@@ -38,9 +38,15 @@ JailResult JailTile::attemptEscape(Player* player) {
         return JailResult::STILL_JAILED;
     }
 
-    // Escape logic will be determined by game rules
-    // For now, return default state
-    return JailResult::STILL_JAILED;
+    if (player->getMoney() >= fineAmount) {
+        payFine(player);
+    } else {
+        player->operator-=(fineAmount);
+        player->setStatus(PlayerStatus::ACTIVE);
+        player->resetJailTurns();
+    }
+
+    return JailResult::FORCED_OUT;
 }
 
 void JailTile::payFine(Player* player) {

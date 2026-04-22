@@ -5,7 +5,24 @@
 #include "../../include/models/GameBoard.hpp"
 #include "../../include/models/JailTile.hpp"
 
-MovementHandler::MovementHandler(GameBoard* b, int boardSizeValue, int goSalaryValue, int jailFineValue) {
+namespace {
+JailTile* findJailTile(GameBoard* board, int boardSize) {
+    if (board == nullptr) {
+        return nullptr;
+    }
+
+    for (int i = 0; i < boardSize; i++) {
+        JailTile* jailTile = dynamic_cast<JailTile*>(board->getTileAt(i));
+        if (jailTile != nullptr) {
+            return jailTile;
+        }
+    }
+
+    return nullptr;
+}
+}
+
+MovementHandler::MovementHandler(GameBoard* b, GameContext* ctx, int boardSizeValue, int goSalaryValue, int jailFineValue) : ctx(ctx) {
     board = b;
     // Placeholder buat tes sebelum ukuran board dibaca dari config/board object.
     boardSize = (boardSizeValue > 0) ? boardSizeValue : 40;
@@ -43,8 +60,14 @@ void MovementHandler::movePlayer(Player* player, int steps) {
 void MovementHandler::teleportPlayer(Player* player, int target) {
     if (!player) return;
 
+    int oldPos = player->getPosition();
     int normalizedTarget = target % boardSize;
     if (normalizedTarget < 0) normalizedTarget += boardSize;
+
+    // Sesuai rule tambahan: teleport yang melewati GO tetap dapat gaji.
+    if (normalizedTarget < oldPos) {
+        handlePassGo(player);
+    }
 
     player->setPosition(normalizedTarget);
 
@@ -61,12 +84,24 @@ void MovementHandler::pullPlayer(Player* target, int toPosition) {
         return;
     }
 
-    // TODO: tunggu implementasi board/tile, cek apakah pull perlu trigger onLand().
+    if (target->getStatus() == BANKRUPT) {
+        return;
+    }
+
+    // Pull memindahkan target lalu memicu efek tile tujuan (onLand).
     int normalizedTarget = toPosition % boardSize;
     if (normalizedTarget < 0) {
         normalizedTarget += boardSize;
     }
+
     target->setPosition(normalizedTarget);
+
+    if (board != nullptr) {
+        Tile* tile = board->getTileAt(normalizedTarget);
+        if (tile != nullptr) {
+            tile->onLand(target);
+        }
+    }
 }
 
 void MovementHandler::handlePassGo(Player* player) {
@@ -92,44 +127,32 @@ void MovementHandler::sendToJail(Player* player) {
     player->resetConsecutiveDoubles();
     player->resetJailTurns();
 
-    // Cari posisi jail dari board
-    if (board != nullptr) {
-        for (int i = 0; i < boardSize; i++) {
-            Tile* tile = board->getTileAt(i);
-            // Dynamic cast untuk cek apakah JailTile
-            JailTile* jailTile = dynamic_cast<JailTile*>(tile);
-            if (jailTile != nullptr) {
-                player->setPosition(i);
-                // Tidak trigger onLand — sendToJail bukan landing normal
-                return;
-            }
-        }
+    JailTile* jailTile = findJailTile(board, boardSize);
+    if (jailTile != nullptr) {
+        jailTile->sendToJail(player);
+        return;
     }
 
-    // Fallback
+    // Fallback jika board belum punya JailTile
     player->setPosition(10);
 }
 
 JailResult MovementHandler::handleJailTurn(Player* player, Dice& dice) {
     if (!player) return STILL_JAILED;
 
-    // Cari JailTile
-    JailTile* jailTile = nullptr;
-    if (board != nullptr) {
-        for (int i = 0; i < boardSize; i++) {
-            jailTile = dynamic_cast<JailTile*>(board->getTileAt(i));
-            if (jailTile != nullptr) break;
-        }
-    }
-
+    JailTile* jailTile = findJailTile(board, boardSize);
     int fine = (jailTile != nullptr) ? jailTile->getFineAmount() : jailFine;
 
     // Sudah 3 kali gagal → giliran ini wajib bayar denda
     if (player->getJailTurnsRemaining() >= 3) {
-        player->setStatus(ACTIVE);
-        player->resetJailTurns();
-        (*player) -= fine;
-        return FORCED_OUT;
+        if (jailTile != nullptr) {
+            return jailTile->attemptEscape(player);
+        } else {
+            (*player) -= fine;
+            player->setStatus(ACTIVE);
+            player->resetJailTurns();
+            return FORCED_OUT;
+        }
     }
 
     // Coba roll
@@ -138,6 +161,8 @@ JailResult MovementHandler::handleJailTurn(Player* player, Dice& dice) {
         player->resetJailTurns();
         return ESCAPED_DOUBLE;
     }
+
+    
 
     player->incrementJailTurns();
     return STILL_JAILED;

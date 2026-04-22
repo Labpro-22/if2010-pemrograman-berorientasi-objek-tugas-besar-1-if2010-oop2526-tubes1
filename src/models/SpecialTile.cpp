@@ -18,3 +18,4 @@ void SpecialTile::executeAction(Player* player, GameContext* ctx) {
         executeSpecial(player, ctx);
     }
 }
+void SpecialTile::onPass(Player* player) {}
