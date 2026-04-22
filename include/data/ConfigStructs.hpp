@@ -31,4 +31,13 @@ class BoardConfig {
  public:
   std::vector<TileSpec> tileOrder;
 };
+
+class ActionTileConfig {
+ public:
+  int id = 0;
+  std::string code;
+  std::string name;
+  std::string tileType;
+  std::string color;
+};
 }  // namespace data
