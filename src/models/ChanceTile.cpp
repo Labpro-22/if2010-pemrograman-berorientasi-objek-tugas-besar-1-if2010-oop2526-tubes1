@@ -4,10 +4,15 @@ ChanceTile::ChanceTile(int position, const std::string& name, const std::string&
     : ActionTile(position, name, color, ActionType::CHANCE) {
 }
 
-ActionCard* ChanceTile::drawCard(Player* player, CardDeck* deck) {
-    if (deck.isEmpty()) {
-        return nullptr;
-    }
-    return deck -> drawTop();
+ActionCard* ChanceTile::drawCard(Player* player, CardDeck<ActionCard>* deck) {
+    (void)player;
+
+    if (deck == nullptr) return nullptr;
 }
 
+void ChanceTile::executeAction(Player* player) {
+    ActionCard* card = drawCard(player, nullptr);
+    if (card != nullptr && player != nullptr) {
+        //card implementation goes here
+    }
+}

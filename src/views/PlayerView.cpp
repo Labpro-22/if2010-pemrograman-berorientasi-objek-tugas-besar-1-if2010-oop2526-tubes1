@@ -1,5 +1,5 @@
 #include "../../include/views/PlayerView.hpp"
-// #include "../../include/models/Player.hpp"
+#include "../../include/models/Player.hpp"
 
 #include <iostream>
 

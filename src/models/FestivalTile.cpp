@@ -1,4 +1,6 @@
 #include "../include/models/FestivalTile.hpp"
+#include "../include/models/Player.hpp"
+#include "../include/models/Property.hpp"
 
 
 FestivalTile::FestivalTile(int position, const std::string& name, const std::string& color)

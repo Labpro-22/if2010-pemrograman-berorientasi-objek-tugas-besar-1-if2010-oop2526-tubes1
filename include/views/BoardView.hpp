@@ -11,12 +11,12 @@ class Property;
 
 class BoardView {
 public:
-    void showBoard(GameBoard& board, const std::vector<Player>& players);
+    void showBoard(GameBoard& board, const std::vector<Player*>& players);
 
 private:
-    std::string getPlayersOnTile(int pos, const std::vector<Player>& players);
+    std::string getPlayersOnTile(int pos, const std::vector<Player*>& players);
     std::string getColorCode(const std::string& color);
-    std::string renderTile(Tile* tile, const std::vector<Player>& players);
+    std::string renderTile(Tile* tile, const std::vector<Player*>& players);
 };
 
 #endif

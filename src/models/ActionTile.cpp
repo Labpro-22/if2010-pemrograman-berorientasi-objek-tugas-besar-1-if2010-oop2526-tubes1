@@ -20,3 +20,8 @@ void ActionTile::onLand(Player* player) {
     }
 }
 
+
+void ActionTile::onPass(Player* player) {
+    (void)player;
+    // Default implementation does nothing when passing
+}

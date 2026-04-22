@@ -18,3 +18,8 @@ void SpecialTile::executeAction(Player* player) {
         executeSpecial(player);
     }
 }
+
+void SpecialTile::onPass(Player* player) {
+    (void)player;
+    // Default implementation does nothing when passing
+}
