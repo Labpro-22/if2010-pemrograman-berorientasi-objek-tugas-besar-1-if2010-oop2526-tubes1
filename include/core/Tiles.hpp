@@ -18,6 +18,7 @@ class Tile {
 		virtual string getType() const ; 
 		virtual int getPosition() const; 
 
+		  virtual Property *getProperty() const { return nullptr; }
 	protected: 
 		int position_;
 		string name_; 
