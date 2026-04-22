@@ -17,6 +17,7 @@ public:
     
     core::Tile* getTile(int index) const;
     int getTileCount() const;
+    void addTile(core::Tile* tile); 
 };
 
 } // namespace logic

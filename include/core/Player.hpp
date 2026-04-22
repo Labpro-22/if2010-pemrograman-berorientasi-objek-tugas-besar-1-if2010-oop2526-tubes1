@@ -28,12 +28,13 @@ class Player {
 		void goToJail(); 
 		void releaseFromJail(); 
 		void addProperty(Property* p); 
-		void removeProperty(Property* p); 
+		void removeProperty(Property* p);
 		Player& operator+(int amount); // terima uang
 		Player& operator-=(int amount); // keluar uang
 		bool operator<(const Player& other) const; 
 		bool operator>(const Player& other) const; 
 		bool operator==(const Player& other) const; 
+		void setPosition(int pos); 
 		string getName() const;
 		int getBalance() const;
 		int getPosition() const;
