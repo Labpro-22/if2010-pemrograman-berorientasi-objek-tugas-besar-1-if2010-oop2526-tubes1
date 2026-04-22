@@ -1,4 +1,6 @@
 #include "Card.hpp"
+#include "../Player/Player.hpp"
+#include "../GameState/GameState.hpp"
 
 Card::Card()
 {
@@ -12,7 +14,7 @@ Card::~Card()
 {
 }
 
-void Card::execute(Player &p, GameMaster &g)
+void Card::execute(Player &p, GameState &gs)
 {
 }
 

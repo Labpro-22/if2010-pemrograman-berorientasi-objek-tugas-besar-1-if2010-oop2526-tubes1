@@ -364,7 +364,7 @@ void GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
         }
         else
         {
-            state.getBank()->receiveFromPlayer(debtor, debt);
+            *debtor -= debt;
         }
         return;
     }
@@ -441,7 +441,7 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     int remaining = from->getBalance();
     if (remaining > 0)
     {
-        bank->receiveFromPlayer(from, remaining);
+        from -= remaining;
     }
 
     // Semua properti kembali ke BANK dan dilelang

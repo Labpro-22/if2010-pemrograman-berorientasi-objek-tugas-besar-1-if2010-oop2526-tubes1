@@ -7,13 +7,13 @@ using namespace std;
 class ElectionCard : public GeneralFundCard
 {
 private:
-    double amountPerPlayer;
+    int amountPerPlayer;
 
 public:
     ElectionCard();
-    ElectionCard(const string &type, const string &description, double amountPerPlayer);
+    ElectionCard(const string &type, const string &description, int amountPerPlayer);
     ~ElectionCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif

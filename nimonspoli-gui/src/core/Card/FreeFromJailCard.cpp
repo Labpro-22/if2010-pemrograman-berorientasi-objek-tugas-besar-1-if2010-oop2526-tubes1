@@ -1,4 +1,6 @@
 #include "FreeFromJailCard.hpp"
+#include "../Player/Player.hpp"
+#include "../GameState/GameState.hpp"
 
 FreeFromJailCard::FreeFromJailCard()
 {
@@ -12,6 +14,6 @@ FreeFromJailCard::~FreeFromJailCard()
 {
 }
 
-void FreeFromJailCard::execute(Player &p, GameMaster &g)
+void FreeFromJailCard::execute(Player &p, GameState &gs)
 {
 }

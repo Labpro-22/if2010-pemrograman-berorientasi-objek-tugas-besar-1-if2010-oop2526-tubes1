@@ -1,4 +1,6 @@
 #include "DiscountCard.hpp"
+#include "../GameState/GameState.hpp"
+#include "../Board/Board.hpp"
 
 DiscountCard::DiscountCard()
 {
@@ -22,6 +24,8 @@ void DiscountCard::decreaseDuration()
     duration -= 1;
 }
 
-void DiscountCard::execute(Player &p, GameMaster &g)
+void DiscountCard::execute(Player &p, GameState &gs)
 {
+    double discountPercent = rand();
+    p.setDiscount(discountPercent);
 }

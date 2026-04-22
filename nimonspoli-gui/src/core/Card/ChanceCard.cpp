@@ -11,7 +11,3 @@ ChanceCard::ChanceCard(const string &type, const string &description) : Card(typ
 ChanceCard::~ChanceCard()
 {
 }
-
-void ChanceCard::execute(Player &p, GameMaster &g)
-{
-}

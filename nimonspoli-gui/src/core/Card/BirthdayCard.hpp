@@ -7,13 +7,13 @@ using namespace std;
 class BirthdayCard : public GeneralFundCard
 {
 private:
-    double amountPerPlayer;
+    int amountPerPlayer;
 
 public:
     BirthdayCard();
-    BirthdayCard(const string &type, const string &description, double amountPerPlayer);
+    BirthdayCard(const string &type, const string &description, int amountPerPlayer);
     ~BirthdayCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif

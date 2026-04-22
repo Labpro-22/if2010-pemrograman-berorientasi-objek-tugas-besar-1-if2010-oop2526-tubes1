@@ -10,7 +10,7 @@ public:
     DemolitionCard();
     DemolitionCard(const string &type, const string &description, bool used);
     ~DemolitionCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif

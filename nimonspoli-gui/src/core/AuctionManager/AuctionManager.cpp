@@ -56,7 +56,7 @@ void AuctionManager::closeAuction(Bank &centralBank)
     if (highestBidder != nullptr && auctionedProperty != nullptr)
     {
         // Pemain membayar ke bank melalui koordinasi AuctionManager
-        centralBank.receiveFromPlayer(highestBidder, currentBid);
+        highestBidder -= currentBid;
 
         // Atur kepemilikan properti ke pemenang lelang
         auctionedProperty->setOwner(highestBidder->getUsername());

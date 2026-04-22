@@ -22,6 +22,6 @@ void SkillCard::setUsed(bool newUsed)
     used = newUsed;
 }
 
-void SkillCard::execute(Player &p, GameMaster &g)
+void SkillCard::execute(Player &p, GameState &gs)
 {
 }

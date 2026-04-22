@@ -10,7 +10,7 @@ public:
     ChanceCard();
     ChanceCard(const string &type, const string &description);
     virtual ~ChanceCard();
-    virtual void execute(Player &p, GameMaster &g) = 0;
+    virtual void execute(Player &p, GameState &gs) = 0;
 };
 
 #endif

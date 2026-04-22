@@ -1,4 +1,9 @@
 #include "MoveCard.hpp"
+#include "../Player/Player.hpp"
+#include "../GameState/GameState.hpp"
+#include "../Board/Board.hpp"
+
+class Board;
 
 MoveCard::MoveCard()
 {
@@ -12,4 +17,9 @@ MoveCard::~MoveCard()
 {
 }
 
-void MoveCard::execute(Player &p, GameMaster &g) {}
+void MoveCard::execute(Player &p, GameState &gs)
+{
+    int boardSize = gs.getBoard()->getSize();
+    int randomNum = (p.getPosition() + rand()) % boardSize;
+    p.setPosition(randomNum);
+}

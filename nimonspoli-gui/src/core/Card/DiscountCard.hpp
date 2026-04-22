@@ -16,7 +16,7 @@ public:
     ~DiscountCard();
     int getDuration();
     void decreaseDuration();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif
