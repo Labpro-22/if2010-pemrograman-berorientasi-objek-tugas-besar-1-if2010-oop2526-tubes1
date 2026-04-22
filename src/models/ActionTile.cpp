@@ -23,7 +23,7 @@ void CardTile::triggerEffect(Player& player){
     }
 }
 
-string CardTile::getCardType(){
+string CardTile::getCardType()const{
     return this->cardType;
 }
 
@@ -74,6 +74,10 @@ int TaxTile::computeNetWorth(const Player& player) const{
     }
     return total;
 }
+
+string TaxTile::getTaxType() const {return this->taxType;}
+int TaxTile::getFlatAmount() const{return this->flatAmount;}
+double TaxTile::getPercentageRate() const {return this->percentageRate;}
 
 //FestivalTile
 

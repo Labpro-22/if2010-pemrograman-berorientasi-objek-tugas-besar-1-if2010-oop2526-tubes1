@@ -19,14 +19,15 @@ public:
     void onLanded(Player& player) override;
 
     virtual int calcRent(int diceRoll = 0) const = 0;
+    virtual int calcValue() const = 0;
     void buy(); 
     void payRent(); 
     virtual void mortgage(); 
     virtual void unmortgage();  
-    int getmortgageValue() { return mortgageValue;}
-    int getPrice() { return price; }
-    int getOwnerId() { return ownerId; }
-    int getStatus() { return status; }
+    int getmortgageValue() const{ return mortgageValue;}
+    int getPrice() const { return price; }
+    int getOwnerId() const { return ownerId; }
+    int getStatus() const { return status; }
     virtual void sellTobank(Player& owner);
 };
 
@@ -41,6 +42,7 @@ public:
                int houseCost, int hotelCost);
  
     int calcRent(int diceRoll = 0) const override;
+    int calcValue() const override;
     void onLanded(Player& player) override;
  
     // jual properti ke bank
@@ -52,9 +54,9 @@ public:
     void buildHotel();
     void demolish();
     bool hasBuildings();
-    int getHouseCost();
-    int getHotelCost();
-    int getRentLevel();
+    int getHouseCost() const;
+    int getHotelCost() const;
+    int getRentLevel() const;
  
     // Color group
     string getColorGroup() const;
@@ -88,8 +90,9 @@ public:
                  const map<int, int>& rentByCount);
 
     int calcRent(int diceRoll = 0) const override;
+    int calcValue() const override;
     void onLanded(Player& player) override;
-    int getRailroadOwnedCount();
+    int getRailroadOwnedCount() const;
     void setrailroadOwnedCount(int count);
  
 private:
@@ -109,11 +112,12 @@ public:
     // Perhitungan biaya sewa Utility ditentukan oleh total angka dadu yang didapatkan pemain ketika mendarat, 
     //dikalikan dengan faktor pengali yang bergantung pada jumlah petak Utility yang dimiliki oleh pemiliknya            
     int calcRent(int diceRoll = 0) const override;
+    int calcValue() const override;
     void onLanded(Player& player) override;
     void setUtilityOwnedCount(int count);
     void setLastDiceRoll(int dice);
-    int getUtilityOwnedCount();
-    int getLastDiceRoll();
+    int getUtilityOwnedCount() const;
+    int getLastDiceRoll()const;
 
  
 private:

@@ -40,10 +40,10 @@ void PropertyTile:: sellTobank(Player& owner){
     status = 0;
 }
 
-int PropertyTile::getmortgageValue() { return mortgageValue;}
-int PropertyTile::getPrice() { return price; }
-int PropertyTile::getOwnerId() { return ownerId; }
-int PropertyTile::getStatus() { return status; }
+int PropertyTile::getmortgageValue() const { return mortgageValue;}
+int PropertyTile::getPrice() const { return price; }
+int PropertyTile::getOwnerId() const { return ownerId; }
+int PropertyTile::getStatus() const { return status; }
 
 //Street Tile
 StreetTile::StreetTile(int index, const std::string& code, const std::string& name,
@@ -133,15 +133,21 @@ void StreetTile::demolish(){
 
 bool StreetTile:: hasBuildings(){return this->hasBuilding;}
 
-int StreetTile::getHouseCost(){return this->houseCost;}
+int StreetTile::getHouseCost() const{return this->houseCost;}
 
-int StreetTile::getHotelCost(){return this->hotelCost;}
+int StreetTile::getHotelCost() const{return this->hotelCost;}
+
+int StreetTile::getRentLevel() const {this->rentLevel;}
 
 string StreetTile::getColorGroup() const {return this->colorGroup;}
 
 void StreetTile::setMonopolized(bool val){this->isMonopolized = val;}
 
 int StreetTile::calcBuildingResaleValue() const{
+    return 0.5 * calcValue();
+}
+
+int StreetTile::calcValue() const {
     if(!hasBuilding) return 0;
     int total = 0;
     if(rentLevel == 5) return (4 * houseCost) + hotelCost;
@@ -165,6 +171,10 @@ int RailroadTile::calcRent(int diceRoll = 0) const {
     // maka, jawabannya adalah rentByCount[x]
 }
 
+int RailroadTile::calcValue() const{
+    return getmortgageValue();
+}
+
 void RailroadTile::onLanded(Player& player){
     if (status == 0) {
         // BANK - kepemilikan otomatis tanpa beli/lelang
@@ -186,7 +196,7 @@ void RailroadTile::onLanded(Player& player){
     }
 }
 
-int RailroadTile::getRailroadOwnedCount(){
+int RailroadTile::getRailroadOwnedCount() const{
     return this->railroadOwnedCount;
 }
 
@@ -210,6 +220,10 @@ int UtilityTile::calcRent(int diceroll) const {
     }
     return 0;
 }
+
+int UtilityTile::calcValue() const{
+    return getmortgageValue();
+} 
 
 void UtilityTile:: onLanded(Player& player){
     if(status == 0){
@@ -240,10 +254,10 @@ void UtilityTile::setLastDiceRoll(int dice){
     this->utilityOwnedCount = dice;
 }
 
-int UtilityTile::getUtilityOwnedCount(){
+int UtilityTile::getUtilityOwnedCount() const{
     return this->utilityOwnedCount;
 }
 
-int UtilityTile::getLastDiceRoll(){
+int UtilityTile::getLastDiceRoll()const {
     return this->lastDiceRoll;
 }

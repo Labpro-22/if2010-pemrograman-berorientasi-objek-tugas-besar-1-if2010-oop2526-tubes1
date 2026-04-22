@@ -25,7 +25,7 @@ public:
  
     void triggerEffect(Player& player) override;
  
-    string getCardType();
+    string getCardType() const;
  
 private:
     string cardType; // 1 : Kartu Kesempatan dan 2 : Dana Umum
@@ -48,7 +48,7 @@ public:
  
     string getTaxType() const ;
     int getFlatAmount() const;
-    double getPercentageRate();
+    double getPercentageRate() const;
 
     // Tangani alur PPH
     void handlePPH(Player& player);
