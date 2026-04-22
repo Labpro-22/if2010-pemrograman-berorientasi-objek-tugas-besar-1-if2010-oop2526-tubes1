@@ -1,167 +1,143 @@
 #include "Player.hpp"
-#include "../Property/Property.hpp"
 
-// ─────────────────────────────────────────────
-//  Konstruktor & destruktor
-// ─────────────────────────────────────────────
-
-Player::Player(const string& id, const string& username, int startingBalance)
-    :  username(username), balance(startingBalance),
-      position(0), currPetak(nullptr),
-      status(PlayerStatus::ACTIVE), jailTurns(0),
-      cardUsedThisTurn(false), shieldActive(false) {}
-
-Player::~Player() {}
-
-// ─────────────────────────────────────────────
-//  Identitas
-// ─────────────────────────────────────────────
-
-string Player::getUsername() const { return username; }
-
-// ─────────────────────────────────────────────
-//  Keuangan
-// ─────────────────────────────────────────────
-
-int Player::getBalance() const { return balance; }
-int Player::getMoney()   const { return balance; }
-
-int Player::getWealth() const {
-    int total = balance;
-    for (Property* p : properties) {
-        if (p) total += static_cast<int>(p->getPurchasePrice());
-        // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
-        // jika sudah diimplementasi — saat ini gunakan purchasePrice sebagai baseline
-    }
-    return total;
+Player::Player(const std::string &username, int startingBalance) : username(username), balance(startingBalance)
+{
 }
 
-Player& Player::operator+=(int amount) { balance += amount; return *this; }
-Player& Player::operator-=(int amount) { balance -= amount; return *this; }
-bool    Player::canAfford(int amount)  const { return balance >= amount; }
-bool    Player::operator>(const Player& other) const { return balance > other.balance; }
-bool    Player::operator<(const Player& other) const { return balance < other.balance; }
+Player::~Player()
+{
+}
 
-// ─────────────────────────────────────────────
-//  Posisi
-// ─────────────────────────────────────────────
+// GET
+string Player::getUsername() const
+{
+    return username;
+}
 
-int   Player::getPosition()  const { return position; }
-Tile* Player::getCurrPetak() const { return currPetak; }
+int Player::getBalance() const
+{
+    return balance;
+}
 
-void Player::setPosition(int tileIndex) {
+int Player::getPosition() const
+{
+    return position;
+}
+
+PlayerStatus Player::getStatus() const
+{
+    return status;
+}
+
+int Player::getJailTurns() const
+{
+    return jailTurns;
+}
+
+// SET
+void Player::setPosition(int tileIndex)
+{
     position = tileIndex;
 }
 
-void Player::setCurrPetak(Tile* tile) {
-    currPetak = tile;
+void Player::setStatus(PlayerStatus newStatus)
+{
+    status = newStatus;
 }
 
-void Player::move(int steps) {
-    // Implementasi menunggu Board selesai.
-    // GameMaster::movePlayer() yang memanggil setCurrPetak() dan setPosition()
-    // setelah menghitung targetIdx = (position + steps) % board.getSize()
-    (void)steps;
+void Player::setJailTurns(int turns)
+{
+    jailTurns = turns;
 }
 
-// ─────────────────────────────────────────────
-//  Status
-// ─────────────────────────────────────────────
-
-PlayerStatus Player::getStatus() const { return status; }
-
-void Player::setStatus(PlayerStatus s) { status = s; }
-
-string Player::getStatusString() const {
-    switch (status) {
-        case PlayerStatus::ACTIVE:   return "ACTIVE";
-        case PlayerStatus::JAILED:   return "JAILED";
-        case PlayerStatus::BANKRUPT: return "BANKRUPT";
-        default:                     return "UNKNOWN";
-    }
+Player &Player::operator+=(int amount)
+{
+    balance += amount;
+    return *this;
 }
 
-// ─────────────────────────────────────────────
-//  Penjara
-// ─────────────────────────────────────────────
-
-int  Player::getJailTurns()       const { return jailTurns; }
-void Player::setJailTurns(int t)        { jailTurns = t; }
-bool Player::isInJail()           const { return status == PlayerStatus::JAILED; }
-void Player::incrementJailTurns()       { jailTurns++; }
-
-void Player::goToJail() {
-    status    = PlayerStatus::JAILED;
-    jailTurns = 0;
+Player &Player::operator-=(int amount)
+{
+    balance -= amount;
+    return *this;
 }
 
-void Player::releaseFromJail() {
-    status    = PlayerStatus::ACTIVE;
-    jailTurns = 0;
+bool Player::canAfford(int amount) const
+{
+    return balance >= amount;
 }
 
-// ─────────────────────────────────────────────
-//  Properti
-// ─────────────────────────────────────────────
-
-void Player::addProperty(Property* prop) {
-    if (prop) properties.push_back(prop);
+bool Player::operator>(const Player &other) const
+{
+    return balance > other.balance;
 }
 
-void Player::removeProperty(Property* prop) {
+bool Player::operator<(const Player &other) const
+{
+    return balance < other.balance;
+}
+
+void Player::addProperty(Property *prop)
+{
+    properties.push_back(prop);
+}
+
+void Player::removeProperty(Property *prop)
+{
     auto it = find(properties.begin(), properties.end(), prop);
-    if (it != properties.end()) properties.erase(it);
+    if (it != properties.end())
+        properties.erase(it);
 }
 
-Property* Player::getPropertyAt(int pos) const {
-    if (pos < 0 || pos >= static_cast<int>(properties.size())) return nullptr;
-    return properties[pos];
+const vector<Property *> &Player::getProperties() const
+{
+    return properties;
 }
 
-const vector<Property*>& Player::getProperties()   const { return properties; }
-int Player::getPropertyCount()                      const { return static_cast<int>(properties.size()); }
-int Player::getPropertyNum()                        const { return getPropertyCount(); }
-
-// ─────────────────────────────────────────────
-//  Kartu Kemampuan
-// ─────────────────────────────────────────────
-
-bool Player::addSkillCard(SkillCard* card) {
-    if (!card) return false;
-    if (static_cast<int>(skillCards.size()) >= 3) return false; // tangan penuh
-    skillCards.push_back(card);
-    return true;
+int Player::getPropertyCount() const
+{
+    return properties.size();
 }
 
-void Player::discardSkillCard(int index) {
-    if (index < 0 || index >= static_cast<int>(skillCards.size())) return;
-    skillCards.erase(skillCards.begin() + index);
+void Player::goToJail()
+{
+    status = PlayerStatus::JAILED;
+    jailTurns = 0;
 }
 
-SkillCard* Player::getSkillCardAt(int index) const {
-    if (index < 0 || index >= static_cast<int>(skillCards.size())) return nullptr;
-    return skillCards[index];
+void Player::releaseFromJail()
+{
+    status = PlayerStatus::ACTIVE;
+    jailTurns = 0;
 }
 
-const vector<SkillCard*>& Player::getHand()    const { return skillCards; }
-int Player::getHandSize()                      const { return static_cast<int>(skillCards.size()); }
-int Player::getCardNum()                       const { return getHandSize(); }
-void Player::setCardUsedThisTurn(bool used)          { cardUsedThisTurn = used; }
-bool Player::hasUsedCardThisTurn()             const { return cardUsedThisTurn; }
+bool Player::isInJail() const
+{
+    return status == PlayerStatus::JAILED;
+}
 
-// ─────────────────────────────────────────────
-//  Shield
-// ─────────────────────────────────────────────
+void Player::incrementJailTurns()
+{
+    jailTurns++;
+}
 
-void Player::activateShield()   { shieldActive = true; }
-void Player::deactivateShield() { shieldActive = false; }
-bool Player::isShielded()  const { return shieldActive; }
+void Player::activateShield()
+{
+    shieldActive = true;
+}
 
-// ─────────────────────────────────────────────
-//  Turn lifecycle
-// ─────────────────────────────────────────────
+bool Player::isShielded() const
+{
+    return shieldActive;
+}
 
-void Player::onTurnStart() {
+void Player::deactivateShield()
+{
+    shieldActive = false;
+}
+
+void Player::onTurnStart()
+{
     cardUsedThisTurn = false;
-    shieldActive     = false;
+    shieldActive = false;
 }

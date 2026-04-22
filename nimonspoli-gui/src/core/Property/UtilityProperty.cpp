@@ -1,35 +1,64 @@
 #include "UtilityProperty.hpp"
-#include <iostream>
 
-UtilityProperty::UtilityProperty() {}
-
-UtilityProperty::UtilityProperty(
-    const string& id, const string& code, const string& name,
-    const string& colorGroup, double purchasePrice, double mortageValue,
-    PropertyStatus status, const string& ownerId, map<int,int> rentPrice)
-    : Property(id, code, name, colorGroup, purchasePrice, mortageValue, status, ownerId),
-      rentPrice(rentPrice) {}
-
-UtilityProperty::~UtilityProperty() {}
-
-double UtilityProperty::calculateRentPrice() {
-    // Sewa = diceTotal × faktor pengali (tergantung jumlah utility dimiliki)
-    // diceTotal di-inject dari UtilityTile::calculateRent(diceTotal)
-    // Di sini return faktor pengali saja; perkalian di UtilityTile
-    return 1;
+UtilityProperty::UtilityProperty()
+{
 }
 
-double UtilityProperty::calculateSellPrice() {
-    return purchasePrice;
+UtilityProperty::UtilityProperty(int id, const string &code, const string &name, const string &colorGroup, int purchasePrice, int mortageValue, const string &ownerId, map<int, int> rentPrice) : Property(id, code, name, colorGroup, purchasePrice, mortageValue, ownerId), rentPrice(rentPrice)
+{
 }
 
-void UtilityProperty::formattingTXT() const {
-    // TODO: implementasi serialisasi untuk Save/Load
+UtilityProperty::~UtilityProperty()
+{
 }
 
-ostream& operator<<(ostream& os, const UtilityProperty& p) {
-    os << "[UTILITAS] " << p.name << " (" << p.code << ")"
-       << " | Pemilik: " << (p.ownerId.empty() ? "BANK" : p.ownerId)
-       << " | Status: " << (p.status == PropertyStatus::MORTGAGED ? "MORTGAGED" : "OWNED");
+int UtilityProperty::calculateRentPrice(int diceRoll,
+                                        int ownerSameColorCount,
+                                        bool monopoly) const
+{
+    return diceRoll * rentPrice.at(ownerSameColorCount);
+}
+
+int UtilityProperty::calculateSellPrice() const
+{
+    return getMortageValue();
+}
+
+ostream &operator<<(ostream &os, const UtilityProperty &p)
+{
+    string namaKode = p.getName() + " (" + p.getCode() + ")";
+    os << left << setw(26) << namaKode;
+
+    os << setw(10) << "";
+
+    string harga = "M" + to_string(p.getMortageValue() * 2);
+    os << setw(8) << harga;
+
+    if (p.getStatus() == PropertyStatus::MORTGAGED)
+        os << "MORTGAGED [M]";
+    else
+        os << "OWNED";
+
     return os;
+}
+
+string UtilityProperty::formattingTXT() const
+{
+    string statusStr;
+    switch (getStatus())
+    {
+    case PropertyStatus::BANK:
+        statusStr = "BANK";
+        break;
+    case PropertyStatus::OWNED:
+        statusStr = "OWNED";
+        break;
+    case PropertyStatus::MORTGAGED:
+        statusStr = "MORTGAGED";
+        break;
+    }
+
+    string ownerStr = getOwnerId().empty() ? "BANK" : getOwnerId();
+
+    return getCode() + " UTILITY " + ownerStr + " " + statusStr + " 1 0 0";
 }

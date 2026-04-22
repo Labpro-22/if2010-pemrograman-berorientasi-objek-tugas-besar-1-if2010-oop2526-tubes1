@@ -3,112 +3,135 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <algorithm>
 
 using namespace std;
 
-// Forward declarations — hindari circular include
 class Card;
 class SkillCard;
+class ShieldCard;
 class Property;
-class Tile;
 
-enum class PlayerStatus {
+enum class PlayerStatus
+{
     ACTIVE,
     BANKRUPT,
     JAILED
 };
 
-class Player {
+class Player
+{
 private:
-    // ── Identitas ────────────────────────────────
-    string username;  // nama tampilan
-
-    // ── Keuangan ─────────────────────────────────
+    string username;
     int balance;
-
-    // ── Posisi ────────────────────────────────────
-    int   position;   // indeks petak (0–39), dipakai GameMaster::movePlayer
-    Tile* currPetak;  // pointer ke tile saat ini, dipakai Board & GameMaster
-
-    // ── Status ────────────────────────────────────
+    int position; // indeks petak (0-39)
     PlayerStatus status;
-    int jailTurns;    // sudah berapa giliran di penjara (0–3)
+    int jailTurns; // sudah berapa giliran di penjara
 
-    // ── Properti ──────────────────────────────────
-    vector<Property*> properties;
+    vector<Property *> properties;  // daftar properti yang dimiliki
+    vector<SkillCard *> skillCards; // kartu kemampuan di tangan (maks 3)
 
-    // ── Kartu ─────────────────────────────────────
-    vector<SkillCard*> skillCards;  // kartu kemampuan di tangan (maks 3)
-    bool cardUsedThisTurn;
-
-    // ── Shield ────────────────────────────────────
+    bool cardUsedThisTurn; // flag pemakaian kartu per giliran
     bool shieldActive;
+    string id;
 
 public:
-    // ── Konstruktor & destruktor ─────────────────
-    Player(const string& username, int startingBalance);
+    /**
+    + Player(Id: string, Money: int, currPetak: Petak*, listProperty: vector<Property*>, listCard: vector<Card*>, Status: string): Player
+    + getID(): string
+    + getMoney(): int
+    + operator=(amount : int) : Player&
+    + operator-(amount : int): Player&
+    + operator+(amount : int): Player&
+    + getWealth(): int
+    + move(steps: int): void
+    + getPropertyAt(): Property* // 0 based
+    + getPropertyNum(): int
+    + showProperty(): void
+    + getCardAt(int): Card* // 0 based
+    + addCard(Card): void
+    + removeCardAt(int): Card* // 0 based
+    + setStatus(string): void
+    + getStatus(): string
+     */
+    Player(const std::string &username, int startingBalance);
     ~Player();
 
-    // ── Identitas ────────────────────────────────
+    // GET
     string getUsername() const;
+    int getBalance() const;
+    int getPosition() const;
+    PlayerStatus getStatus() const;
+    int getJailTurns() const;
 
-    // ── Keuangan ─────────────────────────────────
-    int  getBalance() const;
-    int  getMoney()   const;      // alias getBalance() — kompatibel kode lama
-    int  getWealth()  const;      // balance + harga beli semua properti + bangunan
-
-    Player& operator+=(int amount);
-    Player& operator-=(int amount);
-    bool    canAfford(int amount) const;
-    bool    operator>(const Player& other) const;
-    bool    operator<(const Player& other) const;
-
-    // ── Posisi ────────────────────────────────────
-    int   getPosition()  const;
-    Tile* getCurrPetak() const;     // dipakai GameMaster::movePlayer
-    void  setPosition(int tileIndex);
-    void  setCurrPetak(Tile* tile); // dipakai GameMaster::movePlayer
-    void  move(int steps);          // update position & currPetak — impl menunggu Board
-
-    // ── Status ────────────────────────────────────
-    PlayerStatus getStatus()          const;
-    void         setStatus(PlayerStatus s);
-    string       getStatusString()    const; // return "ACTIVE"/"JAILED"/"BANKRUPT"
-
-    // ── Penjara ───────────────────────────────────
-    int  getJailTurns()       const;
+    // SET
+    void setPosition(int tileIndex);
+    void setStatus(PlayerStatus newStatus);
     void setJailTurns(int turns);
-    void goToJail();              // set JAILED, jailTurns = 0, dipakai JailTile
-    void releaseFromJail();       // set ACTIVE, jailTurns = 0
-    bool isInJail()           const;
+
+    // KEUANGAN
+    Player &operator+=(int amount);
+    Player &operator-=(int amount);
+    bool canAfford(int amount) const;
+    bool operator>(const Player &other) const;
+    bool operator<(const Player &other) const;
+
+    // Player &operator=(int amount)
+    // {
+    //     money = amount;
+    //     return *this;
+    // }
+    // Player &operator+(int amount)
+    // {
+    //     money += amount;
+    //     return *this;
+    // }
+    // Player &operator-(int amount)
+    // {
+    //     money -= amount;
+    //     return *this;
+    // }
+
+    // PROPERTI
+    void addProperty(Property *prop);                // tambah properti ke daftar milik pemain
+    void removeProperty(Property *prop);             // lepas properti dari daftar milik pemain
+    const vector<Property *> &getProperties() const; // ambil seluruh properti milik pemain
+    int getPropertyCount() const;
+
+    // KARTU
+    bool addSkillCard(SkillCard *card);
+    void discardSkillCard(int index);
+    const vector<SkillCard *> &getHand() const;
+    int getHandSize() const;
+    void setCardUsedThisTurn(bool used);
+    bool hasUsedCardThisTurn() const;
+
+    // JAIL
+    void goToJail();
+    void releaseFromJail();
+    bool isInJail() const;
     void incrementJailTurns();
 
-    // ── Properti ──────────────────────────────────
-    void                     addProperty(Property* prop);
-    void                     removeProperty(Property* prop);
-    Property*                getPropertyAt(int pos)    const; // 0-based, dipakai GameMaster
-    const vector<Property*>& getProperties()           const;
-    int                      getPropertyCount()        const;
-    int                      getPropertyNum()          const; // alias getPropertyCount()
+    // SHIELD CARD
+    void activateShield();   // aktifkan efek kebal dari ShieldCard
+    bool isShielded() const; // cek apakah pemain sedang terlindungi shield
+    void deactivateShield(); // matikan efek shield (dipanggil di akhir giliran)
 
-    // ── Kartu Kemampuan ───────────────────────────
-    bool                      addSkillCard(SkillCard* card); // return false jika tangan penuh (>3)
-    void                      discardSkillCard(int index);
-    SkillCard*                getSkillCardAt(int index) const; // dipakai Command
-    const vector<SkillCard*>& getHand()                const;
-    int                       getHandSize()            const;
-    int                       getCardNum()             const; // alias getHandSize()
-    void                      setCardUsedThisTurn(bool used);
-    bool                      hasUsedCardThisTurn()    const;
+    // TURN
+    void onTurnStart();
 
-    // ── Shield ────────────────────────────────────
-    void activateShield();
-    void deactivateShield();
-    bool isShielded() const;
-
-    // ── Turn lifecycle ────────────────────────────
-    void onTurnStart(); // reset cardUsedThisTurn & shieldActive
+    // int getWealth() const;
+    // void move(int steps);
+    // Property *getPropertyAt(int pos) const { return listProperty[pos]; }
+    // int getPropertyNum() const;
+    // void showProperty() const;
+    // Card *getCardAt(int pos) const { return listCard[pos]; }
+    // void addCard(Card *newCard);
+    // Card *removeCardAt(int pos);
+    // void setStatus(std::string newStatus);
+    // std::string getStatus() const { return status; }
+    // std::string getId() const { return id; }
 };
 
 #endif
