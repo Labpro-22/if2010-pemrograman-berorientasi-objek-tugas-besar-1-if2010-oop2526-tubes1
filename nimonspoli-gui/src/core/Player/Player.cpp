@@ -1,75 +1,167 @@
 #include "Player.hpp"
+#include "../Property/Property.hpp"
 
-int Player::getWealth() const 
-{
-    int totalWealth = money;
-    for (Property* prop : listProperty) {
-        // Kekayaan = uang tunai + harga BELI semua properti + harga beli bangunan
-        // (bukan mortgageValue — sesuai spesifikasi PPH)
-        totalWealth += static_cast<int>(prop->getPurchasePrice());
+// ─────────────────────────────────────────────
+//  Konstruktor & destruktor
+// ─────────────────────────────────────────────
+
+Player::Player(const string& id, const string& username, int startingBalance)
+    :  username(username), balance(startingBalance),
+      position(0), currPetak(nullptr),
+      status(PlayerStatus::ACTIVE), jailTurns(0),
+      cardUsedThisTurn(false), shieldActive(false) {}
+
+Player::~Player() {}
+
+// ─────────────────────────────────────────────
+//  Identitas
+// ─────────────────────────────────────────────
+
+string Player::getUsername() const { return username; }
+
+// ─────────────────────────────────────────────
+//  Keuangan
+// ─────────────────────────────────────────────
+
+int Player::getBalance() const { return balance; }
+int Player::getMoney()   const { return balance; }
+
+int Player::getWealth() const {
+    int total = balance;
+    for (Property* p : properties) {
+        if (p) total += static_cast<int>(p->getPurchasePrice());
+        // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
+        // jika sudah diimplementasi — saat ini gunakan purchasePrice sebagai baseline
     }
-    return totalWealth;
+    return total;
 }
 
-void Player::move(int steps)
-{
-    // Implementasi menunggu Board selesai.
-    // Yang perlu dilakukan:
-    //   1. Hitung indeks baru = (indeksSekarang + steps) % board.getSize()
-    //   2. Set currPetak = board.getTile(indeksBaru)
-    // Saat ini dikosongkan — akan diisi setelah Board tersedia.
-    (void)steps;
+Player& Player::operator+=(int amount) { balance += amount; return *this; }
+Player& Player::operator-=(int amount) { balance -= amount; return *this; }
+bool    Player::canAfford(int amount)  const { return balance >= amount; }
+bool    Player::operator>(const Player& other) const { return balance > other.balance; }
+bool    Player::operator<(const Player& other) const { return balance < other.balance; }
+
+// ─────────────────────────────────────────────
+//  Posisi
+// ─────────────────────────────────────────────
+
+int   Player::getPosition()  const { return position; }
+Tile* Player::getCurrPetak() const { return currPetak; }
+
+void Player::setPosition(int tileIndex) {
+    position = tileIndex;
 }
 
-// Getter posisi saat ini sebagai indeks integer
-// Dipanggil oleh GameMaster::movePlayer untuk tahu posisi pemain
-Tile* Player::getCurrPetak() const
-{
-    return currPetak;
-}
-
-void Player::setCurrPetak(Tile* tile)
-{
+void Player::setCurrPetak(Tile* tile) {
     currPetak = tile;
 }
 
-int Player::getPropertyNum() const
-{
-    return static_cast<int>(listProperty.size());
+void Player::move(int steps) {
+    // Implementasi menunggu Board selesai.
+    // GameMaster::movePlayer() yang memanggil setCurrPetak() dan setPosition()
+    // setelah menghitung targetIdx = (position + steps) % board.getSize()
+    (void)steps;
 }
 
-void Player::showProperty() const
-{
-    for (Property* prop : listProperty) {
-        // Delegate ke DisplayManager — kosongkan di sini
-        // DisplayManager::printPlayerProperties() yang menangani output
-        (void)prop;
+// ─────────────────────────────────────────────
+//  Status
+// ─────────────────────────────────────────────
+
+PlayerStatus Player::getStatus() const { return status; }
+
+void Player::setStatus(PlayerStatus s) { status = s; }
+
+string Player::getStatusString() const {
+    switch (status) {
+        case PlayerStatus::ACTIVE:   return "ACTIVE";
+        case PlayerStatus::JAILED:   return "JAILED";
+        case PlayerStatus::BANKRUPT: return "BANKRUPT";
+        default:                     return "UNKNOWN";
     }
 }
 
-void Player::addCard(Card* newCard)
-{
-    listCard.push_back(newCard);
+// ─────────────────────────────────────────────
+//  Penjara
+// ─────────────────────────────────────────────
+
+int  Player::getJailTurns()       const { return jailTurns; }
+void Player::setJailTurns(int t)        { jailTurns = t; }
+bool Player::isInJail()           const { return status == PlayerStatus::JAILED; }
+void Player::incrementJailTurns()       { jailTurns++; }
+
+void Player::goToJail() {
+    status    = PlayerStatus::JAILED;
+    jailTurns = 0;
 }
 
-Card* Player::removeCardAt(int pos)
-{
-    // Bug fix dari versi sebelumnya:
-    // - iterator di-advance sebanyak pos, tapi pos sudah jadi 0 di dalam loop
-    // - listCard[pos] selalu index 0 karena pos sudah 0
-    if (pos < 0 || pos >= static_cast<int>(listCard.size())) return nullptr;
-
-    Card* ret = listCard[pos];
-    listCard.erase(listCard.begin() + pos);
-    return ret;
+void Player::releaseFromJail() {
+    status    = PlayerStatus::ACTIVE;
+    jailTurns = 0;
 }
 
-void Player::setStatus(std::string newStatus)
-{
-    status = newStatus;
+// ─────────────────────────────────────────────
+//  Properti
+// ─────────────────────────────────────────────
+
+void Player::addProperty(Property* prop) {
+    if (prop) properties.push_back(prop);
 }
 
-int Player::getCardNum() const
-{
-    return static_cast<int>(listCard.size());
+void Player::removeProperty(Property* prop) {
+    auto it = find(properties.begin(), properties.end(), prop);
+    if (it != properties.end()) properties.erase(it);
+}
+
+Property* Player::getPropertyAt(int pos) const {
+    if (pos < 0 || pos >= static_cast<int>(properties.size())) return nullptr;
+    return properties[pos];
+}
+
+const vector<Property*>& Player::getProperties()   const { return properties; }
+int Player::getPropertyCount()                      const { return static_cast<int>(properties.size()); }
+int Player::getPropertyNum()                        const { return getPropertyCount(); }
+
+// ─────────────────────────────────────────────
+//  Kartu Kemampuan
+// ─────────────────────────────────────────────
+
+bool Player::addSkillCard(SkillCard* card) {
+    if (!card) return false;
+    if (static_cast<int>(skillCards.size()) >= 3) return false; // tangan penuh
+    skillCards.push_back(card);
+    return true;
+}
+
+void Player::discardSkillCard(int index) {
+    if (index < 0 || index >= static_cast<int>(skillCards.size())) return;
+    skillCards.erase(skillCards.begin() + index);
+}
+
+SkillCard* Player::getSkillCardAt(int index) const {
+    if (index < 0 || index >= static_cast<int>(skillCards.size())) return nullptr;
+    return skillCards[index];
+}
+
+const vector<SkillCard*>& Player::getHand()    const { return skillCards; }
+int Player::getHandSize()                      const { return static_cast<int>(skillCards.size()); }
+int Player::getCardNum()                       const { return getHandSize(); }
+void Player::setCardUsedThisTurn(bool used)          { cardUsedThisTurn = used; }
+bool Player::hasUsedCardThisTurn()             const { return cardUsedThisTurn; }
+
+// ─────────────────────────────────────────────
+//  Shield
+// ─────────────────────────────────────────────
+
+void Player::activateShield()   { shieldActive = true; }
+void Player::deactivateShield() { shieldActive = false; }
+bool Player::isShielded()  const { return shieldActive; }
+
+// ─────────────────────────────────────────────
+//  Turn lifecycle
+// ─────────────────────────────────────────────
+
+void Player::onTurnStart() {
+    cardUsedThisTurn = false;
+    shieldActive     = false;
 }
