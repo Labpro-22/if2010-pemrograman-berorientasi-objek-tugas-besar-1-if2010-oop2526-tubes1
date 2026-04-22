@@ -487,11 +487,7 @@ void CardTile::onLanded(Player &p, GameState &gs)
     if (!kartu)
         return;
 
-    GameMaster *gm = gs.getGameMaster();
-    if (gm)
-    {
-        kartu->execute(p, *gm);
-    }
+    kartu->execute(p, gs);
 
     card->discard(kartu);
 }
