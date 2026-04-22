@@ -29,6 +29,9 @@ add_library(
   nimonspoli_logic STATIC
   src/logic/Game.cpp
   src/logic/TransactionLogger.cpp
+  src/logic/Bank.cpp
+  src/logic/Auction.cpp
+  src/logic/Board.cpp
   # etc. lanjut sendiri
 )
 
@@ -65,14 +68,15 @@ target_link_libraries(nimonspoli PRIVATE nimonspoli_ui)
 # enable_testing()
 #
 # find_package(GTest REQUIRED)
-# add_executable(tiles_test src/core/TilesTest.cpp)
+# add_executable(logictest test/logic/AuctionTest.cpp test/logic/BankTest.cpp test/logic/GameLoopTest.cpp)
 #
-# target_link_libraries(tiles_test 
+# target_link_libraries(logictest
 #     PRIVATE 
 #     nimonspoli_core 
+#     nimonspoli_logic
 #     GTest::gtest 
 #     GTest::gtest_main 
 #     pthread
 # )
-#
-# add_test(NAME CoreTilesTest COMMAND tiles_test)
+# add_test(NAME LogicTest COMMAND logictest)
+# gtest_discover_tests(logictest)
