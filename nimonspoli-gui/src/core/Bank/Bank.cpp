@@ -17,26 +17,13 @@ void Bank::payPlayer(Player *p, int amount)
     }
 }
 
-void Bank::receiveFromPlayer(Player *p, int amount)
-{
-    if (p != nullptr && amount > 0)
-    {
-        // Berdasarkan diagram kelas Player, terdapat operator-(int) yang me-return Player&
-        // Operasi ini mengurangi uang dari state pemain.
-        *p -= amount;
-    }
-}
-
 void Bank::confesticatePlayerAssets(Player *p)
 {
     if (p != nullptr)
     {
         // 1. Bank menyita sisa uang tunai yang dimiliki pemain (jika ada)
         int remainingMoney = p->getBalance();
-        if (remainingMoney > 0)
-        {
-            receiveFromPlayer(p, remainingMoney);
-        }
+        p -= remainingMoney;
 
         // 2. Mengubah status pemain menjadi BANKRUPT
         p->setStatus(PlayerStatus::BANKRUPT);

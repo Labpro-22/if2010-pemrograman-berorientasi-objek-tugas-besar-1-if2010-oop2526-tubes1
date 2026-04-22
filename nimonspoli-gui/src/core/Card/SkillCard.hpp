@@ -15,7 +15,7 @@ public:
     virtual ~SkillCard();
     bool getUsed();
     void setUsed(bool newUsed);
-    virtual void execute(Player &p, GameMaster &g) = 0;
+    virtual void execute(Player &p, GameState &gs) = 0;
 };
 
 #endif

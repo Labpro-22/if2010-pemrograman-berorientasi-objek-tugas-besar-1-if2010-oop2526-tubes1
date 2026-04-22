@@ -10,7 +10,7 @@ public:
     GeneralFundCard();
     GeneralFundCard(const string &type, const string &description);
     virtual ~GeneralFundCard();
-    virtual void execute(Player &p, GameMaster &g) = 0;
+    virtual void execute(Player &p, GameState &gs) = 0;
 };
 
 #endif

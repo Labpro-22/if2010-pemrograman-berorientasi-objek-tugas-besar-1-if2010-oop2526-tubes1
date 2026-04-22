@@ -34,28 +34,11 @@ private:
     vector<SkillCard *> skillCards; // kartu kemampuan di tangan (maks 3)
 
     bool cardUsedThisTurn; // flag pemakaian kartu per giliran
+    double activeDiscount;
     bool shieldActive;
     string id;
 
 public:
-    /**
-    + Player(Id: string, Money: int, currPetak: Petak*, listProperty: vector<Property*>, listCard: vector<Card*>, Status: string): Player
-    + getUsername(): string
-    + getMoney(): int
-    + operator=(amount : int) : Player&
-    + operator-(amount : int): Player&
-    + operator+(amount : int): Player&
-    + getWealth(): int
-    + move(steps: int): void
-    + getPropertyAt(): Property* // 0 based
-    + getPropertyNum(): int
-    + showProperty(): void
-    + getCardAt(int): Card* // 0 based
-    + addCard(Card): void
-    + removeCardAt(int): Card* // 0 based
-    + setStatus(string): void
-    + getStatus(): string
-     */
     Player(const std::string &username, int startingBalance);
     ~Player();
 
@@ -79,26 +62,10 @@ public:
     bool operator>(const Player &other) const;
     bool operator<(const Player &other) const;
 
-    // Player &operator=(int amount)
-    // {
-    //     money = amount;
-    //     return *this;
-    // }
-    // Player &operator+(int amount)
-    // {
-    //     money += amount;
-    //     return *this;
-    // }
-    // Player &operator-(int amount)
-    // {
-    //     money -= amount;
-    //     return *this;
-    // }
-
     // PROPERTI
-    void addProperty(Property *prop);                // tambah properti ke daftar milik pemain
-    void removeProperty(Property *prop);             // lepas properti dari daftar milik pemain
-    const vector<Property *> &getProperties() const; // ambil seluruh properti milik pemain
+    void addProperty(Property *prop);
+    void removeProperty(Property *prop);
+    const vector<Property *> &getProperties() const;
     int getPropertyCount() const;
 
     // KARTU
@@ -115,6 +82,11 @@ public:
     bool isInJail() const;
     void incrementJailTurns();
 
+    // DISKON
+    void setDiscount(double percent);
+    double getDiscount() const;
+    void clearDiscount();
+
     // SHIELD CARD
     void activateShield();   // aktifkan efek kebal dari ShieldCard
     bool isShielded() const; // cek apakah pemain sedang terlindungi shield
@@ -122,18 +94,6 @@ public:
 
     // TURN
     void onTurnStart();
-    int getWealth() const;
-    // int getWealth() const;
-    // void move(int steps);
-    // Property *getPropertyAt(int pos) const { return listProperty[pos]; }
-    // int getPropertyNum() const;
-    // void showProperty() const;
-    // Card *getCardAt(int pos) const { return listCard[pos]; }
-    // void addCard(Card *newCard);
-    // Card *removeCardAt(int pos);
-    // void setStatus(std::string newStatus);
-    // std::string getStatus() const { return status; }
-    // std::string getUsername() const { return id; }
 };
 
 #endif

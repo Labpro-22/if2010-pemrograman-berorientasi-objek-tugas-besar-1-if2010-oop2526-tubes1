@@ -379,10 +379,10 @@ bool JailTile::tryEscape(Player &p, Dice &d)
     return false;
 }
 
-// FIX #14: Bank::receiveFromPlayer butuh Player*, bukan Player&
+// FIX #14: Bank:: Player butuh Player*, bukan Player&
 void JailTile::payFine(Player &p, Bank &b)
 {
-    b.receiveFromPlayer(&p, jailFine);
+    p -= jailFine;
     release(p);
 }
 
@@ -487,11 +487,7 @@ void CardTile::onLanded(Player &p, GameState &gs)
     if (!kartu)
         return;
 
-    GameMaster *gm = gs.getGameMaster();
-    if (gm)
-    {
-        kartu->execute(p, *gm);
-    }
+    kartu->execute(p, gs);
 
     card->discard(kartu);
 }

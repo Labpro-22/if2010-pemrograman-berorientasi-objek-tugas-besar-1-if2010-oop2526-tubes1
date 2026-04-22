@@ -5,7 +5,7 @@
 using namespace std;
 
 class Player;
-class GameMaster;
+class GameState;
 
 class Card
 {
@@ -17,7 +17,7 @@ public:
     Card();
     Card(const string &type, const string &description);
     virtual ~Card();
-    virtual void execute(Player &p, GameMaster &g) = 0;
+    virtual void execute(Player &p, GameState &gs) = 0;
     string getDescription();
     string getType();
 };

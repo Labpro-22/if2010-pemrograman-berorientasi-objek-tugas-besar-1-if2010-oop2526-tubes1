@@ -10,7 +10,7 @@ public:
     GoToJailCard();
     GoToJailCard(const string &type, const string &description);
     ~GoToJailCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif

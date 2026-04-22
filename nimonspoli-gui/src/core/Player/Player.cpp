@@ -1,6 +1,14 @@
 #include "Player.hpp"
 
-Player::Player(const std::string &username, int startingBalance) : username(username), balance(startingBalance)
+Player::Player(const std::string &username, int startingBalance) : username(username),
+                                                                   balance(startingBalance),
+                                                                   position(0),
+                                                                   status(PlayerStatus::ACTIVE),
+                                                                   jailTurns(0),
+                                                                   cardUsedThisTurn(false),
+                                                                   activeDiscount(0.0),
+                                                                   shieldActive(false),
+                                                                   id(username)
 {
 }
 
@@ -163,6 +171,21 @@ void Player::incrementJailTurns()
     jailTurns++;
 }
 
+// DISKON
+void Player::setDiscount(double percent)
+{
+    activeDiscount = percent;
+}
+double Player::getDiscount() const
+{
+    return activeDiscount;
+}
+void Player::clearDiscount()
+{
+    activeDiscount = 0.0;
+}
+
+// SHIELD
 void Player::activateShield()
 {
     shieldActive = true;

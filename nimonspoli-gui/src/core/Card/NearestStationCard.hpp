@@ -10,7 +10,7 @@ public:
     NearestStationCard();
     NearestStationCard(const string &type, const string &description);
     ~NearestStationCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
 };
 
 #endif

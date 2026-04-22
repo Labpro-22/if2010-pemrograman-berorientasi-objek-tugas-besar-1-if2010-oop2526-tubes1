@@ -6,11 +6,16 @@ using namespace std;
 
 class TeleportCard : public SkillCard
 {
+private:
+    int targetPosition;
+
 public:
     TeleportCard();
     TeleportCard(const string &type, const string &description, bool used);
     ~TeleportCard();
-    void execute(Player &p, GameMaster &g) override;
+    void execute(Player &p, GameState &gs) override;
+    void setTargetPosition(int pos, GameState &gs);
+    int getTargetPosition() const;
 };
 
 #endif
