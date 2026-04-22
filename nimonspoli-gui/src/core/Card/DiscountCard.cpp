@@ -25,3 +25,7 @@ void DiscountCard::decreaseDuration()
 void DiscountCard::execute(Player &p, GameMaster &g)
 {
 }
+
+double DiscountCard::getDiscountPercent() const{
+    return discountPercent;
+}

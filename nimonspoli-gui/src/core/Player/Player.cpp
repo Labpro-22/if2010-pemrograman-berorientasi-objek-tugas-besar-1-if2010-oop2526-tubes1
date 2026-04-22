@@ -50,6 +50,10 @@ void Player::setJailTurns(int turns)
     jailTurns = turns;
 }
 
+void Player::setBalance(int b){
+    balance = b;
+}
+
 Player &Player::operator+=(int amount)
 {
     balance += amount;
@@ -178,4 +182,12 @@ void Player::onTurnStart()
 {
     cardUsedThisTurn = false;
     shieldActive = false;
+}
+
+int Player::getWealth() const{
+    int total = balance;
+    for (auto* p: properties){
+        total += p->getPurchasePrice();
+    }
+    return total;
 }

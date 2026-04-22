@@ -17,6 +17,7 @@ public:
     int getDuration();
     void decreaseDuration();
     void execute(Player &p, GameMaster &g) override;
+    double getDiscountPercent() const;
 };
 
 #endif

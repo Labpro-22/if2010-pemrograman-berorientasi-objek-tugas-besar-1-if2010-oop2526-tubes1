@@ -13,3 +13,5 @@ MoveCard::~MoveCard()
 }
 
 void MoveCard::execute(Player &p, GameMaster &g) {}
+
+int MoveCard::getSteps() const {return steps;}

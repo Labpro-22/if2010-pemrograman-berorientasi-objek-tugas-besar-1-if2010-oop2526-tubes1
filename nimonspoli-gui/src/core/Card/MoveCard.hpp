@@ -14,6 +14,7 @@ public:
     MoveCard(const string &type, const string &description, bool used, int steps);
     ~MoveCard();
     void execute(Player &p, GameMaster &g) override;
+    int getSteps() const;
 };
 
 #endif

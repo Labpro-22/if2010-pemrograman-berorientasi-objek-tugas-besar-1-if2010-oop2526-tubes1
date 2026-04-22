@@ -59,7 +59,6 @@ private:
     TransactionLogger* logger;
     GameMaster*        gameMaster;
 
-
 public:
     // ── Konstruktor & destruktor ─────────────────
     GameState();
@@ -110,16 +109,18 @@ public:
     void setHasExtraTurn(bool val);
     void setHasRolled(bool val);
     void setHasUsedCard(bool val);
-    void setGameMaster(GameMaster* gm);
 
     // ── Setter: navigasi giliran ─────────────────
     void advanceTurn();         // naikkan currTurn, reset flag giliran
     void nextPlayer();          // pindah ke pemain aktif berikutnya
     void removePlayer(Player* p); // keluarkan pemain bankrut dari urutan
+    void setCurrTurn(int t);
+    void setCurrPlayerIdx(int idx);
+    void setMaxTurn(int m);
+    void setGameMaster(GameMaster* gm);
 
     // ── Helper ───────────────────────────────────
     bool isMaxTurnReached() const;
     int  countActivePlayers() const;
 };
-
 #endif

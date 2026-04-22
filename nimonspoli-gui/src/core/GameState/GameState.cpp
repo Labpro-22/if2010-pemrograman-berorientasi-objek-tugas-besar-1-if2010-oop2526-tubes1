@@ -159,3 +159,7 @@ int GameState::countActivePlayers() const
 {
     return static_cast<int>(getActivePlayers().size());
 }
+
+void GameState::setCurrTurn(int t)      { currTurn = t; }
+void GameState::setCurrPlayerIdx(int i) { currPlayerIdx = i; }
+void GameState::setMaxTurn(int m)       { maxTurn = m; }

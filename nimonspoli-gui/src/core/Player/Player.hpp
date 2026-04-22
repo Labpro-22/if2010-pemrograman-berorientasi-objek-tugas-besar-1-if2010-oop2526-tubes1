@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <algorithm>
+#include "../Property/Property.hpp"
 
 using namespace std;
 
@@ -69,6 +70,7 @@ public:
     void setPosition(int tileIndex);
     void setStatus(PlayerStatus newStatus);
     void setJailTurns(int turns);
+    void setBalance(int amount);
 
     // KEUANGAN
     Player &operator+=(int amount);
@@ -120,7 +122,7 @@ public:
 
     // TURN
     void onTurnStart();
-
+    int getWealth() const;
     // int getWealth() const;
     // void move(int steps);
     // Property *getPropertyAt(int pos) const { return listProperty[pos]; }
