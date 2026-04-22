@@ -94,6 +94,8 @@ public:
 
     // TURN
     void onTurnStart();
+
+    int getWealth() const;
 };
 
 #endif
