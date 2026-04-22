@@ -1,8 +1,7 @@
 #include "../../include/core/GameController.hpp"
 #include "../../include/models/GameBoard.hpp"
 #include "../../include/models/Player.hpp"
-#include "../../include/models/Tile.hpp"
-#include "../../include/models/Property.hpp"
+#include "../../include/models/Street.hpp"
 #include <iostream>
 
 using namespace std;
@@ -18,14 +17,29 @@ GameController::~GameController() {
 }
 
 void GameController::startGame() {
-    initializeGame();
-    cout << "[GameController] Game berhasil dimulai!\n";
-}
 
-void GameController::initializeGame() {
-    // TODO: Initialize 40-tile board with properties
-    // TODO: Create and initialize players
-    cout << "[GameController] Board dan players sudah diinisialisasi\n";
+    cout << "[GameController] Game berhasil dimulai!\n";
+
+
+for (int i = 0; i < 40; i++) {
+        std::map<int, int> rentTable = {
+            {0, 10}, {1, 20}, {2, 30}, {3, 40}, {4, 50}, {5, 100}
+        };
+
+        auto street = std::make_unique<Street>(
+            i,                              // position
+            "Street_" + std::to_string(i),  // name
+            "MERAH",                        // color (string for your BoardView)
+            ColorGroup::MERAH,  
+            69,              // adjust based on your enum
+            67,
+            50,                             // house price
+            100                             // hotel price
+        );
+
+        street->setOwner(""); // initially no owner
+        gameBoard->addTile(std::move(street));
+    }
 }
 
 void GameController::addPlayer(const std::string& username, int startingMoney) {

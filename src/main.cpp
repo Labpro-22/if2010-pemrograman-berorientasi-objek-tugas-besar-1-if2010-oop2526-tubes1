@@ -27,6 +27,7 @@ int main() {
     gameController.addPlayer("Player 1", 2000);
     gameController.addPlayer("Player 2", 2000);
     gameController.addPlayer("Player 3", 2000);
+
     
     cout << "\n[INFO] Ketik HELP untuk melihat command yang tersedia." << endl;
     cout << "[INFO] Mulai dengan CETAK_PAPAN untuk melihat board." << endl;

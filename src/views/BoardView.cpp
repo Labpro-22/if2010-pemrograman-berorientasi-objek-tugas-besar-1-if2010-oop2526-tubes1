@@ -23,7 +23,7 @@ string BoardView::getColorCode(const string& color) {
 }
 
 
-string BoardView::getPlayersOnTile(int pos, const vector<Player*>& players) {
+string BoardView::getPlayersOnTile(int pos, const std::vector<std::shared_ptr<Player>> players) {
     stringstream ss;
 
     for (const auto& p : players) {
@@ -35,7 +35,7 @@ string BoardView::getPlayersOnTile(int pos, const vector<Player*>& players) {
     return ss.str();
 }
 
-string BoardView::renderTile(Tile* tile, const vector<Player*>& players) {
+string BoardView::renderTile(Tile* tile, const std::vector<std::shared_ptr<Player>> players) {
     string color = getColorCode(tile->getColor());
     string name = tile->getName();
     int pos = tile->getPosition();
@@ -60,11 +60,12 @@ string BoardView::renderTile(Tile* tile, const vector<Player*>& players) {
     return ss.str();
 }
 
-void BoardView::showBoard(GameBoard& board, const vector<Player*>& players) {
+void BoardView::showBoard(GameBoard& board, const std::vector<std::shared_ptr<Player>> players) {
     cout << "\n=== MONOPOLI BOARD ===\n";
 
     for (int i = 0; i < 40; i++) {
         Tile* tile = board.getTileAt(i);
+        
         cout << "[" << i << "] " << renderTile(tile, players) << endl;
     }
 
