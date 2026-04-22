@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <utility>
 #include "core/GameException.hpp"
+#include "core/SkillContext.hpp"
 #include "models/Card/SkillCard/SkillCard.hpp"
 #include "models/Plot/Plot.hpp"
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
@@ -17,7 +18,10 @@ Player::Player()
       jailTurns(0),
       hasRolled(false),
       shieldActive(false),
-      usedSkillThisTurn(false) {}
+      usedSkillThisTurn(false),
+      shieldTurnLeft(0),
+      discountTurnLeft(0),
+      discountValue(0) {}
 
 Player::Player(std::string username, int startingCash, int startPosition)
     : username(std::move(username)),
@@ -27,7 +31,10 @@ Player::Player(std::string username, int startingCash, int startPosition)
       jailTurns(0),
       hasRolled(false),
       shieldActive(false),
-      usedSkillThisTurn(false) {
+      usedSkillThisTurn(false),
+      shieldTurnLeft(0),
+      discountTurnLeft(0),
+      discountValue(0) {
     if (startingCash < 0) {
         throw std::invalid_argument("startingCash tidak boleh negatif.");
     }
@@ -71,6 +78,18 @@ bool Player::isShieldActive() const {
 
 bool Player::hasUsedSkillThisTurn() const {
     return usedSkillThisTurn;
+}
+
+int Player::getShieldTurnLeft() const {
+    return shieldTurnLeft;
+}
+
+int Player::getDiscountTurnLeft() const {
+    return discountTurnLeft;
+}
+
+int Player::getDiscountValue() const {
+    return discountValue;
 }
 
 int Player::getTotalWealth() const {
@@ -160,11 +179,7 @@ bool Player::buyProperty(Plot& property) {
     return true;
 }
 
-bool Player::useCards() {
-    return useCards(0);
-}
-
-bool Player::useCards(std::size_t cardIndex) {
+bool Player::useCards(std::size_t cardIndex, SkillContext& ctx) {
     if (usedSkillThisTurn || cardIndex >= ownedCards.size()) {
         return false;
     }
@@ -175,10 +190,7 @@ bool Player::useCards(std::size_t cardIndex) {
         return false;
     }
 
-    selectedCard->activate();
-    if (selectedCard->getName() == "ShieldCard") {
-        shieldActive = true;
-    }
+    selectedCard->activate(ctx);
     usedSkillThisTurn = true;
     return true;
 }
@@ -232,6 +244,9 @@ void Player::setStatus(PlayerStatus newStatus) {
         hasRolled = false;
         shieldActive = false;
         usedSkillThisTurn = false;
+        shieldTurnLeft = 0;
+        discountTurnLeft = 0;
+        discountValue = 0;
         ownedCards.clear();
         ownedProperties.clear();
     }
@@ -252,9 +267,45 @@ void Player::setShieldActive(bool value) {
     shieldActive = value;
 }
 
+void Player::setShieldTurnLeft(int turns) {
+    if (turns < 0) {
+        throw std::invalid_argument("shieldTurnLeft tidak boleh negatif.");
+    }
+    shieldTurnLeft = turns;
+}
+
+void Player::setDiscountTurnLeft(int turns) {
+    if (turns < 0) {
+        throw std::invalid_argument("discountTurnLeft tidak boleh negatif.");
+    }
+    discountTurnLeft = turns;
+}
+
+void Player::setDiscountValue(int value) {
+    if (value < 0) {
+        throw std::invalid_argument("discountValue tidak boleh negatif.");
+    }
+    discountValue = value;
+}
+
 void Player::decrementJailTurns() {
     if (jailTurns > 0) {
         --jailTurns;
+    }
+}
+
+void Player::decrementShieldTurn() {
+    if (shieldTurnLeft > 0) {
+        --shieldTurnLeft;
+    }
+}
+
+void Player::decrementDiscountTurn() {
+    if (discountTurnLeft > 0) {
+        --discountTurnLeft;
+        if (discountTurnLeft == 0) {
+            discountValue = 0;
+        }
     }
 }
 

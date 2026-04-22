@@ -8,6 +8,7 @@
 
 class Plot;
 class SkillCard;
+struct SkillContext;
 
 class Player {
 private:
@@ -21,6 +22,9 @@ private:
     bool hasRolled;
     bool shieldActive;
     bool usedSkillThisTurn;
+    int shieldTurnLeft;
+    int discountTurnLeft;
+    int discountValue;
 
 public:
     Player();
@@ -36,6 +40,9 @@ public:
     bool getHasRolled() const;
     bool isShieldActive() const;
     bool hasUsedSkillThisTurn() const;
+    int getShieldTurnLeft() const;
+    int getDiscountTurnLeft() const;
+    int getDiscountValue() const;
     int getTotalWealth() const;
 
     void move();
@@ -44,8 +51,7 @@ public:
     void pay(int amount);
     void payTaxes();
     bool buyProperty(Plot& property);
-    bool useCards();
-    bool useCards(std::size_t cardIndex);
+    bool useCards(std::size_t cardIndex, SkillContext& ctx);
     bool dropCard();
     bool dropCard(std::size_t cardIndex);
     void receive(int amount);
@@ -59,7 +65,12 @@ public:
     void setJailTurns(int turns);
     void setHasRolled(bool value);
     void setShieldActive(bool value);
+    void setShieldTurnLeft(int turns);
+    void setDiscountTurnLeft(int turns);
+    void setDiscountValue(int value);
     void decrementJailTurns();
+    void decrementShieldTurn();
+    void decrementDiscountTurn();
     void addOwnedCard(const std::shared_ptr<SkillCard>& card);
     void setUsedSkillThisTurn(bool used);
     void resetTurnFlags();
