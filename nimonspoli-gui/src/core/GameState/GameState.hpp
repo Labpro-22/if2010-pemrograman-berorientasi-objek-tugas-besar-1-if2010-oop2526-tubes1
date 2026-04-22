@@ -12,6 +12,7 @@ class Dice;
 class AuctionManager;
 class Card;
 class TransactionLogger;
+class GameMaster;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
@@ -56,6 +57,8 @@ private:
     CardDeck<Card>*    communityCardDeck;
     CardDeck<Card>*    skillCardDeck;
     TransactionLogger* logger;
+    GameMaster*        gameMaster;
+
 
 public:
     // ── Konstruktor & destruktor ─────────────────
@@ -100,12 +103,14 @@ public:
     CardDeck<Card>*    getCommunityDeck() const;
     CardDeck<Card>*    getSkillDeck()     const;
     TransactionLogger* getLogger()        const;
+    GameMaster*        getGameMaster()    const;
 
     // ── Setter: turn & fase ─────────────────────
     void setPhase(GamePhase p);
     void setHasExtraTurn(bool val);
     void setHasRolled(bool val);
     void setHasUsedCard(bool val);
+    void setGameMaster(GameMaster* gm);
 
     // ── Setter: navigasi giliran ─────────────────
     void advanceTurn();         // naikkan currTurn, reset flag giliran

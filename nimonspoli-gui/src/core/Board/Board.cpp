@@ -420,16 +420,24 @@ GoToJail::GoToJail(int id, string display, TileType type, TileName name, string 
 
 void GoToJail::onLanded(Player &p, GameState &gs)
 {
+    // Gunakan GameMaster::sendPlayerToJail() agar semua side-effect tertangani:
+    // posisi, status JAILED, log, dan endCurrentTurn
+    GameMaster *gm = gs.getGameMaster();
+    if (gm)
+    {
+        gm->sendPlayerToJail(&p);
+        return;
+    }
+
+    // Fallback jika GameMaster belum terdaftar (tidak seharusnya terjadi)
     Board *board = gs.getBoard();
     if (!board)
         return;
-
     int jailIdx = board->findTileIndexByCode("PEN");
     if (jailIdx == -1)
         return;
-
     p.setPosition(jailIdx);
-    p.goToJail(); // Player yang urus status JAILED-nya sendiri
+    p.goToJail();
 }
 
 // ═════════════════════════════════════════════
@@ -479,9 +487,11 @@ void CardTile::onLanded(Player &p, GameState &gs)
     if (!kartu)
         return;
 
-    // kartu->execute(p, gameMaster); ← TODO setelah GameMaster bisa diakses
-    (void)p;
-    (void)gs;
+    GameMaster *gm = gs.getGameMaster();
+    if (gm)
+    {
+        kartu->execute(p, *gm);
+    }
 
     card->discard(kartu);
 }

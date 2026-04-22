@@ -11,6 +11,7 @@
 #include "../GameState/GameState.hpp"
 #include "../Card/CardDeck.hpp"
 #include "../Card/Card.hpp"
+#include "../GameMaster/GameMaster.hpp"
 using namespace std;
 
 // ─────────────────────────────────────────────

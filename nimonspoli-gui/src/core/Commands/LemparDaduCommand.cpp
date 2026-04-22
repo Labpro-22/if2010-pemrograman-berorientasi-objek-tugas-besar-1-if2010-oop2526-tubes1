@@ -9,66 +9,69 @@ LemparDaduCommand::LemparDaduCommand(GameMaster &gm, Player *player, Dice &d)
 
 void LemparDaduCommand::execute(GameMaster &gm)
 {
+    (void)gm; // Semua akses GameMaster dilakukan via member gameMaster
+
     if (currentPlayer == nullptr)
     {
         std::cerr << "Error: Tidak ada pemain yang sedang aktif!" << std::endl;
         return;
     }
 
+    // Pastikan pemain belum melempar dadu di giliran ini
+    if (gameMaster.getState().getHasRolled())
+    {
+        std::cout << "Anda sudah melempar dadu giliran ini." << std::endl;
+        return;
+    }
+
     std::cout << currentPlayer->getUsername() << " melempar dadu..." << std::endl;
 
-    // Lakukan pengacakan dadu
     dice.rollRandom();
 
-    int val1 = dice.getDaduVal1();
-    int val2 = dice.getDaduVal2();
+    int val1  = dice.getDaduVal1();
+    int val2  = dice.getDaduVal2();
     int total = dice.getTotal();
 
     std::cout << "Hasil: Dadu 1 = " << val1 << ", Dadu 2 = " << val2
               << " (Total: " << total << ")" << std::endl;
 
-    // Cek kondisi double berturut-turut (aturan Monopoli: 3x double masuk penjara)
-    if (dice.getConsecutiveDoubles() == 3)
+    // Tandai bahwa dadu sudah dilempar giliran ini
+    gameMaster.getState().setHasRolled(true);
+
+    // ── Cek 3× double berturut-turut → langsung penjara ──────────────────
+    if (dice.getConsecutiveDoubles() >= 3)
     {
-        std::cout << "Tiga kali double berturut-turut! " << currentPlayer->getUsername()
+        std::cout << "Tiga kali double berturut-turut! "
+                  << currentPlayer->getUsername()
                   << " langsung dijebloskan ke Penjara!" << std::endl;
 
-        // Pindahkan pemain ke penjara (Asumsi: ada method sendToJail di GameMaster atau Player)
-        // START OF SOON TO IMPLEMENT =========
-        // gameMaster.sendPlayerToJail(currentPlayer);
-        // END OF SOON TO IMPLEMENT =========
+        gameMaster.log(currentPlayer->getUsername(), "JAIL",
+                       "3x double berturut-turut → masuk penjara");
 
-        // Reset counter double setelah masuk penjara
+        // Reset counter sebelum sendPlayerToJail (yang juga memanggil endCurrentTurn)
         dice.resetConsecutiveDouvles();
+        gameMaster.sendPlayerToJail(currentPlayer);
 
-        // Akhiri giliran (pemain tidak boleh jalan lagi)
-        // START OF SOON TO IMPLEMENT =========
-        // gameMaster.endCurrentTurn();
-        // END OF SOON TO IMPLEMENT =========
+        // sendPlayerToJail sudah memanggil endCurrentTurn() — tidak perlu move pemain
+        return;
+    }
+
+    // ── Gerakkan pemain ───────────────────────────────────────────────────
+    gameMaster.movePlayer(currentPlayer, total);
+
+    // ── Handle double (giliran tambahan) ──────────────────────────────────
+    if (dice.isDouble())
+    {
+        std::cout << "DOUBLE! " << currentPlayer->getUsername()
+                  << " mendapat giliran tambahan." << std::endl;
+        gameMaster.setExtraTurn(true);
+
+        // Reset hasRolled agar pemain bisa lempar lagi di giliran tambahan
+        gameMaster.getState().setHasRolled(false);
     }
     else
     {
-        if (val1 == val2)
-        {
-            std::cout << "DOUBLE! Anda mendapat kesempatan untuk melempar dadu lagi setelah ini." << std::endl;
-            // Set flag di GameMaster bahwa pemain ini punya giliran ekstra
-            // START OF SOON TO IMPLEMENT =========
-            // gameMaster.setExtraTurn(true);
-            // END OF SOON TO IMPLEMENT =========
-        }
-        else
-        {
-            // Jika tidak double, pastikan flag giliran ekstra dimatikan dan counter reset
-            // START OF SOON TO IMPLEMENT =========
-            // gameMaster.setExtraTurn(false);
-            // END OF SOON TO IMPLEMENT =========
-            dice.resetConsecutiveDouvles();
-        }
-
-        // Pindahkan pemain sesuai dengan total dadu
-        // Asumsi: gameMaster menangani perpindahan dan efek petak yang diinjak
-        // START OF SOON TO IMPLEMENT =========
-        // gameMaster.movePlayer(currentPlayer, total);
-        // END OF SOON TO IMPLEMENT =========
+        // Bukan double → reset counter (rollRandom sudah reset, tapi reset eksplisit lebih aman)
+        gameMaster.setExtraTurn(false);
     }
 }

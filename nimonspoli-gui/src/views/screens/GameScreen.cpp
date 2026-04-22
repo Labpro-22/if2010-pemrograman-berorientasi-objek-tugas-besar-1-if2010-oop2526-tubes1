@@ -1,6 +1,7 @@
 #include "GameScreen.hpp"
 #include "../../../lib/raylib/include/raylib.h"
 #include "raymath.h"
+#include "../../core/Commands/LemparDaduCommand.hpp"
 #include <cmath>
 #include <string>
 #include <algorithm>
@@ -56,6 +57,14 @@ static const TileDef TILE_DEFS[40] = {
     {"IKN", "RIGHT",  false},   // 39
 };
 
+// Helper
+static void DrawRoundedBorder(Rectangle rec, float roundness, int segments, float thick, Color color) {
+    for (float i = 0.f; i < thick; i += 0.5f) {
+        Rectangle r = { rec.x - i, rec.y - i, rec.width + i*2, rec.height + i*2 };
+        DrawRectangleRoundedLines(r, roundness, segments, thick, color);
+    }
+}
+
 // ─── Constructor ─────────────────────────────────────────────────────────────
 GameScreen::GameScreen()
     : zoomLevel(1.f), zoomOffset({0,0}), isDragging(false),
@@ -92,18 +101,27 @@ void GameScreen::onExit() {
 // ─── Update ──────────────────────────────────────────────────────────────────
 void GameScreen::update(float dt) {
     glowTimer += dt;
+
+    // Tick animasi dadu
+    if (diceState.animating) {
+        diceState.animTimer += dt;
+        if (diceState.animTimer >= DiceState::ANIM_DURATION) {
+            diceState.animating = false;
+            diceState.animTimer = 0.f;
+        }
+    }
+
     handleInput();
-    // kspGlowing = gameState.kspGlow;
-    // dnuGlowing = gameState.dnuGlow;
 }
 
 // ─── Render ──────────────────────────────────────────────────────────────────
 void GameScreen::render(Window& window) {
-    (void)window; // Window handles BeginDrawing/ClearBackground/EndDrawing
+    (void)window;
     ClearBackground({20, 22, 30, 255});
     drawLeftPanel();
     drawRightPanel();
     drawBoard();
+    drawDiceArea();   // overlay dadu di tengah board
     drawPopup();
     drawLogPopup();
     DrawFPS(LEFT_PANEL + 4, 4);
@@ -189,6 +207,9 @@ void GameScreen::initMockState() {
 
 // ─── Input ────────────────────────────────────────────────────────────────────
 void GameScreen::handleInput() {
+    // Testing — tekan W untuk simulasi game over
+    if (IsKeyPressed(KEY_W)) gameOver = true;
+
     Vector2 mouse = GetMousePosition();
 
     float cx1 = boardX + CORNER_SZ;
@@ -383,7 +404,7 @@ void GameScreen::drawPlayers(int tileIdx, float cx, float cy) {
     for (int i=0; i<(int)onTile.size(); i++) {
         int pi = onTile[i];
         float px = startX + i*sp;
-        DrawCircle((int)px, (int)cy, r+1, BLACK);
+        DrawCircle((int)px, (int)cy, r+3, WHITE);
         DrawCircle((int)px, (int)cy, r, playerColors[pi]);
         std::string num = std::to_string(pi+1);
         int fw = MeasureText(num.c_str(), 9);
@@ -548,6 +569,12 @@ void GameScreen::drawLeftPanel() {
         if (pl.cardCount>0)
             DrawText(("x"+std::to_string(pl.cardCount)).c_str(),
                      38+pl.cardCount*16+2,(int)(py+66),10,{150,150,200,255});
+        
+        if (p >= activePlayerCount) {
+            DrawRectangleRec(card, {0, 0, 0, 180});
+            DrawText("+", (int)(card.x + card.width/2 - 5),
+                    (int)(card.y + card.height/2 - 6), 14, {50,52,80,255});
+        }
     }
 }
 
@@ -585,16 +612,30 @@ void GameScreen::drawRightPanel() {
     };
 
     Vector2 mouse = GetMousePosition();
-    for (int i=0; i<8; i++) {
+    for (int i = 0; i < 8; i++) {
         Rectangle btn = {rx+10, 140.f+i*44, RIGHT_PANEL-20, 36};
         bool hover    = CheckCollisionPointRec(mouse, btn);
-        Color bgC     = hover ? Color{btns[i].col.r,btns[i].col.g,btns[i].col.b,220}
-                              : Color{40,42,54,255};
-        DrawRectangleRec(btn, bgC);
-        DrawRectangleLinesEx(btn, 1, btns[i].col);
-        int tw = MeasureText(btns[i].label,11);
-        DrawText(btns[i].label,(int)(rx+RIGHT_PANEL/2-tw/2),(int)(140+i*44+12),
-                 11, hover?WHITE:Color{200,200,210,255});
+
+        // Tombol LEMPAR DADU (i==0): disable jika sudah roll atau sedang animasi
+        bool disabled = false;
+        if (i == 0) disabled = diceState.hasRolled || diceState.animating;
+
+        Color colBase = disabled ? Color{50,50,60,255} : Color{40,42,54,255};
+        Color colHov  = disabled ? Color{50,50,60,255}
+                                 : Color{btns[i].col.r, btns[i].col.g, btns[i].col.b, 220};
+        Color border  = disabled ? Color{70,70,80,255} : btns[i].col;
+
+        DrawRectangleRec(btn, hover && !disabled ? colHov : colBase);
+        DrawRectangleLinesEx(btn, 1, border);
+        int tw = MeasureText(btns[i].label, 11);
+        Color textCol = disabled ? Color{90,90,100,255}
+                                 : (hover ? WHITE : Color{200,200,210,255});
+        DrawText(btns[i].label, (int)(rx+RIGHT_PANEL/2-tw/2), (int)(140+i*44+12), 11, textCol);
+
+        // Klik tombol LEMPAR DADU
+        if (i == 0 && !disabled && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            handleLemparDadu();
+        }
     }
 
     DrawLine((int)rx+8,SCREEN_H-80,SCREEN_W-8,SCREEN_H-80,{60,60,80,255});
@@ -685,6 +726,152 @@ void GameScreen::drawPopup() {
     }
 }
 
+
+// ─── Lempar Dadu ─────────────────────────────────────────────────────────────
+
+void GameScreen::handleLemparDadu() {
+    // Jika ada GameMaster (mode real), push LemparDaduCommand ke GUIManager
+    if (guiManager && guiManager->getGameMaster()) {
+        GameMaster* gm   = guiManager->getGameMaster();
+        Player* player   = gm->getState().getCurrPlayer();
+        Dice*   dice     = gm->getState().getDice();
+        if (player && dice) {
+            guiManager->pushCommand(new LemparDaduCommand(*gm, player, *dice));
+        }
+        return;
+    }
+
+    // ── Mode mock (GUI berjalan tanpa GameMaster) ─────────────────────────
+    if (diceState.hasRolled || diceState.animating) return;
+
+    // Simulasi roll dadu
+    diceState.val1 = GetRandomValue(1, 6);
+    diceState.val2 = GetRandomValue(1, 6);
+    int total      = diceState.val1 + diceState.val2;
+
+    diceState.isDouble    = (diceState.val1 == diceState.val2);
+    diceState.tripleDouble = false; // mock tidak track consecutive doubles
+    diceState.hasRolled   = true;
+    diceState.animating   = true;
+    diceState.animTimer   = 0.f;
+
+    // Update posisi mock player
+    auto& curP    = gameState.players[gameState.activePlayerIdx];
+    int   newPos  = (curP.position + total) % 40;
+
+    // Pindah pemain + log
+    std::string detail = "Lempar: " + std::to_string(diceState.val1) + "+" +
+                         std::to_string(diceState.val2) + "=" + std::to_string(total) +
+                         ", mendarat di " + TILE_DEFS[newPos].code;
+    if (diceState.isDouble) detail += " (double!)";
+
+    gameState.logger.addLog(gameState.currentTurn, curP.username, "DADU", detail);
+    curP.position = newPos;
+}
+
+
+
+// ─── Draw dice area ───────────────────────────────────────────────────────────
+
+void GameScreen::drawDiceArea() {
+    // Area tengah papan (dalam inner board square)
+    float boardSz  = CORNER_SZ + 9*TILE_W + CORNER_SZ;
+    float innerX   = boardX + CORNER_SZ;
+    float innerY   = boardY + CORNER_SZ;
+    float innerSz  = 9 * TILE_W;
+    float cx       = innerX + innerSz / 2.f;
+    float cy       = innerY + innerSz / 2.f;
+    (void)boardSz;
+
+    // Ukuran dadu
+    constexpr float DIE_SZ  = 54.f;
+    constexpr float GAP     = 16.f;
+    float           totalW  = DIE_SZ * 2 + GAP;
+    float           d1x     = cx - totalW / 2.f;
+    float           d2x     = d1x + DIE_SZ + GAP;
+    float           dy      = cy - DIE_SZ / 2.f;
+
+    // ── Selama animasi: gambar angka acak berputar ────────────────────────
+    int disp1 = diceState.val1;
+    int disp2 = diceState.val2;
+    if (diceState.animating) {
+        float t = diceState.animTimer / DiceState::ANIM_DURATION;
+        // Makin lambat menjelang akhir
+        if (t < 0.85f) {
+            disp1 = GetRandomValue(1, 6);
+            disp2 = GetRandomValue(1, 6);
+        }
+    }
+
+    // Belum pernah lempar — tampilkan placeholder "?"
+    bool showResult = diceState.val1 > 0;
+
+    // ── Helper lambda: gambar satu dadu ───────────────────────────────────
+    auto drawDie = [&](float x, float y, int val, bool highlight) {
+        Color bg     = highlight ? Color{255, 230, 80, 255} : Color{240, 240, 240, 255};
+        Color border = highlight ? Color{200, 160, 0, 255}  : Color{160, 160, 160, 255};
+        Color dotCol = {30, 30, 30, 255};
+
+        // Sedikit goyang saat animasi
+        if (diceState.animating) {
+            float shake = 3.f * (1.f - diceState.animTimer / DiceState::ANIM_DURATION);
+            x += (float)GetRandomValue(-1, 1) * shake;
+            y += (float)GetRandomValue(-1, 1) * shake;
+        }
+
+        DrawRectangleRounded({x, y, DIE_SZ, DIE_SZ}, 0.2f, 8, bg);
+        DrawRoundedBorder({x, y, DIE_SZ, DIE_SZ}, 0.2f, 8, 2.f, border);
+
+        if (!showResult && !diceState.animating) {
+            int qw = MeasureText("?", 24);
+            DrawText("?", (int)(x + DIE_SZ/2 - qw/2), (int)(y + DIE_SZ/2 - 12), 24, {150,150,150,255});
+            return;
+        }
+
+        // Pola titik dadu standar
+        // Posisi titik: (col, row) dalam grid 3×3, dinormalisasi ke [0..1]
+        struct Dot { float nx, ny; };
+        static const Dot dots[6][6] = {
+            {{.5f,.5f}},                                                         // 1
+            {{.25f,.25f},{.75f,.75f}},                                           // 2
+            {{.25f,.25f},{.5f,.5f},{.75f,.75f}},                                 // 3
+            {{.25f,.25f},{.75f,.25f},{.25f,.75f},{.75f,.75f}},                   // 4
+            {{.25f,.25f},{.75f,.25f},{.5f,.5f},{.25f,.75f},{.75f,.75f}},         // 5
+            {{.25f,.25f},{.75f,.25f},{.25f,.5f},{.75f,.5f},{.25f,.75f},{.75f,.75f}}, // 6
+        };
+        static const int dotCount[6] = {1,2,3,4,5,6};
+
+        int v = (val >= 1 && val <= 6) ? val : 1;
+        for (int d = 0; d < dotCount[v-1]; d++) {
+            float dotX = x + dots[v-1][d].nx * DIE_SZ;
+            float dotY = y + dots[v-1][d].ny * DIE_SZ;
+            DrawCircle((int)dotX, (int)dotY, 5.f, dotCol);
+        }
+    };
+
+    drawDie(d1x, dy, disp1, diceState.isDouble && !diceState.animating && showResult);
+    drawDie(d2x, dy, disp2, diceState.isDouble && !diceState.animating && showResult);
+
+    // ── Label hasil di bawah dadu ─────────────────────────────────────────
+    if (showResult && !diceState.animating) {
+        int total = diceState.val1 + diceState.val2;
+        std::string lbl = std::to_string(diceState.val1) + " + " +
+                          std::to_string(diceState.val2) + " = " +
+                          std::to_string(total);
+        int lw = MeasureText(lbl.c_str(), 13);
+        DrawText(lbl.c_str(), (int)(cx - lw/2), (int)(dy + DIE_SZ + 8), 13,
+                 diceState.isDouble ? Color{255, 220, 50, 255} : Color{200, 200, 210, 255});
+
+        if (diceState.isDouble) {
+            const char* dblLbl = "DOUBLE!";
+            int dw = MeasureText(dblLbl, 12);
+            DrawText(dblLbl, (int)(cx - dw/2), (int)(dy + DIE_SZ + 26), 12,
+                     {255, 200, 50, 255});
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 void GameScreen::initMockLogs() {
     gameState.logger.addLog(15,"Uname1","DADU","Lempar: 4+5=9, mendarat di BDG");

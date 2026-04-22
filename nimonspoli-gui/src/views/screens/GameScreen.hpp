@@ -2,6 +2,7 @@
 #include "../../../lib/raylib/include/raylib.h"
 #include "../IScreen.hpp"
 #include "../../core/utils/TransactionLogger.hpp"
+#include "../GUIManager.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -57,6 +58,11 @@ public:
     void onExit()  override;
     void update(float dt) override;
     void render(Window& window) override;
+    void setPlayerCount(int n) { activePlayerCount = n; }
+    void setGUIManager(GUIManager* gm) { guiManager = gm; }  // inject GUIManager
+    int  activePlayerCount = 4;
+    bool gameOver = false;
+    bool isGameOver() const { return gameOver; }
 
 private:
     // ── Layout ──────────────────────────────────────────────────────────
@@ -68,7 +74,7 @@ private:
     static constexpr float ORIG_TILE_W  = 200.f;
     static constexpr float ORIG_TILE_H  = 290.f;
     static constexpr float ORIG_CORNER  = 290.f;
-    static constexpr float ORIG_STRIP_W = 176.f;
+    static constexpr float ORIG_STRIP_W = 200.f;
     static constexpr float ORIG_STRIP_H =  35.f;
 
     // Scale: board height = 2*290 + 9*200 = 2380, fit to 1080
@@ -88,12 +94,11 @@ private:
     void drawLogPopup();
     std::string getActionIcon(const std::string& action);
     Color getActionColor(const std::string& action);
-
     // Hanlde keyboardInput
     std::string logNInput;   // string yang diketik user
     bool logNFocused; // apakah input box sedang aktif
-
-
+    
+    
     float boardX, boardY;
 
     // ── Tiles ────────────────────────────────────────────────────────────
@@ -119,6 +124,23 @@ private:
 
     // ── State ────────────────────────────────────────────────────────────
     MockGameState gameState;
+
+    // ── GUIManager (untuk pushCommand) ───────────────────────────────────
+    GUIManager* guiManager = nullptr;
+
+    // ── State dadu ───────────────────────────────────────────────────────
+    struct DiceState {
+        int val1 = 0, val2 = 0;    // hasil terakhir (0 = belum pernah lempar)
+        bool hasRolled  = false;    // sudah lempar giliran ini?
+        bool isDouble   = false;    // hasil double?
+        bool tripleDouble = false;  // 3× double → penjara
+        float animTimer = 0.f;     // timer animasi rolling (0 = idle)
+        bool  animating = false;
+        static constexpr float ANIM_DURATION = 0.6f; // detik
+    } diceState;
+
+    void drawDiceArea();            // gambar dadu di center board
+    void handleLemparDadu();        // buat & push LemparDaduCommand
 
     // ── Player colors ────────────────────────────────────────────────────
     Color playerColors[4] = {
@@ -147,4 +169,5 @@ private:
     Vector2   getTileCenter(int idx);
     Rectangle getTileRect(int idx);
     int       tileAtPoint(Vector2 pt);
+
 };

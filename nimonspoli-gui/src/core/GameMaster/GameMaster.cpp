@@ -17,7 +17,9 @@
 // ─────────────────────────────────────────────
 
 GameMaster::GameMaster(GameState initialState)
-    : state(std::move(initialState)) {}
+    : state(std::move(initialState)) {
+        state.setGameMaster(this);
+    }
 
 // ─────────────────────────────────────────────
 //  Akses state
