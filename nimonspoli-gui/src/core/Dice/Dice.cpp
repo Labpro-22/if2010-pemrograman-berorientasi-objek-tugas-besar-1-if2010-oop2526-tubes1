@@ -64,3 +64,8 @@ int Dice::getDaduVal2() const
 {
     return daduVal2;
 }
+
+bool Dice::isDouble() const
+{
+    return daduVal1 == daduVal2;
+}

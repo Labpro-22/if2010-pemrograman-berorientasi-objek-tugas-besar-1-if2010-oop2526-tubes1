@@ -1,4 +1,3 @@
-
 #ifndef DICE_HPP
 #define DICE_HPP
 
@@ -26,6 +25,9 @@ public:
 
     // Mereset counter double berturut-turut (misal saat pemain ganti giliran atau masuk penjara)
     void resetConsecutiveDouvles(); // Penamaan method disesuaikan dengan typo di UML diagram
+
+    // Mengembalikan true jika kedua dadu bernilai sama
+    bool isDouble() const;
 
     // Tambahan getter opsional yang direkomendasikan untuk mempermudah logging/display
     int getDaduVal1() const;
