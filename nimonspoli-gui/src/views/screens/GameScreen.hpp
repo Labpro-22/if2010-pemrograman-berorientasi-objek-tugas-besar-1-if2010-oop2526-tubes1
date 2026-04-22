@@ -2,6 +2,7 @@
 #include "../../../lib/raylib/include/raylib.h"
 #include "../IScreen.hpp"
 #include "../../core/utils/TransactionLogger.hpp"
+#include "../GUIManager.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -57,10 +58,11 @@ public:
     void onExit()  override;
     void update(float dt) override;
     void render(Window& window) override;
-    void setPlayerCount(int n){activePlayerCount = n;}
-    int activePlayerCount = 4;
+    void setPlayerCount(int n) { activePlayerCount = n; }
+    void setGUIManager(GUIManager* gm) { guiManager = gm; }  // inject GUIManager
+    int  activePlayerCount = 4;
     bool gameOver = false;
-    bool isGameOver() const {return gameOver;}
+    bool isGameOver() const { return gameOver; }
 
 private:
     // ── Layout ──────────────────────────────────────────────────────────
@@ -122,6 +124,23 @@ private:
 
     // ── State ────────────────────────────────────────────────────────────
     MockGameState gameState;
+
+    // ── GUIManager (untuk pushCommand) ───────────────────────────────────
+    GUIManager* guiManager = nullptr;
+
+    // ── State dadu ───────────────────────────────────────────────────────
+    struct DiceState {
+        int val1 = 0, val2 = 0;    // hasil terakhir (0 = belum pernah lempar)
+        bool hasRolled  = false;    // sudah lempar giliran ini?
+        bool isDouble   = false;    // hasil double?
+        bool tripleDouble = false;  // 3× double → penjara
+        float animTimer = 0.f;     // timer animasi rolling (0 = idle)
+        bool  animating = false;
+        static constexpr float ANIM_DURATION = 0.6f; // detik
+    } diceState;
+
+    void drawDiceArea();            // gambar dadu di center board
+    void handleLemparDadu();        // buat & push LemparDaduCommand
 
     // ── Player colors ────────────────────────────────────────────────────
     Color playerColors[4] = {
