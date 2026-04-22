@@ -15,35 +15,43 @@ TurnManager::TurnManager(vector<Player*> p, int maxT) {
 }
 
 Player* TurnManager::getCurrentPlayer() {
-    if (players.empty()) {
-        return nullptr;
-    }
+    if (players.empty()) return nullptr;
 
-    if (players[currentIndex] != nullptr && players[currentIndex]->getStatus() != BANKRUPT) {
+    // Cek dulu player sekarang
+    if (players[currentIndex] != nullptr &&
+        players[currentIndex]->getStatus() != BANKRUPT) {
         return players[currentIndex];
     }
 
-    advanceToNextPlayer();
-    if (players[currentIndex] == nullptr || players[currentIndex]->getStatus() == BANKRUPT) {
-        return nullptr;
+    // Cari player aktif berikutnya
+    int checked = 0;
+    while (checked < (int)players.size()) {
+        if (players[currentIndex] != nullptr &&
+            players[currentIndex]->getStatus() != BANKRUPT) {
+            return players[currentIndex];
+        }
+        currentIndex = (currentIndex + 1) % players.size();
+        checked++;
     }
 
-    return players[currentIndex];
+    return nullptr; // semua bankrupt
 }
 
 void TurnManager::advanceToNextPlayer() {
-    if (players.empty()) {
-        return;
-    }
+    if (players.empty()) return;
 
-    int visited = 0;
-    currentIndex = (currentIndex + 1) % players.size();
+    int startIndex = currentIndex;
+    currentIndex = (currentIndex + 1) % (int)players.size();
+
+    // Cek apakah sudah satu putaran penuh (wrap ke index 0)
     if (currentIndex == 0) currentTurnNumber++;
 
-    while (visited < static_cast<int>(players.size()) &&
-           (players[currentIndex] == nullptr || players[currentIndex]->getStatus() == BANKRUPT)) {
-        currentIndex = (currentIndex + 1) % players.size();
-        if (currentIndex == 0) currentTurnNumber++;
+    int visited = 0;
+    while (visited < (int)players.size() &&
+           (players[currentIndex] == nullptr ||
+            players[currentIndex]->getStatus() == BANKRUPT)) {
+        currentIndex = (currentIndex + 1) % (int)players.size();
+        // Jangan increment di sini — hanya geser index
         visited++;
     }
 }

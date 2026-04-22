@@ -16,10 +16,11 @@ private:
     GameBoard* board; //placehold
     int boardSize;
     int goSalary;
+    int jailFine;
 
 public:
     // Placeholder fallback: boardSize dan goSalary akan dipasok dari config/CLI saat integrasi penuh.
-    MovementHandler(GameBoard* b, int boardSize = 40, int goSalary = 200);
+    MovementHandler(GameBoard* b, int boardSize = 40, int goSalary = 200, int jailFine = 50);
 
     void movePlayer(Player* player, int steps);
     void teleportPlayer(Player* player, int target);

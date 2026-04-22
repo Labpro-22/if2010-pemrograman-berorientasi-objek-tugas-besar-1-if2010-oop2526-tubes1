@@ -12,16 +12,19 @@ class GameContext;
 class SkillCardManager {
 private:
     size_t maxHandSize;
+    vector<SkillCard*> deck;
+    vector<SkillCard*> discardPile;
     bool isValidIndex(Player* player, int idx);
+    void reshuffleIfEmpty();
 
 public:
     SkillCardManager(int maxSize);
+    void initDeck();
 
     void distributeCardToAll(vector<Player*> players);
-    void distributeCardTo(Player* player);
+    SkillCard* distributeCardTo(Player* player); 
     void useCard(Player* player, int idx, GameContext* ctx);
     void dropCard(Player* player, int idx);
-
     void decrementDurations(Player* player);
 
     SkillCard* generateCard();

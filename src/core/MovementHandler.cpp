@@ -2,18 +2,22 @@
 #include "../../include/models/Player.hpp"
 #include "../../include/utils/Dice.hpp"
 
-MovementHandler::MovementHandler(GameBoard* b, int boardSizeValue, int goSalaryValue) {
+MovementHandler::MovementHandler(GameBoard* b, int boardSizeValue, int goSalaryValue, int jailFineValue) {
     board = b;
     // Placeholder buat tes sebelum ukuran board dibaca dari config/board object.
     boardSize = (boardSizeValue > 0) ? boardSizeValue : 40;
     // Placeholder buat tes sebelum salary GO dibaca dari special config.
     goSalary = (goSalaryValue >= 0) ? goSalaryValue : 200;
+    jailFine = (jailFineValue >= 0) ? jailFineValue : 50;
 }
 
 void MovementHandler::movePlayer(Player* player, int steps) {
     if (player == nullptr) {
         return;
     }
+    if (!player) return;
+    if (player->getStatus() == BANKRUPT) return;
+    if (player->getStatus() == JAILED) return; // handle via handleJailTurn
 
     int oldPos = player->getPosition();
 
@@ -88,27 +92,25 @@ void MovementHandler::sendToJail(Player* player) {
 }
 
 JailResult MovementHandler::handleJailTurn(Player* player, Dice& dice) {
-    if (player == nullptr) {
-        return STILL_JAILED;
+    if (!player) return STILL_JAILED;
+
+    // Jika sudah 3 kali gagal → giliran ini wajib bayar denda, tidak roll
+    if (player->getJailTurnsRemaining() >= 3) {
+        player->setStatus(ACTIVE);
+        player->resetJailTurns();
+        (*player) -= jailFine; 
+
+        return FORCED_OUT;
     }
 
-    player->incrementJailTurns();
-
+    // Coba roll
     dice.rollRandom();
-
     if (dice.isDouble()) {
         player->setStatus(ACTIVE);
         player->resetJailTurns();
         return ESCAPED_DOUBLE;
     }
 
-    if (player->getJailTurnsRemaining() >= 3) {
-        player->setStatus(ACTIVE);
-        player->resetJailTurns();
-        // Placeholder: nominal denda wajib keluar penjara, nanti ambil dari config tile/jail.
-        (*player) -= 50;
-        return FORCED_OUT;
-    }
-
+    player->incrementJailTurns();
     return STILL_JAILED;
 }

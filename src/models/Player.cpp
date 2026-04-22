@@ -38,12 +38,16 @@ int Player::getDiscountPercent() { return discountPercent; }
 void Player::setPosition(int pos) { position = pos; }
 void Player::setStatus(PlayerStatus s) { status = s; }
 
+void Player::payVoluntary(int amt) {
+    money -= amt;
+}
 Player& Player::operator+=(int amt) {
     money += amt;
     return *this;
 }
 
 Player& Player::operator-=(int amt) {
+    if (amt <= 0) { money -= amt; return *this; } // negatif/zero lewat saja
     if (shieldActive) {
         shieldActive = false;
         return *this;

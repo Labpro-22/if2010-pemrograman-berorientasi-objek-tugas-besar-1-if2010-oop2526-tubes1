@@ -48,6 +48,7 @@ public:
     void setStatus(PlayerStatus s);
 
     // money
+    void payVoluntary(int amt);
     Player& operator+=(int amt);
     Player& operator-=(int amt);
 

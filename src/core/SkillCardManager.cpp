@@ -9,6 +9,38 @@ SkillCardManager::SkillCardManager(int maxSize) {
     maxHandSize = (maxSize > 0) ? static_cast<size_t>(maxSize) : static_cast<size_t>(0);
 }
 
+void SkillCardManager::initDeck() {
+    // Bersihkan deck lama jika ada
+    for (SkillCard* c : deck) delete c;
+    deck.clear();
+    discardPile.clear();
+
+    // Stok sesuai spec: Move=4, Discount=3, Shield=2, Teleport=2, Lasso=2, Demolition=2
+    for (int i = 0; i < 4; i++) deck.push_back(new MoveCard(rand() % 6 + 1));
+    for (int i = 0; i < 3; i++) deck.push_back(new DiscountCard(rand() % 30 + 10));
+    for (int i = 0; i < 2; i++) deck.push_back(new ShieldCard());
+    for (int i = 0; i < 2; i++) deck.push_back(new TeleportCard(rand() % 40));
+    for (int i = 0; i < 2; i++) deck.push_back(new LassoCard());
+    for (int i = 0; i < 2; i++) deck.push_back(new DemolitionCard());
+
+    // Shuffle
+    for (int i = (int)deck.size() - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        swap(deck[i], deck[j]);
+    }
+}
+
+void SkillCardManager::reshuffleIfEmpty() {
+    if (!deck.empty()) return;
+    deck = discardPile;
+    discardPile.clear();
+
+    for (int i = (int)deck.size() - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        swap(deck[i], deck[j]);
+    }
+}
+
 bool SkillCardManager::isValidIndex(Player* player, int idx) {
     if (player == nullptr) {
         return false;
@@ -23,22 +55,28 @@ void SkillCardManager::distributeCardToAll(vector<Player*> players) {
     }
 }
 
-void SkillCardManager::distributeCardTo(Player* player) {
-    if (player == nullptr) {
-        return;
-    }
-
-    if (player->getHand().size() >= maxHandSize) return;
+SkillCard* SkillCardManager::distributeCardTo(Player* player) {
+    if (player == nullptr) return nullptr;
 
     SkillCard* card = generateCard();
+
+    if (player->getHand().size() >= maxHandSize) {
+        // Kasih kartu ke player dulu 4
+        // return kartu agar UI  bisa trigger drop prompt
+        player->receiveCard(card);
+        return card; 
+    }
+
     player->receiveCard(card);
+    return nullptr; 
 }
 
 void SkillCardManager::useCard(Player* player, int idx, GameContext* ctx) {
+    
     if (player == nullptr || ctx == nullptr) {
         return;
     }
-
+    if (player->getStatus() == JAILED) return;
     if (player->hasUsedCard() || player->hasRolled()) return;
 
     if (!isValidIndex(player, idx)) {
@@ -51,17 +89,16 @@ void SkillCardManager::useCard(Player* player, int idx, GameContext* ctx) {
     }
 
     card->activate(player, ctx);
-
     player->markCardUsed();
-
-    delete card;
+    discardPile.push_back(card); // masuk discard
 }
 
 void SkillCardManager::dropCard(Player* player, int idx) {
     if (!isValidIndex(player, idx)) return;
-
     SkillCard* card = player->removeCard(idx);
-    delete card;
+    if (card != nullptr) {
+        discardPile.push_back(card); // masuk discard, bisa reshuffle nanti
+    }
 }
 
 void SkillCardManager::decrementDurations(Player* player) {
@@ -77,10 +114,10 @@ void SkillCardManager::decrementDurations(Player* player) {
 }
 
 SkillCard* SkillCardManager::generateCard() {
-    int r = rand() % 3;
+    reshuffleIfEmpty();
 
-    if (r == 0) return new MoveCard(rand() % 6 + 1);
-    if (r == 1) return new ShieldCard();
-    // Placeholder: 40 ngikut default board size yg placeholder juga, nanti gunakan ukuran board asli dari config
-    return new TeleportCard(rand() % 40);
+    if (deck.empty()) return new MoveCard(1); // fallback
+    SkillCard* card = deck.back();
+    deck.pop_back();
+    return card;
 }

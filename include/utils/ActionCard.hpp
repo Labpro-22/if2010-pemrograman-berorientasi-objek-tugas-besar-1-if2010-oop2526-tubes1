@@ -13,7 +13,9 @@ enum class ActionCardType {
     MOVE,
     TELEPORT,
     GO_TO_JAIL,
-    GET_SKILL
+    GET_SKILL,
+    COLLECT_FROM_ALL,
+    PAY_TO_ALL
 };
 
 class ActionCard {
