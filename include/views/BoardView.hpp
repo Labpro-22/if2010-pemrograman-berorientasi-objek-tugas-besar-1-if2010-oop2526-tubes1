@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <memory>
-#include "models/Player.hpp"
-#include "models/Petak.hpp"
+
+class Player;
+class Petak;
 
 class BoardView {
 public:

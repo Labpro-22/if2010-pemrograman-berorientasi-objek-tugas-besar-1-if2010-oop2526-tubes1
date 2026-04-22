@@ -9,7 +9,8 @@
 #include "models/Petak.hpp"
 #include "models/Dice.hpp"
 #include "models/CardDeck.hpp"
-#include "models/PetakProperti.hpp"
+
+class PetakProperti;
 
 class GameManager {
 private:

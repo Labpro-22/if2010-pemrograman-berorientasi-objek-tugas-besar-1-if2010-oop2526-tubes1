@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "models/Petak.hpp"
+
+class Petak;
 
 class ConfigParser {
 public:
