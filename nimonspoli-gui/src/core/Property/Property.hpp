@@ -9,12 +9,12 @@ enum class PropertyStatus
 {
     BANK,
     OWNED,
-    MORTAGED
+    MORTGAGED
 };
 
 class Property
 {
-private:
+protected:
     string id;
     string code;
     string name;
