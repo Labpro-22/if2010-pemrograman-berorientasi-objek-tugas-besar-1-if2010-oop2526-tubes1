@@ -13,6 +13,7 @@ class Dice;
 class JailTile;
 class Property;
 class TransactionLogger;
+class SkillCard;
 
 // ─────────────────────────────────────────────
 //  GameMaster: controller utama permainan
