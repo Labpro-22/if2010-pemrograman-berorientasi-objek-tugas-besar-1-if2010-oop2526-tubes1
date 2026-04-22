@@ -168,11 +168,11 @@ void GameScreen::initMockState() {
     // gameState.dnuGlow         = true;
 
     gameState.players = {
-        {"Uname1", 1500,  0, "ACTIVE", 2, true },
-        {"Uname2",  800, 31, "ACTIVE", 1, false},
-        {"Uname3", 2200, 11, "ACTIVE", 3, false},
-        {"Uname4",    0, 10, "JAILED", 0, false},
-    };
+    {"Uname1", 1500,  0, "ACTIVE", 2, true },  // GO
+    {"Uname2",  800,  5, "ACTIVE", 1, false},  // GBR
+    {"Uname3", 2200, 11, "ACTIVE", 3, false},  // SBY
+    {"Uname4",    0, 10, "JAILED", 0, false},  // PEN
+};
 
     gameState.properties.resize(40);
     for (int i=0; i<40; i++) {

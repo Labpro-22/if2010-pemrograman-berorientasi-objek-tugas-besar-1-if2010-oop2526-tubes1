@@ -6,11 +6,6 @@
 
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    // SetConfigFlags(FLAG_FULLSCREEN_MODE);
-    InitWindow(1920, 1080, "Nimonspoli");
-    // ToggleFullscreen();
-    SetTargetFPS(60);
-
     std::string title = "Nimonspoli";
     GUIManager gui(1920, 1080, title, 60);
 
@@ -57,9 +52,9 @@ int main() {
             EndDrawing();
         }
     }
+    gui.setScreen(nullptr); 
     delete menuScreen;
     delete gameScreen;
     delete winScreen;
-    CloseWindow();
     return 0;
 }
