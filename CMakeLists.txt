@@ -16,13 +16,34 @@ find_package(SFML 2.5 COMPONENTS system window graphics REQUIRED)
 
 add_library(
   nimonspoli_core STATIC
-  src/core/Tiles.cpp 
-  # etc. lanjut sendiri
+  src/core/ActionCard.cpp
+  src/core/ChanceCard.cpp
+  src/core/COMPlayer.cpp
+  src/core/COMStrategy.cpp
+  src/core/CommunityChestCard.cpp
+  src/core/DemolitionCard.cpp
+  src/core/DiscountCard.cpp
+  src/core/GreedyCOMStrategy.cpp
+  src/core/HumanPlayer.cpp
+  src/core/LassoCard.cpp
+  src/core/MoveCard.cpp
+  src/core/Player.cpp
+  src/core/Property.cpp
+  src/core/PropertyTile.cpp
+  src/core/ShieldCard.cpp
+  src/core/SimpleCOMStrategy.cpp
+  src/core/SkillCard.cpp
+  src/core/TeleportCard.cpp
+  src/core/Tiles.cpp
 )
 
 add_library(
   nimonspoli_logic STATIC
+  src/logic/Bank.cpp
+  src/logic/BankruptcyHandler.cpp
+  src/logic/Board.cpp
   src/logic/Game.cpp
+  src/logic/TransactionLogger.cpp
   # etc. lanjut sendiri
 )
 
