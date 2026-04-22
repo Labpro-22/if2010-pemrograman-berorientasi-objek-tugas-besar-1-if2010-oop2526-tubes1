@@ -19,6 +19,9 @@
 #include "Simpan.hpp"
 #include "Tawar.hpp"
 #include "Tebus.hpp"
+#include "QuitCommand.hpp"
+#include "EndTurnCommand.hpp"
+#include "BankruptCommand.hpp"
 
 #include <string>
 #include <vector>
