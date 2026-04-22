@@ -1,9 +1,9 @@
 #include "../include/models/TaxTile.hpp"
 #include "../include/models/Player.hpp"
 
-TaxTile::TaxTile(int position, const std::string& name, const std::string& color,
+TaxTile::TaxTile(int position, const std::string& name, const std::string& code, const std::string& color,
                  TaxType taxType, int flatAmount, double percentageRate)
-    : ActionTile(position, name, color, ActionType::TAX),
+    : ActionTile(position, name, code, color, ActionType::TAX),
       taxType(taxType),
       flatAmount(flatAmount),
       percentageRate(percentageRate) {

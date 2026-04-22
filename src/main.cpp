@@ -12,14 +12,11 @@ int main() {
     cout << "========================================" << endl;
     cout << endl;
 
-    // Layer: Models - Initialize GameController
     GameController gameController;
     
-    // Layer: UI - Initialize Views
     BoardView boardView;
     PropertyView propertyView;
     
-    // Layer: CommandProcessor - Bridge between UI and GameController
     CommandProcessor commandProcessor(&gameController, &boardView, &propertyView);
     
     // Initialize game

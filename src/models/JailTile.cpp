@@ -1,9 +1,8 @@
 #include "../include/models/JailTile.hpp"
 #include "../include/models/Player.hpp"
 
-JailTile::JailTile(int position, const std::string& name, const std::string& color, int fineAmount)
-    : SpecialTile(position, name, color, SpecialType::JAIL), fineAmount(fineAmount) {
-}
+JailTile::JailTile(int position, const std::string& name, const std::string& code, const std::string& color, int fineAmount)
+    : SpecialTile(position, name, "PEN", "DEFAULT", SpecialType::JAIL), fineAmount(fineAmount) { }
 
 int JailTile::getFineAmount() const {
     return fineAmount;

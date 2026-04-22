@@ -1,9 +1,9 @@
 #include "../include/models/ActionTile.hpp"
 
 
-ActionTile::ActionTile(int position, const std::string& name, const std::string& color,
+ActionTile::ActionTile(int position, const std::string& name, const std::string& code, const std::string& color,
                        ActionType actionType)
-    : Tile(position, name, color), actionType(actionType) {
+    : Tile(position, name, code, color), actionType(actionType) {
 }
 
 ActionType ActionTile::getActionType() const {
@@ -24,4 +24,12 @@ void ActionTile::onLand(Player* player) {
 void ActionTile::onPass(Player* player) {
     (void)player;
     // Default implementation does nothing when passing
+}
+
+std::string getCode() {
+    return "DF"; // default aksi
+}
+
+std::string getCategory() {
+    return "DEFAULT";
 }

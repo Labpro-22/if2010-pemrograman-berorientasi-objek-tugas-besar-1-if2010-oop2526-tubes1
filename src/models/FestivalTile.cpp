@@ -3,8 +3,8 @@
 #include "../include/models/Property.hpp"
 
 
-FestivalTile::FestivalTile(int position, const std::string& name, const std::string& color)
-    : ActionTile(position, name, color, ActionType::FESTIVAL) {
+FestivalTile::FestivalTile(int position, const std::string& name, const std::string& code, const std::string& color)
+    : ActionTile(position, name, "FES", "DEFAULT", ActionType::FESTIVAL) {
 }
 
 void FestivalTile::applyFestivalEffect(Player* player, Property* property) {

@@ -14,7 +14,7 @@ private:
     int fineAmount;
 
 public:
-    JailTile(int position, const std::string& name, const std::string& color, int fineAmount);
+    JailTile(int position, const std::string& name, const std::string& code, const std::string& color, int fineAmount);
     ~JailTile() = default;
 
     int getFineAmount() const;

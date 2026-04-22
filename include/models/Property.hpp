@@ -19,7 +19,7 @@ protected:
     int mortgageValue;
 
 public:
-    Property(int position, const std::string& name, const std::string& color,
+    Property(int position, const std::string& name, const std::string& code, const std::string& color,
              int purchasePrice, int mortgageValue);
     virtual ~Property() = default;
 
@@ -38,6 +38,7 @@ public:
     virtual int calculateRent(Player* visitor) = 0;
     virtual void mortgage();
     virtual void redeem();
+
 
     void onLand(Player* player) override;
     void onPass(Player* player) override;

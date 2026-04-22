@@ -8,7 +8,7 @@ private:
     std::map<int, int> multiplierTable;
 
 public:
-    Utility(int position, const std::string& name, const std::string& color,
+    Utility(int position, const std::string& name, const std::string& code, const std::string& color,
             int purchasePrice, int mortgageValue);
     ~Utility() = default;
 

@@ -12,7 +12,7 @@ class CommunityChestTile : public ActionTile {
 
 
 public:
-    CommunityChestTile(int position, const std::string& name, const std::string& color);
+    CommunityChestTile(int position, const std::string& name, const std::string& code, const std::string& color);
     ~CommunityChestTile() = default;
 
     ActionCard* drawCard(Player* player, CardDeck<ActionCard>* deck);

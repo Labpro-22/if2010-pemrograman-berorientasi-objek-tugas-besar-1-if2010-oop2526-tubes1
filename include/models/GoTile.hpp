@@ -7,7 +7,7 @@ private:
     int salary;
 
 public:
-    GoTile(int position, const std::string& name, const std::string& color, int salary);
+    GoTile(int position, const std::string& name, const std::string& code, const std::string& color, int salary);
     ~GoTile() = default;
 
     int getSalary() const;

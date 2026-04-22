@@ -10,9 +10,10 @@
 
 class ChanceTile : public ActionTile {
 public:
-    ChanceTile(int position, const std::string& name, const std::string& color);
+    ChanceTile(int position, const std::string& name, const std::string& code, const std::string& color);
     ~ChanceTile() = default;
 
     ActionCard* drawCard(Player* player, CardDeck<ActionCard>* deck);
     void executeAction(Player* player) override;
+
 };

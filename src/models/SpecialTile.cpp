@@ -1,8 +1,8 @@
 #include "../include/models/SpecialTile.hpp"
 
-SpecialTile::SpecialTile(int position, const std::string& name, const std::string& color,
-                         SpecialType specialType)
-    : ActionTile(position, name, color, ActionType::SPECIAL), specialType(specialType) {
+SpecialTile::SpecialTile(int position, const std::string& name, const std::string& code, const std::string& color,
+                           SpecialType specialType)
+    : ActionTile(position, name, code, color, ActionType::SPECIAL), specialType(specialType) {
 }
 
 SpecialType SpecialTile::getSpecialType() const {

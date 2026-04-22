@@ -15,7 +15,7 @@ protected:
     SpecialType specialType;
 
 public:
-    SpecialTile(int position, const std::string& name, const std::string& color,
+    SpecialTile(int position, const std::string& name, const std::string& code, const std::string& color,
                 SpecialType specialType);
     virtual ~SpecialTile() = default;
 
@@ -26,4 +26,6 @@ public:
 
     void executeAction(Player* player) override;
     virtual void onPass(Player* player) override;  
+
+
 };

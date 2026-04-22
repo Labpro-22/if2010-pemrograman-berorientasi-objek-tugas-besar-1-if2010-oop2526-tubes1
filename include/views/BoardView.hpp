@@ -5,6 +5,11 @@
 #include <string>
 #include <memory>
 
+#include "../../include/models/GameBoard.hpp"
+#include "../../include/models/Player.hpp"
+#include "../../include/models/Tile.hpp"
+#include "../../include/models/Property.hpp"
+
 class GameBoard;
 class Player;
 class Tile;
@@ -12,12 +17,16 @@ class Property;
 
 class BoardView {
 public:
-    void showBoard(GameBoard& board, const std::vector<std::shared_ptr<Player>>players);
+    void showBoard(GameBoard& board, const std::vector<std::shared_ptr<Player>>& players);
 
 private:
-    std::string getPlayersOnTile(int pos, const std::vector<std::shared_ptr<Player>> players);
+    std::string getPlayersOnTile(int pos, const std::vector<std::shared_ptr<Player>>& players);
     std::string getColorCode(const std::string& color);
-    std::string renderTile(Tile* tile, const std::vector<std::shared_ptr<Player>> players);
+    std::string formatTile(Tile* tile, const std::vector<std::shared_ptr<Player>>& players);
+    void printTop(GameBoard& board, const std::vector<std::shared_ptr<Player>>& players);
+    void printBottom(GameBoard& board, const std::vector<std::shared_ptr<Player>>& players);
+    void printMiddle(GameBoard& board, const std::vector<std::shared_ptr<Player>>& players);
+    void printCenterInfo();
 };
 
 #endif

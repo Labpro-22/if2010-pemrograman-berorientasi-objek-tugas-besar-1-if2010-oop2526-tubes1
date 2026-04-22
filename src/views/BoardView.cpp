@@ -1,13 +1,38 @@
 #include "../../include/views/BoardView.hpp"
-#include "../../include/models/GameBoard.hpp"
-#include "../../include/models/Player.hpp"
-#include "../../include/models/Tile.hpp"
-#include "../../include/models/Property.hpp"
 
 #include <iostream>
 #include <sstream>
-
+#include <iomanip>
 using namespace std;
+
+string BoardView::formatTile(Tile* tile, const vector<shared_ptr<Player>>& players) {
+
+    if (!tile) return "EMPTY";
+
+    string code = tile->getCode();   // contoh: MR, DF, KN
+
+    string name = tile->getName();
+    if (name.length() > 3) name = name.substr(0,3);
+
+    string color = getColorCode(tile->getColor());
+
+    string playerStr = "";
+    for (int i = 0; i < players.size(); i++) {
+        if (players[i]->getPosition() == tile->getPosition()) {
+            playerStr += "P" + to_string(i+1) + " ";
+        }
+    }
+
+    string result = color + "[" + code + "] " + name;
+
+    if (!playerStr.empty()) {
+        result += " " + playerStr;
+    }
+
+    result += "\033[0m"; // reset warna
+
+    return result;
+}
 
 string BoardView::getColorCode(const string& color) {
     if (color == "MERAH") return "\033[31m";
@@ -23,7 +48,7 @@ string BoardView::getColorCode(const string& color) {
 }
 
 
-string BoardView::getPlayersOnTile(int pos, const std::vector<std::shared_ptr<Player>> players) {
+string BoardView::getPlayersOnTile(int pos, const vector<shared_ptr<Player>>& players) {
     stringstream ss;
 
     for (const auto& p : players) {
@@ -35,39 +60,83 @@ string BoardView::getPlayersOnTile(int pos, const std::vector<std::shared_ptr<Pl
     return ss.str();
 }
 
-string BoardView::renderTile(Tile* tile, const std::vector<std::shared_ptr<Player>> players) {
-    string color = getColorCode(tile->getColor());
-    string name = tile->getName();
-    int pos = tile->getPosition();
+void BoardView::printTop(GameBoard& board, const vector<shared_ptr<Player>>& players) {
+    cout << "+";
+    for (int i = 20; i <= 30; i++) cout << "--------+";
+    cout << endl;
 
-    string playersStr = getPlayersOnTile(pos, players);
-
-    stringstream ss;
-    ss << color << "[" << name << "]" << "\033[0m";
-
-    if (!playersStr.empty()) {
-        ss << " (" << playersStr << ")";
+    cout << "|";
+    for (int i = 20; i <= 30; i++) {
+        cout << setw(8) << formatTile(board.getTileAt(i), players) << "|";
     }
-
-    Property* prop = dynamic_cast<Property*>(tile);
-    if (prop != nullptr) {
-        string owner = prop->getOwner();
-        if (!owner.empty()) {
-            ss << " {" << owner << "}";
-        }
-    }
-
-    return ss.str();
+    cout << endl;
 }
 
-void BoardView::showBoard(GameBoard& board, const std::vector<std::shared_ptr<Player>> players) {
-    cout << "\n=== MONOPOLI BOARD ===\n";
+void BoardView::printBottom(GameBoard& board, const vector<shared_ptr<Player>>& players) {
+    cout << "+";
+    for (int i = 10; i >= 0; i--) cout << "--------+";
+    cout << endl;
 
-    for (int i = 0; i < 40; i++) {
-        Tile* tile = board.getTileAt(i);
-        
-        cout << "[" << i << "] " << renderTile(tile, players) << endl;
+    cout << "|";
+    for (int i = 10; i >= 0; i--) {
+        cout << setw(8) << formatTile(board.getTileAt(i), players) << "|";
     }
+    cout << endl;
+}
 
-    cout << "==============\n";
+void BoardView::printMiddle(GameBoard& board, const vector<shared_ptr<Player>>& players) {
+
+    int left = 19;
+    int right = 31;
+
+    for (int i = 0; i < 9; i++) {
+
+        cout << "|";
+
+        cout << setw(8) << formatTile(board.getTileAt(left--), players);
+
+        cout << "                              "; // space tengah
+
+        cout << setw(8) << formatTile(board.getTileAt(right++), players);
+
+        cout << "|" << endl;
+    }
+}
+
+void BoardView::printCenterInfo() {
+
+    cout << "              ==========================\n";
+    cout << "                     NIMONSOPOLI\n";
+    cout << "              ==========================\n\n";
+
+    cout << "                  TURN 15 / 50\n\n";
+
+    cout << "        LEGENDA KEPEMILIKAN & STATUS\n";
+    cout << "        P1-P4 : Properti milik pemain\n";
+    cout << "        ^  : Rumah level 1\n";
+    cout << "        ^^ : Rumah level 2\n";
+    cout << "        ^^^: Rumah level 3\n";
+    cout << "        *  : Hotel\n\n";
+
+    cout << "        KODE WARNA:\n";
+    cout << "        [CK]=Coklat  [MR]=Merah\n";
+    cout << "        [BM]=Biru    [KN]=Kuning\n";
+}
+
+
+void BoardView::showBoard(GameBoard& board, const vector<shared_ptr<Player>>& players) {
+
+    printTop(board, players);
+
+    cout << "+--------------------------------------------------------------+\n";
+
+    printMiddle(board, players);
+
+    cout << "+--------------------------------------------------------------+\n";
+
+    printBottom(board, players);
+
+    cout << endl;
+
+    printCenterInfo();
 }

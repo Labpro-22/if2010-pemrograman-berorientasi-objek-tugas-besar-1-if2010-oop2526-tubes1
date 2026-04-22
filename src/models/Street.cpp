@@ -1,10 +1,10 @@
 #include "../include/models/Street.hpp"
 #include "../include/models/Player.hpp"
 
-Street::Street(int position, const std::string& name, const std::string& color,
+Street::Street(int position, const std::string& name, const std::string& code, const std::string& color,
                ColorGroup colorGroup, int purchasePrice, int mortgageValue,
                int housePrice, int hotelPrice)
-    : Property(position, name, color, purchasePrice, mortgageValue),
+    : Property(position, name, code, color, purchasePrice, mortgageValue),
       colorGroup(colorGroup),
       housePrice(housePrice),
       hotelPrice(hotelPrice),

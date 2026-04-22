@@ -15,7 +15,7 @@ private:
     double percentageRate;
 
 public:
-    TaxTile(int position, const std::string& name, const std::string& color,
+    TaxTile(int position, const std::string& name, const std::string& code, const std::string& color,
             TaxType taxType, int flatAmount = 0, double percentageRate = 0.0);
     ~TaxTile() = default;
 

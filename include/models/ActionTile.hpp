@@ -17,7 +17,7 @@ protected:
     ActionType actionType;
 
 public:
-    ActionTile(int position, const std::string& name, const std::string& color,
+    ActionTile(int position, const std::string& name, const std::string& code, const std::string& color,
                ActionType actionType);
     virtual ~ActionTile() = default;
 
@@ -28,4 +28,5 @@ public:
 
     void onLand(Player* player) override;
     virtual void onPass(Player* player) override;
+
 };

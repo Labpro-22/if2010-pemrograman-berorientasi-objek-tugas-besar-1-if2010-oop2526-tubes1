@@ -1,8 +1,8 @@
 #include "../include/models/CommunityChestTile.hpp"
 #include "../include/utils/CardDeck.hpp"
 
-CommunityChestTile::CommunityChestTile(int position, const std::string& name, const std::string& color)
-    : ActionTile(position, name, color, ActionType::COMMUNITY_CHEST) {
+CommunityChestTile::CommunityChestTile(int position, const std::string& name, const std::string& code, const std::string& color)
+    : ActionTile(position, name, "DNU", "DEFAULT", ActionType::COMMUNITY_CHEST) {
 }
 
 ActionCard* CommunityChestTile::drawCard(Player* player, CardDeck<ActionCard>* deck) {
