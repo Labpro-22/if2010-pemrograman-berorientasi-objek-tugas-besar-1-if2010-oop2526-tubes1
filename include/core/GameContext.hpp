@@ -1,6 +1,6 @@
 #ifndef GAMECONTEXT_H
 #define GAMECONTEXT_H
-
+#include "../models/GameBoard.hpp"
 #include <vector>
 using namespace std;
 
@@ -9,15 +9,22 @@ class TurnManager;
 class MovementHandler;
 class Player;
 class SkillCardManager;
+class Dice;
 
 class GameContext {
 public:
     GameBoard* board;
-    TurnManager* turnManager;
     MovementHandler* movementHandler;
+    TurnManager* turnManager;
     SkillCardManager* skillCardManager;
+    Dice* lastDice;
+    std::vector<Player*> allPlayers;
 
-    vector<Player*> allPlayers;
+    // Helper supaya kartu tidak perlu akses board langsung
+    int getBoardSize() const {
+        if (board != nullptr) return board->getTiles().size();
+        return 40;
+    }
 };
 
 #endif

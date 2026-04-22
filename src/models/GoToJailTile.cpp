@@ -15,7 +15,7 @@ void GoToJailTile::sendToJail(Player* player) {
     player->setStatus(PlayerStatus::JAILED);
 }
 
-void GoToJailTile::executeSpecial(Player* player) {
+void GoToJailTile::executeSpecial(Player* player, GameContext* ctx) {
     if (player != nullptr) {
         sendToJail(player);
     }

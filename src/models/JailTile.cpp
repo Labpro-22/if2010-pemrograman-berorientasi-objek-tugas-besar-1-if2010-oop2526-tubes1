@@ -55,7 +55,7 @@ void JailTile::payFine(Player* player) {
     }
 }
 
-void JailTile::executeSpecial(Player* player) {
+void JailTile::executeSpecial(Player* player, GameContext* ctx) {
     if (player != nullptr) {
         visitJail(player);
     }

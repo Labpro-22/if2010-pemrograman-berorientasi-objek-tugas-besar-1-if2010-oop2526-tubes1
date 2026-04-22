@@ -1,33 +1,35 @@
 #ifndef SKILLCARDMANAGER_H
 #define SKILLCARDMANAGER_H
 
-#include <cstddef>
 #include <vector>
+#include "CardDeck.hpp"
+#include "SkillCard.hpp"
+
 using namespace std;
 
 class Player;
-class SkillCard;
 class GameContext;
 
 class SkillCardManager {
 private:
+    CardDeck<SkillCard> skillDeck;
     size_t maxHandSize;
-    vector<SkillCard*> deck;
-    vector<SkillCard*> discardPile;
+
     bool isValidIndex(Player* player, int idx);
-    void reshuffleIfEmpty();
 
 public:
     SkillCardManager(int maxSize);
+
     void initDeck();
 
     void distributeCardToAll(vector<Player*> players);
-    SkillCard* distributeCardTo(Player* player); 
+    SkillCard* distributeCardTo(Player* player);
     void useCard(Player* player, int idx, GameContext* ctx);
     void dropCard(Player* player, int idx);
     void decrementDurations(Player* player);
 
-    SkillCard* generateCard();
+    // Untuk save/load
+    CardDeck<SkillCard>& getDeck() { return skillDeck; }
 };
 
 #endif

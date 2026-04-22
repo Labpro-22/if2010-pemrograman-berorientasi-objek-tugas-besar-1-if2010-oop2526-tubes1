@@ -20,7 +20,10 @@ MoveCard::MoveCard(int steps)
     : SkillCard("MOVE", steps, 0) {}
 
 void MoveCard::activate(Player* player, GameContext* ctx) {
-    if (ctx != nullptr && ctx->movementHandler != nullptr) {
+    if (!player || !ctx) return;
+    if (player->getStatus() == JAILED) return; // tambah guard
+
+    if (ctx->movementHandler != nullptr) {
         ctx->movementHandler->movePlayer(player, value);
     }
 }
@@ -49,9 +52,13 @@ TeleportCard::TeleportCard(int target)
     : SkillCard("TELEPORT", target, 0) {}
 
 void TeleportCard::activate(Player* player, GameContext* ctx) {
-    if (ctx != nullptr && ctx->movementHandler != nullptr) {
-        ctx->movementHandler->teleportPlayer(player, value);
-    }
+    if (!player || !ctx || !ctx->movementHandler) return;
+    if (player->getStatus() == JAILED) return;
+
+    // TODO: value seharusnya dari input user saat kartu dipakai
+    // Nanti UI layer set value sebelum activate() dipanggil
+    // atau tambah parameter input ke activate()
+    ctx->movementHandler->teleportPlayer(player, value);
 }
 
 string TeleportCard::getDescription() {

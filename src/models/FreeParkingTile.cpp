@@ -12,7 +12,7 @@ void FreeParkingTile::rest(Player* player) {
     }
 }
 
-void FreeParkingTile::executeSpecial(Player* player) {
+void FreeParkingTile::executeSpecial(Player* player, GameContext* ctx) {
     if (player != nullptr) {
         rest(player);
     }

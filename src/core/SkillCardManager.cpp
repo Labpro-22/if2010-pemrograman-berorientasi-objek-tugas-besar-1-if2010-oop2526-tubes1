@@ -2,6 +2,8 @@
 #include "../../include/utils/SkillCard.hpp"
 #include "../../include/models/Player.hpp"
 #include "../../include/core/GameContext.hpp"
+#include "../../include/utils/CardDeck.hpp"
+
 
 #include <cstdlib>
 
@@ -10,35 +12,21 @@ SkillCardManager::SkillCardManager(int maxSize) {
 }
 
 void SkillCardManager::initDeck() {
-    // Bersihkan deck lama jika ada
-    for (SkillCard* c : deck) delete c;
-    deck.clear();
-    discardPile.clear();
+    // Stok sesuai spec
+    for (int i = 0; i < 4; i++) 
+        skillDeck.addCard(new MoveCard(rand() % 6 + 1));
+    for (int i = 0; i < 3; i++) 
+        skillDeck.addCard(new DiscountCard(rand() % 30 + 10));
+    for (int i = 0; i < 2; i++) 
+        skillDeck.addCard(new ShieldCard());
+    for (int i = 0; i < 2; i++) 
+        skillDeck.addCard(new TeleportCard(rand() % 40));
+    for (int i = 0; i < 2; i++) 
+        skillDeck.addCard(new LassoCard());
+    for (int i = 0; i < 2; i++) 
+        skillDeck.addCard(new DemolitionCard());
 
-    // Stok sesuai spec: Move=4, Discount=3, Shield=2, Teleport=2, Lasso=2, Demolition=2
-    for (int i = 0; i < 4; i++) deck.push_back(new MoveCard(rand() % 6 + 1));
-    for (int i = 0; i < 3; i++) deck.push_back(new DiscountCard(rand() % 30 + 10));
-    for (int i = 0; i < 2; i++) deck.push_back(new ShieldCard());
-    for (int i = 0; i < 2; i++) deck.push_back(new TeleportCard(rand() % 40));
-    for (int i = 0; i < 2; i++) deck.push_back(new LassoCard());
-    for (int i = 0; i < 2; i++) deck.push_back(new DemolitionCard());
-
-    // Shuffle
-    for (int i = (int)deck.size() - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        swap(deck[i], deck[j]);
-    }
-}
-
-void SkillCardManager::reshuffleIfEmpty() {
-    if (!deck.empty()) return;
-    deck = discardPile;
-    discardPile.clear();
-
-    for (int i = (int)deck.size() - 1; i > 0; i--) {
-        int j = rand() % (i + 1);
-        swap(deck[i], deck[j]);
-    }
+    skillDeck.shuffle();
 }
 
 bool SkillCardManager::isValidIndex(Player* player, int idx) {
@@ -56,49 +44,41 @@ void SkillCardManager::distributeCardToAll(vector<Player*> players) {
 }
 
 SkillCard* SkillCardManager::distributeCardTo(Player* player) {
-    if (player == nullptr) return nullptr;
+    if (!player) return nullptr;
 
-    SkillCard* card = generateCard();
-
-    if (player->getHand().size() >= maxHandSize) {
-        // Kasih kartu ke player dulu 4
-        // return kartu agar UI  bisa trigger drop prompt
-        player->receiveCard(card);
-        return card; 
-    }
+    // drawTop() otomatis reshuffle kalau deck kosong
+    SkillCard* card = skillDeck.drawTop();
+    if (!card) return nullptr;
 
     player->receiveCard(card);
-    return nullptr; 
+
+    // Return card kalau overflow (hand penuh), sinyal ke caller untuk drop
+    if (player->getHand().size() > maxHandSize) {
+        return card;
+    }
+
+    return nullptr;
 }
 
 void SkillCardManager::useCard(Player* player, int idx, GameContext* ctx) {
-    
-    if (player == nullptr || ctx == nullptr) {
-        return;
-    }
-    if (player->getStatus() == JAILED) return;
+    if (!player || !ctx) return;
     if (player->hasUsedCard() || player->hasRolled()) return;
-
-    if (!isValidIndex(player, idx)) {
-        return;
-    }
+    if (player->getStatus() == JAILED) return;
+    if (!isValidIndex(player, idx)) return;
 
     SkillCard* card = player->removeCard(idx);
-    if (card == nullptr) {
-        return;
-    }
+    if (!card) return;
 
     card->activate(player, ctx);
     player->markCardUsed();
-    discardPile.push_back(card); // masuk discard
+
+    skillDeck.discard(card); // masuk discard, bukan delete
 }
 
 void SkillCardManager::dropCard(Player* player, int idx) {
     if (!isValidIndex(player, idx)) return;
     SkillCard* card = player->removeCard(idx);
-    if (card != nullptr) {
-        discardPile.push_back(card); // masuk discard, bisa reshuffle nanti
-    }
+    if (card) skillDeck.discard(card);
 }
 
 void SkillCardManager::decrementDurations(Player* player) {
@@ -113,11 +93,3 @@ void SkillCardManager::decrementDurations(Player* player) {
     }
 }
 
-SkillCard* SkillCardManager::generateCard() {
-    reshuffleIfEmpty();
-
-    if (deck.empty()) return new MoveCard(1); // fallback
-    SkillCard* card = deck.back();
-    deck.pop_back();
-    return card;
-}

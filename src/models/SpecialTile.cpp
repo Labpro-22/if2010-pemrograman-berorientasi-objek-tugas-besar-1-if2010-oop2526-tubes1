@@ -13,8 +13,8 @@ void SpecialTile::setSpecialType(SpecialType type) {
     specialType = type;
 }
 
-void SpecialTile::executeAction(Player* player) {
+void SpecialTile::executeAction(Player* player, GameContext* ctx) {
     if (player != nullptr) {
-        executeSpecial(player);
+        executeSpecial(player, ctx);
     }
 }

@@ -1,10 +1,9 @@
 #pragma once
-
 #include "ActionTile.hpp"
 
-// Forward declaration
+//Forward Declaration 
 class Property;
-class Player;
+class GameContext;
 
 class FestivalTile : public ActionTile {
 public:
@@ -13,6 +12,5 @@ public:
 
     void applyFestivalEffect(Player* player, Property* property);
     void updateDuration();
-
-    void executeAction(Player* player) override;
+    void executeAction(Player* player, GameContext* ctx) override;
 };

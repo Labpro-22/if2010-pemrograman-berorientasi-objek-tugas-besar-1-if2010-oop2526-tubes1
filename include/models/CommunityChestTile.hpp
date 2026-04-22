@@ -1,21 +1,19 @@
 #pragma once
-
 #include "ActionTile.hpp"
-#include <vector>
+#include "../utils/CardDeck.hpp"
+#include "ActionCard.hpp"
 
-// Forward declaration
-class ActionCard;
-class CardDeck;
+class GameContext;
 
 class CommunityChestTile : public ActionTile {
-
+private:
+    CardDeck<ActionCard>* deck;
 
 public:
-    CommunityChestTile(int position, const std::string& name, const std::string& color);
+    CommunityChestTile(int position, const std::string& name,
+                       const std::string& color, CardDeck<ActionCard>* deck);
     ~CommunityChestTile() = default;
 
-    ActionCard* drawCard(Player* player, CardDeck* deck);
-
-
-    void executeAction(Player* player) override;
+    ActionCard* drawCard();
+    void executeAction(Player* player, GameContext* ctx) override;
 };
