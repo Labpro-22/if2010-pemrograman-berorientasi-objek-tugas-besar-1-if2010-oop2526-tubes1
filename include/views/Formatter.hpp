@@ -11,7 +11,7 @@
 
 class Formatter {
 public:
-    static void printBoard(const Board& board, const std::vector<Player>& players, int currentTurn, int maxTurn);
+    static void printBoard(Board& board, const std::vector<Player>& players, int currentTurn, int maxTurn);
     static void printAkta(const PropertyTile& property);
     static void printProperti(const Player& player);
     static void printLog(const TransactionLogger& logger, int limit = -1);
