@@ -3,7 +3,8 @@
 #include <string> 
 #include "core/Player.hpp"
 #include "core/Property.hpp"
-#include "logic/Game.hpp" 
+
+namespace logic { class Game; } 
 
 namespace core {
 
