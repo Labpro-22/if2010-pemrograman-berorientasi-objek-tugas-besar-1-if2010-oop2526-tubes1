@@ -13,7 +13,3 @@ GeneralFundCard::GeneralFundCard(const string &type, const string &description) 
 GeneralFundCard::~GeneralFundCard()
 {
 }
-
-void GeneralFundCard::execute(Player &p, GameState &gs)
-{
-}
