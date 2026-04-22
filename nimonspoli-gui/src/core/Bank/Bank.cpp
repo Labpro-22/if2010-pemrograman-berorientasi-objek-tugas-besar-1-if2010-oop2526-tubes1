@@ -13,7 +13,7 @@ void Bank::payPlayer(Player *p, int amount)
     {
         // Berdasarkan diagram kelas Player, terdapat operator+(int) yang me-return Player&
         // Operasi ini menambahkan uang ke dalam state pemain.
-        *p + amount;
+        *p += amount;
     }
 }
 
@@ -23,7 +23,7 @@ void Bank::receiveFromPlayer(Player *p, int amount)
     {
         // Berdasarkan diagram kelas Player, terdapat operator-(int) yang me-return Player&
         // Operasi ini mengurangi uang dari state pemain.
-        *p - amount;
+        *p -= amount;
     }
 }
 
@@ -39,7 +39,7 @@ void Bank::confesticatePlayerAssets(Player *p)
         }
 
         // 2. Mengubah status pemain menjadi BANKRUPT
-        p->setStatus("BANKRUPT");
+        p->setStatus(PlayerStatus::BANKRUPT);
 
         /* * TUGAS LANJUTAN UNTUK M2:
          * Di bagian ini, Bank harus menangani pelelangan aset dan penghancuran bangunan.

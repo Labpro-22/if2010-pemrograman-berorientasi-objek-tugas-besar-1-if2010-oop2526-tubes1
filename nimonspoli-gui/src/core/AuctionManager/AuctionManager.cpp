@@ -25,7 +25,7 @@ void AuctionManager::setupAuction(Property *prop, const std::vector<Player *> &p
     activeParticipants.clear();
     for (Player *p : players)
     {
-        if (p->getStatus() != "BANKRUPT")
+        if (p->getStatus() != PlayerStatus::BANKRUPT)
         {
             activeParticipants.push_back(p);
         }
