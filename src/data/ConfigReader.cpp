@@ -210,6 +210,49 @@ MiscConfig ConfigReader::readMisc() {
   return cfg;
 }
 
+// aksi.txt
+// Format: ID KODE NAMA JENIS_PETAK WARNA
+std::vector<ActionTileConfig> ConfigReader::readActionTiles() {
+  std::ifstream file(filePath("aksi.txt"));
+  if (!file.is_open())
+    throw InvalidConfigException{"aksi.txt", "readable file at " + filePath("aksi.txt")};
+
+  std::vector<ActionTileConfig> configs;
+  std::string line;
+  std::getline(file, line);  // skip header
+
+  while (std::getline(file, line)) {
+    line = trimCR(line);
+    if (line.empty()) continue;
+
+    std::istringstream ss(line);
+    ActionTileConfig cfg;
+    ss >> cfg.id >> cfg.code >> cfg.name >> cfg.tileType >> cfg.color;
+
+    if (ss.fail())
+      throw InvalidConfigException{
+          "aksi.txt",
+          "complete row: ID KODE NAMA JENIS_PETAK WARNA (at id=" +
+              std::to_string(cfg.id) + ")"};
+
+    static const std::vector<std::string> validTypes = {
+        "SPESIAL", "KARTU", "PAJAK", "FESTIVAL"};
+    bool typeValid = false;
+    for (const auto& t : validTypes)
+      if (cfg.tileType == t) { typeValid = true; break; }
+
+    if (!typeValid)
+      throw InvalidConfigException{
+          "aksi.txt",
+          "JENIS_PETAK must be SPESIAL|KARTU|PAJAK|FESTIVAL, got '" +
+              cfg.tileType + "'"};
+
+    configs.push_back(cfg);
+  }
+
+  return configs;
+}
+
 // board.txt (bonus Dynamic Board)
 // Line 1 : JUMLAH_PETAK
 // Line 2+: satu tile code pada tiap line
@@ -247,7 +290,6 @@ BoardConfig ConfigReader::readBoardConfig() {
     cfg.tileOrder.push_back(TileSpec{code});
   }
 
-  // validasi agar jumlah GO dan PEN = 1
   if (goCount != 1)
     throw InvalidConfigException{"board.txt", "exactly 1 GO tile"};
   if (jailCount != 1)

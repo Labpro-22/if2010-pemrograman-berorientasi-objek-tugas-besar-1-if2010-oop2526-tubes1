@@ -24,6 +24,9 @@ class ConfigReader {
   SpecialConfig readSpecial();
   MiscConfig readMisc();
 
+  // aksi.txt: daftar action tile beserta atributnya
+  std::vector<ActionTileConfig> readActionTiles();
+
   // untuk Dynamic Board bonus: board.txt -> ordered tile list (20-60 tiles)
   BoardConfig readBoardConfig();
 
