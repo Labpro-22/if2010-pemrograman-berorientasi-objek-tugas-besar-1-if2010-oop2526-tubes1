@@ -1,4 +1,4 @@
-#include "utils/PropertyFactory.hpp"
+#include "PropertyFactory.hpp"
 #include <stdexcept>
 
 vector<unique_ptr<Property>> PropertyFactory::createProperties(
