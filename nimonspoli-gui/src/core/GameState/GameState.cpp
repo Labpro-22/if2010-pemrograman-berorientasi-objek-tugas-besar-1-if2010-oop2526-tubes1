@@ -20,16 +20,15 @@ GameState::GameState()
 
 GameState::GameState(
     int maxTurn,
-    std::vector<Player*> players,
-    Board*              board,
-    Bank*               bank,
-    Dice*               dice,
-    AuctionManager*     auctionMgr,
-    CardDeck<Card>*     chanceDeck,
-    CardDeck<Card>*     communityDeck,
-    CardDeck<Card>*     skillDeck,
-    TransactionLogger*  log
-)
+    std::vector<Player *> players,
+    Board *board,
+    Bank *bank,
+    Dice *dice,
+    AuctionManager *auctionMgr,
+    CardDeck<Card> *chanceDeck,
+    CardDeck<Card> *communityDeck,
+    CardDeck<Card> *skillDeck,
+    TransactionLogger *log)
     : currTurn(1), maxTurn(maxTurn), phase(GamePhase::NOT_STARTED),
       listPlayer(players), currPlayerIdx(0),
       hasExtraTurn(false), hasRolled(false), hasUsedCard(false),
@@ -42,11 +41,12 @@ GameState::GameState(
 //  Getter: turn & fase
 // ─────────────────────────────────────────────
 
-int       GameState::getCurrTurn()  const { return currTurn; }
-int       GameState::getMaxTurn()   const { return maxTurn; }
-GamePhase GameState::getPhase()     const { return phase; }
-bool      GameState::isGameOver()   const { return phase == GamePhase::GAME_OVER; }
-bool      GameState::isMaxTurnReached() const {
+int GameState::getCurrTurn() const { return currTurn; }
+int GameState::getMaxTurn() const { return maxTurn; }
+GamePhase GameState::getPhase() const { return phase; }
+bool GameState::isGameOver() const { return phase == GamePhase::GAME_OVER; }
+bool GameState::isMaxTurnReached() const
+{
     // maxTurn < 1 = mode BANKRUPTCY (tidak ada batas giliran)
     return maxTurn >= 1 && currTurn > maxTurn;
 }
@@ -55,91 +55,105 @@ bool      GameState::isMaxTurnReached() const {
 //  Getter: pemain
 // ─────────────────────────────────────────────
 
-Player* GameState::getCurrPlayer() const {
-    if (listPlayer.empty()) return nullptr;
+Player *GameState::getCurrPlayer() const
+{
+    if (listPlayer.empty())
+        return nullptr;
     return listPlayer[currPlayerIdx];
 }
 
 int GameState::getCurrPlayerIdx() const { return currPlayerIdx; }
 
-std::vector<Player*> GameState::getPlayers() const { return listPlayer; }
+std::vector<Player *> GameState::getPlayers() const { return listPlayer; }
 
-std::vector<Player*> GameState::getActivePlayers() const {
-    std::vector<Player*> active;
-    for (Player* p : listPlayer) {
-        if (p && p->getStatus() != "BANKRUPT") {
+std::vector<Player *> GameState::getActivePlayers() const
+{
+    std::vector<Player *> active;
+    for (Player *p : listPlayer)
+    {
+        if (p && p->getStatus() != PlayerStatus::BANKRUPT)
+        {
             active.push_back(p);
         }
     }
     return active;
 }
 
-Player* GameState::getPlayerById(const std::string& id) const {
-    for (Player* p : listPlayer) {
-        if (p && p->getID() == id) return p;
+Player *GameState::getPlayerById(const std::string &id) const
+{
+    for (Player *p : listPlayer)
+    {
+        if (p && p->getUsername() == id)
+            return p;
     }
     return nullptr;
 }
 
-int  GameState::getPlayerCount()    const { return static_cast<int>(listPlayer.size()); }
-bool GameState::getHasExtraTurn()   const { return hasExtraTurn; }
-bool GameState::getHasRolled()      const { return hasRolled; }
-bool GameState::getHasUsedCard()    const { return hasUsedCard; }
+int GameState::getPlayerCount() const { return static_cast<int>(listPlayer.size()); }
+bool GameState::getHasExtraTurn() const { return hasExtraTurn; }
+bool GameState::getHasRolled() const { return hasRolled; }
+bool GameState::getHasUsedCard() const { return hasUsedCard; }
 
 // ─────────────────────────────────────────────
 //  Getter: entitas
 // ─────────────────────────────────────────────
 
-Board*             GameState::getBoard()          const { return gameBoard; }
-Bank*              GameState::getBank()           const { return gameBank; }
-Dice*              GameState::getDice()           const { return gameDice; }
-AuctionManager*    GameState::getAuctionManager() const { return auctionManager; }
-CardDeck<Card>*    GameState::getChanceDeck()     const { return chanceCardDeck; }
-CardDeck<Card>*    GameState::getCommunityDeck()  const { return communityCardDeck; }
-CardDeck<Card>*    GameState::getSkillDeck()      const { return skillCardDeck; }
-TransactionLogger* GameState::getLogger()         const { return logger; }
+Board *GameState::getBoard() const { return gameBoard; }
+Bank *GameState::getBank() const { return gameBank; }
+Dice *GameState::getDice() const { return gameDice; }
+AuctionManager *GameState::getAuctionManager() const { return auctionManager; }
+CardDeck<Card> *GameState::getChanceDeck() const { return chanceCardDeck; }
+CardDeck<Card> *GameState::getCommunityDeck() const { return communityCardDeck; }
+CardDeck<Card> *GameState::getSkillDeck() const { return skillCardDeck; }
+TransactionLogger *GameState::getLogger() const { return logger; }
 
 // ─────────────────────────────────────────────
 //  Setter
 // ─────────────────────────────────────────────
 
-void GameState::setPhase(GamePhase p)      { phase = p; }
-void GameState::setHasExtraTurn(bool val)  { hasExtraTurn = val; }
-void GameState::setHasRolled(bool val)     { hasRolled = val; }
-void GameState::setHasUsedCard(bool val)   { hasUsedCard = val; }
+void GameState::setPhase(GamePhase p) { phase = p; }
+void GameState::setHasExtraTurn(bool val) { hasExtraTurn = val; }
+void GameState::setHasRolled(bool val) { hasRolled = val; }
+void GameState::setHasUsedCard(bool val) { hasUsedCard = val; }
 
 // ─────────────────────────────────────────────
 //  Navigasi giliran
 // ─────────────────────────────────────────────
 
-void GameState::advanceTurn() {
+void GameState::advanceTurn()
+{
     currTurn++;
     hasExtraTurn = false;
-    hasRolled    = false;
-    hasUsedCard  = false;
+    hasRolled = false;
+    hasUsedCard = false;
 }
 
-void GameState::nextPlayer() {
-    if (listPlayer.empty()) return;
+void GameState::nextPlayer()
+{
+    if (listPlayer.empty())
+        return;
 
-    int total    = static_cast<int>(listPlayer.size());
+    int total = static_cast<int>(listPlayer.size());
     int attempts = 0;
-    do {
+    do
+    {
         currPlayerIdx = (currPlayerIdx + 1) % total;
         attempts++;
-    } while (listPlayer[currPlayerIdx]->getStatus() == "BANKRUPT"
-             && attempts < total);
+    } while (listPlayer[currPlayerIdx]->getStatus() == PlayerStatus::BANKRUPT && attempts < total);
 
     hasExtraTurn = false;
-    hasRolled    = false;
-    hasUsedCard  = false;
+    hasRolled = false;
+    hasUsedCard = false;
 }
 
-void GameState::removePlayer(Player* p) {
-    if (!p) return;
-    p->setStatus("BANKRUPT");
+void GameState::removePlayer(Player *p)
+{
+    if (!p)
+        return;
+    p->setStatus(PlayerStatus::BANKRUPT);
 }
 
-int GameState::countActivePlayers() const {
+int GameState::countActivePlayers() const
+{
     return static_cast<int>(getActivePlayers().size());
 }

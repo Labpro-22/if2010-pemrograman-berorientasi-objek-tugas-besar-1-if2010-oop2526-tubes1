@@ -155,7 +155,7 @@ int main()
         {
             cout << left
                  << setw(5) << i
-                 << setw(8) << properties[i]->getId()
+                 << setw(8) << properties[i]->getUsername()
                  << setw(8) << properties[i]->getCode()
                  << setw(24) << properties[i]->getName()
                  << setw(14) << typeOf(properties[i].get())

@@ -29,7 +29,7 @@ public:
     Property();
     Property(int id, const string &code, const string &name, const string &colorGroup, int purchasePrice, int mortageValue, const string &ownerId);
     virtual ~Property();
-    int getId() const;
+    int getUsername() const;
     string getCode() const;
     string getName() const;
     string getColorGroup() const;

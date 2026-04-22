@@ -3,6 +3,7 @@
 #include "../Board/Board.hpp"
 #include "../Bank/Bank.hpp"
 #include "../Dice/Dice.hpp"
+#include "../Card/SkillCard.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
 #include "../Property/Property.hpp"
 #include "../utils/TransactionLogger.hpp"
@@ -22,33 +23,39 @@ GameMaster::GameMaster(GameState initialState)
 //  Akses state
 // ─────────────────────────────────────────────
 
-GameState&       GameMaster::getState()       { return state; }
-const GameState& GameMaster::getState() const { return state; }
+GameState &GameMaster::getState() { return state; }
+const GameState &GameMaster::getState() const { return state; }
 
 // ─────────────────────────────────────────────
 //  Main loop (CLI)
 // ─────────────────────────────────────────────
 
-void GameMaster::start() {
+void GameMaster::start()
+{
     state.setPhase(GamePhase::PLAYER_TURN);
     std::cout << "=== Nimonspoli Dimulai ===" << std::endl;
 
-    while (!state.isGameOver()) {
+    while (!state.isGameOver())
+    {
         beginTurn();
 
         // Loop input perintah dalam satu giliran
         while (state.getPhase() == GamePhase::PLAYER_TURN ||
-               state.getPhase() == GamePhase::DICE_ROLLED) {
+               state.getPhase() == GamePhase::DICE_ROLLED)
+        {
 
-            Player* cur = state.getCurrPlayer();
-            if (!cur || cur->getStatus() == "BANKRUPT") break;
+            Player *cur = state.getCurrPlayer();
+            if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT)
+                break;
 
             std::cout << "\n[Turn " << state.getCurrTurn() << "] "
-                      << cur->getID() << " > ";
+                      << cur->getUsername() << " > ";
 
             std::string input;
-            if (!std::getline(std::cin, input)) break;
-            if (!input.empty()) handleCommand(input);
+            if (!std::getline(std::cin, input))
+                break;
+            if (!input.empty())
+                handleCommand(input);
         }
 
         endTurn();
@@ -58,13 +65,15 @@ void GameMaster::start() {
     handleWinner();
 }
 
-void GameMaster::handleCommand(const std::string& rawInput) {
+void GameMaster::handleCommand(const std::string &rawInput)
+{
     // Parsing dan dispatch ke Command object dilakukan di lapisan CLI / GUI
     // GameMaster hanya menyediakan method; CommandDispatcher yang memanggil
     (void)rawInput; // placeholder — diisi oleh tim CLI/GUI
 }
 
-void GameMaster::beginTurn() {
+void GameMaster::beginTurn()
+{
     state.setPhase(GamePhase::PLAYER_TURN);
     state.setHasRolled(false);
     state.setHasUsedCard(false);
@@ -72,21 +81,25 @@ void GameMaster::beginTurn() {
 
     distributeSkillCards();
 
-    Player* cur = state.getCurrPlayer();
-    if (cur) {
-        log(cur->getID(), "TURN_START",
+    Player *cur = state.getCurrPlayer();
+    if (cur)
+    {
+        log(cur->getUsername(), "TURN_START",
             "Giliran Turn " + std::to_string(state.getCurrTurn()));
     }
 }
 
-void GameMaster::endTurn() {
+void GameMaster::endTurn()
+{
     tickFestivalDurations();
 
-    if (!state.getHasExtraTurn()) {
+    if (!state.getHasExtraTurn())
+    {
         // Satu siklus penuh (semua pemain sudah jalan) → naikkan turn
         int prevIdx = state.getCurrPlayerIdx();
         state.nextPlayer();
-        if (state.getCurrPlayerIdx() <= prevIdx) {
+        if (state.getCurrPlayerIdx() <= prevIdx)
+        {
             // Sudah berputar penuh
             state.advanceTurn();
         }
@@ -98,83 +111,82 @@ void GameMaster::endTurn() {
 //  Pergerakan pemain
 // ─────────────────────────────────────────────
 
-void GameMaster::movePlayer(Player* player, int steps) {
-    if (!player || !state.getBoard()) return;
+void GameMaster::movePlayer(Player *player, int steps)
+{
+    if (!player || !state.getBoard())
+        return;
 
-    Board* board     = state.getBoard();
-    int    boardSize = board->getSize();
-    Tile*  curTile   = board->getTile(0); // placeholder; idealnya Player simpan idx
+    Board *board = state.getBoard();
+    int boardSize = board->getSize();
+    Tile *curTile = board->getTile(0); // placeholder; idealnya Player simpan idx
 
     // Cari posisi saat ini via kode petak
     // (Player menyimpan Tile*, kita perlu indeksnya)
     // Loop board untuk temukan indeks player sekarang
-    int curIdx = 0;
-    for (int i = 0; i < boardSize; i++) {
-        if (board->getTile(i) == player->getCurrPetak()) {
-            curIdx = i;
-            break;
-        }
-    }
+    int curIdx = player->getPosition();
 
     int targetIdx = (curIdx + steps) % boardSize;
 
     // Cek apakah melewati GO (indeks 0)
-    if (targetIdx < curIdx || steps >= boardSize) {
+    if (targetIdx < curIdx || steps >= boardSize)
+    {
         // Melewati GO → bayar gaji
-        Tile* goTile = board->getTile(0);
-        GoTile* go   = dynamic_cast<GoTile*>(goTile);
-        if (go) {
+        Tile *goTile = board->getTile(0);
+        GoTile *go = dynamic_cast<GoTile *>(goTile);
+        if (go)
+        {
             state.getBank()->payPlayer(player, go->getSalary());
-            log(player->getID(), "GO_SALARY",
+            log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
     }
 
     // Pindahkan player & update currPetak
-    player->move(steps);
-    player->setCurrPetak(board->getTile(targetIdx));
+    player->setPosition(targetIdx);
 
     // Trigger petak yang diinjak
-    Tile* landedTile = board->getTile(targetIdx);
-    if (landedTile) {
-        log(player->getID(), "MOVE",
+    Tile *landedTile = board->getTile(targetIdx);
+    if (landedTile)
+    {
+        log(player->getUsername(), "MOVE",
             "Mendarat di " + landedTile->getCode() +
-            " (" + landedTile->getTileName() + ")");
+                " (" + landedTile->getTileName() + ")");
         landedTile->onLanded(*player, state);
     }
 }
 
-void GameMaster::teleportPlayer(Player* player, int targetIndex, bool passThroughGo) {
-    if (!player || !state.getBoard()) return;
+void GameMaster::teleportPlayer(Player *player, int targetIndex, bool passThroughGo)
+{
+    if (!player || !state.getBoard())
+        return;
 
-    Board* board     = state.getBoard();
-    int    boardSize = board->getSize();
-    if (targetIndex < 0 || targetIndex >= boardSize) return;
+    Board *board = state.getBoard();
+    int boardSize = board->getSize();
+    if (targetIndex < 0 || targetIndex >= boardSize)
+        return;
 
     // Cari posisi saat ini
-    int curIdx = 0;
-    for (int i = 0; i < boardSize; i++) {
-        if (board->getTile(i) == player->getCurrPetak()) {
-            curIdx = i;
-            break;
-        }
-    }
+    int curIdx = player->getPosition();
 
     // Bayar gaji GO jika melewati (hanya jika bukan pergi ke penjara)
-    if (passThroughGo && targetIndex < curIdx) {
-        Tile*   goTile = board->getTile(0);
-        GoTile* go     = dynamic_cast<GoTile*>(goTile);
-        if (go) {
+    if (passThroughGo && targetIndex < curIdx)
+    {
+        Tile *goTile = board->getTile(0);
+        GoTile *go = dynamic_cast<GoTile *>(goTile);
+        if (go)
+        {
             state.getBank()->payPlayer(player, go->getSalary());
-            log(player->getID(), "GO_SALARY",
+            log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
     }
 
-    player->move(targetIndex - curIdx); // Player::move harus handle posisi absolut atau kita set langsung
-    Tile* landedTile = board->getTile(targetIndex);
-    if (landedTile) {
-        log(player->getID(), "TELEPORT",
+    player->setPosition(targetIndex);
+
+    Tile *landedTile = board->getTile(targetIndex);
+    if (landedTile)
+    {
+        log(player->getUsername(), "TELEPORT",
             "Dipindahkan ke " + landedTile->getCode());
         landedTile->onLanded(*player, state);
     }
@@ -184,45 +196,59 @@ void GameMaster::teleportPlayer(Player* player, int targetIndex, bool passThroug
 //  Penjara
 // ─────────────────────────────────────────────
 
-JailTile* GameMaster::findJailTile() const {
-    Board* board = state.getBoard();
-    if (!board) return nullptr;
-    for (int i = 0; i < board->getSize(); i++) {
-        JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
-        if (jt) return jt;
+JailTile *GameMaster::findJailTile() const
+{
+    Board *board = state.getBoard();
+    if (!board)
+        return nullptr;
+    for (int i = 0; i < board->getSize(); i++)
+    {
+        JailTile *jt = dynamic_cast<JailTile *>(board->getTile(i));
+        if (jt)
+            return jt;
     }
     return nullptr;
 }
 
-int GameMaster::findJailIndex() const {
-    Board* board = state.getBoard();
-    if (!board) return -1;
-    for (int i = 0; i < board->getSize(); i++) {
-        if (dynamic_cast<JailTile*>(board->getTile(i))) return i;
+int GameMaster::findJailIndex() const
+{
+    Board *board = state.getBoard();
+    if (!board)
+        return -1;
+    for (int i = 0; i < board->getSize(); i++)
+    {
+        if (dynamic_cast<JailTile *>(board->getTile(i)))
+            return i;
     }
     return -1;
 }
 
-void GameMaster::sendPlayerToJail(Player* player) {
-    if (!player) return;
+void GameMaster::sendPlayerToJail(Player *player)
+{
+    if (!player)
+        return;
 
-    JailTile* jail = findJailTile();
-    if (jail) {
+    JailTile *jail = findJailTile();
+    if (jail)
+    {
         jail->sendToJail(*player);
-        log(player->getID(), "JAIL",
-            player->getID() + " dimasukkan ke penjara!");
+        log(player->getUsername(), "JAIL",
+            player->getUsername() + " dimasukkan ke penjara!");
     }
 
     // flag JAILED sudah di-set oleh JailTile::sendToJail()
     endCurrentTurn();
 }
 
-bool GameMaster::releaseFromJail(Player* player) {
-    if (!player) return false;
-    JailTile* jail = findJailTile();
-    if (!jail || !jail->isInmate(*player)) return false;
+bool GameMaster::releaseFromJail(Player *player)
+{
+    if (!player)
+        return false;
+    JailTile *jail = findJailTile();
+    if (!jail || !jail->isInmate(*player))
+        return false;
     jail->release(*player);
-    log(player->getID(), "RELEASE", player->getID() + " keluar dari penjara.");
+    log(player->getUsername(), "RELEASE", player->getUsername() + " keluar dari penjara.");
     return true;
 }
 
@@ -230,18 +256,21 @@ bool GameMaster::releaseFromJail(Player* player) {
 //  Kontrol giliran
 // ─────────────────────────────────────────────
 
-void GameMaster::setExtraTurn(bool val) {
+void GameMaster::setExtraTurn(bool val)
+{
     state.setHasExtraTurn(val);
 }
 
-void GameMaster::endCurrentTurn() {
+void GameMaster::endCurrentTurn()
+{
     state.setHasExtraTurn(false);
     state.setPhase(GamePhase::PLAYER_TURN);
     // Paksa pindah ke pemain berikutnya
     state.nextPlayer();
 }
 
-bool GameMaster::hasExtraTurn() const {
+bool GameMaster::hasExtraTurn() const
+{
     return state.getHasExtraTurn();
 }
 
@@ -249,38 +278,56 @@ bool GameMaster::hasExtraTurn() const {
 //  Properti
 // ─────────────────────────────────────────────
 
-void GameMaster::handlePropertyLanding(Player* player, Property* prop) {
-    if (!player || !prop) return;
+void GameMaster::handlePropertyLanding(Player *player, Property *prop)
+{
+    if (!player || !prop)
+        return;
 
-    if (prop->getStatus() == PropertyStatus::BANK) {
+    if (prop->getStatus() == PropertyStatus::BANK)
+    {
         // Tawarkan pembelian (Street) atau beri gratis (Railroad/Utility)
         // Detail logika ada di BeliCommand — di sini hanya trigger
         // BeliCommand akan dipanggil dari onLanded() masing-masing tile
-    } else if (prop->getStatus() == PropertyStatus::OWNED) {
-        if (prop->getOwnerId() != player->getID()) {
+    }
+    else if (prop->getStatus() == PropertyStatus::OWNED)
+    {
+        if (prop->getOwnerId() != player->getUsername())
+        {
             // Bayar sewa — BayarSewaCommand dipanggil dari onLanded()
         }
     }
     // MORTGAGED → tidak ada aksi
 }
 
-void GameMaster::startAuction(Property* prop, Player* triggerPlayer) {
-    if (!prop) return;
+void GameMaster::startAuction(Property *prop, Player *triggerPlayer)
+{
+    if (!prop)
+        return;
 
-    AuctionManager* am       = state.getAuctionManager();
-    std::vector<Player*> all = state.getActivePlayers();
+    AuctionManager *am = state.getAuctionManager();
+    std::vector<Player *> all = state.getActivePlayers();
 
     // Susun urutan lelang: mulai dari pemain setelah trigger
-    std::vector<Player*> participants;
-    if (triggerPlayer) {
+    std::vector<Player *> participants;
+    if (triggerPlayer)
+    {
         auto it = std::find(all.begin(), all.end(), triggerPlayer);
-        if (it != all.end()) {
+        if (it != all.end())
+        {
             ++it;
-            while (it != all.end()) { participants.push_back(*it++); }
+            while (it != all.end())
+            {
+                participants.push_back(*it++);
+            }
             it = all.begin();
-            while (*it != triggerPlayer) { participants.push_back(*it++); }
+            while (*it != triggerPlayer)
+            {
+                participants.push_back(*it++);
+            }
         }
-    } else {
+    }
+    else
+    {
         participants = all;
     }
 
@@ -299,18 +346,24 @@ void GameMaster::startAuction(Property* prop, Player* triggerPlayer) {
 //  Kebangkrutan
 // ─────────────────────────────────────────────
 
-void GameMaster::handleDebtPayment(Player* debtor, int debt, Player* creditor) {
-    if (!debtor) return;
+void GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
+{
+    if (!debtor)
+        return;
 
     // Hitung maksimum yang bisa didapat dari likuidasi
     // (perhitungan detail ada di BankruptcyManager / BangkrutCommand)
-    int cash = debtor->getMoney();
-    if (cash >= debt) {
+    int cash = debtor->getBalance();
+    if (cash >= debt)
+    {
         // Cukup bayar langsung
-        if (creditor) {
-            *debtor  - debt;
-            *creditor + debt;
-        } else {
+        if (creditor)
+        {
+            *debtor -= debt;
+            *creditor += debt;
+        }
+        else
+        {
             state.getBank()->receiveFromPlayer(debtor, debt);
         }
         return;
@@ -318,39 +371,50 @@ void GameMaster::handleDebtPayment(Player* debtor, int debt, Player* creditor) {
 
     // Tidak cukup cash → cek potensi likuidasi
     int potential = calculateWealth(debtor);
-    if (potential >= debt) {
+    if (potential >= debt)
+    {
         // Wajib likuidasi — BangkrutCommand yang handle panel likuidasi
         state.setPhase(GamePhase::BANKRUPTCY);
-        log(debtor->getID(), "BANKRUPTCY_START",
+        log(debtor->getUsername(), "BANKRUPTCY_START",
             "Harus likuidasi untuk bayar M" + std::to_string(debt));
-    } else {
+    }
+    else
+    {
         // Tidak bisa bayar → bangkrut
-        if (creditor) {
+        if (creditor)
+        {
             handleBankruptcy(debtor, creditor);
-        } else {
+        }
+        else
+        {
             handleBankruptcy(debtor, state.getBank());
         }
     }
 }
 
-void GameMaster::handleBankruptcy(Player* from, Player* to) {
-    if (!from || !to) return;
+void GameMaster::handleBankruptcy(Player *from, Player *to)
+{
+    if (!from || !to)
+        return;
 
-    log(from->getID(), "BANKRUPT",
-        from->getID() + " bangkrut ke " + to->getID());
+    log(from->getUsername(), "BANKRUPT",
+        from->getUsername() + " bangkrut ke " + to->getUsername());
 
     // Pindahkan uang sisa
-    int remaining = from->getMoney();
-    if (remaining > 0) {
-        *from - remaining;
-        *to   + remaining;
+    int remaining = from->getBalance();
+    if (remaining > 0)
+    {
+        *from -= remaining;
+        *to += remaining;
     }
 
     // Pindahkan semua properti (termasuk yang MORTGAGED, tetap dalam kondisi gadai)
-    for (int i = 0; i < from->getPropertyNum(); i++) {
-        Property* p = from->getPropertyAt(i);
-        if (p) {
-            p->setOwner(to->getID());
+    for (int i = 0; i < from->getPropertyCount(); i++)
+    {
+        Property *p = from->getProperties()[i];
+        if (p)
+        {
+            p->setOwner(to->getUsername());
             to->addProperty(p);
         }
     }
@@ -359,27 +423,33 @@ void GameMaster::handleBankruptcy(Player* from, Player* to) {
     state.removePlayer(from);
 
     // Cek apakah permainan selesai
-    if (state.countActivePlayers() <= 1) {
+    if (state.countActivePlayers() <= 1)
+    {
         state.setPhase(GamePhase::GAME_OVER);
     }
 }
 
-void GameMaster::handleBankruptcy(Player* from, Bank* bank) {
-    if (!from || !bank) return;
+void GameMaster::handleBankruptcy(Player *from, Bank *bank)
+{
+    if (!from || !bank)
+        return;
 
-    log(from->getID(), "BANKRUPT",
-        from->getID() + " bangkrut ke Bank");
+    log(from->getUsername(), "BANKRUPT",
+        from->getUsername() + " bangkrut ke Bank");
 
     // Serahkan uang sisa ke Bank (hilang dari peredaran)
-    int remaining = from->getMoney();
-    if (remaining > 0) {
+    int remaining = from->getBalance();
+    if (remaining > 0)
+    {
         bank->receiveFromPlayer(from, remaining);
     }
 
     // Semua properti kembali ke BANK dan dilelang
-    for (int i = 0; i < from->getPropertyNum(); i++) {
-        Property* p = from->getPropertyAt(i);
-        if (p) {
+    for (int i = 0; i < from->getPropertyCount(); i++)
+    {
+        Property *p = from->getProperties()[i];
+        if (p)
+        {
             p->clearOwner();
             p->setStatus(PropertyStatus::BANK);
             // Hancurkan bangunan jika ada (StreetProperty)
@@ -390,7 +460,8 @@ void GameMaster::handleBankruptcy(Player* from, Bank* bank) {
 
     state.removePlayer(from);
 
-    if (state.countActivePlayers() <= 1) {
+    if (state.countActivePlayers() <= 1)
+    {
         state.setPhase(GamePhase::GAME_OVER);
     }
 }
@@ -399,115 +470,145 @@ void GameMaster::handleBankruptcy(Player* from, Bank* bank) {
 //  Kemenangan
 // ─────────────────────────────────────────────
 
-void GameMaster::handleWinner() {
-    std::vector<Player*> active = state.getActivePlayers();
+void GameMaster::handleWinner()
+{
+    std::vector<Player *> active = state.getActivePlayers();
 
-    if (active.size() == 1) {
+    if (active.size() == 1)
+    {
         // Menang karena bankruptcy
         std::cout << "\n=== Permainan Selesai (Bankruptcy) ===" << std::endl;
-        std::cout << "Pemenang: " << active[0]->getID() << std::endl;
+        std::cout << "Pemenang: " << active[0]->getUsername() << std::endl;
         return;
     }
 
     // Menang karena MAX_TURN — tiebreak: uang → properti → kartu
-    std::sort(active.begin(), active.end(), [this](Player* a, Player* b) {
-        if (a->getMoney() != b->getMoney())
-            return a->getMoney() > b->getMoney();
-        if (a->getPropertyNum() != b->getPropertyNum())
-            return a->getPropertyNum() > b->getPropertyNum();
-        // Jumlah kartu — akses via getCardAt dengan loop
-        // (Tidak ada getCardNum() di Player; gunakan getPropertyNum sebagai fallback)
-        return false; // seri → semua menang
-    });
+    std::sort(active.begin(), active.end(), [this](Player *a, Player *b)
+              {
+                  if (a->getBalance() != b->getBalance())
+                      return a->getBalance() > b->getBalance();
+                  if (a->getPropertyCount() != b->getPropertyCount())
+                      return a->getPropertyCount() > b->getPropertyCount();
+                  // Jumlah kartu — akses via getCardAt dengan loop
+                  // (Tidak ada getCardNum() di Player; gunakan getPropertyNum sebagai fallback)
+                  return false; // seri → semua menang
+              });
 
     std::cout << "\n=== Permainan Selesai (Max Turn) ===" << std::endl;
     std::cout << "Rekap Pemain:" << std::endl;
-    for (Player* p : active) {
-        std::cout << "  " << p->getID()
-                  << " | Uang: M" << p->getMoney()
-                  << " | Properti: " << p->getPropertyNum()
+    for (Player *p : active)
+    {
+        std::cout << "  " << p->getUsername()
+                  << " | Uang: M" << p->getBalance()
+                  << " | Properti: " << p->getPropertyCount()
                   << std::endl;
     }
-    std::cout << "Pemenang: " << active[0]->getID() << std::endl;
+    std::cout << "Pemenang: " << active[0]->getUsername() << std::endl;
 }
 
 // ─────────────────────────────────────────────
 //  Helper: query state
 // ─────────────────────────────────────────────
 
-bool GameMaster::hasMonopoly(Player* player, const std::string& colorGroup) const {
-    if (!player || !state.getBoard()) return false;
+bool GameMaster::hasMonopoly(Player *player, const std::string &colorGroup) const
+{
+    if (!player || !state.getBoard())
+        return false;
 
-    Board* board = state.getBoard();
+    Board *board = state.getBoard();
     int owned = 0, total = 0;
 
-    for (int i = 0; i < board->getSize(); i++) {
-        PropertyTile* pt = dynamic_cast<PropertyTile*>(board->getTile(i));
-        if (!pt) continue;
-        Property* prop = pt->getProperty();
-        if (!prop || prop->getColorGroup() != colorGroup) continue;
+    for (int i = 0; i < board->getSize(); i++)
+    {
+        PropertyTile *pt = dynamic_cast<PropertyTile *>(board->getTile(i));
+        if (!pt)
+            continue;
+        Property *prop = pt->getProperty();
+        if (!prop || prop->getColorGroup() != colorGroup)
+            continue;
         total++;
-        if (prop->getOwnerId() == player->getID()) owned++;
+        if (prop->getOwnerId() == player->getUsername())
+            owned++;
     }
 
     return total > 0 && owned == total;
 }
 
-int GameMaster::countPlayerRailroads(Player* player) const {
-    if (!player || !state.getBoard()) return 0;
-    Board* board = state.getBoard();
+int GameMaster::countPlayerRailroads(Player *player) const
+{
+    if (!player || !state.getBoard())
+        return 0;
+    Board *board = state.getBoard();
     int count = 0;
-    for (int i = 0; i < board->getSize(); i++) {
-        RailroadTile* rt = dynamic_cast<RailroadTile*>(board->getTile(i));
-        if (!rt) continue;
-        Property* prop = rt->getProperty();
-        if (prop && prop->getOwnerId() == player->getID()) count++;
+    for (int i = 0; i < board->getSize(); i++)
+    {
+        RailroadTile *rt = dynamic_cast<RailroadTile *>(board->getTile(i));
+        if (!rt)
+            continue;
+        Property *prop = rt->getProperty();
+        if (prop && prop->getOwnerId() == player->getUsername())
+            count++;
     }
     return count;
 }
 
-int GameMaster::countPlayerUtilities(Player* player) const {
-    if (!player || !state.getBoard()) return 0;
-    Board* board = state.getBoard();
+int GameMaster::countPlayerUtilities(Player *player) const
+{
+    if (!player || !state.getBoard())
+        return 0;
+    Board *board = state.getBoard();
     int count = 0;
-    for (int i = 0; i < board->getSize(); i++) {
-        UtilityTile* ut = dynamic_cast<UtilityTile*>(board->getTile(i));
-        if (!ut) continue;
-        Property* prop = ut->getProperty();
-        if (prop && prop->getOwnerId() == player->getID()) count++;
+    for (int i = 0; i < board->getSize(); i++)
+    {
+        UtilityTile *ut = dynamic_cast<UtilityTile *>(board->getTile(i));
+        if (!ut)
+            continue;
+        Property *prop = ut->getProperty();
+        if (prop && prop->getOwnerId() == player->getUsername())
+            count++;
     }
     return count;
 }
 
-int GameMaster::findNearestRailroad(int currentPosition) const {
-    Board* board = state.getBoard();
-    if (!board) return -1;
+int GameMaster::findNearestRailroad(int currentPosition) const
+{
+    Board *board = state.getBoard();
+    if (!board)
+        return -1;
 
     int size = board->getSize();
-    for (int step = 1; step < size; step++) {
+    for (int step = 1; step < size; step++)
+    {
         int idx = (currentPosition + step) % size;
-        if (dynamic_cast<RailroadTile*>(board->getTile(idx))) return idx;
+        if (dynamic_cast<RailroadTile *>(board->getTile(idx)))
+            return idx;
     }
     return -1;
 }
 
-int GameMaster::calculateWealth(Player* player) const {
-    if (!player) return 0;
-    int wealth = player->getMoney();
-    for (int i = 0; i < player->getPropertyNum(); i++) {
-        Property* p = player->getPropertyAt(i);
-        if (p) wealth += static_cast<int>(p->getPurchasePrice());
+int GameMaster::calculateWealth(Player *player) const
+{
+    if (!player)
+        return 0;
+    int wealth = player->getBalance();
+    for (int i = 0; i < player->getPropertyCount(); i++)
+    {
+        Property *p = player->getProperties()[i];
+        if (p)
+            wealth += static_cast<int>(p->getPurchasePrice());
         // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
         // jika ada override — di sini gunakan purchasePrice sebagai baseline
     }
     return wealth;
 }
 
-void GameMaster::log(const std::string& username,
-                     const std::string& action,
-                     const std::string& detail) {
-    TransactionLogger* logger = state.getLogger();
-    if (logger) {
+void GameMaster::log(const std::string &username,
+                     const std::string &action,
+                     const std::string &detail)
+{
+    TransactionLogger *logger = state.getLogger();
+    if (logger)
+    {
         logger->addLog(state.getCurrTurn(), username, action, detail);
     }
 }
@@ -516,30 +617,39 @@ void GameMaster::log(const std::string& username,
 //  Helper internal
 // ─────────────────────────────────────────────
 
-void GameMaster::distributeSkillCards() {
+void GameMaster::distributeSkillCards()
+{
     // Setiap pemain aktif dapat 1 kartu dari skillDeck
-    CardDeck<Card>* deck = state.getSkillDeck();
-    if (!deck) return;
+    CardDeck<Card> *deck = state.getSkillDeck();
+    if (!deck)
+        return;
 
-    for (Player* p : state.getActivePlayers()) {
-        if (!p) continue;
+    for (Player *p : state.getActivePlayers())
+    {
+        if (!p)
+            continue;
         // Jika tangan sudah 3 kartu, flag akan di-handle oleh DropKartuCommand
         // (dipicu otomatis dari sini atau dari Command dispatcher)
         // Di sini cukup addCard; overflow check ada di Player atau Command
-        Card* drawn = deck->draw();
-        if (drawn) p->addCard(drawn);
+        Card *drawn = deck->draw();
+        if (drawn)
+            p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
     }
 }
 
-void GameMaster::tickFestivalDurations() {
+void GameMaster::tickFestivalDurations()
+{
     // Kurangi durasi festival untuk semua properti milik pemain aktif
     // StreetProperty harus punya method tickFestival() / decreaseFestivalDuration()
-    Player* cur = state.getCurrPlayer();
-    if (!cur) return;
+    Player *cur = state.getCurrPlayer();
+    if (!cur)
+        return;
 
-    for (int i = 0; i < cur->getPropertyNum(); i++) {
-        Property* p = cur->getPropertyAt(i);
-        if (!p) continue;
+    for (int i = 0; i < cur->getPropertyCount(); i++)
+    {
+        Property *p = cur->getProperties()[i];
+        if (!p)
+            continue;
         // Cast ke StreetProperty jika ada method festivalnya
         // StreetProperty* sp = dynamic_cast<StreetProperty*>(p);
         // if (sp) sp->tickFestival();
@@ -547,15 +657,18 @@ void GameMaster::tickFestivalDurations() {
     }
 }
 
-void GameMaster::checkWinCondition() {
+void GameMaster::checkWinCondition()
+{
     // Kondisi 1: hanya 1 pemain aktif tersisa
-    if (state.countActivePlayers() <= 1) {
+    if (state.countActivePlayers() <= 1)
+    {
         state.setPhase(GamePhase::GAME_OVER);
         return;
     }
 
     // Kondisi 2: MAX_TURN tercapai
-    if (state.isMaxTurnReached()) {
+    if (state.isMaxTurnReached())
+    {
         state.setPhase(GamePhase::GAME_OVER);
         return;
     }

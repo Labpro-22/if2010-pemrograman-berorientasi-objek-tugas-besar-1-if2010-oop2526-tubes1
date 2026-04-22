@@ -77,6 +77,7 @@ bool Player::operator<(const Player &other) const
     return balance < other.balance;
 }
 
+// PROPERTY
 void Player::addProperty(Property *prop)
 {
     properties.push_back(prop);
@@ -99,6 +100,43 @@ int Player::getPropertyCount() const
     return properties.size();
 }
 
+// KARTU
+bool Player::addSkillCard(SkillCard *card)
+{
+    if (skillCards.size() >= 3)
+        return false;
+    skillCards.push_back(card);
+    return true;
+}
+
+void Player::discardSkillCard(int index)
+{
+    if (index < 0 || index >= (int)skillCards.size())
+        return;
+    skillCards.erase(skillCards.begin() + index);
+}
+
+const vector<SkillCard *> &Player::getHand() const
+{
+    return skillCards;
+}
+
+int Player::getHandSize() const
+{
+    return skillCards.size();
+}
+
+void Player::setCardUsedThisTurn(bool used)
+{
+    cardUsedThisTurn = true;
+}
+
+bool Player::hasUsedCardThisTurn() const
+{
+    return cardUsedThisTurn;
+}
+
+// JAIL
 void Player::goToJail()
 {
     status = PlayerStatus::JAILED;

@@ -39,7 +39,7 @@ private:
 public:
     /**
     + Player(Id: string, Money: int, currPetak: Petak*, listProperty: vector<Property*>, listCard: vector<Card*>, Status: string): Player
-    + getID(): string
+    + getUsername(): string
     + getMoney(): int
     + operator=(amount : int) : Player&
     + operator-(amount : int): Player&
@@ -131,7 +131,7 @@ public:
     // Card *removeCardAt(int pos);
     // void setStatus(std::string newStatus);
     // std::string getStatus() const { return status; }
-    // std::string getId() const { return id; }
+    // std::string getUsername() const { return id; }
 };
 
 #endif
