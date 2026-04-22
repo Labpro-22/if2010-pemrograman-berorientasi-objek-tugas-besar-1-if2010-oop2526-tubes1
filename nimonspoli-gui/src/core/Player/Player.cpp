@@ -128,7 +128,7 @@ int Player::getHandSize() const
 
 void Player::setCardUsedThisTurn(bool used)
 {
-    cardUsedThisTurn = true;
+    cardUsedThisTurn = used;
 }
 
 bool Player::hasUsedCardThisTurn() const
