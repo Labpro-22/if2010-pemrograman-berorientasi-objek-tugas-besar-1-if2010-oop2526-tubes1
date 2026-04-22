@@ -5,7 +5,7 @@
 #include <memory>
 #include <map>
 
-#include "utils/ConfigLoader.hpp"
+#include "../utils/ConfigLoader.hpp"
 #include "../src/core/Property/Property.hpp"
 #include "../src/core/Property/StreetProperty.hpp"
 #include "../src/core/Property/RailroadProperty.hpp"
