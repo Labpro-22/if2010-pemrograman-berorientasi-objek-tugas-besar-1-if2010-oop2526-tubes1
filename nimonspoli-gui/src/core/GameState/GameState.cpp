@@ -16,7 +16,7 @@ GameState::GameState()
       currPlayerIdx(0), hasExtraTurn(false), hasRolled(false), hasUsedCard(false),
       gameBoard(nullptr), gameBank(nullptr), gameDice(nullptr),
       auctionManager(nullptr), chanceCardDeck(nullptr),
-      communityCardDeck(nullptr), skillCardDeck(nullptr), logger(nullptr) {}
+      communityCardDeck(nullptr), skillCardDeck(nullptr), logger(nullptr), gameMaster(nullptr) {}
 
 GameState::GameState(
     int maxTurn,
@@ -106,6 +106,7 @@ CardDeck<Card> *GameState::getChanceDeck() const { return chanceCardDeck; }
 CardDeck<Card> *GameState::getCommunityDeck() const { return communityCardDeck; }
 CardDeck<Card> *GameState::getSkillDeck() const { return skillCardDeck; }
 TransactionLogger *GameState::getLogger() const { return logger; }
+GameMaster *GameState::getGameMaster() const { return gameMaster; }
 
 // ─────────────────────────────────────────────
 //  Setter
@@ -115,6 +116,7 @@ void GameState::setPhase(GamePhase p) { phase = p; }
 void GameState::setHasExtraTurn(bool val) { hasExtraTurn = val; }
 void GameState::setHasRolled(bool val) { hasRolled = val; }
 void GameState::setHasUsedCard(bool val) { hasUsedCard = val; }
+void GameState::setGameMaster(GameMaster *gm) { gameMaster = gm; }
 
 // ─────────────────────────────────────────────
 //  Navigasi giliran
