@@ -1,4 +1,5 @@
 #include "models/Card/SkillCard/LassoCard.hpp"
+#include "core/GameException.hpp"
 
 void LassoCard::activate(GameState& state) {
     vector<Player>& players = state.getPlayers();
@@ -19,9 +20,7 @@ void LassoCard::activate(GameState& state) {
     try {
         nearestPlayer->moveTo(currPlayerPosition, boardSize);
         state.getCurrentPlayer().setUsedSkillThisTurn(true);
-    } catch(const std::invalid_argument& e){
-        std::cerr << e.what() << '\n';
-    } catch(const std::out_of_range& e) {
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }

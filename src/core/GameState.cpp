@@ -1,6 +1,6 @@
 #include "core/GameState.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 GameState::GameState()
     : currentPlayerIdx(0),
@@ -9,7 +9,7 @@ GameState::GameState()
       gameOver(false),
       board(std::make_shared<Board>()) {
     if (maxTurn <= 0) {
-        throw std::invalid_argument("maxTurn harus lebih dari 0.");
+        throw InvalidInputException("maxTurn harus lebih dari 0.");
     }
 }
 
@@ -28,7 +28,7 @@ const std::vector<Player>& GameState::getPlayers() const {
 
 Player& GameState::getCurrentPlayer() {
     if (players.empty()) {
-        throw std::runtime_error("Tidak ada pemain dalam game state.");
+        throw InvalidStateException("Tidak ada pemain dalam game state.");
     }
     clampCurrentPlayerIndex();
     return players[static_cast<std::size_t>(currentPlayerIdx)];
@@ -36,7 +36,7 @@ Player& GameState::getCurrentPlayer() {
 
 const Player& GameState::getCurrentPlayer() const {
     if (players.empty()) {
-        throw std::runtime_error("Tidak ada pemain dalam game state.");
+        throw InvalidStateException("Tidak ada pemain dalam game state.");
     }
 
     int safeIdx = currentPlayerIdx;
@@ -81,7 +81,7 @@ void GameState::setMaxTurn(int maxTurn){
 
 void GameState::setCurrentTurn(int turn) {
     if (turn <= 0) {
-        throw std::invalid_argument("currentTurn harus lebih dari 0.");
+        throw InvalidInputException("currentTurn harus lebih dari 0.");
     }
     currentTurn = turn;
     if (currentTurn > maxTurn) {
@@ -176,28 +176,28 @@ const Dice& GameState::getDice() const {
 
 Board& GameState::getBoard() {
     if (!board) {
-        throw std::runtime_error("Board belum diinisialisasi.");
+        throw InvalidStateException("Board belum diinisialisasi.");
     }
     return *board;
 }
 
 const Board& GameState::getBoard() const {
     if (!board) {
-        throw std::runtime_error("Board belum diinisialisasi.");
+        throw InvalidStateException("Board belum diinisialisasi.");
     }
     return *board;
 }
 
 void GameState::setBoard(const std::shared_ptr<Board>& newBoard) {
     if (!newBoard) {
-        throw std::invalid_argument("Board tidak boleh null.");
+        throw InvalidInputException("Board tidak boleh null.");
     }
     board = newBoard;
 }
 
 int GameState::getBoardSizeOrDefault(int defaultSize) const {
     if (defaultSize <= 0) {
-        throw std::invalid_argument("defaultSize harus lebih dari 0.");
+        throw InvalidInputException("defaultSize harus lebih dari 0.");
     }
 
     if (!board || board->getSize() <= 0) {

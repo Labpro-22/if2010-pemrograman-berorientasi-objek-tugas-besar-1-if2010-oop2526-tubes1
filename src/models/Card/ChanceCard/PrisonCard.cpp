@@ -1,4 +1,5 @@
 #include "models/Card/ChanceCard/PrisonCard.hpp"
+#include "core/GameException.hpp"
 
 const string PrisonCard::getName() const {
     return "PrisonCard";
@@ -17,9 +18,9 @@ void PrisonCard::activate(GameState& state) {
         currPlayer.moveTo(index, boardSize);
         currPlayer.setJailTurns(3);
         currPlayer.setStatus(PlayerStatus::JAILED);
-    } catch(const std::invalid_argument& e){
-        std::cerr << e.what() << '\n';
-    } catch(const std::out_of_range& e) {
+        currPlayer.resetConsecutiveDoubles();
+        currPlayer.setHasRolled(true);
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }

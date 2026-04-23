@@ -5,6 +5,8 @@
 
 enum class GameErrorID{
     INVALIDINPUTEXCEPTION,
+    INVALIDSTATEEXCEPTION,
+    OUTOFRANGEEXCEPTION,
     FILENOTFOUNDEXCEPTION,
     INVALIDFILEDATAEXCEPTION,
     UNKNOWNTYPEEXCEPTION,
@@ -39,6 +41,27 @@ class InvalidInputException : public GameException{
 public:
     InvalidInputException(): GameException(GameErrorID::INVALIDINPUTEXCEPTION,
         "Input tidak valid.") {}
+
+    explicit InvalidInputException(const std::string& msg): GameException(
+        GameErrorID::INVALIDINPUTEXCEPTION, msg) {}
+};
+
+class InvalidStateException : public GameException{
+public:
+    InvalidStateException(): GameException(GameErrorID::INVALIDSTATEEXCEPTION,
+        "State permainan tidak valid.") {}
+
+    explicit InvalidStateException(const std::string& msg): GameException(
+        GameErrorID::INVALIDSTATEEXCEPTION, msg) {}
+};
+
+class OutOfRangeException : public GameException{
+public:
+    OutOfRangeException(): GameException(GameErrorID::OUTOFRANGEEXCEPTION,
+        "Nilai berada di luar rentang yang valid.") {}
+
+    explicit OutOfRangeException(const std::string& msg): GameException(
+        GameErrorID::OUTOFRANGEEXCEPTION, msg) {}
 };
 
 class FileNotFoundException : public GameException{

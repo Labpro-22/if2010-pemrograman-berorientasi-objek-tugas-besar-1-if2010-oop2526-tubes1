@@ -1,6 +1,6 @@
 #include "core/GameEngine.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 GameEngine::GameEngine() : state() {
     loadGameConfig();
@@ -8,7 +8,7 @@ GameEngine::GameEngine() : state() {
 
 void GameEngine::startNewGame(const std::vector<std::string>& playerNames) {
     if (playerNames.empty()) {
-        throw std::invalid_argument("Minimal harus ada satu pemain.");
+        throw InvalidInputException("Minimal harus ada satu pemain.");
     }
 
     for (const std::string& name : playerNames) {
@@ -35,7 +35,7 @@ void GameEngine::loadGameConfig() {
                 auto property = ConfigLoader::loadProperty(propertyPath);
                 //TODO do something
             }
-            catch (GameException e){
+            catch (const GameException& e){
                 std::cout << e.what(); //TODO: tampilkan dengan renderer
             }
         }

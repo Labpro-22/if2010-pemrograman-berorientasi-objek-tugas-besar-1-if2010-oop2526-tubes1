@@ -1,6 +1,6 @@
 #include "core/services/AuctionService.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 bool AuctionService::startAuction(
     int basePrice,
@@ -10,7 +10,7 @@ bool AuctionService::startAuction(
     GameState& state
 ) const {
     if (basePrice < 0) {
-        throw std::invalid_argument("Harga dasar lelang tidak boleh negatif.");
+        throw InvalidInputException("Harga dasar lelang tidak boleh negatif.");
     }
 
     winner = nullptr;

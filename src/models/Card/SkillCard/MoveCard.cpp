@@ -1,4 +1,5 @@
 #include "models/Card/SkillCard/MoveCard.hpp"
+#include "core/GameException.hpp"
 
 void MoveCard::activate(GameState& state) {
     random_device random;
@@ -12,7 +13,7 @@ void MoveCard::activate(GameState& state) {
     try {
         currPlayer.move(moveNumber, boardSize);
         currPlayer.setUsedSkillThisTurn(true);
-    } catch(const std::invalid_argument& e){
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }

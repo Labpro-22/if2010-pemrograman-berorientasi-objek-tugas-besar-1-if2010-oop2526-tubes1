@@ -1,4 +1,5 @@
 #include "models/Card/SkillCard/TeleportCard.hpp"
+#include "core/GameException.hpp"
 
 TeleportCard::TeleportCard(int targetIndex) : targetIndex(targetIndex){}
 
@@ -11,9 +12,7 @@ void TeleportCard::activate(GameState& state) {
     try {
         currPlayer.moveTo(targetIndex, boardSize);
         currPlayer.setUsedSkillThisTurn(true);
-    } catch(const std::invalid_argument& e){
-        std::cerr << e.what() << '\n';
-    } catch(const std::out_of_range& e) {
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }

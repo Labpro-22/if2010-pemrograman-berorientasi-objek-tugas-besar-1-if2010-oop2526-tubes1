@@ -1,4 +1,5 @@
 #include "models/Card/ChanceCard/StationCard.hpp"
+#include "core/GameException.hpp"
 
 const string StationCard::getName() const{
     return "StationCard";
@@ -24,9 +25,7 @@ void StationCard::activate(GameState& state) {
         } else if (playerPosition >= board.findPlotIndex("GBR")) {
             currPlayer.moveTo(board.findPlotIndex("STB"), boardSize);
         }
-    } catch(const std::invalid_argument& e){
-        std::cerr << e.what() << '\n';
-    } catch(const std::out_of_range& e) {
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }
