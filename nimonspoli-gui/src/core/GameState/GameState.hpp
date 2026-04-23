@@ -11,7 +11,6 @@ class Bank;
 class Dice;
 class AuctionManager;
 class Card;
-class SkillCard;
 class TransactionLogger;
 class GameMaster;
 
@@ -30,10 +29,11 @@ enum class GamePhase
     AWAITING_BUY,      // menunggu keputusan beli properti
     AWAITING_TAX,      // menunggu pilihan user untuk PPH (flat vs persen)
     AWAITING_FESTIVAL, // menunggu user pilih properti festival
-    SHOW_CARD,         // menampilkan hasil kartu Kesempatan/Dana Umum
-    AUCTION,           // lelang sedang berjalan
-    BANKRUPTCY,        // proses likuidasi/kebangkrutan
-    GAME_OVER          // permainan selesai
+    AWAITING_JAIL,
+    SHOW_CARD,  // menampilkan hasil kartu Kesempatan/Dana Umum
+    AUCTION,    // lelang sedang berjalan
+    BANKRUPTCY, // proses likuidasi/kebangkrutan
+    GAME_OVER   // permainan selesai
 };
 
 // ─────────────────────────────────────────────
@@ -62,7 +62,7 @@ private:
     AuctionManager *auctionManager;
     CardDeck<Card> *chanceCardDeck;
     CardDeck<Card> *communityCardDeck;
-    CardDeck<SkillCard> *skillCardDeck;
+    CardDeck<Card> *skillCardDeck;
     TransactionLogger *logger;
     GameMaster *gameMaster;
     TaxConfig taxcfg;
@@ -88,7 +88,7 @@ public:
         AuctionManager *auctionMgr,
         CardDeck<Card> *chanceDeck,
         CardDeck<Card> *communityDeck,
-        CardDeck<SkillCard> *skillDeck,
+        CardDeck<Card> *skillDeck,
         TransactionLogger *logger,
         TaxConfig taxcfg);
     ~GameState() = default;
@@ -152,4 +152,5 @@ public:
     void setPendingPphFlat(int v) { pendingPphFlat = v; }
     void setPendingPphPct(int v) { pendingPphPct = v; }
 };
+
 #endif

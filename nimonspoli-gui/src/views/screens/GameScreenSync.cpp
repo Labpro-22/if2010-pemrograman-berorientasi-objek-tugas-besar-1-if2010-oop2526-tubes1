@@ -8,10 +8,6 @@
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  syncFromGameMaster()
-//
-//  Dipanggil setiap frame di update() jika isRealMode() == true.
-//  Mengisi ulang MockGameState dari data real sehingga semua fungsi render
-//  (drawBoard, drawLeftPanel, dll.) tidak perlu diubah.
 // ─────────────────────────────────────────────────────────────────────────────
 void GameScreen::syncFromGameMaster()
 {
@@ -31,11 +27,11 @@ void GameScreen::syncFromGameMaster()
     if (playerVisuals.size() != realPlayers.size()) {
         playerVisuals.resize(realPlayers.size());
         for (int i = 0; i < (int)realPlayers.size(); i++) {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition() );
+            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
             playerVisuals[i].targetTileIdx  = playerVisuals[i].currentTileIdx;
         }
     }
-    
+
     gameState.players.clear();
     gameState.players.resize(realPlayers.size());
 
@@ -52,7 +48,6 @@ void GameScreen::syncFromGameMaster()
                      : (p->getStatus() == PlayerStatus::BANKRUPT) ? "BANKRUPT"
                                                                    : "ACTIVE";
 
-        // Logika animasi: jika posisi real berubah, set target baru
         if (realPos != (int)playerVisuals[i].targetTileIdx)
             playerVisuals[i].targetTileIdx = (float)realPos;
     }
@@ -60,21 +55,22 @@ void GameScreen::syncFromGameMaster()
     // ── Sync Properties ───────────────────────────────────────────────────
     if (board) {
         for (int i = 0; i < (int)gameState.properties.size(); ++i) {
-            Tile* tile = board->getTile(i);  // indeks core 0-based
+            Tile* tile = board->getTile(i);
             if (!tile) continue;
 
             PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
             if (!pt) continue;
 
-            Property*    prop = pt->getProperty();
+            Property* prop = pt->getProperty();
             if (!prop) continue;
-            MockProperty& mp  = gameState.properties[i];
-            
-            mp.name = prop->getName();
+
+            MockProperty& mp = gameState.properties[i];
+
+            mp.name       = prop->getName();
             mp.colorGroup = prop->getColorGroup();
 
             const std::string& ownerId = prop->getOwnerId();
-            mp.owner    = -1;
+            mp.owner     = -1;
             mp.mortgaged = (prop->getStatus() == PropertyStatus::MORTGAGED);
 
             if (prop->getStatus() != PropertyStatus::BANK) {
@@ -87,18 +83,15 @@ void GameScreen::syncFromGameMaster()
             }
             mp.price = prop->getPurchasePrice();
 
-            // ── Sync StreetProperty specific (buildings, festival) ──
             if (auto* sp = dynamic_cast<StreetProperty*>(prop)) {
-                mp.type = "STREET";
-                if (sp->gethasHotel()) mp.buildings = 5;
-                else mp.buildings = sp->getBuildingCount();
-
+                mp.type      = "STREET";
+                mp.buildings = sp->gethasHotel() ? 5 : sp->getBuildingCount();
                 mp.festivalMult = sp->getFestivalMultiplier();
                 mp.festivalDur  = sp->getFestivalDuration();
             } else {
-                if (dynamic_cast<RailroadProperty*>(prop)) mp.type = "RAILROAD";
-                else if (dynamic_cast<UtilityProperty*>(prop)) mp.type = "UTILITY";
-                else mp.type = "ACTION";
+                if      (dynamic_cast<RailroadProperty*>(prop)) mp.type = "RAILROAD";
+                else if (dynamic_cast<UtilityProperty*>(prop))  mp.type = "UTILITY";
+                else                                             mp.type = "ACTION";
 
                 mp.buildings    = 0;
                 mp.festivalMult = 1;
@@ -110,9 +103,6 @@ void GameScreen::syncFromGameMaster()
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  syncDiceResult()
-//
-//  Dipanggil dari GUIManager::run() SETELAH flushCommands(), karena
-//  LemparDaduCommand baru mengubah nilai Dice di dalam execute().
 // ─────────────────────────────────────────────────────────────────────────────
 void GameScreen::syncDiceResult()
 {
@@ -139,8 +129,6 @@ void GameScreen::syncDiceResult()
 
     // ── Trigger Dialogs ────────────────────────────────────────────────────
     const GameState& gs = gm->getState();
-    std::cout << "[DEBUG syncDiceResult] phase=" << (int)gs.getPhase()
-          << " auctionVisible=" << auctionDialog.visible << std::endl;
     if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
         triggerBuyDialog(gs.getCurrPlayer()->getPosition());
     if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
@@ -151,4 +139,6 @@ void GameScreen::syncDiceResult()
         triggerCardDialog();
     if (gs.getPhase() == GamePhase::AUCTION && !auctionDialog.visible)
         triggerAuctionDialog();
+    if (gs.getPhase() == GamePhase::AWAITING_JAIL && !jailDialog.visible)
+        triggerJailDialog();
 }
