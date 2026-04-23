@@ -1,8 +1,9 @@
 #include "models/Plot/PropertyPlot/UtilityPlot.hpp"
 
-UtilityPlot::UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
-                        std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, color, mortgageValue, propertyStatus) {}
+UtilityPlot::UtilityPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
+                         Player* owner, PropertyStatus propertyStatus = PropertyStatus::BANK,
+                         int festivalDuration = 0, int festivalMultiplier = 1):
+    PropertyPlot(name, code, color, buyPrice, mortgageValue, owner, propertyStatus, festivalDuration, festivalMultiplier) {}
 
 std::map<int, int> UtilityPlot::getRentPriceTable() const {
     return rentPriceTable;
@@ -17,8 +18,8 @@ void UtilityPlot::setRentPriceTable(std::map<int, int> rentPriceTable){
 }
 
 int UtilityPlot::calculateRentPrice() const {
-    int ownedUtility = 0; //TODO: dummy
-    int diceTotal = 6; //TODO: dummy
+    int ownedUtility = 0; //TODO: need helper function
+    int diceTotal = 6; //TODO: need helper function
     return rentPriceTable.at(ownedUtility)*diceTotal*festivalMultiplier;
 }
 
@@ -27,5 +28,10 @@ std::string UtilityPlot::getType() const {
 }
 
 void UtilityPlot::startEvent(PlotContext& ctx) {
-
+    if (!isOwned()){
+        ctx.getCurrentPlayer().buyProperty(*this);
+    }
+    else{
+        //TODO: bayar
+    }
 }

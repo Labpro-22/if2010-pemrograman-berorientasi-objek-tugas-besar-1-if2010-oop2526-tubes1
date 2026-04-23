@@ -88,9 +88,9 @@ Color ConfigLoader::colorTypeToEnum(std::string color){
     }
 }
 
-std::vector<std::pair<int, Plot*>> ConfigLoader::loadProperty(std::string path){
+std::vector<std::pair<int, std::unique_ptr<Plot>>> ConfigLoader::loadProperty(std::string path){
     std::ifstream file = ConfigLoader::open(path);
-    std::vector<std::pair<int, Plot*>> tiles;
+    std::vector<std::pair<int, std::unique_ptr<Plot>>> tiles;
     try{
         while (!file.eof()){
             int id, buyPrice, mortgageValue;
@@ -105,7 +105,7 @@ std::vector<std::pair<int, Plot*>> ConfigLoader::loadProperty(std::string path){
             Color colorEnum = ConfigLoader::colorTypeToEnum(color);
 
             //Buat plot sesuai tipenya
-            Plot* plot;
+            std::unique_ptr<Plot> plot;
     
             if (type.compare("STREET")){
                 //Baca data lainnya
@@ -120,15 +120,15 @@ std::vector<std::pair<int, Plot*>> ConfigLoader::loadProperty(std::string path){
                     rentPriceTable[i] = value;
                 }       
 
-                plot = new LandPlot(name, code, colorEnum, mortgageValue, buyPrice, 
-                                    upgHousePrice, upgHotelPrice, rentPriceTable);
+                plot = std::make_unique<Plot>(LandPlot(name, code, colorEnum, mortgageValue, buyPrice, 
+                                    upgHousePrice, upgHotelPrice, rentPriceTable));
 
             }
             else if (type.compare("RAILROAD")){
-                plot = new StationPlot(name, code, colorEnum, mortgageValue);
+                plot = std::make_unique<Plot>(StationPlot(name, code, colorEnum, mortgageValue));
             }
             else if (type.compare("UTILITY")){
-                plot = new UtilityPlot(name, code, colorEnum, mortgageValue);
+                plot = std::make_unique<Plot>(UtilityPlot(name, code, colorEnum, mortgageValue));
             }
             else{
                 throw UnknownTypeException(type);

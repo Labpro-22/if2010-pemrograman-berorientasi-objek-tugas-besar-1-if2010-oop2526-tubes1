@@ -7,8 +7,8 @@ private:
     static std::map<int, int> rentPriceTable;
 
 public:
-    UtilityPlot(std::string name, std::string code, Color color, int mortgageValue,
-            PropertyStatus propertyStatus = PropertyStatus::BANK);
+    UtilityPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
+            Player* owner, PropertyStatus propertyStatus, int festivalDuration, int festivalMultiplier);
     ~UtilityPlot() = default;
     
     std::map<int, int> getRentPriceTable() const override;

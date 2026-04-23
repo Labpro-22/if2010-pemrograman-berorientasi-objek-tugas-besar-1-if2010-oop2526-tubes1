@@ -1,15 +1,13 @@
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
 
 LandPlot::LandPlot(std::string name, std::string code, Color color,
-            int mortgageValue, int buyPrice, int upgHousePrice, int upgHotelPrice,
-            std::map<int, int> rentPriceTable, PropertyStatus propertyStatus = PropertyStatus::BANK):
-    PropertyPlot(name, code, color, mortgageValue, propertyStatus),
+             int buyPrice,int mortgageValue, int upgHousePrice, int upgHotelPrice,
+             std::map<int, int> rentPriceTable, Player* owner, 
+             PropertyStatus propertyStatus = PropertyStatus::BANK,
+             int festivalDuration = 0, int festivalMultiplier = 1):
+    PropertyPlot(name, code, color, buyPrice, mortgageValue, owner, propertyStatus, festivalDuration, festivalMultiplier),
     upgHousePrice(upgHousePrice), upgHotelPrice(upgHotelPrice),
     rentPriceTable(rentPriceTable) {}
-
-int LandPlot::getBuyPrice() const {
-    return buyPrice;
-}
 
 int LandPlot::getUpgHousePrice() const {
     return upgHotelPrice;
@@ -32,46 +30,65 @@ int LandPlot::getLevel() const {
 }
 
 void LandPlot::build(){
-    if (!canBuild) return;
-
+    canBuild();
+    
     if (level == 4){
-        //money -= upgHotelPrice;
+        owner->pay(upgHotelPrice);
     }
     else{
-        //money -= upgHousePrice;
+        owner->pay(upgHousePrice);
     }
 }
 
-void LandPlot::sellBuildings(){ //TODO:
+void LandPlot::sellBuildings(){
     if (level <= 0){
-        //throw exception level kurang
+        throw BuildingIsEmptyException();
     }
 
     level--;
     //tambah uang tergantung level
     if (level == 5){
-        //tambah 
+        owner->receive(upgHotelPrice);
     }
     else{
-
+        owner->receive(upgHousePrice);
     }
 }
 
-bool LandPlot::canBuild() const { //TODO:
-    //TODO: check uang
-    //if uang cukup &&
-    if (level >= 5){
-        //std::cout << "Tidak bisa menambah bangunan. << std::endl;
-        //std::cout << "Tanah sudah mencapai level maximum" << std::endl;
-        // atau throw exception
+bool LandPlot::canBuild() const {
+    int buildCost = getBuildCost();
+    if (!isStreetOwned()){
+        throw ColorSetNotOwnedException();
     }
+    if (owner->getCash() < getBuildCost()){
+        throw InsufficientFundException();
+    }
+    if (level >= 5){
+        throw BuildingIsFullException();
+    }
+    return true;
 } 
+
+int LandPlot::getBuildCost() const {
+    if (level < 4){
+        return upgHousePrice;
+    }
+    else if (level == 4){
+        return upgHotelPrice;
+    } else {
+        return 0;
+    }
+}
+
+bool LandPlot::isStreetOwned() const {
+    return true; //TODO cek apakah street owned
+}
 
 int LandPlot::calculateRentPrice() const {
     int rentPrice = rentPriceTable.at(level);
 
-    if (level == 0){
-        //TODO: return 2 kali harga dasar jika street ownedBy Player
+    if (level == 0 && isStreetOwned()){
+        rentPrice *= 2;
     }
 
     return rentPrice*festivalMultiplier;
@@ -82,5 +99,10 @@ std::string LandPlot::getType() const {
 }
 
 void LandPlot::startEvent(PlotContext& ctx) {
+    if (!isOwned()){
+        
+    }
+    else{
 
+    }
 }

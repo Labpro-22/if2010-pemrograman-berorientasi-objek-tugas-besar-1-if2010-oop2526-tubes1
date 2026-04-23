@@ -5,6 +5,7 @@
 #include <map>
 #include <tuple>
 #include <utility>
+#include <memory>
 #include "core/GameException.hpp"
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
 #include "models/Plot/PropertyPlot/StationPlot.hpp"
@@ -23,8 +24,7 @@ private:
     static Color colorTypeToEnum(std::string color);
 
 public:
-    //TODO: pake unique_ptr biar lebih aman
-    static std::vector<std::pair<int, Plot*>> loadProperty(std::string path);
+    static std::vector<std::pair<int, std::unique_ptr<Plot>>> loadProperty(std::string path);
 
     static std::map<int, int> loadRailroad(std::string path);
 

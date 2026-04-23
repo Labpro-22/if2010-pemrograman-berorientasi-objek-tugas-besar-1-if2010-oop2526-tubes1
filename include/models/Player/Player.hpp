@@ -50,7 +50,7 @@ public:
     void moveTo(int index, int boardSize = 40);
     void pay(int amount);
     void payTaxes();
-    bool buyProperty(Plot& property);
+    bool buyProperty(PropertyPlot& property);
     bool useCards(std::size_t cardIndex, SkillContext& ctx);
     bool dropCard();
     bool dropCard(std::size_t cardIndex);
