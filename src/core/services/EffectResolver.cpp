@@ -1,4 +1,4 @@
-#include "core/EffectResolver.hpp"
+#include "core/services/EffectResolver.hpp"
 
 #include <stdexcept>
 

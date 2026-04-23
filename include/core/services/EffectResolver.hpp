@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "core/AuctionService.hpp"
-#include "core/BankruptcyService.hpp"
+#include "core/services/AuctionService.hpp"
+#include "core/services/BankruptcyService.hpp"
 #include "core/GameState.hpp"
 
 class EffectResolver {

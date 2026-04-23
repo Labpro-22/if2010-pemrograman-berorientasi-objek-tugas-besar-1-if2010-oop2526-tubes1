@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "core/EffectResolver.hpp"
+#include "core/services/EffectResolver.hpp"
 #include "core/GameState.hpp"
 #include "core/TurnManager.hpp"
 
