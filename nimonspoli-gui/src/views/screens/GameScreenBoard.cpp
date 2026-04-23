@@ -117,9 +117,9 @@ Rectangle GameScreen::getTileRect(int idx)
     if (td.corner) {
         hw = CORNER_SZ / 2.f; hh = CORNER_SZ / 2.f;
     } else if (td.side == "BOTTOM" || td.side == "TOP") {
-        hw = TILE_H / 2.f; hh = TILE_W / 2.f;
+        hw = TILE_W / 2.f; hh = TILE_H / 2.f; // Spacing is W, Length is H
     } else {
-        hw = TILE_W / 2.f; hh = TILE_H / 2.f;
+        hw = TILE_H / 2.f; hh = TILE_W / 2.f; // Rotated: Spacing is W, Length is H
     }
     return {c.x - hw, c.y - hh, hw * 2, hh * 2};
 }
@@ -183,7 +183,7 @@ void GameScreen::drawTile(int idx, float cx, float cy, float rotation)
         DrawRotatedBorder(cx, cy, tw + thick + 2, th + thick + 2, rotation, 1.5f, {255, 255, 255, 120});
 
         // "FESTIVAL" Label - ROTATED & FACING INSIDE
-        // localY negatif berarti bergerak ke arah tengah papan
+        // localY positif (setelah diputar) berarti bergerak ke arah tengah papan
         DrawRotatedText("FESTIVAL", cx, cy, 0, th/2 - 12, rotation, 13, rc);
 
         // Multiplier Label (x2, x4, x8) - ROTATED, LARGE & BOLDER
@@ -199,7 +199,8 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
                                    int buildings, Color ownerColor)
 {
     float sw = STRIP_W, sh = STRIP_H;
-    float localY = TILE_H/2.f - sh/2.f;
+    // localY diubah jadi negatif agar strip digambar di sisi "dalam" (menghadap tengah papan)
+    float localY = -(TILE_H/2.f - sh/2.f); 
     float rad = rotation * DEG2RAD;
     float cosR = cosf(rad), sinR = sinf(rad);
     float sx = cx - localY * sinR;
@@ -208,7 +209,8 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
 
     if (buildings == 0) return;
 
-    float bldLocalY = localY - sh;
+    // bangunan digambar lebih "dalam" lagi (offset ditambah sh karena localY negatif)
+    float bldLocalY = localY + sh;
     bool  isHotel   = (buildings == 5);
     if (isHotel) {
         float hw = sw * 0.85f, hh = sh * 0.7f;
