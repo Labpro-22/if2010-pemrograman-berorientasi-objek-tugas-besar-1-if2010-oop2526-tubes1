@@ -1,16 +1,13 @@
 #pragma once
-
+ 
 #include "models/Plot/ActionPlot/CardPlot.hpp"
-
+ 
 class CommunityChestCardPlot : public CardPlot {
-private:
-    std::string lastDrawnCard;
-
 public:
-    CommunityChestCardPlot(std::string name, std::string code, CardDeck<std::string>& deck);
+    CommunityChestCardPlot(std::string name, std::string code);
     ~CommunityChestCardPlot() = default;
-
+ 
     std::string getType() const override;
-    void startEvent(PlotContext& ctx) override;
-    std::string getLastDrawnCard() const;
+    void startEvent() override;
 };
+ 
