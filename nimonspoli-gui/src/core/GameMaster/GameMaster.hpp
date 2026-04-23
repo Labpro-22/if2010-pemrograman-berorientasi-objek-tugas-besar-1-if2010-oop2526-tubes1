@@ -88,9 +88,8 @@ public:
     void handleBankruptcy(Player *from, Bank *bank);
 
     // Helper likuidasi
-    void sellPropertyToBank(Player* player, Property* prop);
-    void mortgageProperty(Player* player, Property* prop);
-
+    void sellPropertyToBank(Player *player, Property *prop);
+    void mortgageProperty(Player *player, Property *prop);
 
     // Kemenangan
     // Hitung & umumkan pemenang (dipanggil saat GAME_OVER)
