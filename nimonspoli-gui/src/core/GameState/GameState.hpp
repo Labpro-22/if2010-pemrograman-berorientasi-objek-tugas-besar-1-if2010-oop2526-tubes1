@@ -16,6 +16,7 @@ class GameMaster;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
+#include "../utils/ConfigLoader.hpp"
 
 // ─────────────────────────────────────────────
 //  Enum fase permainan
@@ -25,6 +26,9 @@ enum class GamePhase {
     PLAYER_TURN,        // menunggu input pemain (sebelum lempar dadu)
     DICE_ROLLED,        // sudah lempar dadu, menunggu resolusi petak
     AWAITING_BUY,       // menunggu keputusan beli properti
+    AWAITING_TAX,       // menunggu pilihan user untuk PPH (flat vs persen)
+    AWAITING_FESTIVAL,  // menunggu user pilih properti festival
+    SHOW_CARD,          // menampilkan hasil kartu Kesempatan/Dana Umum
     AUCTION,            // lelang sedang berjalan
     BANKRUPTCY,         // proses likuidasi/kebangkrutan
     GAME_OVER           // permainan selesai
@@ -58,6 +62,16 @@ private:
     CardDeck<Card>*    skillCardDeck;
     TransactionLogger* logger;
     GameMaster*        gameMaster;
+    TaxConfig taxcfg;
+
+    // ── Pending data untuk GUI dialog ────────────
+    // Untuk SHOW_CARD (CardDialog)
+    std::string pendingCardDesc;    // deskripsi kartu yang ditarik
+    std::string pendingCardDeck;    // "Kesempatan" atau "Dana Umum"
+
+    // Untuk AWAITING_TAX (TaxDialog — PPH saja)
+    int pendingPphFlat = 0;         // jumlah flat M
+    int pendingPphPct  = 0;         // persentase %
 
 public:
     // ── Konstruktor & destruktor ─────────────────
@@ -72,7 +86,8 @@ public:
         CardDeck<Card>*     chanceDeck,
         CardDeck<Card>*     communityDeck,
         CardDeck<Card>*     skillDeck,
-        TransactionLogger*  logger
+        TransactionLogger*  logger,
+        TaxConfig taxcfg
     );
     ~GameState() = default;
 
@@ -103,6 +118,7 @@ public:
     CardDeck<Card>*    getSkillDeck()     const;
     TransactionLogger* getLogger()        const;
     GameMaster*        getGameMaster()    const;
+    TaxConfig          getTaxConfig()     const;
 
     // ── Setter: turn & fase ─────────────────────
     void setPhase(GamePhase p);
@@ -122,5 +138,16 @@ public:
     // ── Helper ───────────────────────────────────
     bool isMaxTurnReached() const;
     int  countActivePlayers() const;
+
+    // ── Getter/Setter pending dialog data ────────
+    const std::string& getPendingCardDesc()  const { return pendingCardDesc; }
+    const std::string& getPendingCardDeck()  const { return pendingCardDeck; }
+    int  getPendingPphFlat() const { return pendingPphFlat; }
+    int  getPendingPphPct()  const { return pendingPphPct;  }
+
+    void setPendingCardDesc(const std::string& s) { pendingCardDesc = s; }
+    void setPendingCardDeck(const std::string& s) { pendingCardDeck = s; }
+    void setPendingPphFlat(int v) { pendingPphFlat = v; }
+    void setPendingPphPct(int v)  { pendingPphPct  = v; }
 };
 #endif

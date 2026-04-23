@@ -72,13 +72,15 @@ int main() {
             menuScreen->resetReady();
             cleanupGame();
 
-            ConfigLoader cfg("config");
-            auto propData      = cfg.loadProperties();
-            auto railroadRent  = cfg.loadRailroad();
-            auto utilityFactor = cfg.loadUtility();
-            auto specialCfg    = cfg.loadSpecial();
-            auto miscCfg       = cfg.loadMisc();
-            auto actData       = cfg.loadActions();
+        // Load config
+        ConfigLoader cfg("config");
+        auto propData      = cfg.loadProperties();
+        auto railroadRent  = cfg.loadRailroad();
+        auto utilityFactor = cfg.loadUtility();
+        auto specialCfg    = cfg.loadSpecial();
+        auto miscCfg       = cfg.loadMisc();
+        auto actData = cfg.loadActions();
+        auto taxData = cfg.loadTax();
 
             properties = PropertyFactory::createProperties(propData, railroadRent, utilityFactor);
 
@@ -144,12 +146,12 @@ int main() {
                         p = new ComputerPlayer(info.name, miscCfg.initialBalance, info.diff);
                     else
                         p = new Player(info.name, miscCfg.initialBalance);
-                    p->setPosition(1);
+                    p->setPosition(0);
                     players.push_back(p);
                 }
 
                 GameState gs(miscCfg.maxTurn, players, board, bank, dice,
-                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger);
+                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData);
                 gameMaster = new GameMaster(gs);
 
                 try {
@@ -167,6 +169,7 @@ int main() {
                 gameScreen->setPlayerCount(count);
                 gui.setScreen(gameScreen);
 
+                        // Debug memory — print setiap 60 frame
             } else {
                 // ── NEW GAME ──────────────────────────────────────────────
                 int count = std::max(2, std::min(4, setup.playerCount));
@@ -180,12 +183,12 @@ int main() {
                         p = new ComputerPlayer(name, miscCfg.initialBalance, setup.botDifficulty);
                     else
                         p = new Player(name, miscCfg.initialBalance);
-                    p->setPosition(1);
+                    p->setPosition(0);
                     players.push_back(p);
                 }
 
                 GameState gs(miscCfg.maxTurn, players, board, bank, dice,
-                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger);
+                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData);
                 gameMaster = new GameMaster(gs);
 
                 gui.setGameMaster(gameMaster);
@@ -233,25 +236,44 @@ int main() {
         }
 
         // ── COM auto-play ─────────────────────────────────────────────────
+        // Di main.cpp, tambah variable di luar loop:
+        bool comHasActed = false;
+
+        // Di dalam loop, ganti bagian COM auto-play:
         if (gameMaster) {
             GameState& state = gameMaster->getState();
-            Player* curr = state.getCurrPlayer();
+            Player* curr     = state.getCurrPlayer();
             ComputerPlayer* com = dynamic_cast<ComputerPlayer*>(curr);
+
             if (com && state.getPhase() == GamePhase::PLAYER_TURN
-                    && !state.getHasRolled()) {
+                    && !state.getHasRolled()
+                    && !comHasActed) {          // ← guard tambahan
+                comHasActed = true;             // ← set dulu sebelum execute
                 com->executeTurn(*gameMaster);
                 if (state.getPhase() != GamePhase::GAME_OVER)
                     gameMaster->endTurn();
                 if (state.getPhase() != GamePhase::GAME_OVER) 
                     gameMaster->beginTurn();
+
+                    gui.clearCommands();
+                }
+            }
+
+            // Reset guard kalau giliran berganti ke pemain baru
+            if (!com || state.getHasRolled() == false) {
+                comHasActed = false;
             }
         }
-
         if (gui.getCurrentScreen()) {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
         }
 
+        // Debug memory — print setiap 60 frame
+        static int frameCount = 0;
+        if (++frameCount % 60 == 0) {
+            TraceLog(LOG_INFO, "Frame %d - queue size: (check manually)", frameCount);
+        }
         // ── Update + Render ───────────────────────────────────────────────
         BeginDrawing();
         if (gui.getCurrentScreen()) {
