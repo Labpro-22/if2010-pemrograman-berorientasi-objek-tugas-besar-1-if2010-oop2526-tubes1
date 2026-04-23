@@ -448,7 +448,7 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
     }
 }
 
-//  loadProperties
+    // loadProperties
 void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
 {
     std::string line;
@@ -462,6 +462,13 @@ void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
         for (int i = 0; i < count; i++)
             std::getline(in, line);
         return;
+    }
+
+    // Clear properti semua pemain dulu supaya sinkron
+    for (auto *p : state.getPlayers())
+    {
+        if (p)
+            p->clearProperties();
     }
 
     for (int i = 0; i < count; i++)
@@ -498,9 +505,19 @@ void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
 
         // Restore owner
         if (owner == "BANK")
+        {
             prop->clearOwner();
+        }
         else
+        {
             prop->setOwner(owner);
+            // Sinkronisasi ke objek Player
+            Player *p = state.getPlayerById(owner);
+            if (p)
+            {
+                p->addProperty(prop);
+            }
+        }
 
         // Restore bangunan (hanya StreetProperty)
         if (auto *sp = dynamic_cast<StreetProperty *>(prop))

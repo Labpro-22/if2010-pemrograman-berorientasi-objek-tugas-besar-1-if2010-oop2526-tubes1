@@ -1,22 +1,25 @@
 #ifndef ATURDADUCOMMAND_HPP
 #define ATURDADUCOMMAND_HPP
 
-#include "Command.hpp" // Asumsi ada base interface Command
-#include <exception>
+#include "Command.hpp"
 #include <string>
 
-// Forward declaration
+// Forward declarations
+class GameMaster;
+class Player;
 class Dice;
 
 class AturDaduCommand : public Command {
 private:
-    Dice& dice; // Referensi ke objek Dice utama (Rule of Zero / Aggregation)
+    GameMaster& gameMaster;
+    Player* currentPlayer;
+    Dice& dice;
     int targetVal1;
     int targetVal2;
 
 public:
-    // Konstruktor menerima referensi dadu dan nilai yang ingin di-set (biasanya dari parser)
-    AturDaduCommand(Dice& d, int v1, int v2);
+    // Konstruktor menerima referensi/pointer ke entitas yang dibutuhkan dan nilai dadu
+    AturDaduCommand(GameMaster& gm, Player* player, Dice& d, int v1, int v2);
 
     // Override metode execute dari kelas induk Command
     void execute(GameMaster& gm) override;

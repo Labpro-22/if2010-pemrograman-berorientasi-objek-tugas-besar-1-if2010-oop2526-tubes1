@@ -103,6 +103,7 @@ void GameScreen::drawRightPanel()
     struct Btn { const char* label; Color col; };
     Btn btns[] = {
         {"LEMPAR DADU",   {70,130,180,255}},
+        {"ATUR DADU",     {180,100,220,255}},
         {"USE CARD",      {100,160,100,255}},
         {"BELI BANGUNAN", {80,140,80,255}},
         {"GADAI",         {180,130,60,255}},
@@ -113,8 +114,8 @@ void GameScreen::drawRightPanel()
     };
 
     Vector2 mouse = GetMousePosition();
-    for (int i = 0; i < 8; i++) {
-        Rectangle btn = {rx+10, 140.f+i*44, RIGHT_PANEL-20, 36};
+    for (int i = 0; i < 9; i++) {
+        Rectangle btn = {rx+10, 140.f+i*40, RIGHT_PANEL-20, 32};
         bool hover    = CheckCollisionPointRec(mouse, btn);
         bool disabled = false;
 
@@ -122,19 +123,19 @@ void GameScreen::drawRightPanel()
             GamePhase phase    = guiManager->getGameMaster()->getState().getPhase();
             bool      hasRolled = guiManager->getGameMaster()->getState().getHasRolled();
             switch (i) {
-            case 0: disabled = hasRolled || diceState.animating || phase != GamePhase::PLAYER_TURN; break;
-            case 1: disabled = phase != GamePhase::PLAYER_TURN || hasRolled; break;
-            case 2: disabled = phase != GamePhase::PLAYER_TURN; break;
-            case 3: case 4: case 5:
+            case 0: case 1: disabled = hasRolled || diceState.animating || phase != GamePhase::PLAYER_TURN; break;
+            case 2: disabled = phase != GamePhase::PLAYER_TURN || hasRolled; break;
+            case 3: disabled = phase != GamePhase::PLAYER_TURN; break;
+            case 4: case 5: case 6:
                 disabled = (phase == GamePhase::AUCTION ||
                             phase == GamePhase::BANKRUPTCY ||
                             phase == GamePhase::GAME_OVER); break;
-            case 6: disabled = hasRolled || phase != GamePhase::PLAYER_TURN; break;
-            case 7: disabled = !hasRolled || phase != GamePhase::PLAYER_TURN; break;
+            case 7: disabled = hasRolled || phase != GamePhase::PLAYER_TURN; break;
+            case 8: disabled = !hasRolled || phase != GamePhase::PLAYER_TURN; break;
             default: break;
             }
         } else {
-            if (i == 0) disabled = diceState.hasRolled || diceState.animating;
+            if (i == 0 || i == 1) disabled = diceState.hasRolled || diceState.animating;
         }
 
         Color colBase = disabled ? Color{50,50,60,255} : Color{40,42,54,255};
@@ -148,13 +149,14 @@ void GameScreen::drawRightPanel()
         Color textCol = disabled ? Color{90,90,100,255}
                                  : (hover ? WHITE : Color{200,200,210,255});
         DrawText(btns[i].label, (int)(rx+RIGHT_PANEL/2-tw/2),
-                 (int)(140+i*44+12), 11, textCol);
+                 (int)(140+i*40+10), 11, textCol);
 
         if (!disabled && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             switch (i) {
             case 0: handleLemparDadu(); break;
-            case 6: handleSimpan();     break;
-            case 7:
+            case 1: triggerAturDaduDialog(); break;
+            case 7: handleSimpan();     break;
+            case 8:
                 if (guiManager && guiManager->getGameMaster()) {
                     GameMaster* gm = guiManager->getGameMaster();
                     gm->endTurn();
@@ -170,14 +172,34 @@ void GameScreen::drawRightPanel()
     Color modeCol = isRealMode() ? Color{100,220,100,255} : Color{220,100,100,255};
     DrawText(modeStr, (int)rx+10, SCREEN_H-20, 11, modeCol);
 
-    DrawLine((int)rx+8, SCREEN_H-80, SCREEN_W-8, SCREEN_H-80, {60,60,80,255});
-    Rectangle logBtn = {rx+10, (float)SCREEN_H-70, RIGHT_PANEL-20, 32};
+    // ─── FOOTER BUTTONS ──────────────────────────────────────────────────────
+    float footerY = SCREEN_H - 140;
+    DrawLine((int)rx+8, (int)footerY, (int)SCREEN_W-8, (int)footerY, {60,60,80,255});
+
+    // 1. CETAK AKTA
+    Rectangle aktaBtn = {rx+10, footerY + 10, RIGHT_PANEL-20, 28};
+    DrawRectangleRec(aktaBtn, {40,42,54,255});
+    DrawRectangleLinesEx(aktaBtn, 1, {220,190,90,255});
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), aktaBtn))
+        triggerAktaDialog();
+    int aw = MeasureText("CETAK AKTA", 10);
+    DrawText("CETAK AKTA", (int)(rx+RIGHT_PANEL/2-aw/2), (int)footerY + 19, 10, {220,190,90,255});
+
+    // 2. CETAK PROPERTI
+    Rectangle propBtn = {rx+10, footerY + 44, RIGHT_PANEL-20, 28};
+    DrawRectangleRec(propBtn, {40,42,54,255});
+    DrawRectangleLinesEx(propBtn, 1, {80,130,200,255});
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), propBtn))
+        triggerCetakPropertiDialog(gameState.activePlayerIdx);
+    int pw = MeasureText("CETAK PROPERTI", 10);
+    DrawText("CETAK PROPERTI", (int)(rx+RIGHT_PANEL/2-pw/2), (int)footerY + 53, 10, {100,160,220,255});
+
+    // 3. LOG TRANSAKSI
+    Rectangle logBtn = {rx+10, footerY + 78, RIGHT_PANEL-20, 32};
     DrawRectangleRec(logBtn, {40,42,54,255});
     DrawRectangleLinesEx(logBtn, 1, {100,100,160,255});
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        CheckCollisionPointRec(GetMousePosition(), logBtn))
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), logBtn))
         showLogPopup = !showLogPopup;
     int lw = MeasureText("LOG TRANSAKSI", 11);
-    DrawText("LOG TRANSAKSI",
-             (int)(rx+RIGHT_PANEL/2-lw/2), SCREEN_H-58, 11, {150,150,200,255});
+    DrawText("LOG TRANSAKSI", (int)(rx+RIGHT_PANEL/2-lw/2), (int)footerY + 88, 11, {150,150,200,255});
 }

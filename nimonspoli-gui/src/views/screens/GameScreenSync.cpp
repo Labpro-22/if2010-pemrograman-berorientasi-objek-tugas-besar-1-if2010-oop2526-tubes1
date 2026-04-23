@@ -3,6 +3,8 @@
 #include "../../core/GameMaster/GameMaster.hpp"
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
+#include "../../core/Property/RailroadProperty.hpp"
+#include "../../core/Property/UtilityProperty.hpp"
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  syncFromGameMaster()
@@ -58,7 +60,7 @@ void GameScreen::syncFromGameMaster()
     // ── Sync Properties ───────────────────────────────────────────────────
     if (board) {
         for (int i = 0; i < (int)gameState.properties.size(); ++i) {
-            Tile* tile = board->getTile(i + 1);  // indeks core 1-based
+            Tile* tile = board->getTile(i);  // indeks core 0-based
             if (!tile) continue;
 
             PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
@@ -68,6 +70,8 @@ void GameScreen::syncFromGameMaster()
             if (!prop) continue;
             MockProperty& mp  = gameState.properties[i];
             
+            mp.name = prop->getName();
+            mp.colorGroup = prop->getColorGroup();
 
             const std::string& ownerId = prop->getOwnerId();
             mp.owner    = -1;
@@ -82,6 +86,24 @@ void GameScreen::syncFromGameMaster()
                 }
             }
             mp.price = prop->getPurchasePrice();
+
+            // ── Sync StreetProperty specific (buildings, festival) ──
+            if (auto* sp = dynamic_cast<StreetProperty*>(prop)) {
+                mp.type = "STREET";
+                if (sp->gethasHotel()) mp.buildings = 5;
+                else mp.buildings = sp->getBuildingCount();
+
+                mp.festivalMult = sp->getFestivalMultiplier();
+                mp.festivalDur  = sp->getFestivalDuration();
+            } else {
+                if (dynamic_cast<RailroadProperty*>(prop)) mp.type = "RAILROAD";
+                else if (dynamic_cast<UtilityProperty*>(prop)) mp.type = "UTILITY";
+                else mp.type = "ACTION";
+
+                mp.buildings    = 0;
+                mp.festivalMult = 1;
+                mp.festivalDur  = 0;
+            }
         }
     }
 }

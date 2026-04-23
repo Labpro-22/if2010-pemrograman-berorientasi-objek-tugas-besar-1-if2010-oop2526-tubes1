@@ -234,6 +234,26 @@ private:
         float scrollY  = 0.f;
     } propertiPopup;
 
+    // ── Akta Dialog (CETAK_AKTA — user input kode petak) ────────────────
+    struct AktaDialogState {
+        bool        visible      = false;
+        bool        inputFocused = true;
+        float       scrollY      = 0.f;
+        std::string inputCode;   // kode yang diketik user, misal "JKT"
+        std::string content;     // output dari cetakAkta()
+        std::string propName;    // nama properti untuk judul
+        std::string errorMsg;    // pesan error jika kode tidak ditemukan
+    } aktaDialog;
+
+    // ── Cetak Properti Dialog (cetakProperti per pemain) ──────────────────
+    struct CetakPropertiDialogState {
+        bool        visible     = false;
+        float       scrollY     = 0.f;
+        std::string content;    // output dari cetakProperti()
+        std::string playerName; // nama pemain untuk judul
+        int         playerIdx   = -1;
+    } cetakPropertiDialog;
+
     // ── Dialog Gadai ──────────────────────────────────────────────────────
     struct GadaiDialogState {
         bool visible = false;
@@ -280,6 +300,17 @@ private:
     } jualBangunanDialog;
     void triggerJualBangunanDialog();
     void drawJualBangunanDialog();
+
+    // ── Dialog Atur Dadu ──────────────────────────────────────────────────
+    struct AturDaduDialogState {
+        bool visible = false;
+        std::string input1 = "1";
+        std::string input2 = "1";
+        int focusField = 0; // 0=none, 1=val1, 2=val2
+        std::string errorMsg = "";
+    } aturDaduDialog;
+    void triggerAturDaduDialog();
+    void drawAturDaduDialog();
 
     // ── Dialog Skill Card (USE CARD) ──────────────────────────────────────
     struct SkillCardDialogState {
@@ -349,6 +380,14 @@ private:
     // ── GameScreenDialogProperti.cpp ──────────────────────────────────────
     void    drawPropertiPopup();
 
+    // ── GameScreenDialogAkta.cpp ─────────────────────────────────────────
+    void    triggerAktaDialog();              // buka dialog input kode
+    void    drawAktaDialog();
+
+    // ── GameScreenDialogCetakProperti.cpp ────────────────────────────────
+    void    triggerCetakPropertiDialog(int playerIdx);
+    void    drawCetakPropertiDialog();
+
     // ── GameScreenSave.cpp ────────────────────────────────────────────────
     void    handleSimpan();
     void    drawSavePopup();
@@ -359,4 +398,6 @@ private:
     void    drawLogPopup();
     std::string getActionIcon(const std::string& action);
     Color       getActionColor(const std::string& action);
+
+    void searchAndFillAkta();
 };

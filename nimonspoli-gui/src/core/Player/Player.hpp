@@ -43,7 +43,7 @@ public:
     virtual ~Player();
 
     // GET
-    void setUsername(const std::string& name) {username = name;}
+    void setUsername(const std::string &name) { username = name; }
     string getUsername() const;
     int getBalance() const;
     int getPosition() const;
@@ -66,16 +66,19 @@ public:
     // PROPERTI
     void addProperty(Property *prop);
     void removeProperty(Property *prop);
+    void clearProperties();
     const vector<Property *> &getProperties() const;
     int getPropertyCount() const;
 
-    // KARTU
+    // SKILL CARD
     bool addSkillCard(SkillCard *card);
     void discardSkillCard(int index);
     const vector<SkillCard *> &getHand() const;
     int getHandSize() const;
     void setCardUsedThisTurn(bool used);
     bool hasUsedCardThisTurn() const;
+    string printSkillCards() const;
+    void forceAddSkillCard(SkillCard *card);
 
     // JAIL
     void goToJail();
@@ -97,6 +100,7 @@ public:
     void onTurnStart();
 
     int getWealth() const;
+    string cetakProperti() const;
 };
 
 #endif

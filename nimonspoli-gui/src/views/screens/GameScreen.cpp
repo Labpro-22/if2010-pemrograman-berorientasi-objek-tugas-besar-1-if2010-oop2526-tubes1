@@ -164,6 +164,9 @@ void GameScreen::render(Window& window)
     drawSavePopup();
     drawJailDialog();
     drawPropertiPopup();
+    drawAktaDialog();
+    drawCetakPropertiDialog();
+    drawAturDaduDialog();
     DrawFPS(LEFT_PANEL + 4, 4);
 }
 
