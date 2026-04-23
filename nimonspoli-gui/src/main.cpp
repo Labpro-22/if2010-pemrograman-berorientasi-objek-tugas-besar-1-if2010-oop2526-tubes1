@@ -227,6 +227,9 @@ int main() {
         if (gui.getCurrentScreen()) {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
+            if (gs && gameMaster && gameMaster->getState().getPhase() == GamePhase::GAME_OVER) {
+                gs->gameOver = true;
+            }
         }
 
         // ── COM auto-play ─────────────────────────────────────────────────

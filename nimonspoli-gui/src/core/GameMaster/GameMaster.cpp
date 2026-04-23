@@ -77,6 +77,7 @@ void GameMaster::handleCommand(const std::string &rawInput)
 
 void GameMaster::beginTurn()
 {
+    if (state.getPhase() == GamePhase::GAME_OVER) return;
     state.setPhase(GamePhase::PLAYER_TURN);
     state.setHasRolled(false);
     state.setHasUsedCard(false);
@@ -85,7 +86,9 @@ void GameMaster::beginTurn()
     distributeSkillCards();
 
     Player *cur = state.getCurrPlayer();
-    if (cur)
+    if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT) 
+        return;
+    else if (cur)
     {
         log(cur->getUsername(), "TURN_START",
             "Giliran Turn " + std::to_string(state.getCurrTurn()));
@@ -449,7 +452,7 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     int remaining = from->getBalance();
     if (remaining > 0)
     {
-        from -= remaining;
+        *from -= remaining;
     }
 
     // Semua properti kembali ke BANK dan dilelang
@@ -640,8 +643,11 @@ void GameMaster::distributeSkillCards()
         // (dipicu otomatis dari sini atau dari Command dispatcher)
         // Di sini cukup addCard; overflow check ada di Player atau Command
         Card *drawn = deck->draw();
-        if (drawn)
-            p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
+        if (drawn) {
+            SkillCard* sc = dynamic_cast<SkillCard*>(drawn);
+            if (sc) p->addSkillCard(sc);
+            // p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
+        }
     }
 }
 
