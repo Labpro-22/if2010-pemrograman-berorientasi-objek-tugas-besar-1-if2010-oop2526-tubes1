@@ -6,9 +6,9 @@ inline const TileDef TILE_DEFS[40] = {
     // BOTTOM ROW right→left
     {"GO",  "BOTTOM", true},   // 0
     {"GRT", "BOTTOM", false},  // 1
-    {"DNU", "BOTTOM", false},  // 2
+    {"PPH", "BOTTOM", false},  // 2
     {"TSK", "BOTTOM", false},  // 3
-    {"PPH", "BOTTOM", false},  // 4
+    {"DNU", "BOTTOM", false},  // 4
     {"GBR", "BOTTOM", false},  // 5
     {"BGR", "BOTTOM", false},  // 6
     {"FES", "BOTTOM", false},  // 7
@@ -23,8 +23,8 @@ inline const TileDef TILE_DEFS[40] = {
     {"YOG", "LEFT", false},    // 14
     {"STB", "LEFT", false},    // 15
     {"MAL", "LEFT", false},    // 16
-    {"SMG", "LEFT", false},    // 17
-    {"DNU", "LEFT", false},    // 18
+    {"DNU", "LEFT", false},    // 17
+    {"SMG", "LEFT", false},    // 18
     {"SBY", "LEFT", false},    // 19
 
     // TOP ROW left→right
