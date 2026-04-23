@@ -188,6 +188,8 @@ PropertyTile::PropertyTile(int id, string display, TileType type, TileName name,
 
 Property *PropertyTile::getProperty() const { return prop; }
 
+void PropertyTile::setProperty(Property *p) { prop = p; }
+
 // ═════════════════════════════════════════════
 //  StreetTile
 // ═════════════════════════════════════════════

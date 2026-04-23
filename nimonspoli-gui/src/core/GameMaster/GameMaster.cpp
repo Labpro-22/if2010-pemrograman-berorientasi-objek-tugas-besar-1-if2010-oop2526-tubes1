@@ -75,22 +75,22 @@ void GameMaster::handleCommand(const std::string &rawInput)
     (void)rawInput; // placeholder — diisi oleh tim CLI/GUI
 }
 
-void GameMaster::beginTurn()
-{
-    state.setPhase(GamePhase::PLAYER_TURN);
-    state.setHasRolled(false);
-    state.setHasUsedCard(false);
-    state.setHasExtraTurn(false);
-
-    distributeSkillCards();
-
-    Player *cur = state.getCurrPlayer();
-    if (cur)
+    void GameMaster::beginTurn()
     {
-        log(cur->getUsername(), "TURN_START",
-            "Giliran Turn " + std::to_string(state.getCurrTurn()));
+        state.setPhase(GamePhase::PLAYER_TURN);
+        state.setHasRolled(false);
+        state.setHasUsedCard(false);
+        state.setHasExtraTurn(false);
+
+        distributeSkillCards();
+
+        Player *cur = state.getCurrPlayer();
+        if (cur)
+        {
+            log(cur->getUsername(), "TURN_START",
+                "Giliran Turn " + std::to_string(state.getCurrTurn()));
+        }
     }
-}
 
 void GameMaster::endTurn()
 {

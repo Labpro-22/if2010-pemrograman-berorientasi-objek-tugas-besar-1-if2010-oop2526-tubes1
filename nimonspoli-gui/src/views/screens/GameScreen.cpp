@@ -2,12 +2,20 @@
 #include "../../../lib/raylib/include/raylib.h"
 #include "raymath.h"
 #include "../../core/Commands/LemparDaduCommand.hpp"
+#include "../../core/Board/Board.hpp"
+#include "../../core/Commands/BeliCommand.hpp"
+
+
+#include "../../core/Board/Board.hpp"
+#include "../../core/Property/Property.hpp"
+#include "../../core/Property/StreetProperty.hpp"
+#include "../../core/GameMaster/GameMaster.hpp"
 #include <cmath>
 #include <string>
 #include <algorithm>
 
 // ─── Tile order (clockwise, starting from GO = bottom-right corner) ──────────
-static const TileDef TILE_DEFS[40] = {
+static const TileDef TILE_DEFS[40] = {  
     // BOTTOM ROW right→left (spec 1..11)
     {"GO",  "BOTTOM", true },   // 0
     {"GRT", "BOTTOM", false},   // 1
@@ -98,11 +106,216 @@ void GameScreen::onExit() {
     tileTextures.clear();
 }
 
+bool GameScreen::isRealMode() const {
+    return guiManager != nullptr && guiManager->getGameMaster() != nullptr;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  syncFromGameMaster()
+//
+//  Dipanggil setiap frame di update() jika isRealMode() == true.
+//  Fungsi ini mengisi ulang MockGameState dari data real sehingga semua
+//  fungsi render (drawBoard, drawLeftPanel, dll.) tidak perlu diubah.
+//
+//  Apa yang disync:
+//    - currentTurn, maxTurn
+//    - players (username, balance, position, status, cardCount, isCurrentTurn)
+//    - properties (owner, mortgaged, status — dari Board + Property*)
+//    
+// ─────────────────────────────────────────────────────────────────────────────
+void GameScreen::syncFromGameMaster() {
+    if (!isRealMode()) return;
+ 
+    GameMaster* gm      = guiManager->getGameMaster();
+    const GameState& gs = gm->getState();
+    Board* board        = gs.getBoard();
+ 
+    // ── Turn info ────────────────────────────────────────────────────────
+    gameState.currentTurn    = gs.getCurrTurn();
+    gameState.maxTurn        = gs.getMaxTurn();
+    gameState.activePlayerIdx = gs.getCurrPlayerIdx();
+ 
+    // ── Sync players ─────────────────────────────────────────────────────
+    const auto& realPlayers = gs.getPlayers();
+    gameState.players.resize(realPlayers.size());
+ 
+    for (int i = 0; i < (int)realPlayers.size(); ++i) {
+        Player* p = realPlayers[i];
+        MockPlayer& mp = gameState.players[i];
+ 
+        mp.username      = p->getUsername();
+        mp.money         = p->getBalance();
+        mp.position      = p->getPosition();
+        mp.cardCount     = p->getHandSize();
+        mp.isCurrentTurn = (i == gs.getCurrPlayerIdx());
+ 
+        switch (p->getStatus()) {
+            case PlayerStatus::ACTIVE:   mp.status = "ACTIVE";   break;
+            case PlayerStatus::JAILED:   mp.status = "JAILED";   break;
+            case PlayerStatus::BANKRUPT: mp.status = "BANKRUPT";  break;
+        }
+    }
+ 
+    // ── Sync properties dari Board ───────────────────────────────────────
+    //
+    // TILE_DEFS adalah array 40 elemen yang mendefinisikan urutan petak.
+    // Kita iterasi semua tile, ambil PropertyTile* jika ada, lalu sync
+    // MockProperty yang sesuai.
+    //
+    // Asumsi: gameState.properties sudah diinisialisasi dengan 40 slot
+    // oleh initMockState(). Kita hanya update field owner/mortgaged/status.
+ 
+    if (board) {
+        for (int i = 0; i < board->getSize(); ++i) {
+            Tile* tile = board->getTile(i);
+            if (!tile) continue;
+ 
+            // Cast ke PropertyTile — nullptr jika bukan properti
+            PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
+            
+            if (!pt) continue;
+ 
+            Property* prop = pt->getProperty();
+            if (!prop) continue;
+ 
+            // Pastikan indeks aman
+            if (i >= (int)gameState.properties.size()) continue;
+ 
+            MockProperty& mp = gameState.properties[i];
+ 
+            // Sync status kepemilikan
+            switch (prop->getStatus()) {
+                case PropertyStatus::BANK:
+                    mp.owner     = -1;
+                    mp.mortgaged = false;
+                    break;
+                case PropertyStatus::OWNED: {
+                    // Cari indeks pemain berdasarkan ownerId
+                    mp.mortgaged = false;
+                    mp.owner     = -1;
+                    const std::string& ownerId = prop->getOwnerId();
+                    for (int pi = 0; pi < (int)realPlayers.size(); ++pi) {
+                        if (realPlayers[pi]->getUsername() == ownerId) {
+                            mp.owner = pi;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case PropertyStatus::MORTGAGED:
+                    mp.mortgaged = true;
+                    // Owner tetap ada meski digadai — cari seperti OWNED
+                    {
+                        const std::string& ownerId = prop->getOwnerId();
+                        mp.owner = -1;
+                        for (int pi = 0; pi < (int)realPlayers.size(); ++pi) {
+                            if (realPlayers[pi]->getUsername() == ownerId) {
+                                mp.owner = pi;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+            }
+            if (dynamic_cast<StreetTile*>(pt))    mp.type = "STREET";
+            else if (dynamic_cast<RailroadTile*>(pt)) mp.type = "RAILROAD";
+            else if (dynamic_cast<UtilityTile*>(pt))  mp.type = "UTILITY";
+ 
+            // Harga beli (untuk buy dialog)
+            mp.price = prop->getPurchasePrice();
+        }
+    }
+ 
+    // ── Sync ke UI (tombol, phase) ───────────────────────────────────────
+ 
+    // ── Sync logger ──────────────────────────────────────────────────────
+    // Logger real ada di GameState. Kita tidak copy isinya (mahal) — sebagai
+    // gantinya, drawLogPopup() harus membaca dari sumber yang benar.
+    // Lihat catatan di bawah tentang patch drawLogPopup().
+}
+ 
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+//  syncDiceResult()
+//
+//  Dipanggil dari GUIManager::run() SETELAH flushCommands(), karena
+//  LemparDaduCommand baru mengubah nilai Dice di dalam execute().
+//
+//  Mengisi diceState dari Dice* real sehingga drawDiceArea() langsung
+//  menampilkan hasil yang benar tanpa perlu ubah render code.
+// ─────────────────────────────────────────────────────────────────────────────
+void GameScreen::syncDiceResult() {
+    if (!isRealMode()) return;
+ 
+    GameMaster* gm = guiManager->getGameMaster();
+    Dice* dice     = gm->getState().getDice();
+    if (!dice) return;
+ 
+    int v1 = dice->getDaduVal1();
+    int v2 = dice->getDaduVal2();
+ 
+    // Jika nilai dadu berubah dari yang terakhir dirender → update & animasikan
+    bool changed = (v1 != diceState.val1 || v2 != diceState.val2);
+ 
+    if (changed && v1 > 0 && v2 > 0) {
+        diceState.val1        = v1;
+        diceState.val2        = v2;
+        diceState.isDouble    = dice->isDouble();
+        diceState.tripleDouble = (dice->getConsecutiveDoubles() >= 3);
+        diceState.hasRolled   = gm->getState().getHasRolled();
+        diceState.animating   = true;
+        diceState.animTimer   = 0.f;
+    }
+ 
+    // Sync hasRolled jika berubah tanpa nilai dadu berubah
+    // (misal setelah giliran berganti → hasRolled direset ke false)
+    diceState.hasRolled = gm->getState().getHasRolled();
+ 
+    // ── Cek apakah perlu munculkan buy dialog ────────────────────────────
+    // Buy dialog dipicu saat phase = AWAITING_BUY dan dialog belum tampil
+    const GameState& gs = gm->getState();
+    if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible) {
+        Player* curP = gs.getCurrPlayer();
+        if (curP) {
+            int pos = curP->getPosition();
+            // Cek properti di posisi ini masih milik bank (status BANK)
+            Board* board = gs.getBoard();
+            if (board) {
+                Tile* tile = board->getTile(pos);
+                PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
+                if (pt && pt->getProperty()) {
+                    Property* prop = pt->getProperty();
+                    bool canAfford = curP->canAfford(prop->getPurchasePrice());
+                    // Hanya trigger untuk StreetTile (Railroad & Utility otomatis)
+                    if (prop->getStatus() == PropertyStatus::BANK) {
+                        std::string tileType = gameState.properties[pos].type;
+                        if (tileType == "STREET") {
+                            triggerBuyDialog(pos);
+                            buyDialog.canAfford = canAfford;
+                        }
+                    }
+                }
+            }
+        }
+    }
+ 
+    // Sembunyikan buy dialog jika phase sudah berubah keluar dari AWAITING_BUY
+    if (buyDialog.visible && gs.getPhase() != GamePhase::AWAITING_BUY) {
+        buyDialog.visible = false;
+    }
+}
+ 
+ 
+
+
 // ─── Update ──────────────────────────────────────────────────────────────────
 void GameScreen::update(float dt) {
-    glowTimer += dt;
-
-    // Tick animasi dadu
+    // ── Sync data dari GameMaster (jika mode real) ───────────────────────
+    //    syncDiceResult() dipanggil dari GUIManager::run() setelah flushCommands()
+    //    sehingga posisinya sudah tepat (setelah Command dieksekusi).
+    syncFromGameMaster();
+ 
+    // ── Animasi dadu ─────────────────────────────────────────────────────
     if (diceState.animating) {
         diceState.animTimer += dt;
         if (diceState.animTimer >= DiceState::ANIM_DURATION) {
@@ -110,7 +323,15 @@ void GameScreen::update(float dt) {
             diceState.animTimer = 0.f;
         }
     }
-
+ 
+    // ── Log popup scroll ─────────────────────────────────────────────────
+    if (showLogPopup) {
+        float wheel = GetMouseWheelMove();
+        if (wheel != 0.f) logScrollY -= wheel * 24.f;
+        if (logScrollY < 0.f) logScrollY = 0.f;
+    }
+ 
+    // ── Input keyboard & mouse ───────────────────────────────────────────
     handleInput();
 }
 
@@ -123,6 +344,7 @@ void GameScreen::render(Window& window) {
     drawBoard();
     drawDiceArea();   // overlay dadu di tengah board
     drawPopup();
+    drawBuyDialog(); 
     drawLogPopup();
     DrawFPS(LEFT_PANEL + 4, 4);
 }
@@ -203,6 +425,7 @@ void GameScreen::initMockState() {
     setProp(37,"Jakarta",  "BIRU_TUA",0,0,false,1,0, 350,300,200,200, 35,175,500,1100,1300,1500);
     setProp(1, "Garut",    "COKLAT",  0,0,true, 1,0,  60, 40, 20, 50,  2, 10, 30, 90, 160, 250);
     setProp(21,"Makassar", "MERAH",   2,2,false,4,1, 220,175,150,150, 18, 90,250,700, 875,1050);
+    setProp(9, "Bekasi", "BIRU_MUDA", -1, 0, false, 1, 0, 120, 60, 50, 50,  8, 40, 100, 300, 450, 600);
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -244,7 +467,7 @@ void GameScreen::handleInput() {
         if (hit >= 0) { selectedTile = hit; showPopup = true; }
         else { showPopup = false; selectedTile = -1; }
     }
-    if (IsKeyPressed(KEY_ESCAPE)) { showPopup = false; selectedTile = -1; }
+    
 }
 
 // ─── Tile geometry ────────────────────────────────────────────────────────────
@@ -344,6 +567,7 @@ void GameScreen::drawTile(int idx, float cx, float cy, float rotation) {
     // Owner strip + buildings
     if (prop.owner >= 0 && prop.type == "STREET") {
         drawBuildingStrip(cx, cy, rotation, prop.buildings, playerColors[prop.owner]);
+        DrawRectangleLinesEx({cx-tw/2.f, cy-th/2.f, tw, th}, 5, playerColors[prop.owner]);
         if (prop.mortgaged) {
             DrawRectangleRec({cx-tw/2.f, cy-th/2.f, tw, th}, {0,0,0,140});
             int fw = MeasureText("GADAI", 10);
@@ -587,6 +811,7 @@ void GameScreen::drawRightPanel() {
     DrawText("GILIRAN",(int)rx+10,14,14,{150,150,180,255});
     DrawLine((int)rx+8,32,SCREEN_W-8,32,{60,60,80,255});
 
+    
     std::string ts = std::to_string(gameState.currentTurn)+" / "+
                      std::to_string(gameState.maxTurn);
     DrawText("Turn",(int)rx+10,38,11,{150,150,180,255});
@@ -609,34 +834,93 @@ void GameScreen::drawRightPanel() {
         {"JUAL BANGUNAN",{160,80,80,255}},
         {"SAVE",         {100,100,160,255}},
         {"LOAD",         {100,100,160,255}},
+        {"END TURN",     {80, 100, 160, 255}},
     };
 
     Vector2 mouse = GetMousePosition();
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
         Rectangle btn = {rx+10, 140.f+i*44, RIGHT_PANEL-20, 36};
         bool hover    = CheckCollisionPointRec(mouse, btn);
 
-        // Tombol LEMPAR DADU (i==0): disable jika sudah roll atau sedang animasi
         bool disabled = false;
-        if (i == 0) disabled = diceState.hasRolled || diceState.animating;
+        if (isRealMode()) {
+            // ── Mode real: kunci tombol berdasarkan GamePhase ─────────────
+            GamePhase phase = guiManager->getGameMaster()->getState().getPhase();
+            bool hasRolled  = guiManager->getGameMaster()->getState().getHasRolled();
+            switch (i) {
+                case 0: // LEMPAR DADU
+                    disabled = hasRolled || diceState.animating
+                            || phase != GamePhase::PLAYER_TURN;
+                    break;
+                case 1: // USE CARD
+                    disabled = phase != GamePhase::PLAYER_TURN || hasRolled;
+                    break;
+                case 2: // BELI BANGUNAN
+                    disabled = phase != GamePhase::PLAYER_TURN;
+                    break;
+                case 3: // GADAI
+                case 4: // TEBUS
+                case 5: // JUAL BANGUNAN
+                    disabled = (phase == GamePhase::AUCTION
+                                || phase == GamePhase::BANKRUPTCY
+                                || phase == GamePhase::GAME_OVER);
+                    break;
+                case 6: // SAVE — hanya boleh di awal giliran (sebelum roll)
+                    disabled = hasRolled || phase != GamePhase::PLAYER_TURN;
+                    break;
+                case 7: // LOAD — hanya di luar giliran aktif (tidak ada untuk sekarang)
+                    disabled = true;
+                    break;
+                case 8:
+                    disabled = !hasRolled || phase != GamePhase::PLAYER_TURN;
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // ── Mode mock: logika lama ────────────────────────────────────
+            if (i == 0) disabled = diceState.hasRolled || diceState.animating;
+        }
 
         Color colBase = disabled ? Color{50,50,60,255} : Color{40,42,54,255};
         Color colHov  = disabled ? Color{50,50,60,255}
-                                 : Color{btns[i].col.r, btns[i].col.g, btns[i].col.b, 220};
+                                : Color{btns[i].col.r, btns[i].col.g, btns[i].col.b, 220};
         Color border  = disabled ? Color{70,70,80,255} : btns[i].col;
 
         DrawRectangleRec(btn, hover && !disabled ? colHov : colBase);
         DrawRectangleLinesEx(btn, 1, border);
         int tw = MeasureText(btns[i].label, 11);
         Color textCol = disabled ? Color{90,90,100,255}
-                                 : (hover ? WHITE : Color{200,200,210,255});
-        DrawText(btns[i].label, (int)(rx+RIGHT_PANEL/2-tw/2), (int)(140+i*44+12), 11, textCol);
+                                : (hover ? WHITE : Color{200,200,210,255});
+        DrawText(btns[i].label, (int)(rx+RIGHT_PANEL/2-tw/2),
+                (int)(140+i*44+12), 11, textCol);
 
-        // Klik tombol LEMPAR DADU
-        if (i == 0 && !disabled && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            handleLemparDadu();
+        // ── Handle klik ──────────────────────────────────────────────────
+        if (!disabled && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            switch (i) {
+                case 0: handleLemparDadu(); break;
+                // case 1: handleUseCard(); break;   // TODO
+                // case 2: handleBangun(); break;     // TODO
+                // case 3: handleGadai(); break;      // TODO
+                // case 4: handleTebus(); break;      // TODO
+                // case 5: handleJualBangunan(); break; // TODO
+                // case 6: handleSimpan(); break;     // TODO
+                // case 7: handleLoad(); break;       // TODO
+                case 8:
+                    if (guiManager && guiManager->getGameMaster()) {
+                        GameMaster* gm = guiManager->getGameMaster();
+                        gm->endTurn();
+                        gm->beginTurn();
+                    }
+                    break;
+                default: break;
+            }
         }
     }
+
+    const char* modeStr = isRealMode() ? "MODE: REAL" : "MODE: MOCK";
+    Color modeCol = isRealMode() ? Color{100,220,100,255} : Color{220,100,100,255};
+    DrawText(modeStr, (int)rx+10, SCREEN_H-20, 11, modeCol);
 
     DrawLine((int)rx+8,SCREEN_H-80,SCREEN_W-8,SCREEN_H-80,{60,60,80,255});
     Rectangle logBtn = {rx+10,(float)SCREEN_H-70,RIGHT_PANEL-20,32};
@@ -730,6 +1014,7 @@ void GameScreen::drawPopup() {
 // ─── Lempar Dadu ─────────────────────────────────────────────────────────────
 
 void GameScreen::handleLemparDadu() {
+    //cout << "Debug: GAMEMODE " << (isRealMode() ? "REAL" : "MOCK") << endl;
     // Jika ada GameMaster (mode real), push LemparDaduCommand ke GUIManager
     if (guiManager && guiManager->getGameMaster()) {
         GameMaster* gm   = guiManager->getGameMaster();
@@ -745,8 +1030,8 @@ void GameScreen::handleLemparDadu() {
     if (diceState.hasRolled || diceState.animating) return;
 
     // Simulasi roll dadu
-    diceState.val1 = GetRandomValue(1, 6);
-    diceState.val2 = GetRandomValue(1, 6);
+    diceState.val1 = 4;
+    diceState.val2 = 5;
     int total      = diceState.val1 + diceState.val2;
 
     diceState.isDouble    = (diceState.val1 == diceState.val2);
@@ -767,6 +1052,16 @@ void GameScreen::handleLemparDadu() {
 
     gameState.logger.addLog(gameState.currentTurn, curP.username, "DADU", detail);
     curP.position = newPos;
+
+    // ── Cek apakah mendarat di properti berstatus BANK (Street only) ──────
+    // Railroad & Utility langsung berpindah tanpa dialog
+    auto& landedProp = gameState.properties[newPos];
+    
+
+    if (landedProp.type == "STREET" && landedProp.owner == -1) {
+        
+        triggerBuyDialog(newPos);
+    }
 }
 
 
@@ -871,6 +1166,180 @@ void GameScreen::drawDiceArea() {
     }
 }
 
+// ─── Buy Dialog ──────────────────────────────────────────────────────────────
+
+void GameScreen::triggerBuyDialog(int tileIdx) {
+    // Mode real — push BeliCommand akan dilakukan dari tombol dialog
+    // Mode mock — cukup tampilkan dialog
+    auto& curP = gameState.players[gameState.activePlayerIdx];
+    auto& prop = gameState.properties[tileIdx];
+
+    buyDialog.tileIdx   = tileIdx;
+    buyDialog.canAfford = (curP.money >= prop.price);
+    buyDialog.visible   = true;
+}
+
+void GameScreen::drawBuyDialog() {
+    if (!buyDialog.visible || buyDialog.tileIdx < 0) return;
+
+    auto& prop = gameState.properties[buyDialog.tileIdx];
+    auto& curP = gameState.players[gameState.activePlayerIdx];
+    Color pCol = playerColors[gameState.activePlayerIdx];
+
+    // ── Overlay gelap ────────────────────────────────────────────────────
+    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 160});
+
+    // ── Panel utama ──────────────────────────────────────────────────────
+    float pw = 420, ph = 300;
+    float px = SCREEN_W / 2.f - pw / 2.f;
+    float py = SCREEN_H / 2.f - ph / 2.f;
+
+    DrawRectangle((int)px, (int)py, (int)pw, (int)ph, {25, 27, 38, 255});
+    DrawRectangleLinesEx({px, py, pw, ph}, 2.f, {80, 80, 130, 255});
+
+    // ── Header dengan warna group ─────────────────────────────────────────
+    Color hdrCol = prop.colorGroup.empty()
+                       ? Color{50, 52, 70, 255}
+                       : getGroupColor(prop.colorGroup);
+    DrawRectangle((int)px, (int)py, (int)pw, 52, hdrCol);
+
+    std::string propName = prop.name.empty()
+                               ? TILE_DEFS[buyDialog.tileIdx].code
+                               : prop.name;
+    int nw = MeasureText(propName.c_str(), 18);
+    DrawText(propName.c_str(), (int)(px + pw/2 - nw/2), (int)(py + 8), 18, WHITE);
+
+    int gw = MeasureText(prop.colorGroup.c_str(), 11);
+    DrawText(prop.colorGroup.c_str(), (int)(px + pw/2 - gw/2), (int)(py + 32), 11,
+             {255, 255, 255, 180});
+
+    // ── Info pemain & harga ───────────────────────────────────────────────
+    float ry = py + 68;
+
+    DrawText(curP.username.c_str(), (int)(px + 20), (int)ry, 13, pCol);
+
+    // Saldo pemain
+    std::string balStr = "Saldo: M" + std::to_string(curP.money);
+    int bw = MeasureText(balStr.c_str(), 12);
+    DrawText(balStr.c_str(), (int)(px + pw - 20 - bw), (int)ry, 12,
+             buyDialog.canAfford ? Color{100, 220, 100, 255} : Color{220, 80, 80, 255});
+
+    DrawLine((int)(px + 16), (int)(ry + 18), (int)(px + pw - 16), (int)(ry + 18),
+             {60, 60, 90, 255});
+
+    ry += 28;
+
+    // Harga beli
+    DrawText("Harga Beli", (int)(px + 20), (int)ry, 12, {140, 140, 180, 255});
+    std::string priceStr = "M" + std::to_string(prop.price);
+    int pw2 = MeasureText(priceStr.c_str(), 18);
+    DrawText(priceStr.c_str(), (int)(px + pw - 20 - pw2), (int)(ry - 3), 18, WHITE);
+    //cout << "DEBUG: GAMEMODE " << (isRealMode() ? "REAL" : "MOCK") << endl;
+    ry += 28;
+
+    // Sisa saldo setelah beli
+    int remaining = curP.money - prop.price;
+    DrawText("Sisa saldo", (int)(px + 20), (int)ry, 11, {120, 120, 160, 255});
+    std::string remStr = "M" + std::to_string(remaining);
+    Color remCol = remaining >= 0 ? Color{100, 200, 100, 255} : Color{220, 80, 80, 255};
+    int rw = MeasureText(remStr.c_str(), 12);
+    DrawText(remStr.c_str(), (int)(px + pw - 20 - rw), (int)ry, 12, remCol);
+
+    ry += 26;
+
+    // Peringatan jika tidak mampu
+    if (!buyDialog.canAfford) {
+        const char* warn = "Saldo tidak cukup — properti akan dilelang";
+        int ww = MeasureText(warn, 10);
+        DrawText(warn, (int)(px + pw/2 - ww/2), (int)ry, 10, {220, 100, 80, 255});
+        ry += 18;
+    }
+
+    // ── Tombol BELI & SKIP ────────────────────────────────────────────────
+    float btnY  = py + ph - 56;
+    float btnW  = pw / 2.f - 24;
+    Vector2 mouse = GetMousePosition();
+
+    // Tombol BELI
+    Rectangle buyBtn  = {px + 16, btnY, btnW, 40};
+    bool buyHover     = CheckCollisionPointRec(mouse, buyBtn) && buyDialog.canAfford;
+    bool buyDisabled  = !buyDialog.canAfford;
+    Color buyBg       = buyDisabled  ? Color{40, 42, 54, 255}
+                      : buyHover     ? Color{60, 180, 90, 255}
+                                     : Color{40, 140, 70, 255};
+    Color buyBorder   = buyDisabled  ? Color{60, 60, 80, 255} : Color{80, 200, 110, 255};
+    DrawRectangleRec(buyBtn, buyBg);
+    DrawRectangleLinesEx(buyBtn, 1.5f, buyBorder);
+    const char* buyLbl = buyDisabled ? "TIDAK MAMPU" : "BELI";
+    int blw = MeasureText(buyLbl, 13);
+    DrawText(buyLbl, (int)(buyBtn.x + btnW/2 - blw/2), (int)(btnY + 13), 13,
+             buyDisabled ? Color{80, 80, 100, 255} : WHITE);
+
+    // Tombol SKIP / LELANG
+    Rectangle skipBtn = {px + pw/2 + 8, btnY, btnW, 40};
+    bool skipHover    = CheckCollisionPointRec(mouse, skipBtn);
+    Color skipBg      = skipHover ? Color{180, 100, 50, 255} : Color{120, 60, 30, 255};
+    DrawRectangleRec(skipBtn, skipBg);
+    DrawRectangleLinesEx(skipBtn, 1.5f, {200, 130, 80, 255});
+    const char* skipLbl = "SKIP (LELANG)";
+    int slw = MeasureText(skipLbl, 11);
+    DrawText(skipLbl, (int)(skipBtn.x + btnW/2 - slw/2), (int)(btnY + 14), 11, WHITE);
+
+    // ── Handle klik ──────────────────────────────────────────────────────
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (buyHover && !buyDisabled) {
+            // Mode real: push BeliCommand(buy=true)
+            if (guiManager && guiManager->getGameMaster()) {
+                GameMaster* gm = guiManager->getGameMaster();
+                Player*  player = gm->getState().getCurrPlayer();
+                Bank*    bank   = gm->getState().getBank();
+                // Cari Property* dari board
+                Board*   board  = gm->getState().getBoard();
+                Tile*    tile   = board->getTile(buyDialog.tileIdx);
+                auto*    pt     = dynamic_cast<PropertyTile*>(tile);
+                if (player && bank && pt) {
+                    guiManager->pushCommand(
+                        new BeliCommand(player, pt->getProperty(), bank, true));
+                }
+            } else {
+                // Mode mock
+                auto& p = gameState.players[gameState.activePlayerIdx];
+                auto& pr = gameState.properties[buyDialog.tileIdx];
+                p.money  -= pr.price;
+                pr.owner  = gameState.activePlayerIdx;
+                
+                
+
+                gameState.logger.addLog(gameState.currentTurn, p.username,
+                    "BELI", "Beli " + pr.name + ": -M" + std::to_string(pr.price));
+            }
+            buyDialog.visible = false;
+
+        } else if (skipHover) {
+            // Mode real: push BeliCommand(buy=false)
+            if (guiManager && guiManager->getGameMaster()) {
+                GameMaster* gm  = guiManager->getGameMaster();
+                Player*  player = gm->getState().getCurrPlayer();
+                Bank*    bank   = gm->getState().getBank();
+                Board*   board  = gm->getState().getBoard();
+                Tile*    tile   = board->getTile(buyDialog.tileIdx);
+                auto*    pt     = dynamic_cast<PropertyTile*>(tile);
+                if (player && bank && pt) {
+                    guiManager->pushCommand(
+                        new BeliCommand(player, pt->getProperty(), bank, false));
+                }
+            } else {
+                // Mode mock — skip, tidak ada lelang
+                auto& p  = gameState.players[gameState.activePlayerIdx];
+                auto& pr = gameState.properties[buyDialog.tileIdx];
+                gameState.logger.addLog(gameState.currentTurn, p.username,
+                    "BELI", "Skip " + pr.name + " → lelang");
+            }
+            buyDialog.visible = false;
+        }
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 void GameScreen::initMockLogs() {
@@ -917,6 +1386,23 @@ Color GameScreen::getActionColor(const std::string& action) {
  
 void GameScreen::drawLogPopup() {
     if (!showLogPopup) return;
+
+    // ── Pilih sumber log ─────────────────────────────────────────────────
+    // Jika mode real, ambil log dari TransactionLogger milik GameState.
+    // Jika mode mock, tetap pakai gameState.logger.
+    TransactionLogger* logSrc = &gameState.logger;
+    if (isRealMode()) {
+        TransactionLogger* realLogger =
+            guiManager->getGameMaster()->getState().getLogger();
+        if (realLogger) logSrc = realLogger;
+    }
+ 
+    // Ambil log sesuai jumlah yang diminta
+    std::vector<LogEntry> logs;
+    if (logShowN > 0)
+        logs = logSrc->getLastLogs(logShowN);
+    else
+        logs = logSrc->getLogs();
  
     DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0,0,0,160});
  
@@ -1004,8 +1490,8 @@ void GameScreen::drawLogPopup() {
  
     // Filter logs (newest first)
     auto all = (logShowN == 0)
-            ? gameState.logger.getLogs()
-            : gameState.logger.getLastLogs(logShowN);
+            ? logSrc->getLogs()
+            : logSrc->getLastLogs(logShowN);
     std::vector<LogEntry> display(all.rbegin(), all.rend());
 
  

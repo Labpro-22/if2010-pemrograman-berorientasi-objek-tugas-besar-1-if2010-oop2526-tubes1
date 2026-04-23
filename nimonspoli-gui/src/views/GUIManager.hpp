@@ -16,7 +16,7 @@ private:
     IScreen* currentScreen = nullptr;
     GameMaster* gameMaster = nullptr;        // opsional — di-set via setGameMaster()
     queue<Command*> commandQueue;
-    void flushCommands();
+    
 
 public:
     GUIManager(int w, int h, string& t, int fps);
@@ -29,8 +29,9 @@ public:
     // Antri command untuk dieksekusi di awal frame berikutnya
     void pushCommand(Command* cmd);
 
-    void run();
     void shutdown();
     IScreen* getCurrentScreen() const { return currentScreen; }
     Window&  getWindow()              { return window; }
+
+    void flushCommands();
 };
