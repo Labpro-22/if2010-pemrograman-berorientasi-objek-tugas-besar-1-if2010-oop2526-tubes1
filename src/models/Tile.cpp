@@ -1,4 +1,4 @@
-#include "Tile.hpp"
+#include "../../include/models/Tile.hpp"
 
 // Tile
 Tile::Tile(int index, std::string name, std::string code, std::string color) 

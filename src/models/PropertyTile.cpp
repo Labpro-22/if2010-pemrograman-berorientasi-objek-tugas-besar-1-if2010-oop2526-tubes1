@@ -1,4 +1,4 @@
-#include "PropertyTile.hpp"
+#include "../../include/models/PropertyTile.hpp"
 
 // PropertyTile
 PropertyTile::PropertyTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status)
