@@ -45,6 +45,10 @@ void FestivalTile::onLand(Player& p, TileVisitor& visitor){
 GoTile::GoTile(int index, std::string name, std::string code, std::string color, int go_reward) 
     : Tile(index, name, code, color), go_reward(go_reward) {}
 
+int GoTile::getReward(){
+    return go_reward;
+}
+
 void GoTile::onLand(Player& p, TileVisitor& visitor) {
     visitor.visitGoTile(this, p);
 }

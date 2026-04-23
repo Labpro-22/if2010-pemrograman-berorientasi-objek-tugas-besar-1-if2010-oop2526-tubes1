@@ -32,6 +32,7 @@ private:
 
 public:
     CardTile(int index, std::string name, std::string code, std::string color, CardType card);
+    CardType getType();
     void onLand(Player& p, TileVisitor& visitor) override;
 };
 
@@ -47,6 +48,7 @@ private:
 
 public:
     TaxTile(int index, std::string name, std::string code, std::string color, TaxType tax_type, int tax_amount);
+    int getTaxAmount();
     void onLand(Player& p, TileVisitor& visitor) override;
 };
 
@@ -62,6 +64,7 @@ private:
 
 public:
     GoTile(int index, std::string name, std::string code, std::string color, int go_reward);
+    int getReward();
     void onLand(Player& p, TileVisitor& visitor) override;
 };
 
