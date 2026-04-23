@@ -24,7 +24,9 @@ public:
 
     int calculateNewPosition(int pos, int step, bool& passedGo) const;
 
-    Tile* getNearestRailroad(int fromPos) const;
+    int getStepsToNearestRailroad(int fromPos) const;
+
+    int getJailIndex() const;
 
     const std::vector<Tile*>& getTiles() const;
     int size() const;

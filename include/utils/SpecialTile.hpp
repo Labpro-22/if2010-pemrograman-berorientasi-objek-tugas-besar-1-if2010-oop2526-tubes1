@@ -18,6 +18,7 @@ public:
     SpecialTile(int id, std::string code, std::string name, SpecialType type);
 
     void onLand(Player* player, Game* game) override;
+    bool isJail() const;
 };
 
 #endif

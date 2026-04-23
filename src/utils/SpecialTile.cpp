@@ -27,3 +27,7 @@ void SpecialTile::onLand(Player* player, Game* game) {
             break;
     }
 }
+
+bool SpecialTile::isJail() const {
+    return this->type == SpecialType::JAIL;
+}

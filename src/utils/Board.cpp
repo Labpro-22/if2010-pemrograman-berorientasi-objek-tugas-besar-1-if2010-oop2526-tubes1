@@ -1,5 +1,6 @@
 #include "utils/Board.hpp"
 #include "utils/RailroadTile.hpp"
+#include "utils/SpecialTile.hpp"
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -64,19 +65,35 @@ int Board::calculateNewPosition(int pos, int step, bool& passedGo) const {
     return newPos;
 }
 
-Tile* Board::getNearestRailroad(int fromPos) const {
+int Board::getStepsToNearestRailroad(int fromPos) const {
     if (tilesVector.empty()) {
-        return nullptr;
+        return 0;
     }
 
     for (int step = 1; step < static_cast<int>(tilesVector.size()); ++step) {
         Tile* candidate = getTileByIndex(fromPos + step);
         if (dynamic_cast<RailroadTile*>(candidate) != nullptr) {
-            return candidate;
+            return step;
+        }
+        Tile* negativeCandidate = getTileByIndex(fromPos - step);
+        if (dynamic_cast<RailroadTile*>(negativeCandidate) != nullptr) {
+            return -step;
         }
     }
 
-    return nullptr;
+    return 0;
+}
+
+int Board::getJailIndex() const {
+    for (size_t i = 0; i < tilesVector.size(); i++)
+    {
+        Tile* candidate = getTileByIndex(i);
+        SpecialTile* cast = dynamic_cast<SpecialTile*>(candidate);
+        if (cast != nullptr) {
+            if (cast->isJail()) return i;
+        }
+    }
+    return -1;
 }
 
 const std::vector<Tile*>& Board::getTiles() const {
