@@ -16,8 +16,12 @@
     }
 
     Color PropertyPlot::getColor() const {
-    return color;
-}
+        return color;
+    }
+
+    Player* PropertyPlot::getOwner() const  {
+        return owner;
+    }
 
     bool PropertyPlot::isMortgaged() const{
         return propertyStatus == PropertyStatus::MORTGAGED;

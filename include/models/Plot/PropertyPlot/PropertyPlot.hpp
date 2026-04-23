@@ -2,16 +2,15 @@
 
 #include "models/Plot/Plot.hpp"
 #include "models/Plot/PropertyPlot/PropertyStatus.hpp"
-#include "models/Player/Player.hpp"
 
 class PropertyPlot: public Plot{
 protected:
     Color color;
     int mortgageValue;
     PropertyStatus propertyStatus;
-    // Player* ownedBy;
+    Player* owner;
     int festivalDuration;
-    int festivalMultiplier; //TODO: color disimpan di property, bukan di land
+    int festivalMultiplier;
 
     bool isFestival() const;
 
@@ -26,6 +25,7 @@ public:
     virtual std::map<int, int> getRentPriceTable() const = 0;
     virtual int getRentPrice(int level) const = 0;
     Color getColor() const override;
+    Player* getOwner() const override;
 
     bool isMortgaged() const;
     void applyFestival();

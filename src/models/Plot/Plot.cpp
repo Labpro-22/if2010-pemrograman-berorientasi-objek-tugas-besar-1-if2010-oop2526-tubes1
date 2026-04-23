@@ -13,3 +13,7 @@ std::string Plot::getCode() const {
 Color Plot::getColor() const {
     return Color::DEFAULT;
 }
+
+Player* Plot::getOwner() const {
+    return NULL;
+}
