@@ -1,5 +1,6 @@
 #include "iostream"
 #include "core/GameEngine.hpp"
+#include "core/Formatter.hpp"
 #include "models/Plot/PropertyPlot/PropertyPlot.hpp"
 using namespace std;
 
@@ -30,4 +31,5 @@ class GameRenderer {
 
 
         static void showLogger(const LogEntry& entry); //17
+        static void showBoard(const GameState& state);
 };
