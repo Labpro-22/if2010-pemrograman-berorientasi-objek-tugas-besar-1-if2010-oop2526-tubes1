@@ -106,35 +106,46 @@ void SaveLoadManager::save(const GameState &state, const string &filename)
 <JUMLAH_KARTU_TANGAN>
 <JENIS_KARTU_1> [NILAI] [DURASI]
 */
-void SaveLoadManager::savePlayers(ofstream& out, const GameState& state) {
-    for (auto& p : state.getPlayers()) {
+void SaveLoadManager::savePlayers(ofstream &out, const GameState &state)
+{
+    for (auto &p : state.getPlayers())
+    {
         // Status string
         string statusStr;
-        switch (p->getStatus()) {
-            case PlayerStatus::ACTIVE:   statusStr = "ACTIVE";   break;
-            case PlayerStatus::JAILED:   statusStr = "JAILED";   break;
-            case PlayerStatus::BANKRUPT: statusStr = "BANKRUPT"; break;
+        switch (p->getStatus())
+        {
+        case PlayerStatus::ACTIVE:
+            statusStr = "ACTIVE";
+            break;
+        case PlayerStatus::JAILED:
+            statusStr = "JAILED";
+            break;
+        case PlayerStatus::BANKRUPT:
+            statusStr = "BANKRUPT";
+            break;
         }
 
         // Kode petak posisi saat ini
         string tileCode = "GO";
-        if (state.getBoard()) {
+        if (state.getBoard())
+        {
             std::cout << "[DEBUG save] " << p->getUsername()
-                    << " getPosition()=" << p->getPosition()
-                    << " boardSize=" << state.getBoard()->getSize() << std::endl;
-            Tile* t = state.getBoard()->getTile(p->getPosition());
+                      << " getPosition()=" << p->getPosition()
+                      << " boardSize=" << state.getBoard()->getSize() << std::endl;
+            Tile *t = state.getBoard()->getTile(p->getPosition());
             std::cout << "[DEBUG save] tile=" << (t ? t->getCode() : "null") << std::endl;
-            if (t) tileCode = t->getCode();
+            if (t)
+                tileCode = t->getCode();
         }
 
         // <USERNAME> <UANG> <POSISI_PETAK> <STATUS> <HUMAN/COM> [DIFFICULTY]
         out << p->getUsername() << " "
-            << p->getBalance()  << " "
-            << tileCode         << " "
+            << p->getBalance() << " "
+            << tileCode << " "
             << statusStr;
 
         // Flag COM atau HUMAN
-        ComputerPlayer* cp = dynamic_cast<ComputerPlayer*>(p);
+        ComputerPlayer *cp = dynamic_cast<ComputerPlayer *>(p);
         if (cp)
             out << " COM " << difficultyToString(cp->getDifficulty());
         else
@@ -147,17 +158,17 @@ void SaveLoadManager::savePlayers(ofstream& out, const GameState& state) {
         out << hand.size() << "\n";
 
         // <JENIS_KARTU> [NILAI] [DURASI]
-        for (auto* card : hand) {
+        for (auto *card : hand)
+        {
             out << card->getType();
-            if (auto* mc = dynamic_cast<MoveCard*>(card))
+            if (auto *mc = dynamic_cast<MoveCard *>(card))
                 out << " " << mc->getSteps();
-            else if (auto* dc = dynamic_cast<DiscountCard*>(card))
+            else if (auto *dc = dynamic_cast<DiscountCard *>(card))
                 out << " " << dc->getDiscountPercent() << " " << dc->getDuration();
             out << "\n";
         }
     }
 }
-
 
 // SaveProperties
 /*
@@ -404,12 +415,14 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
             *p -= (-diff);
 
         // Posisi
-        if (state.getBoard()) {
+        if (state.getBoard())
+        {
             int idx = state.getBoard()->findTileIndexByCode(tok[2]);
-            std::cout << "[DEBUG load] " << tok[0] 
-                    << " tileCode=" << tok[2] 
-                    << " idx=" << idx << std::endl;
-            if (idx >= 0) p->setPosition(idx);
+            std::cout << "[DEBUG load] " << tok[0]
+                      << " tileCode=" << tok[2]
+                      << " idx=" << idx << std::endl;
+            if (idx >= 0)
+                p->setPosition(idx);
         }
 
         // Status
@@ -448,7 +461,7 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
     }
 }
 
-    // loadProperties
+// loadProperties
 void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
 {
     std::string line;
@@ -550,67 +563,40 @@ void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
 // TODO: butuh CardFactory untuk recreate kartu dari type string
 void SaveLoadManager::loadDeck(std::ifstream &in, GameState &state)
 {
-    std::string line;
+    int deckCount;
+    in >> deckCount;
 
-    // Draw pile count
-    std::getline(in, line);
-    int drawCount = std::stoi(line);
-    std::vector<std::string> drawTypes;
-    for (int i = 0; i < drawCount; i++)
+    std::vector<SkillCard *> newDrawPile;
+
+    for (int i = 0; i < deckCount; ++i)
     {
-        std::getline(in, line);
-        drawTypes.push_back(tokenize(line)[0]);
+        std::string type;
+        double value = 0;
+        int duration = 0;
+
+        in >> type;
+
+        if (type == "MoveCard")
+        {
+            in >> value;
+        }
+        else if (type == "DiscountCard")
+        {
+            in >> value >> duration;
+        }
+
+        SkillCard *card = CardFactory::createSkillCard(type, value, duration);
+        if (card)
+        {
+            newDrawPile.push_back(card);
+        }
     }
 
-    // Discard pile count
-    std::getline(in, line);
-    int discardCount = std::stoi(line);
-    std::vector<std::string> discardTypes;
-    for (int i = 0; i < discardCount; i++)
-    {
-        std::getline(in, line);
-        discardTypes.push_back(tokenize(line)[0]);
-    }
-
-    // Rebuild deck dengan urutan yang benar pakai CardFactory
-    auto *skillDeck = state.getSkillDeck();
+    CardDeck<SkillCard> *skillDeck = state.getSkillDeck();
     if (!skillDeck)
         return;
 
-    // Build draw pile
-    std::vector<Card *> newDrawPile;
-    for (auto &t : drawTypes)
-    {
-        auto ctok = tokenize(t);
-        if (ctok.empty())
-            continue;
-        std::string type = ctok[0];
-        double value = ctok.size() > 1 ? std::stod(ctok[1]) : 0;
-        int duration = ctok.size() > 2 ? std::stoi(ctok[2]) : 0;
-        SkillCard *card = CardFactory::createSkillCard(type, value, duration);
-        if (card)
-            newDrawPile.push_back(card);
-    }
-
-    // Build discard pile
-    std::vector<Card *> newDiscardPile;
-    for (auto &t : discardTypes)
-    {
-        auto ctok = tokenize(t);
-        if (ctok.empty())
-            continue;
-        std::string type = ctok[0];
-        double value = ctok.size() > 1 ? std::stod(ctok[1]) : 0;
-        int duration = ctok.size() > 2 ? std::stoi(ctok[2]) : 0;
-        SkillCard *card = CardFactory::createSkillCard(type, value, duration);
-        if (card)
-            newDiscardPile.push_back(card);
-    }
-
-    // Restore deck tanpa shuffle
     skillDeck->setCardsNoShuffle(newDrawPile);
-    for (auto *c : newDiscardPile)
-        skillDeck->discard(c);
 }
 
 // loadLogs
