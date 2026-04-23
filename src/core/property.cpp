@@ -14,6 +14,7 @@ void Property::handlePurchase(Player& player, Game& game) {
         setStatus(PropertyStatus::OWNED);
         player.addProperty(this);
         game.refreshPropertyCounts(&player);
+        if (game.callbacks().onAutoPurchase) game.callbacks().onAutoPurchase(*this);
         game.logger().log(game.currentTurn(), player.username(), type_ == PropertyType::RAILROAD ? "RAILROAD" : "UTILITY", name_ + " kini milik " + player.username() + " (otomatis)");
         return;
     }

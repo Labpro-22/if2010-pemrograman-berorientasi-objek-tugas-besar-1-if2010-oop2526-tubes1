@@ -42,7 +42,18 @@ void GameCLI::registerCallbacks() {
     cb.onDropCard = [this](Player&) {
         promptDropCard();
     };
+    cb.onDiceRolled = [](int d1, int d2) {
+        cout << "Hasil: " << d1 << " + " << d2 << " = " << (d1 + d2) << "\n";
+    };
 
+    cb.onAutoPurchase = [](Property& prop) {
+        cout << "\nKamu mendarat di " << prop.name() << " (" << prop.code() << ")!\n";
+        cout << "Properti ini " << prop.name() << " otomatis menjadi milikmu!\n";
+    };
+
+    cb.onOfferPurchase = [this](Property& prop) -> bool {
+        return promptBuyStreet(prop);
+    };
     game_.setCallbacks(move(cb));
 }
 
@@ -178,8 +189,6 @@ void GameCLI::cmdLemparDadu() {
     cout << "Mengocok dadu...\n";
     game_.cmdRollDice();
     auto& d = game_.dice();
-    cout << "Hasil: " << d.die1() << " + " << d.die2()
-              << " = " << d.total() << "\n";
     if (d.doubleCount() == 3) {
         cout << "Tiga kali double — masuk penjara!\n";
         turnOver_ = true;
@@ -197,7 +206,6 @@ void GameCLI::cmdAturDadu(const string& args) {
     cout << "Dadu diatur secara manual.\n";
     game_.cmdSetDice(d1, d2);
     auto& d = game_.dice();
-    cout << "Hasil: " << d.die1() << " + " << d.die2() << " = " << d.total() << "\n";
     if (d.doubleCount() == 3) {
         cout << "Tiga kali double — masuk penjara!\n";
         turnOver_ = true;

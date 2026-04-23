@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <climits>
+#include <chrono>
 using namespace std;
 namespace Nimonspoli {
 Game::Game(TaxConfig tax, SpecialConfig special, MiscConfig misc,
@@ -25,9 +26,11 @@ void Game::setBoard(unique_ptr<Board> board) {
 }
 
 void Game::randomizeTurnOrder() {
-    mt19937 rng(random_device{}());
+    unsigned seed = static_cast<unsigned>(chrono::system_clock::now().time_since_epoch().count());
+    mt19937 rng(seed);
     shuffle(turnOrder_.begin(), turnOrder_.end(), rng);
 }
+
 
 void Game::initCardDecks() {
     chanceDeck_.addCard(make_unique<ChanceCard>(ChanceEffect::GO_NEAREST_STATION));
@@ -163,6 +166,7 @@ void Game::cmdRollDice() {
     if (player.hasRolled() && !dice_.isDouble()) throw logic_error("Kamu sudah melempar dadu pada giliran ini.");
     if (player.isJailed()) { handleJailTurn(player); return; }
     auto [d1, d2] = dice_.roll();
+    if (cb_.onDiceRolled) cb_.onDiceRolled(d1, d2);
     logger_.log(currentTurn_, player.username(), "DADU", "Lempar: " + to_string(d1) + "+" + to_string(d2) + "=" + to_string(d1+d2));
     if (dice_.doubleCount() == 3) { sendToJail(player); return; }
     player.setHasRolled(true);
@@ -174,6 +178,7 @@ void Game::cmdSetDice(int d1, int d2) {
     Player& player = currentPlayer();
     if (player.hasRolled() && !dice_.isDouble()) throw logic_error("Kamu sudah melempar dadu pada giliran ini.");
     dice_.setRoll(d1, d2);
+    if (cb_.onDiceRolled) cb_.onDiceRolled(d1, d2);
     logger_.log(currentTurn_, player.username(), "DADU", "Atur manual: " + to_string(d1) + "+" + to_string(d2) + "=" + to_string(d1+d2));
     if (dice_.doubleCount() == 3) { sendToJail(player); return; }
     player.setHasRolled(true);
@@ -192,6 +197,7 @@ void Game::handleJailTurn(Player& player) {
         return;
     }
     auto [d1, d2] = dice_.roll();
+    if (cb_.onDiceRolled) cb_.onDiceRolled(d1, d2);
     logger_.log(currentTurn_, player.username(), "DADU_PENJARA", "Lempar: " + to_string(d1) + "+" + to_string(d2));
     if (dice_.isDouble()) {
         player.setStatus(PlayerStatus::ACTIVE);

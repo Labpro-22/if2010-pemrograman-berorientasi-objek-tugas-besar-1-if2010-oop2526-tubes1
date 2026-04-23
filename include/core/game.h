@@ -28,6 +28,8 @@ public:
     function<Player*(Player&)>             onLasso; //Prompt player milih siapa yg mau di lasso
     function<string(Player&)>         onDemolition; //Prompt player milih properti yg mau didemo
     function<void(Player&)>                onDropCard; //Prompt player milih kartu yg mau didrop waktu overflow
+    function<void(Property&)>              onAutoPurchase;  //Prompt player langsung mendapatkan properti tanpa membeli (stasiun)
+    function<void(int, int)>               onDiceRolled; // 
 };
 
 class Game {
