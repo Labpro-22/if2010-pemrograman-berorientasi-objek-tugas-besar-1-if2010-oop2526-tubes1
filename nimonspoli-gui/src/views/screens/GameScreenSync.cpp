@@ -151,4 +151,6 @@ void GameScreen::syncDiceResult()
         triggerCardDialog();
     if (gs.getPhase() == GamePhase::AUCTION && !auctionDialog.visible)
         triggerAuctionDialog();
+    if (gs.getPhase() == GamePhase::AWAITING_JAIL && !jailDialog.visible)
+        triggerJailDialog();
 }

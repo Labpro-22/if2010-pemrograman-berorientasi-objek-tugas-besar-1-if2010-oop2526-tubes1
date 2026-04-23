@@ -28,6 +28,7 @@ enum class GamePhase {
     AWAITING_BUY,       // menunggu keputusan beli properti
     AWAITING_TAX,       // menunggu pilihan user untuk PPH (flat vs persen)
     AWAITING_FESTIVAL,  // menunggu user pilih properti festival
+    AWAITING_JAIL,
     SHOW_CARD,          // menampilkan hasil kartu Kesempatan/Dana Umum
     AUCTION,            // lelang sedang berjalan
     BANKRUPTCY,         // proses likuidasi/kebangkrutan
