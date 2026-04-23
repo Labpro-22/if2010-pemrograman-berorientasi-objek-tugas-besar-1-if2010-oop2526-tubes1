@@ -8,10 +8,10 @@ const string StationCard::getDescription() const{
     return "Pergi ke stasiun terdekat";
 }
 
-void StationCard::activate(GameState& state) {
-    int playerPosition = state.getCurrentPlayerIdx();
-    Player& currPlayer = state.getCurrentPlayer();
-    Board& board = state.getBoard();
+void StationCard::activate(SkillContext& ctx) {
+    int playerPosition = ctx.getCurrentPlayerIdx();
+    Player& currPlayer = ctx.getCurrentPlayer();
+    Board& board = ctx.getBoard();
     int boardSize = board.getSize();
     const vector<unique_ptr<Plot>>& plots = board.getPlots();
 

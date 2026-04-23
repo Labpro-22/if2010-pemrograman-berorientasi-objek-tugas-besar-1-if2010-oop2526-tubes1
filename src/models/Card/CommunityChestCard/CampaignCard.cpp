@@ -1,5 +1,4 @@
 #include "models/Card/CommunityChestCard/CampaignCard.hpp"
-#include "core/GameEngine.hpp"
 
 string CampaignCard::getName() {
     return "CampaignCard";
@@ -9,10 +8,10 @@ string CampaignCard::getDescription() {
     return "Anda mau nyaleg. Bayar M200 kepada setiap pemain.";
 }
  
-void CampaignCard::activate(GameEngine& ge) {
-    Player& currPlayer = ge.getState().getCurrentPlayer();
+void CampaignCard::activate(SkillContext& ctx) {
+    Player& currPlayer = ctx.getCurrentPlayer();
  
-    for (Player& other : ge.getState().getPlayers()) {
+    for (Player& other : ctx.getPlayers()) {
         if (other.getUsername() == currPlayer.getUsername()) continue;
         if (other.isBankrupt()) continue;
  

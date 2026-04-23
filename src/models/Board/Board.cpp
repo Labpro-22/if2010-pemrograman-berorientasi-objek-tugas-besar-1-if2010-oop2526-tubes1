@@ -105,3 +105,4 @@ CommunityChestCard* Board::drawCommunityChestCard() {
 SkillCard* Board::drawSkillCard() {
     return skillCardDeckPile.draw();
 }
+

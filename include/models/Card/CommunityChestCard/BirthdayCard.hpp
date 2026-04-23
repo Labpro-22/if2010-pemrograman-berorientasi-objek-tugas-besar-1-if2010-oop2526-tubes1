@@ -7,5 +7,5 @@ class BirthdayCard : public CommunityChestCard {
         ~BirthdayCard();
         string getName();
         string getDescription();
-        void activate(GameEngine& ge);
+        void activate(SkillContext& ctx);
 };

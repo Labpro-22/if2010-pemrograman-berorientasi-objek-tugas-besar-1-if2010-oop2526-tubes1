@@ -8,11 +8,11 @@ const string PrisonCard::getDescription() const{
     return "Masuk Penjara";
 }
 
-void PrisonCard::activate(GameState& state) {
-    Player& currPlayer = state.getCurrentPlayer();
-    int boardSize = state.getBoard().getSize();
+void PrisonCard::activate(SkillContext& ctx) {
+    Player& currPlayer = ctx.getCurrentPlayer();
+    int boardSize = ctx.getBoard().getSize();
 
-    int index = state.getBoard().findPlotIndex("PEN");
+    int index = ctx.getBoard().findPlotIndex("PEN");
     try {
         currPlayer.moveTo(index, boardSize);
         currPlayer.setJailTurns(3);
