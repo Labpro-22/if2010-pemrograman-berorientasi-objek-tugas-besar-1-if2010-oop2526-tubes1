@@ -27,6 +27,7 @@ public:
 
     int getHouseUpgCost() const;
     int getHotelUpgCost() const;
+    const map<int, int> &getRentPrice() const;
     int getBuildingCount() const;
     bool gethasHotel() const;
     int getFestivalMultiplier() const;
@@ -43,8 +44,9 @@ public:
                            int ownerSameColorCount,
                            bool monopoly) const override;
     int calculateSellPrice() const override;
+    string cetakAkta() const override;
     string formattingTXT() const override;
-    friend ostream &operator<<(ostream &os, const StreetProperty &p);
+    string printList() const override;
     void resetBuildings();
 };
 

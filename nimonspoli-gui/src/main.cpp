@@ -28,13 +28,18 @@
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     std::string title = "Nimonspoli";
+    std::cout << "Before GUIManager" << std::endl;
     GUIManager gui(1920, 1080, title, 60);
-
+    std::cout << "Before MenuScreen" << std::endl;
     MainMenuScreen* menuScreen = new MainMenuScreen();
-    GameScreen*     gameScreen = new GameScreen();
-    WinScreen*      winScreen  = new WinScreen();
+    std::cout << "Before GameScreen" << std::endl;
+    GameScreen* gameScreen = new GameScreen();
+    std::cout << "Before WinScreen" << std::endl;
+    WinScreen* winScreen = new WinScreen();
 
+    std::cout << "Before setScreen" << std::endl;
     gui.setScreen(menuScreen);
+    std::cout << "Entering loop" << std::endl;
 
     GameMaster*        gameMaster    = nullptr;
     Bank*              bank          = nullptr;
@@ -62,7 +67,8 @@ int main() {
         players.clear();
         properties.clear();
     };
-
+    
+    bool comHasActed = false;
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
@@ -231,10 +237,6 @@ int main() {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
         }
-
-        // ── COM auto-play ─────────────────────────────────────────────────
-        // Di main.cpp, tambah variable di luar loop:
-        bool comHasActed = false;
 
         // Di dalam loop, ganti bagian COM auto-play:
         if (gameMaster) {

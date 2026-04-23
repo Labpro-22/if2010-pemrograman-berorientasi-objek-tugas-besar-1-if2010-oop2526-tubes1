@@ -12,6 +12,11 @@ RailroadProperty::~RailroadProperty()
 {
 }
 
+const map<int, int> &RailroadProperty::getRentFactor() const
+{
+    return rentFactor;
+}
+
 int RailroadProperty::calculateRentPrice(int diceRoll,
                                          int ownerSameColorCount,
                                          bool monopoly) const
@@ -22,23 +27,6 @@ int RailroadProperty::calculateRentPrice(int diceRoll,
 int RailroadProperty::calculateSellPrice() const
 {
     return getMortageValue();
-}
-
-ostream &operator<<(ostream &os, const RailroadProperty &p)
-{
-    string namaKode = p.getName() + " (" + p.getCode() + ")";
-    os << left << setw(26) << namaKode;
-
-    os << setw(10) << "";
-
-    string harga = "M" + to_string(p.getMortageValue() * 2);
-    os << setw(8) << harga;
-
-    if (p.getStatus() == PropertyStatus::MORTGAGED)
-        os << "MORTGAGED [M]";
-    else
-        os << "OWNED";
-    return os;
 }
 
 string RailroadProperty::formattingTXT() const
@@ -60,4 +48,47 @@ string RailroadProperty::formattingTXT() const
     string ownerStr = getOwnerId().empty() ? "BANK" : getOwnerId();
 
     return getCode() + " RAILROAD " + ownerStr + " " + statusStr + " 1 0 0";
+}
+
+string RailroadProperty::cetakAkta() const
+{
+    ostringstream out;
+
+    printHeader(out);
+    printBasicInfo(out);
+
+    printLine(out, '-');
+
+    if (rentFactor.empty())
+    {
+        printFullRow(out, "Data sewa tidak tersedia");
+    }
+    else
+    {
+        for (const auto &[ownedCount, rent] : rentFactor)
+        {
+            string label = "Sewa (" + to_string(ownedCount) + " railroad)";
+            printRow(out, label, moneyToString(rent));
+        }
+    }
+
+    printFooterStatus(out);
+
+    return out.str();
+}
+
+string RailroadProperty::printList() const
+{
+    ostringstream out;
+
+    string namaKode = getName() + " (" + getCode() + ")";
+    out << left << setw(26) << namaKode;
+    out << setw(10) << "";
+
+    string harga = "M" + to_string(getPurchasePrice());
+    out << setw(8) << harga;
+
+    out << Property::statusToString(getStatus());
+
+    return out.str();
 }

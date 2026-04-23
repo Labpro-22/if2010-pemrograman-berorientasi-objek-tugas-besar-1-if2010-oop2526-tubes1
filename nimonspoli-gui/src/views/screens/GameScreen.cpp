@@ -91,16 +91,27 @@ void GameScreen::update(float dt)
 {
     syncFromGameMaster();
 
-    // Animasi pion
-    for (int i = 0; i < (int)playerVisuals.size(); i++) {
-        auto& pv = playerVisuals[i];
-        if (pv.currentTileIdx != pv.targetTileIdx) {
-            float step = 5.0f * dt;
+    // Update Animasi Pion
+    for (int i = 0; i < (int)playerVisuals.size(); i++)
+    {
+        auto &pv = playerVisuals[i];
+
+        // Jika belum sampai di target tile
+        if (pv.currentTileIdx != pv.targetTileIdx)
+        {
+            float step = 5.0f * dt; // Kecepatan gerak (5 tile per detik)
+
+            // Logika berputar (handling modulo 40)
             float diff = pv.targetTileIdx - pv.currentTileIdx;
-            if (diff < 0) diff += 40;
-            if (diff < step) {
+            if (diff < 0)
+                diff += 40; // Selalu bergerak maju
+
+            if (diff < step)
+            {
                 pv.currentTileIdx = pv.targetTileIdx;
-            } else {
+            }
+            else
+            {
                 pv.currentTileIdx += step;
                 if (pv.currentTileIdx >= 40.0f)
                     pv.currentTileIdx -= 40.0f;
@@ -110,7 +121,8 @@ void GameScreen::update(float dt)
 
     if (savePopup.resultTimer > 0)
         savePopup.resultTimer -= dt;
-    if (diceState.animating) {
+    if (diceState.animating)
+    {
         diceState.animTimer += dt;
         if (diceState.animTimer >= DiceState::ANIM_DURATION)
             diceState.animating = false;
@@ -131,6 +143,7 @@ void GameScreen::render(Window& window)
     drawDiceArea();
     drawPopup();
     drawBuyDialog();
+    drawAuctionDialog();
     drawTaxDialog();
     drawFestivalDialog();
     drawCardDialog();

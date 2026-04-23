@@ -3,6 +3,8 @@
 #include "../../core/GameMaster/GameMaster.hpp"
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
+#include "../../core/Property/RailroadProperty.hpp"
+#include "../../core/Property/UtilityProperty.hpp"
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  syncFromGameMaster()
@@ -29,7 +31,7 @@ void GameScreen::syncFromGameMaster()
     if (playerVisuals.size() != realPlayers.size()) {
         playerVisuals.resize(realPlayers.size());
         for (int i = 0; i < (int)realPlayers.size(); i++) {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
+            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition() );
             playerVisuals[i].targetTileIdx  = playerVisuals[i].currentTileIdx;
         }
     }
@@ -43,7 +45,7 @@ void GameScreen::syncFromGameMaster()
 
         mp.username  = p->getUsername();
         mp.money     = p->getBalance();
-        int realPos = p->getPosition();
+        int realPos  = p->getPosition();
         mp.position  = realPos;
         mp.cardCount = p->getHandSize();
         mp.status    = (p->getStatus() == PlayerStatus::JAILED)   ? "JAILED"
@@ -58,14 +60,18 @@ void GameScreen::syncFromGameMaster()
     // ── Sync Properties ───────────────────────────────────────────────────
     if (board) {
         for (int i = 0; i < (int)gameState.properties.size(); ++i) {
-            Tile* tile = board->getTile(i);  // indeks core 1-based
+            Tile* tile = board->getTile(i);  // indeks core 0-based
             if (!tile) continue;
 
             PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
             if (!pt) continue;
 
             Property*    prop = pt->getProperty();
+            if (!prop) continue;
             MockProperty& mp  = gameState.properties[i];
+            
+            mp.name = prop->getName();
+            mp.colorGroup = prop->getColorGroup();
 
             const std::string& ownerId = prop->getOwnerId();
             mp.owner    = -1;
@@ -80,6 +86,24 @@ void GameScreen::syncFromGameMaster()
                 }
             }
             mp.price = prop->getPurchasePrice();
+
+            // ── Sync StreetProperty specific (buildings, festival) ──
+            if (auto* sp = dynamic_cast<StreetProperty*>(prop)) {
+                mp.type = "STREET";
+                if (sp->gethasHotel()) mp.buildings = 5;
+                else mp.buildings = sp->getBuildingCount();
+
+                mp.festivalMult = sp->getFestivalMultiplier();
+                mp.festivalDur  = sp->getFestivalDuration();
+            } else {
+                if (dynamic_cast<RailroadProperty*>(prop)) mp.type = "RAILROAD";
+                else if (dynamic_cast<UtilityProperty*>(prop)) mp.type = "UTILITY";
+                else mp.type = "ACTION";
+
+                mp.buildings    = 0;
+                mp.festivalMult = 1;
+                mp.festivalDur  = 0;
+            }
         }
     }
 }
@@ -115,6 +139,8 @@ void GameScreen::syncDiceResult()
 
     // ── Trigger Dialogs ────────────────────────────────────────────────────
     const GameState& gs = gm->getState();
+    std::cout << "[DEBUG syncDiceResult] phase=" << (int)gs.getPhase()
+          << " auctionVisible=" << auctionDialog.visible << std::endl;
     if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
         triggerBuyDialog(gs.getCurrPlayer()->getPosition());
     if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
@@ -123,4 +149,6 @@ void GameScreen::syncDiceResult()
         triggerFestivalDialog();
     if (gs.getPhase() == GamePhase::SHOW_CARD && !cardDialog.visible)
         triggerCardDialog();
+    if (gs.getPhase() == GamePhase::AUCTION && !auctionDialog.visible)
+        triggerAuctionDialog();
 }

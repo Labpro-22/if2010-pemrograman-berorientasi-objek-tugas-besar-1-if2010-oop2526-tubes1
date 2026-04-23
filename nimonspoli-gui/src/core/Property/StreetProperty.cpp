@@ -12,6 +12,11 @@ StreetProperty::~StreetProperty()
 {
 }
 
+const map<int, int> &StreetProperty::getRentPrice() const
+{
+    return rentPrice;
+}
+
 int StreetProperty::getHouseUpgCost() const
 {
     return houseUpgCost;
@@ -150,29 +155,6 @@ int StreetProperty::calculateSellPrice() const
     return getPurchasePrice() + buildingValue;
 }
 
-ostream &operator<<(ostream &os, const StreetProperty &p)
-{
-    string namaKode = p.getName() + " (" + p.getCode() + ")";
-    os << left << setw(26) << namaKode;
-
-    string bangunan = "";
-    if (p.hasHotel)
-        bangunan = "Hotel";
-    else if (p.buildingCount > 0)
-        bangunan = to_string(p.buildingCount) + " rumah";
-    os << setw(10) << bangunan;
-
-    string harga = "M" + to_string(p.getPurchasePrice());
-    os << setw(8) << harga;
-
-    if (p.getStatus() == PropertyStatus::MORTGAGED)
-        os << "MORTGAGED [M]";
-    else
-        os << "OWNED";
-
-    return os;
-}
-
 string StreetProperty::formattingTXT() const
 {
     string statusStr;
@@ -200,7 +182,71 @@ string StreetProperty::formattingTXT() const
            bangunanStr;
 }
 
-void StreetProperty::resetBuildings(){
+void StreetProperty::resetBuildings()
+{
     buildingCount = 0;
     hasHotel = false;
+}
+
+string StreetProperty::cetakAkta() const
+{
+    ostringstream out;
+
+    printHeader(out);
+    printBasicInfo(out);
+
+    printLine(out, '-');
+
+    if (rentPrice.empty())
+    {
+        printFullRow(out, "Data sewa tidak tersedia");
+    }
+    else
+    {
+        for (const auto &[level, rent] : rentPrice)
+        {
+            string label;
+            if (level == 0)
+                label = "Sewa (unimproved)";
+            else if (level >= 1 && level <= 4)
+                label = "Sewa (" + to_string(level) + " rumah)";
+            else if (level == 5)
+                label = "Sewa (hotel)";
+            else
+                label = "Sewa (level " + to_string(level) + ")";
+
+            printRow(out, label, moneyToString(rent));
+        }
+    }
+
+    printLine(out, '-');
+    printRow(out, "Harga Rumah", moneyToString(getHouseUpgCost()));
+    printRow(out, "Harga Hotel", moneyToString(getHotelUpgCost()));
+
+    printFooterStatus(out);
+
+    return out.str();
+}
+
+string StreetProperty::printList() const
+{
+    ostringstream out;
+
+    string namaKode = getName() + " (" + getCode() + ")";
+    out << left << setw(26) << namaKode;
+
+    string bangunan = "";
+    if (hasHotel)
+        bangunan = "Hotel";
+    else if (buildingCount > 0)
+        bangunan = to_string(buildingCount) + " rumah";
+
+    out << setw(10) << bangunan;
+
+    string harga = "M" + to_string(getPurchasePrice());
+    out << setw(8) << harga;
+
+    out << Property::statusToString(getStatus());
+
+    return out.str();
 }

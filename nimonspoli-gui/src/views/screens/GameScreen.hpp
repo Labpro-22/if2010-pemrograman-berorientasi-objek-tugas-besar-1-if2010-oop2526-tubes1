@@ -206,21 +206,53 @@ private:
         std::string description;
     } cardDialog;
 
-    // ── Jail Dialog ───────────────────────────────────────────────────────
-    struct JailDialogState
-    {
-        bool visible = false;
-        int jailFine = 50;
-        bool canAffordFine = true;
-        int jailTurnsLeft = 0;
+    
+    struct JailDialog{
+        bool visible    = false;
+        int jailFine    = 50;
+        bool canAffordFine  = true;
+        int jailTurnsLeft   = 0;
     } jailDialog;
 
+
+    // ── Auction Dialog ────────────────────────────────────────────────────
+    struct AuctionDialogState {
+        bool        visible       = false;
+        std::string propertyName;
+        std::string propertyGroup;
+        int         currentBid    = 0;        // bid tertinggi saat ini
+        std::string highestBidder;            // username pemenang sementara
+        std::string currParticipant;          // username yang sedang giliran
+        bool        isForcedBid   = false;    // true = PASS diblok
+        std::string bidInput;                 // input angka dari keyboard
+        bool        bidFocused    = false;    // apakah input field aktif
+    } auctionDialog;
+
     // ── Properti Popup ────────────────────────────────────────────────────
-    struct PropertiPopupState
-    {
-        bool visible = false;
-        float scrollY = 0.f;
+    struct PropertiPopupState {
+        bool  visible  = false;
+        float scrollY  = 0.f;
     } propertiPopup;
+
+    // ── Akta Dialog (CETAK_AKTA — user input kode petak) ────────────────
+    struct AktaDialogState {
+        bool        visible      = false;
+        bool        inputFocused = true;
+        float       scrollY      = 0.f;
+        std::string inputCode;   // kode yang diketik user, misal "JKT"
+        std::string content;     // output dari cetakAkta()
+        std::string propName;    // nama properti untuk judul
+        std::string errorMsg;    // pesan error jika kode tidak ditemukan
+    } aktaDialog;
+
+    // ── Cetak Properti Dialog (cetakProperti per pemain) ──────────────────
+    struct CetakPropertiDialogState {
+        bool        visible     = false;
+        float       scrollY     = 0.f;
+        std::string content;    // output dari cetakProperti()
+        std::string playerName; // nama pemain untuk judul
+        int         playerIdx   = -1;
+    } cetakPropertiDialog;
 
     // ── Dialog Gadai ──────────────────────────────────────────────────────
     struct GadaiDialogState {
@@ -330,8 +362,20 @@ private:
     void    triggerJailDialog();
     void    drawJailDialog();
 
+    // ── GameScreenDialogAuction.cpp ───────────────────────────────────────
+    void    triggerAuctionDialog();
+    void    drawAuctionDialog();
+
     // ── GameScreenDialogProperti.cpp ──────────────────────────────────────
     void    drawPropertiPopup();
+
+    // ── GameScreenDialogAkta.cpp ─────────────────────────────────────────
+    void    triggerAktaDialog();              // buka dialog input kode
+    void    drawAktaDialog();
+
+    // ── GameScreenDialogCetakProperti.cpp ────────────────────────────────
+    void    triggerCetakPropertiDialog(int playerIdx);
+    void    drawCetakPropertiDialog();
 
     // ── GameScreenSave.cpp ────────────────────────────────────────────────
     void    handleSimpan();
@@ -343,4 +387,6 @@ private:
     void    drawLogPopup();
     std::string getActionIcon(const std::string& action);
     Color       getActionColor(const std::string& action);
+
+    void searchAndFillAkta();
 };
