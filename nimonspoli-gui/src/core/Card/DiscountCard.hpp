@@ -7,15 +7,16 @@ using namespace std;
 class DiscountCard : public SkillCard
 {
 private:
-    double discountPercent;
+    int discountPercent;
     int duration;
 
 public:
     DiscountCard();
-    DiscountCard(double discountPercent, int duration);
+    DiscountCard(int discountPercent, int duration);
     ~DiscountCard();
-    int getDuration();
+    int getDuration() const;
     void decreaseDuration();
+    int getDiscountPercent() const;
     void execute(Player &p, GameState &gs) override;
 };
 

@@ -1,9 +1,8 @@
 #include "LassoCard.hpp"
 #include "../Player/Player.hpp"
 #include "../GameState/GameState.hpp"
+#include "../GameMaster/GameMaster.hpp"
 #include "../Board/Board.hpp"
-
-class Board;
 
 LassoCard::LassoCard() : SkillCard("Tarik lawan ke petakmu", "LassoCard")
 {
@@ -35,5 +34,9 @@ void LassoCard::execute(Player &p, GameState &gs)
     }
 
     if (target)
-        target->setPosition(currPos);
+    {
+        GameMaster *gm = gs.getGameMaster();
+        if (gm)
+            gm->teleportPlayer(target, currPos);
+    }
 }

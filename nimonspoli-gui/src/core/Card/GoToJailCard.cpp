@@ -3,8 +3,6 @@
 #include "../GameState/GameState.hpp"
 #include "../Board/Board.hpp"
 
-#define JAIL_INDEX 13
-
 GoToJailCard::GoToJailCard() : ChanceCard("Masuk Penjara")
 {
 }
@@ -15,6 +13,7 @@ GoToJailCard::~GoToJailCard()
 
 void GoToJailCard::execute(Player &p, GameState &gs)
 {
-    p.setPosition(JAIL_INDEX);
+    int jailIdx = gs.getBoard()->findTileIndexByCode("PEN");
+    p.setPosition(jailIdx);
     p.goToJail();
 }

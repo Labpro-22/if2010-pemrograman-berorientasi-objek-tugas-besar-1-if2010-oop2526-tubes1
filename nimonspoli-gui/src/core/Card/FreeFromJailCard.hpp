@@ -8,7 +8,6 @@ class FreeFromJailCard : public ChanceCard
 {
 public:
     FreeFromJailCard();
-    FreeFromJailCard(const string &type, const string &description);
     ~FreeFromJailCard();
     void execute(Player &p, GameState &gs) override;
 };

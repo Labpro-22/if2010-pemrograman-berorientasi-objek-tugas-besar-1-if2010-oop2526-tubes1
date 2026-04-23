@@ -22,7 +22,7 @@ void ElectionCard::execute(Player &p, GameState &gs)
     {
         if (other == &p)
             continue;
-        p -= (int)amountPerPlayer;
-        *other += (int)amountPerPlayer;
+        p -= amountPerPlayer;
+        *other += amountPerPlayer;
     }
 }
