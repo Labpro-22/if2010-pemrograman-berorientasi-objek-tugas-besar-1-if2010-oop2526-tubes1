@@ -43,17 +43,17 @@ void BeliCommand::execute(GameMaster& gm) {
         currentPlayer->addProperty(property);
 
         std::cout << "[DEBUG] " << currentPlayer->getUsername()
-                  << " membeli " << property->getName()
-                  << " seharga M" << price
-                  << ". Saldo: M" << currentPlayer->getBalance() << std::endl;
+                << " membeli " << property->getName()
+                << " seharga M" << price
+                << ". Saldo: M" << currentPlayer->getBalance() << std::endl;
 
-        gs.setPhase(GamePhase::PLAYER_TURN);
+        gs.setPhase(GamePhase::PLAYER_TURN); // ← beli sukses, lanjut giliran
+
     } else {
         // Tidak mau beli atau uang tidak cukup → lelang
         std::cout << "[DEBUG] " << property->getName()
-                  << " masuk ke lelang." << std::endl;
+                << " masuk ke lelang." << std::endl;
 
-        gs.setPhase(GamePhase::AUCTION);
-        // GameMaster mendeteksi fase AUCTION dan menjalankan LelangCommand
+        gm.startAuction(property, currentPlayer); // ← pindahkan ke sini
     }
 }
