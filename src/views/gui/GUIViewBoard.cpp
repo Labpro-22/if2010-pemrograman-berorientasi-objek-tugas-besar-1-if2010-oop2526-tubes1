@@ -21,13 +21,13 @@
 
 #if NIMONSPOLY_ENABLE_SFML
 // Fixed layout constants for in-game screen (window 1440x1024)
-static constexpr float LAYOUT_PAD = 8.f;      // spacing for globe / board area
+static constexpr float LAYOUT_PAD = 2.f;      // spacing for globe / board area
 static constexpr float SECTION_PAD = 2.f;     // compact margin for section cards
-static constexpr float SQUARE_CARD_W = 300.f;
-static constexpr float SQUARE_CARD_H = 380.f;
-static constexpr float RECT_CARD_W = 1000.f;
-static constexpr float RECT_CARD_H = 250.f;
-static constexpr float GLOBE_SIZE = 520.f;
+static constexpr float SQUARE_CARD_W = 360.f;
+static constexpr float SQUARE_CARD_H = 358.f;
+static constexpr float RECT_CARD_W = 1100.f;
+static constexpr float RECT_CARD_H = 180.f;
+static constexpr float GLOBE_SIZE = 700.f;
 #endif
 
 void GUIView::showBoard(const GameStateView& state) {
@@ -131,6 +131,30 @@ void GUIView::showBoard(const GameStateView& state) {
     drawLeftPanel (rw, state);
     drawRightPanel(rw, state);
     drawBottomStrip(rw, state);
+
+    // Save/load status toast
+    if (saveLoadStatusFrames_ > 0) {
+        --saveLoadStatusFrames_;
+        const float toastW = W * 0.40f;
+        const float toastH = static_cast<float>(rw.getSize().y) * 0.06f;
+        const float tx = W * 0.5f;
+        const float ty = static_cast<float>(rw.getSize().y) * 0.04f + toastH * 0.5f;
+        sf::RectangleShape toast({toastW, toastH});
+        toast.setOrigin({toastW * 0.5f, toastH * 0.5f});
+        toast.setPosition({tx, ty});
+        toast.setFillColor(sf::Color(30, 50, 80, 220));
+        toast.setOutlineThickness(1.5f);
+        toast.setOutlineColor(sf::Color(80, 130, 200));
+        rw.draw(toast);
+
+        unsigned tsz = static_cast<unsigned>(toastH * 0.40f);
+        sf::Text t(am.font("regular"), saveLoadStatus_, tsz);
+        t.setFillColor(sf::Color(230, 240, 255));
+        auto tb = t.getLocalBounds();
+        t.setOrigin({tb.position.x + tb.size.x * 0.5f, tb.position.y + tb.size.y * 0.5f});
+        t.setPosition({tx, ty});
+        rw.draw(t);
+    }
 
     if (currentPrompt_ && currentPrompt_->type != GUIPromptType::NONE && !currentPrompt_->resolved) {
         renderPromptOverlay(*currentPrompt_);
@@ -362,14 +386,14 @@ void GUIView::drawRightPanel(sf::RenderWindow& rw, const GameStateView& state) {
     }
 
     {
-        const char* actions[] = {"Buy", "Build", "Mortgage", "Card"};
+        const char* actions[] = {"Buy", "Build", "Mortgage", "Card", "Save", "End"};
         const sf::Texture* squareBtnTex = am.texture("assets/components/btn/EmptySquareBtn.png");
-        float btnSz = std::min(colW * 0.46f, (H - y - SECTION_PAD - 100.f) / 2.5f);
+        float btnSz = std::min(colW * 0.46f, (H - y - SECTION_PAD - 100.f) / 3.6f);
         float gap = btnSz * 0.18f;
         float gridW = btnSz * 2.f + gap;
         float startX = rpX + (colW - gridW) * 0.5f + btnSz * 0.5f;
         float startY = y + btnSz * 0.5f;
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < 6; ++i) {
             int col = i % 2;
             int row = i / 2;
             float bx = startX + col * (btnSz + gap);
@@ -388,7 +412,7 @@ void GUIView::drawRightPanel(sf::RenderWindow& rw, const GameStateView& state) {
                 gui::draw::drawMenuButton(rw, am, actions[i], {bx, by}, {btnSz, btnSz}, false);
             }
         }
-        y += 2.f * (btnSz + gap) + padY * 0.6f;
+        y += 3.f * (btnSz + gap) + padY * 0.6f;
     }
 
     {
@@ -813,15 +837,15 @@ void GUIView::handleInGameClick(float mx, float my, std::string& outCommand, con
     // Calculate button positions (same as drawRightPanel)
     float y = SECTION_PAD + SQUARE_CARD_H + SECTION_PAD;
 
-    // Action buttons: Buy, Build, Mortgage, Card
-    float btnSz = std::min(colW * 0.46f, (H - y - SECTION_PAD - 100.f) / 2.5f);
+    // Action buttons: Buy, Build, Mortgage, Card, Save, End
+    float btnSz = std::min(colW * 0.46f, (H - y - SECTION_PAD - 100.f) / 3.6f);
     float gap = btnSz * 0.18f;
     float gridW = btnSz * 2.f + gap;
     float startX = rpX + (colW - gridW) * 0.5f + btnSz * 0.5f;
     float startY = y + btnSz * 0.5f;
 
-    const char* actions[] = {"BELI", "BANGUN", "GADAI", "KARTU"};
-    for (int i = 0; i < 4; ++i) {
+    const char* actions[] = {"BELI", "BANGUN", "GADAI", "KARTU", "SIMPAN", "SELESAI"};
+    for (int i = 0; i < 6; ++i) {
         int col = i % 2;
         int row = i / 2;
         float bx = startX + col * (btnSz + gap);

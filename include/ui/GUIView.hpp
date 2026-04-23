@@ -103,6 +103,10 @@ private:
     Money buyPromptMoney_{0};
     bool buyPromptActive_{false};
 
+    // Save/load status toast
+    std::string saveLoadStatus_;
+    int saveLoadStatusFrames_{0};
+
     void drawLeftPanel (sf::RenderWindow& rw, const GameStateView& state);
     void drawRightPanel(sf::RenderWindow& rw, const GameStateView& state);
     void drawBottomStrip(sf::RenderWindow& rw, const GameStateView& state);

@@ -193,6 +193,19 @@ int main() {
                 // Delay DADU command until dice animation finishes
                 if (pendingCommand == "DADU" && view.isDiceAnimating()) {
                     // wait for animation
+                } else if (pendingCommand == "SIMPAN") {
+                    std::string path = input.getString("Nama berkas simpanan");
+                    if (path.empty()) {
+                        path = "nimonspoli_save.txt";
+                    }
+                    if (!engine.getState().canSave()) {
+                        view.showSaveLoadStatus("Permainan belum bisa disimpan.");
+                    } else if (engine.saveGame(path)) {
+                        view.showSaveLoadStatus("Permainan disimpan ke " + path + ".");
+                    } else {
+                        view.showSaveLoadStatus("Gagal menyimpan.");
+                    }
+                    pendingCommand.clear();
                 } else {
                     engine.processCommand(pendingCommand, *active);
                     pendingCommand.clear();

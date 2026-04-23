@@ -90,7 +90,8 @@ void GUIView::showDropCardPrompt(const vector<CardInfo>& cards) {
 }
 
 void GUIView::showSaveLoadStatus(const string& message) {
-    (void)message;
+    saveLoadStatus_ = message;
+    saveLoadStatusFrames_ = 180; // 3 seconds at 60fps
 }
 
 void GUIView::showTurnInfo(const string& playerName, int turnNum, int maxTurn) {
