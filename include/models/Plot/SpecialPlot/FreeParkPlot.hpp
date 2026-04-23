@@ -2,10 +2,10 @@
 
 #include "models/Plot/SpecialPlot/SpecialPlot.hpp"
 
-class PrisonPlot : public SpecialPlot {
+class FreeParkPlot : public SpecialPlot {
 public:
-    PrisonPlot(std::string name, std::string code);
-    ~PrisonPlot() = default;
+    FreeParkPlot(std::string name, std::string code);
+    ~FreeParkPlot() = default;
 
     std::string getType() const override;
     void startEvent() override;
