@@ -14,6 +14,8 @@
 #include "../GameMaster/GameMaster.hpp"
 #include "../Commands/BayarPajakCommand.hpp"
 #include "../Commands/FestivalCommand.hpp"
+#include "../Commands/BangunCommand.hpp"
+#include "../Commands/BayarSewaCommand.hpp"
 #include "../Commands/CardCommand.hpp"
 #include "../GameState/GameState.hpp"
 #include "../Exceptions/FinancialException.hpp"
