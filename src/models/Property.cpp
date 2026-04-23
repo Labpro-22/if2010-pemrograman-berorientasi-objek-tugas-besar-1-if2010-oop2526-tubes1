@@ -1,9 +1,9 @@
 #include "../include/models/Property.hpp"
 #include "../include/models/Player.hpp"
 
-Property::Property(int position, const std::string& name, const std::string& color,
+Property::Property(int position, const std::string& name, const std::string& code, const std::string& color,
                    int purchasePrice, int mortgageValue)
-    : Tile(position, name, color),
+    : Tile(position, name, code, color),
       owner(""),
       status(StatusType::BANK),
       festivalMultiplier(1),
@@ -79,4 +79,5 @@ void Property::onLand(Player* player) {
 
 void Property::onPass(Player* player) {
     // Default: no action when passing
+    
 }

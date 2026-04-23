@@ -8,7 +8,7 @@ private:
     std::map<int, int> rentTable;
 
 public:
-    Railroad(int position, const std::string& name, const std::string& color,
+    Railroad(int position, const std::string& name, const std::string& code, const std::string& color,
              int purchasePrice, int mortgageValue);
     ~Railroad() = default;
 

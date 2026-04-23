@@ -1,14 +1,18 @@
 #include "../include/models/Street.hpp"
 #include "../include/models/Player.hpp"
 
-Street::Street(int position, const std::string& name, const std::string& color,
+Street::Street(int position, const std::string& name, const std::string& code, const std::string& color,
                ColorGroup colorGroup, int purchasePrice, int mortgageValue,
                int housePrice, int hotelPrice)
-    : Property(position, name, color, purchasePrice, mortgageValue),
+    : Property(position, name, code, color, purchasePrice, mortgageValue),
       colorGroup(colorGroup),
       housePrice(housePrice),
       hotelPrice(hotelPrice),
       buildingCount("0") {
+}
+
+Street::Street(int position, const std::string& name, const std::string& color, ColorGroup colorGroup, int purchasePrice, int mortgageValue, int housePrice, int hotelPrice)
+    : Street(position, name, "", color, colorGroup, purchasePrice, mortgageValue, housePrice, hotelPrice) {
 }
 
 ColorGroup Street::getColorGroup() const {
@@ -31,7 +35,7 @@ int Street::getHotelPrice() const {
     return hotelPrice;
 }
 
-std::string Street::getBuildingCount() const {
+string Street::getBuildingCount() const {
     return buildingCount;
 }
 
@@ -58,16 +62,13 @@ bool Street::canBuildHotel(Player* player) const {
 }
 
 void Street::buildHouse() {
-    // Building logic will be managed by BuildingManager
+    if (stoi(buildingCount) < 4) buildingCount = std::to_string(stoi(buildingCount) + 1);
 }
 
 void Street::buildHotel() {
-    // Building logic will be managed by BuildingManager
+    if (stoi(buildingCount) == 4) buildingCount = "H";
 }
 
-void Street::sellBuilding() {
-    // Selling logic will be managed by BuildingManager
-}
 
 int Street::calculateRent(Player* visitor) {
     if (status != StatusType::OWNED || visitor == nullptr) {
@@ -75,12 +76,13 @@ int Street::calculateRent(Player* visitor) {
     }
 
     int houseCount = 0;
-    try {
+    if(houseCount = std::stoi(buildingCount)) {
         houseCount = std::stoi(buildingCount);
-    } catch (...) {
-        houseCount = 0;
+    } else if (buildingCount == "H") {
+        houseCount = 5; // 5 untuk hotel
+    } else {
+        houseCount = 0; // default ke 0 kalau parsing gagal
     }
-
     int baseRent = getRent(houseCount);
     return baseRent * festivalMultiplier;
 }

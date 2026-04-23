@@ -1,9 +1,8 @@
 #include "../include/models/JailTile.hpp"
 #include "../include/models/Player.hpp"
 
-JailTile::JailTile(int position, const std::string& name, const std::string& color, int fineAmount)
-    : SpecialTile(position, name, color, SpecialType::JAIL), fineAmount(fineAmount) {
-}
+JailTile::JailTile(int position, const std::string& name, const std::string& code, const std::string& color, int fineAmount)
+    : SpecialTile(position, name, "PEN", "DEFAULT", SpecialType::JAIL), fineAmount(fineAmount) { }
 
 int JailTile::getFineAmount() const {
     return fineAmount;
@@ -38,15 +37,9 @@ JailResult JailTile::attemptEscape(Player* player) {
         return JailResult::STILL_JAILED;
     }
 
-    if (player->getMoney() >= fineAmount) {
-        payFine(player);
-    } else {
-        player->operator-=(fineAmount);
-        player->setStatus(PlayerStatus::ACTIVE);
-        player->resetJailTurns();
-    }
-
-    return JailResult::FORCED_OUT;
+    // Escape logic will be determined by game rules
+    // For now, return default state
+    return JailResult::STILL_JAILED;
 }
 
 void JailTile::payFine(Player* player) {
@@ -61,7 +54,7 @@ void JailTile::payFine(Player* player) {
     }
 }
 
-void JailTile::executeSpecial(Player* player, GameContext* ctx) {
+void JailTile::executeSpecial(Player* player) {
     if (player != nullptr) {
         visitJail(player);
     }

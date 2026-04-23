@@ -1,25 +1,19 @@
 #include "../include/models/ChanceTile.hpp"
-#include "../include/core/GameContext.hpp"
 
-ChanceTile::ChanceTile(int position, const std::string& name,
-                       const std::string& color, CardDeck<ActionCard>* deck)
-    : ActionTile(position, name, color, ActionType::CHANCE), deck(deck) {}
-
-ActionCard* ChanceTile::drawCard() {
-    if (deck == nullptr || deck->isEmpty()) return nullptr;
-    return deck->drawTop();
+ChanceTile::ChanceTile(int position, const std::string& name, const std::string& code, const std::string& color)
+    : ActionTile(position, name, "KSP", "DEFAULT", ActionType::CHANCE) {
 }
 
-CardDeck<ActionCard>* ChanceTile::getDeck() const {
-    return deck;
+ActionCard* ChanceTile::drawCard(Player* player, CardDeck<ActionCard>* deck) {
+    (void)player;
+
+    if (deck == nullptr) return nullptr;
 }
 
-void ChanceTile::executeAction(Player* player, GameContext* ctx) {
-    if (player == nullptr || ctx == nullptr) return;
-
-    ActionCard* card = drawCard();
-    if (card == nullptr) return;
-
-    card->execute(player, ctx);
-    deck->discard(card);
+void ChanceTile::executeAction(Player* player) {
+    ActionCard* card = drawCard(player, nullptr);
+    if (card != nullptr && player != nullptr) {
+        //card implementation goes here
+    }
 }
+

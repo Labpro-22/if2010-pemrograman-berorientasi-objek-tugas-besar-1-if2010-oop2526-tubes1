@@ -13,7 +13,7 @@ protected:
     std::string code;
 
 public:
-    Tile(int position, const std::string& name, const std::string& color);
+    Tile(int position, const std::string& name, const std::string& code, const std::string& color);
     virtual ~Tile() = default;
 
     int getPosition() const;

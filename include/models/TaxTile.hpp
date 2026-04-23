@@ -1,11 +1,12 @@
 #pragma once
 
 #include "ActionTile.hpp"
-#include "Street.hpp"
-#include "Property.hpp"
-class GameContext;
 
-enum TaxType { PPH, PBM };
+
+enum TaxType {
+    PPH,
+    PBM
+};
 
 class TaxTile : public ActionTile {
 private:
@@ -14,20 +15,20 @@ private:
     double percentageRate;
 
 public:
-    TaxTile(int position, const std::string& name, const std::string& color,
+    TaxTile(int position, const std::string& name, const std::string& code, const std::string& color,
             TaxType taxType, int flatAmount = 0, double percentageRate = 0.0);
     ~TaxTile() = default;
 
     TaxType getTaxType() const;
     int getFlatAmount() const;
     double getPercentageRate() const;
+
     void setTaxType(TaxType type);
     void setFlatAmount(int amount);
     void setPercentageRate(double rate);
 
     int calculateTax(Player* player) const;
-    int calculateTaxPercentage(Player* player, GameContext* ctx) const;
     void collectTax(Player* player);
-    void executeAction(Player* player, GameContext* ctx) override;
 
+    void executeAction(Player* player) override;
 };

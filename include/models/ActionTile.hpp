@@ -2,7 +2,7 @@
 
 #include "Tile.hpp"
 
-class GameContext;
+
 
 enum ActionType {
     CHANCE,
@@ -17,16 +17,16 @@ protected:
     ActionType actionType;
 
 public:
-    ActionTile(int position, const std::string& name, 
-               const std::string& color, ActionType actionType);
+    ActionTile(int position, const std::string& name, const std::string& code, const std::string& color,
+               ActionType actionType);
     virtual ~ActionTile() = default;
 
     ActionType getActionType() const;
     void setActionType(ActionType type);
 
-    virtual void executeAction(Player* player, GameContext* ctx) = 0;
+    virtual void executeAction(Player* player) = 0;
 
     void onLand(Player* player) override;
-    void onLand(Player* player, GameContext* ctx);
     virtual void onPass(Player* player) override;
+
 };

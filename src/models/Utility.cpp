@@ -1,9 +1,9 @@
 #include "../include/models/Utility.hpp"
 #include "../include/models/Player.hpp"
 
-Utility::Utility(int position, const std::string& name, const std::string& color,
+Utility::Utility(int position, const std::string& name, const std::string& code, const std::string& color,
                  int purchasePrice, int mortgageValue)
-    : Property(position, name, color, purchasePrice, mortgageValue) {
+    : Property(position, name, code, color, purchasePrice, mortgageValue) {
 }
 
 int Utility::getRent(int diceTotal, int utilityCount) const {

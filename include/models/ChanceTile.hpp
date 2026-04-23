@@ -1,20 +1,19 @@
 #pragma once
+
 #include "ActionTile.hpp"
 #include "../utils/CardDeck.hpp"
-#include "../utils/ActionCard.hpp"
+#include "../include/utils/ActionCard.hpp"
+#include "../include/utils/CardDeck.hpp"
+#include "../include/models/Player.hpp"
 
-class GameContext;
+// Forward declaration
 
 class ChanceTile : public ActionTile {
-private:
-    CardDeck<ActionCard>* deck;
-
 public:
-    ChanceTile(int position, const std::string& name,
-               const std::string& color, CardDeck<ActionCard>* deck);
+    ChanceTile(int position, const std::string& name, const std::string& code, const std::string& color);
     ~ChanceTile() = default;
 
-    ActionCard* drawCard();
-    CardDeck<ActionCard>* getDeck() const;
-    void executeAction(Player* player, GameContext* ctx) override;
+    ActionCard* drawCard(Player* player, CardDeck<ActionCard>* deck);
+    void executeAction(Player* player) override;
+
 };

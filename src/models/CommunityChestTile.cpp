@@ -1,25 +1,21 @@
 #include "../include/models/CommunityChestTile.hpp"
-#include "../include/core/GameContext.hpp"
+#include "../include/utils/CardDeck.hpp"
 
-CommunityChestTile::CommunityChestTile(int position, const std::string& name,
-                                        const std::string& color, CardDeck<ActionCard>* deck)
-    : ActionTile(position, name, color, ActionType::COMMUNITY_CHEST), deck(deck) {}
-
-ActionCard* CommunityChestTile::drawCard() {
-    if (deck == nullptr || deck->isEmpty()) return nullptr;
-    return deck->drawTop();
+CommunityChestTile::CommunityChestTile(int position, const std::string& name, const std::string& code, const std::string& color)
+    : ActionTile(position, name, "DNU", "DEFAULT", ActionType::COMMUNITY_CHEST) {
 }
 
-CardDeck<ActionCard>* CommunityChestTile::getDeck() const {
-    return deck;
+ActionCard* CommunityChestTile::drawCard(Player* player, CardDeck<ActionCard>* deck) {
+    (void)player;
+    if (deck->isEmpty()) {
+        return nullptr;
+    }
 }
 
-void CommunityChestTile::executeAction(Player* player, GameContext* ctx) {
-    if (player == nullptr || ctx == nullptr) return;
 
-    ActionCard* card = drawCard();
-    if (card == nullptr) return;
-
-    card->execute(player, ctx);
-    deck->discard(card);
+void CommunityChestTile::executeAction(Player* player) {
+    ActionCard* card = drawCard(player, nullptr);
+    if (card != nullptr && player != nullptr) {
+        //card implementation goes here
+    }
 }

@@ -105,7 +105,7 @@ void GameLoader::readPlayerStates(ifstream& in, GameBoard* board) {
         else if (statusStr == "JAILED")   status = JAILED;
         else throw FileFormatException("Unknown player status: " + statusStr);
 
-        Player* p = new Player(username, money);
+        std::shared_ptr<Player> p = std::make_shared<Player>(username, money);
         p->setPosition(position);
         p->setStatus(status);
 
@@ -171,9 +171,9 @@ void GameLoader::readPropertyStates(ifstream& in, GameBoard* board) {
         string building = t[6];
 
         Property* prop = nullptr;
-        const vector<Tile*>& tiles = board->getTiles();
+        const vector<std::unique_ptr<Tile>>& tiles = board->getTiles();
         for (size_t k = 0; k < tiles.size(); ++k) {
-            Property* cand = dynamic_cast<Property*>(tiles[k]);
+            Property* cand = dynamic_cast<Property*>(tiles[k].get());
             if (cand != nullptr && cand->getCode() == code) {
                 prop = cand;
                 break;
@@ -302,14 +302,14 @@ bool GameLoader::loadSave(const string& filename,
     readPropertyStates(in, board);
 
     vector<SkillCard*> loadedDeck = readDeckState(in);
-    CardDeck<SkillCard>* targetDeck = board->getSkillDeck();
+    CardDeck<SkillCard*>* targetDeck = board->getSkillDeck();
     if (targetDeck != nullptr) {
         while (!targetDeck->isEmpty()) {
             SkillCard* c = targetDeck->drawTop();
             delete c;
         }
         for (size_t i = 0; i < loadedDeck.size(); ++i) {
-            targetDeck->addCard(loadedDeck[i]);
+            targetDeck->addToDeck(loadedDeck[i]);
         }
     } else {
         for (size_t i = 0; i < loadedDeck.size(); ++i) {

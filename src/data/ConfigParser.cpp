@@ -21,6 +21,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <cctype>
+#include <memory>
 
 namespace {
 
@@ -116,7 +117,7 @@ void ConfigParser::parsePropertyConfig(const string& filename) {
             else if (up == "BIRU_TUA") colorGroup = BIRU_TUA;
             else throw FileFormatException("Unknown color group: " + colorRaw);
 
-            Street* s = new Street(position, name, colorRaw, colorGroup,
+            Street* s = new Street(position, name, code, colorRaw, colorGroup,
                                    harga, gadai, upgRumah, upgHotel);
             map<int, int> rentTable;
             int levels = static_cast<int>(tokens.size()) - 9;
@@ -134,14 +135,14 @@ void ConfigParser::parsePropertyConfig(const string& filename) {
             }
             int harga = parseInt(tokens[5], "property.txt railroad HARGA");
             int gadai = parseInt(tokens[6], "property.txt railroad NILAI_GADAI");
-            tile = new Railroad(position, name, colorRaw, harga, gadai);
+            tile = new Railroad(position, name, code, colorRaw, harga, gadai);
         } else if (type == "UTILITY") {
             if (tokens.size() < 7) {
                 throw FileFormatException("property.txt: utility needs 7 fields");
             }
             int harga = parseInt(tokens[5], "property.txt utility HARGA");
             int gadai = parseInt(tokens[6], "property.txt utility NILAI_GADAI");
-            tile = new Utility(position, name, colorRaw, harga, gadai);
+            tile = new Utility(position, name, code, colorRaw, harga, gadai);
         } else {
             throw FileFormatException("property.txt: unknown property type " + type);
         }
@@ -294,31 +295,31 @@ void ConfigParser::parseActionConfig(const string& filename) {
         Tile* tile = nullptr;
         if (jenis == "SPESIAL" || jenis == "SPECIAL") {
             if (upCode == "GO") {
-                tile = new GoTile(position, name, color, goSalary);
+                tile = new GoTile(position, name, code, color, goSalary);
             } else if (upCode == "PEN" || upCode == "JAIL" || upCode == "PJR") {
-                tile = new JailTile(position, name, color, jailFine);
+                tile = new JailTile(position, name, code, color, jailFine);
             } else if (upCode == "BBP" || upCode == "FP") {
-                tile = new FreeParkingTile(position, name, color);
+                tile = new FreeParkingTile(position, name, code, color);
             } else if (upCode == "PPJ" || upCode == "GTJ") {
-                tile = new GoToJailTile(position, name, color);
+                tile = new GoToJailTile(position, name, code, color);
             } else {
-                tile = new FreeParkingTile(position, name, color);
+                tile = new FreeParkingTile(position, name, code, color);
             }
         } else if (jenis == "KARTU" || jenis == "CARD") {
             if (upCode == "DNU" || upCode == "DU") {
-                tile = new CommunityChestTile(position, name, color, communityDeck);
+                tile = new CommunityChestTile(position, name, code, color);
             } else {
-                tile = new ChanceTile(position, name, color, chanceDeck);
+                tile = new ChanceTile(position, name, code, color);
             }
         } else if (jenis == "PAJAK" || jenis == "TAX") {
             if (upCode == "PBM") {
-                tile = new TaxTile(position, name, color, PBM, pbmFlat, 0.0);
+                tile = new TaxTile(position, name, code, color, PBM, pbmFlat, 0.0);
             } else {
-                tile = new TaxTile(position, name, color, PPH, pphFlat,
+                tile = new TaxTile(position, name, code, color, PPH, pphFlat,
                                    static_cast<double>(pphPercentage) / 100.0);
             }
         } else if (jenis == "FESTIVAL") {
-            tile = new FestivalTile(position, name, color);
+            tile = new FestivalTile(position, name, code, color);
         } else {
             throw FileFormatException("aksi.txt: unknown JENIS_PETAK " + jenis);
         }
@@ -357,18 +358,18 @@ void ConfigParser::loadConfig(GameBoard* board) {
         if (it == stagedTiles.end()) {
             throw FileFormatException("Missing tile at position " + to_string(i));
         }
-        board->addTile(it->second);
+        board->addTile(std::unique_ptr<Tile>(it->second));
     }
     stagedTiles.clear();
 
-    const vector<Tile*>& tiles = board->getTiles();
+    const vector<std::unique_ptr<Tile>>& tiles = board->getTiles();
     for (size_t i = 0; i < tiles.size(); ++i) {
-        Railroad* r = dynamic_cast<Railroad*>(tiles[i]);
+        Railroad* r = dynamic_cast<Railroad*>(tiles[i].get());
         if (r != nullptr) {
             r->setRentTable(railroadRentTable);
             continue;
         }
-        Utility* u = dynamic_cast<Utility*>(tiles[i]);
+        Utility* u = dynamic_cast<Utility*>(tiles[i].get());
         if (u != nullptr) {
             u->setMultiplierTable(utilityMultiplierTable);
         }

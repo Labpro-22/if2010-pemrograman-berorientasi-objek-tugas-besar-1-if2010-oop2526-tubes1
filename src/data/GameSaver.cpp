@@ -14,10 +14,10 @@
 #include "../../include/models/Utility.hpp"
 
 void GameSaver::writePlayerStates(ofstream& out,
-                                  const vector<Player*>& players) const {
+                                  const vector<std::shared_ptr<Player>>& players) const {
     out << players.size() << "\n";
     for (size_t i = 0; i < players.size(); ++i) {
-        Player* p = players[i];
+        Player* p = players[i].get();
         if (p == nullptr) continue;
 
         string statusStr;
@@ -60,21 +60,21 @@ void GameSaver::writeTurnOrder(ofstream& out, GameBoard* board) const {
         out << "\n\n";
         return;
     }
-    const vector<Player*>& players = board->getPlayers();
+    const vector<std::shared_ptr<Player>>& players = board->getPlayers();
     for (size_t i = 0; i < players.size(); ++i) {
         if (i > 0) out << " ";
         if (players[i] != nullptr) out << players[i]->getUsername();
     }
     out << "\n";
-    Player* cur = board->getCurrentPlayer();
+    std::shared_ptr<Player> cur = board->getCurrentPlayer();
     out << (cur ? cur->getUsername() : "") << "\n";
 }
 
 void GameSaver::writePropertyStates(ofstream& out,
-                                    const vector<Tile*>& tiles) const {
+                                    const vector<std::unique_ptr<Tile>>& tiles) const {
     vector<Property*> props;
     for (size_t i = 0; i < tiles.size(); ++i) {
-        Property* p = dynamic_cast<Property*>(tiles[i]);
+        Property* p = dynamic_cast<Property*>(tiles[i].get());
         if (p != nullptr) props.push_back(p);
     }
     out << props.size() << "\n";

@@ -24,9 +24,10 @@ private:
     std::string buildingCount;
 
 public:
-    Street(int position, const std::string& name, const std::string& color,
+    Street(int position, const std::string& name, const std::string& code, const std::string& color,
            ColorGroup colorGroup, int purchasePrice, int mortgageValue,
            int housePrice, int hotelPrice);
+    Street(int position, const std::string& name, const std::string& color, ColorGroup colorGroup, int purchasePrice, int mortgageValue, int housePrice, int hotelPrice);
     ~Street() = default;
 
     ColorGroup getColorGroup() const;

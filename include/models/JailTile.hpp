@@ -14,7 +14,7 @@ private:
     int fineAmount;
 
 public:
-    JailTile(int position, const std::string& name, const std::string& color, int fineAmount);
+    JailTile(int position, const std::string& name, const std::string& code, const std::string& color, int fineAmount);
     ~JailTile() = default;
 
     int getFineAmount() const;
@@ -25,5 +25,5 @@ public:
     JailResult attemptEscape(Player* player);
     void payFine(Player* player);
 
-    void executeSpecial(Player* player, GameContext* ctx) override;
+    void executeSpecial(Player* player) override;
 };

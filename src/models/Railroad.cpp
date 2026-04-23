@@ -1,9 +1,9 @@
 #include "../include/models/Railroad.hpp"
 #include "../include/models/Player.hpp"
 
-Railroad::Railroad(int position, const std::string& name, const std::string& color,
-                   int purchasePrice, int mortgageValue)
-    : Property(position, name, color, purchasePrice, mortgageValue) {
+Railroad::Railroad(int position, const std::string& name, const std::string& code, const std::string& color,
+                     int purchasePrice, int mortgageValue)
+    : Property(position, name, code, color, purchasePrice, mortgageValue) {
 }
 
 int Railroad::getRent(int railroadCount) const {
