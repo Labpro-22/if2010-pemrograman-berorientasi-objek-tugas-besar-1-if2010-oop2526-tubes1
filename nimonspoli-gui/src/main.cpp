@@ -169,6 +169,7 @@ int main() {
                 gameScreen->setPlayerCount(count);
                 gui.setScreen(gameScreen);
 
+                        // Debug memory — print setiap 60 frame
             } else {
                 // ── NEW GAME ──────────────────────────────────────────────
                 int count = std::max(2, std::min(4, setup.playerCount));
@@ -232,25 +233,43 @@ int main() {
         }
 
         // ── COM auto-play ─────────────────────────────────────────────────
+        // Di main.cpp, tambah variable di luar loop:
+        bool comHasActed = false;
+
+        // Di dalam loop, ganti bagian COM auto-play:
         if (gameMaster) {
             GameState& state = gameMaster->getState();
-            Player* curr = state.getCurrPlayer();
+            Player* curr     = state.getCurrPlayer();
             ComputerPlayer* com = dynamic_cast<ComputerPlayer*>(curr);
+
             if (com && state.getPhase() == GamePhase::PLAYER_TURN
-                    && !state.getHasRolled()) {
+                    && !state.getHasRolled()
+                    && !comHasActed) {          // ← guard tambahan
+                comHasActed = true;             // ← set dulu sebelum execute
                 com->executeTurn(*gameMaster);
                 if (state.getPhase() != GamePhase::GAME_OVER) {
                     gameMaster->endTurn();
                     gameMaster->beginTurn();
+
+                    gui.clearCommands();
                 }
             }
-        }
 
+            // Reset guard kalau giliran berganti ke pemain baru
+            if (!com || state.getHasRolled() == false) {
+                comHasActed = false;
+            }
+        }
         if (gui.getCurrentScreen()) {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
         }
 
+        // Debug memory — print setiap 60 frame
+        static int frameCount = 0;
+        if (++frameCount % 60 == 0) {
+            TraceLog(LOG_INFO, "Frame %d - queue size: (check manually)", frameCount);
+        }
         // ── Update + Render ───────────────────────────────────────────────
         BeginDrawing();
         if (gui.getCurrentScreen()) {

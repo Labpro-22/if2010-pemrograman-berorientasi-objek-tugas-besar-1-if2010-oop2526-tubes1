@@ -79,7 +79,7 @@ void GameScreen::drawRightPanel()
     DrawText("Giliran:", (int)rx+10, 76, 11, {150,150,180,255});
     DrawText(curP.username.c_str(),(int)rx+10, 90, 14, playerColors[gameState.activePlayerIdx]);
 
-        // Tambah di drawRightPanel(), setelah DrawText("MODE: REAL"...)
+    // Tambah di drawRightPanel(), setelah DrawText("MODE: REAL"...)
     const char* phaseStr = "";
     if (isRealMode()) {
         auto ph = guiManager->getGameMaster()->getState().getPhase();
