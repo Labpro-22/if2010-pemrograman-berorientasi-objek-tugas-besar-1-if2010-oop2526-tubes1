@@ -651,21 +651,6 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     return -1;
 }
 
-int GameMaster::calculateWealth(Player *player) const
-{
-    if (!player)
-        return 0;
-    int wealth = player->getBalance();
-    for (int i = 0; i < player->getPropertyCount(); i++)
-    {
-        Property *p = player->getProperties()[i];
-        if (!p || p->getStatus() == PropertyStatus::MORTGAGED) continue;
-        wealth += p->calculateSellPrice();
-        // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
-        // jika ada override — di sini gunakan purchasePrice sebagai baseline
-    }
-    return wealth;
-}
 
 void GameMaster::log(const std::string &username,
                      const std::string &action,
