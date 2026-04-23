@@ -75,22 +75,22 @@ void GameMaster::handleCommand(const std::string &rawInput)
     (void)rawInput; // placeholder — diisi oleh tim CLI/GUI
 }
 
-    void GameMaster::beginTurn()
+void GameMaster::beginTurn()
+{
+    state.setPhase(GamePhase::PLAYER_TURN);
+    state.setHasRolled(false);
+    state.setHasUsedCard(false);
+    state.setHasExtraTurn(false);
+
+    distributeSkillCards();
+
+    Player *cur = state.getCurrPlayer();
+    if (cur)
     {
-        state.setPhase(GamePhase::PLAYER_TURN);
-        state.setHasRolled(false);
-        state.setHasUsedCard(false);
-        state.setHasExtraTurn(false);
-
-        distributeSkillCards();
-
-        Player *cur = state.getCurrPlayer();
-        if (cur)
-        {
-            log(cur->getUsername(), "TURN_START",
-                "Giliran Turn " + std::to_string(state.getCurrTurn()));
-        }
+        log(cur->getUsername(), "TURN_START",
+            "Giliran Turn " + std::to_string(state.getCurrTurn()));
     }
+}
 
 void GameMaster::endTurn()
 {
@@ -113,27 +113,23 @@ void GameMaster::endTurn()
 // ─────────────────────────────────────────────
 //  Pergerakan pemain
 // ─────────────────────────────────────────────
-
 void GameMaster::movePlayer(Player *player, int steps)
 {
     if (!player || !state.getBoard())
         return;
 
     Board *board = state.getBoard();
-    int boardSize = board->getSize();
-    Tile *curTile = board->getTile(0); // placeholder; idealnya Player simpan idx
 
-    // Cari posisi saat ini via kode petak
-    // (Player menyimpan Tile*, kita perlu indeksnya)
-    // Loop board untuk temukan indeks player sekarang
     int curIdx = player->getPosition();
+    int boardSize = state.getBoard()->getSize();
 
     int targetIdx = (curIdx + steps) % boardSize;
 
-    // Cek apakah melewati GO (indeks 0)
-    if (targetIdx < curIdx || steps >= boardSize)
+    // detect pass GO (GO = index 0)
+    bool passedGo = (curIdx + steps) >= boardSize;
+
+    if (passedGo)
     {
-        // Melewati GO → bayar gaji
         Tile *goTile = board->getTile(0);
         GoTile *go = dynamic_cast<GoTile *>(goTile);
         if (go)
@@ -142,12 +138,10 @@ void GameMaster::movePlayer(Player *player, int steps)
             log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
-    }
+}
 
-    // Pindahkan player & update currPetak
-    player->setPosition(targetIdx);
+player->setPosition(targetIdx);
 
-    // Trigger petak yang diinjak
     Tile *landedTile = board->getTile(targetIdx);
     if (landedTile)
     {
@@ -215,6 +209,7 @@ JailTile *GameMaster::findJailTile() const
 
 int GameMaster::findJailIndex() const
 {
+    
     Board *board = state.getBoard();
     if (!board)
         return -1;
@@ -226,12 +221,21 @@ int GameMaster::findJailIndex() const
     return -1;
 }
 
-void GameMaster::sendPlayerToJail(Player *player)
+void GameMaster::sendPlayerToJail(Player* player)
 {
-    if (!player)
-        return;
+    if (!player) return;
 
-    JailTile *jail = findJailTile();
+    int jailIdx = findJailIndex();
+    if (jailIdx >= 0)
+        player->setPosition(jailIdx);
+
+    Dice* dice = state.getDice();
+    if (dice)
+        dice->resetConsecutiveDoubles(); // FIX
+
+    state.setHasRolled(true); // FIX: stop movement
+
+    JailTile* jail = findJailTile();
     if (jail)
     {
         jail->sendToJail(*player);
@@ -239,7 +243,6 @@ void GameMaster::sendPlayerToJail(Player *player)
             player->getUsername() + " dimasukkan ke penjara!");
     }
 
-    // flag JAILED sudah di-set oleh JailTile::sendToJail()
     endCurrentTurn();
 }
 
@@ -444,7 +447,7 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     int remaining = from->getBalance();
     if (remaining > 0)
     {
-        from -= remaining;
+        *from -= remaining;
     }
 
     // Semua properti kembali ke BANK dan dilelang
@@ -642,21 +645,19 @@ void GameMaster::distributeSkillCards()
 
 void GameMaster::tickFestivalDurations()
 {
-    // Kurangi durasi festival untuk semua properti milik pemain aktif
-    // StreetProperty harus punya method tickFestival() / decreaseFestivalDuration()
-    Player *cur = state.getCurrPlayer();
-    if (!cur)
-        return;
-
-    for (int i = 0; i < cur->getPropertyCount(); i++)
+    for (Player* p : state.getActivePlayers())
     {
-        Property *p = cur->getProperties()[i];
-        if (!p)
-            continue;
-        // Cast ke StreetProperty jika ada method festivalnya
-        // StreetProperty* sp = dynamic_cast<StreetProperty*>(p);
-        // if (sp) sp->tickFestival();
-        // → Uncomment setelah StreetProperty diimplementasi
+        for (int i = 0; i < p->getPropertyCount(); i++)
+        {
+            Property* prop = p->getProperties()[i];
+            if (!prop) continue;
+
+            auto* sp = dynamic_cast<StreetProperty*>(prop);
+            if (sp)
+            {
+                sp->decrementFestivalDuration();
+            }
+        }
     }
 }
 
@@ -685,13 +686,13 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
         return;
     if (gs.getHasUsedCard())
         return;
-    if (card->getUsed())
+    if (card->isUsed())
         return;
 
     card->execute(*player, gs);
     gs.getLogger()->addLog(gs.getCurrTurn(), player->getUsername(), "SKILL_CARD", card->getDescription());
 
-    card->setUsed(true);
+    card->markUsed();
     const vector<SkillCard *> &hand = player->getHand();
     for (int i = 0; i < (int)hand.size(); i++)
     {

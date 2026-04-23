@@ -71,7 +71,7 @@ private:
     int size;
 public:
     Board(const vector<Tile*>& tiles, int size);
-    ~Board() = default;
+    ~Board();
     Tile* getTile(int idx)                       const;
     Tile* getNextTile(int cur, int steps)        const;
     int   getSize()                              const;

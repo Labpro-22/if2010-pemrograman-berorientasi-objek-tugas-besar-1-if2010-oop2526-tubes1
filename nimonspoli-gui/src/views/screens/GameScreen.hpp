@@ -160,14 +160,22 @@ private:
     // ── GUIManager (untuk pushCommand) ───────────────────────────────────
     GUIManager* guiManager = nullptr;
 
+    // Struct Player Visual
+    struct PlayerVisual {
+        float currentTileIdx;
+        float targetTileIdx;
+    };
+    std::vector<PlayerVisual> playerVisuals;
+
     // ── State dadu ───────────────────────────────────────────────────────
-    struct DiceState {
+    struct DiceState
+    {
         int val1 = 0, val2 = 0;    // hasil terakhir (0 = belum pernah lempar)
-        bool hasRolled  = false;    // sudah lempar giliran ini?
-        bool isDouble   = false;    // hasil double?
-        bool tripleDouble = false;  // 3× double → penjara
+        bool hasRolled = false;    // sudah lempar giliran ini?
+        bool isDouble = false;     // hasil double?
+        bool tripleDouble = false; // 3× double → penjara
         float animTimer = 0.f;     // timer animasi rolling (0 = idle)
-        bool  animating = false;
+        bool animating = false;
         static constexpr float ANIM_DURATION = 0.6f; // detik
     } diceState;
 

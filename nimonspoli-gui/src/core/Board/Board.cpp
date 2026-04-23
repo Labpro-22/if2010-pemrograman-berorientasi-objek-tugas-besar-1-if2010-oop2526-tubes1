@@ -38,6 +38,13 @@ string tileTypeToString(TileType type)
 Board::Board(const vector<Tile *> &Tile, int Size)
     : tile(Tile), size(Size) {}
 
+Board::~Board()
+{
+    for (Tile* t : tile)
+    {
+        delete t;
+    }
+}
 // FIX #2: const di akhir, bukan sebelum parameter
 Tile *Board::getTile(int idx) const
 {
