@@ -301,6 +301,17 @@ private:
     void triggerJualBangunanDialog();
     void drawJualBangunanDialog();
 
+    // ── Dialog Atur Dadu ──────────────────────────────────────────────────
+    struct AturDaduDialogState {
+        bool visible = false;
+        std::string input1 = "1";
+        std::string input2 = "1";
+        int focusField = 0; // 0=none, 1=val1, 2=val2
+        std::string errorMsg = "";
+    } aturDaduDialog;
+    void triggerAturDaduDialog();
+    void drawAturDaduDialog();
+
     // ── Dialog Skill Card (USE CARD) ──────────────────────────────────────
     struct SkillCardDialogState {
         bool visible = false;

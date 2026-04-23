@@ -151,8 +151,10 @@ void GameScreen::render(Window& window)
     drawSavePopup();
     drawJailDialog();
     drawPropertiPopup();
-    
-    // Dialogs baru
+    drawAktaDialog();
+    drawCetakPropertiDialog();
+    drawAturDaduDialog();
+
     drawGadaiDialog();
     drawTebusDialog();
     drawBangunDialog();
