@@ -3,10 +3,6 @@
 IncomeTaxPlot::IncomeTaxPlot(std::string name, std::string code, Color color)
     : TaxPlot(name, code, color) {}
 
-std::string IncomeTaxPlot::getType() const {
-    return "Petak Pajak Penghasilan";
-}
-
 int IncomeTaxPlot::getPercentage() const {
     return percentage;
 }

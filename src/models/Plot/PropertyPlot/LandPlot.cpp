@@ -74,6 +74,6 @@ int LandPlot::calculateRentPrice() const {
     return rentPrice*festivalMultiplier;
 }
 
-std::string LandPlot::getType() const {
-    return "Petak Lahan";
+PlotType LandPlot::getType() const {
+    return PlotType::LANDPLOT;
 }

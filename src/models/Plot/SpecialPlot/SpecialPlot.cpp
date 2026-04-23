@@ -3,6 +3,6 @@
 SpecialPlot::SpecialPlot(std::string name, std::string code, Color color)
     : Plot(name, code, color) {}
 
-std::string SpecialPlot::getType() const {
-    return "Petak Spesial";
+PlotType SpecialPlot::getType() const {
+    return PlotType::SPECIALPLOT;
 }

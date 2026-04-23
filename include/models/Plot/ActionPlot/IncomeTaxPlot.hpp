@@ -10,7 +10,6 @@ public:
     IncomeTaxPlot(std::string name, std::string code, Color color);
     ~IncomeTaxPlot() = default;
 
-    std::string getType() const override;
     int getPercentage() const;
     void startEvent(PlotContext& ctx) override;
 };

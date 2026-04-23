@@ -8,5 +8,5 @@ public:
     CardPlot(std::string name, std::string code, Color color);
     virtual ~CardPlot() = default;
 
-    std::string getType() const override;
+    PlotType getType() const override;
 };

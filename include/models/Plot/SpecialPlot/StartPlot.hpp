@@ -7,6 +7,6 @@ public:
     StartPlot(std::string name, std::string code, Color color);
     ~StartPlot() = default;
 
-    std::string getType() const override;
+    PlotType getType() const override;
     void startEvent(PlotContext& ctx) override;
 };

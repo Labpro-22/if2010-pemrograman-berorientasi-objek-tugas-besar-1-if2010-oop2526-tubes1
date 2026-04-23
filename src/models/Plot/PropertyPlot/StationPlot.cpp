@@ -22,8 +22,8 @@ int StationPlot::calculateRentPrice() const {
     return rentPriceTable.at(ownedStation)*festivalMultiplier;
 }
 
-std::string StationPlot::getType() const {
-    return "Petak Stasiun";
+PlotType StationPlot::getType() const {
+    return PlotType::STATIONPLOT;
 }
 
 void StationPlot::startEvent(PlotContext& ctx) {

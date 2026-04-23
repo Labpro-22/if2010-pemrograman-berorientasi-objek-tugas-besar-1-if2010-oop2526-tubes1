@@ -3,8 +3,8 @@
 StartPlot::StartPlot(std::string name, std::string code, Color color)
     : SpecialPlot(name, code, color) {}
 
-std::string StartPlot::getType() const {
-    return "Petak Mulai";
+PlotType StartPlot::getType() const {
+    return PlotType::STARTPLOT;
 }
 
 void StartPlot::startEvent(PlotContext& ctx) {

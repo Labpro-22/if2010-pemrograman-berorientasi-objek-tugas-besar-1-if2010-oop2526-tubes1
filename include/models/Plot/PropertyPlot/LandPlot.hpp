@@ -30,6 +30,6 @@ public:
     int getBuildCost() const;
     bool isStreetOwned() const;
     int calculateRentPrice() const override;
-    std::string getType() const override;
+    PlotType getType() const override;
     void startEvent(PlotContext& ctx) override;
 };

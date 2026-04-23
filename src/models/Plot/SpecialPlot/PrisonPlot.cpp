@@ -3,8 +3,8 @@
 PrisonPlot::PrisonPlot(std::string name, std::string code, Color color)
     : SpecialPlot(name, code, color) {}
 
-std::string PrisonPlot::getType() const {
-    return "Petak Penjara";
+PlotType PrisonPlot::getType() const {
+    return PlotType::PRISONPLOT;
 }
 
 void PrisonPlot::startEvent(PlotContext& ctx) {

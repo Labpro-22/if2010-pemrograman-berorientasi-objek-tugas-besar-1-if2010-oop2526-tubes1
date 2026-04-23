@@ -1,0 +1,13 @@
+#pragma once
+
+enum class PlotType{
+    LANDPLOT,
+    STATIONPLOT,
+    UTILITYPLOT,
+    CARDPLOT,
+    TAXPLOT,
+    FESTIVALPLOT,
+    SPECIALPLOT,
+    STARTPLOT,
+    PRISONPLOT
+};

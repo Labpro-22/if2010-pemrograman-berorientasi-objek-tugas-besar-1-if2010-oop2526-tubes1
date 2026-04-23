@@ -23,8 +23,8 @@ int UtilityPlot::calculateRentPrice() const {
     return rentPriceTable.at(ownedUtility)*diceTotal*festivalMultiplier;
 }
 
-std::string UtilityPlot::getType() const {
-    return "Petak Utilitas";
+PlotType UtilityPlot::getType() const {
+    return PlotType::UTILITYPLOT;
 }
 
 void UtilityPlot::startEvent(PlotContext& ctx) {

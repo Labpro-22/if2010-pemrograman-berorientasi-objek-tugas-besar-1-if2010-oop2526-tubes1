@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include "models/Plot/Colors.hpp"
+#include "models/Plot/PlotType.hpp"
 #include "models/Player/Player.hpp"
 #include "core/PlotContext.hpp"
 #include "core/GameException.hpp"
@@ -22,7 +23,7 @@ public:
     std::string getCode() const;
     Color getColor() const;
 
-    virtual std::string getType() const = 0;
+    virtual PlotType getType() const = 0;
     virtual Player* getOwner() const;
     virtual void startEvent(PlotContext& ctx) = 0;
 };

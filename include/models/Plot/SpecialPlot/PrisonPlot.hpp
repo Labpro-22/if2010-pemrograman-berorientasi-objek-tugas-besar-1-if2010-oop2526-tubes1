@@ -7,6 +7,6 @@ public:
     PrisonPlot(std::string name, std::string code, Color color);
     ~PrisonPlot() = default;
 
-    std::string getType() const override;
+    PlotType getType() const override;
     void startEvent(PlotContext& ctx) override;
 };

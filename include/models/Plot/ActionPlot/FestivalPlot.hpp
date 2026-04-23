@@ -6,6 +6,6 @@ class FestivalPlot : public ActionPlot {
 public:
     FestivalPlot(std::string name, std::string code, Color color);
     ~FestivalPlot() = default;
-    std::string getType() const override;
+    PlotType getType() const override;
     void startEvent(PlotContext& ctx) override;
 };
