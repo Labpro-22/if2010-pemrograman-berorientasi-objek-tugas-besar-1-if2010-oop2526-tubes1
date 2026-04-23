@@ -2,6 +2,7 @@
 #include "GameScreenTiles.hpp"
 #include "../../../lib/raylib/include/raylib.h"
 #include "../../core/GameMaster/GameMaster.hpp"
+#include "../../core/Player/Player.hpp"
 #include <string>
 
 extern const TileDef TILE_DEFS[40];
@@ -79,7 +80,6 @@ void GameScreen::drawRightPanel()
     DrawText("Giliran:", (int)rx+10, 76, 11, {150,150,180,255});
     DrawText(curP.username.c_str(),(int)rx+10, 90, 14, playerColors[gameState.activePlayerIdx]);
 
-    // Tambah di drawRightPanel(), setelah DrawText("MODE: REAL"...)
     const char* phaseStr = "";
     if (isRealMode()) {
         auto ph = guiManager->getGameMaster()->getState().getPhase();
@@ -93,6 +93,17 @@ void GameScreen::drawRightPanel()
             case GamePhase::BANKRUPTCY:        phaseStr = "BANKRUPTCY"; break;
             case GamePhase::GAME_OVER:         phaseStr = "GAME_OVER"; break;
             default:                           phaseStr = "OTHER"; break;
+        }
+        // Info hutang saat BANKRUPTCY
+        if (ph == GamePhase::BANKRUPTCY) {
+            const GameState& gs = guiManager->getGameMaster()->getState();
+            int debt = gs.getPendingDebt();
+            Player* cred = gs.getPendingCreditor();
+            std::string credName = cred ? cred->getUsername() : "Bank";
+            std::string debtInfo = "Hutang: M" + std::to_string(debt);
+            std::string credInfo = "ke: " + credName;
+            DrawText(debtInfo.c_str(), (int)rx+10, SCREEN_H-65, 11, {220,100,100,255});
+            DrawText(credInfo.c_str(), (int)rx+10, SCREEN_H-50, 11, {200,140,140,255});
         }
     }
     DrawText(phaseStr, (int)rx+10, SCREEN_H-35, 10, {200,200,100,255});

@@ -5,6 +5,7 @@
 #include "../../core/Property/Property.hpp"
 #include "../../core/Property/RailroadProperty.hpp"
 #include "../../core/Property/UtilityProperty.hpp"
+#include "../../core/Player/Player.hpp"
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  syncFromGameMaster()
@@ -151,4 +152,22 @@ void GameScreen::syncDiceResult()
         triggerCardDialog();
     if (gs.getPhase() == GamePhase::AUCTION && !auctionDialog.visible)
         triggerAuctionDialog();
+    // Fase BANKRUPTCY → tampilkan dialog likuidasi
+    if (gs.getPhase() == GamePhase::BANKRUPTCY
+        && !bankruptcyDialog.visible
+        && !bankruptcyDialog.notifVisible)
+    {
+        triggerBankruptcyDialog();
+    }
+
+    // Setelah lelang selesai (properti bangkrut ke Bank), mulai lelang berikutnya
+    // jika masih ada antrian
+    if (gs.getPhase() == GamePhase::PLAYER_TURN
+        && !gs.getPendingAuctionQueue().empty()
+        && !auctionDialog.visible)
+    {
+        Property* next = gm->getState().popPendingAuction();
+        if (next)
+            gm->startAuction(next, nullptr);
+    }
 }

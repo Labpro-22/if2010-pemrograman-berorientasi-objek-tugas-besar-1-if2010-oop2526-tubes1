@@ -13,6 +13,7 @@ class AuctionManager;
 class Card;
 class TransactionLogger;
 class GameMaster;
+class Property;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
@@ -39,6 +40,15 @@ enum class GamePhase {
 //  Diakses oleh GameMaster dan semua Command
 // ─────────────────────────────────────────────
 class GameState {
+public:
+    // ── Tipe publik ──────────────────────────────
+    // Antrian pembayaran multi-pemain (ElectionCard / BirthdayCard)
+    struct PendingPayment {
+        Player* debtor;    // yang harus bayar
+        Player* creditor;  // yang menerima (nullptr = Bank)
+        int     amount;
+    };
+
 private:
     // ── Turn & fase ─────────────────────────────
     int         currTurn;
@@ -72,6 +82,15 @@ private:
     // Untuk AWAITING_TAX (TaxDialog — PPH saja)
     int pendingPphFlat = 0;         // jumlah flat M
     int pendingPphPct  = 0;         // persentase %
+
+    // Untuk BANKRUPTCY (LikuidasiDialog)
+    int     pendingDebt      = 0;       // jumlah hutang yang harus dibayar
+    Player* pendingDebtor    = nullptr; // pemain yang berhutang
+    Player* pendingCreditor  = nullptr; // kreditur (nullptr = Bank)
+    std::vector<Property*> pendingAuctionQueue; // antrian lelang properti bangkrut ke Bank
+
+    // Antrian pembayaran multi-pemain (private storage)
+    std::vector<PendingPayment> pendingPaymentQueue;
 
 public:
     // ── Konstruktor & destruktor ─────────────────
@@ -149,5 +168,37 @@ public:
     void setPendingCardDeck(const std::string& s) { pendingCardDeck = s; }
     void setPendingPphFlat(int v) { pendingPphFlat = v; }
     void setPendingPphPct(int v)  { pendingPphPct  = v; }
+
+    // ── Getter/Setter bankruptcy context ─────────
+    int     getPendingDebt()     const { return pendingDebt; }
+    Player* getPendingDebtor()   const { return pendingDebtor; }
+    Player* getPendingCreditor() const { return pendingCreditor; }
+    const std::vector<Property*>& getPendingAuctionQueue() const { return pendingAuctionQueue; }
+
+    void setPendingDebt(int d)          { pendingDebt = d; }
+    void setPendingDebtor(Player* p)    { pendingDebtor = p; }
+    void setPendingCreditor(Player* p)  { pendingCreditor = p; }
+    void addToPendingAuctionQueue(Property* p) { pendingAuctionQueue.push_back(p); }
+    void clearPendingAuctionQueue()     { pendingAuctionQueue.clear(); }
+
+    // Multi-player payment queue
+    void addToPendingPaymentQueue(Player* debtor, Player* creditor, int amount) {
+        pendingPaymentQueue.push_back({debtor, creditor, amount});
+    }
+    void clearPendingPaymentQueue() { pendingPaymentQueue.clear(); }
+    bool hasPendingPayment() const  { return !pendingPaymentQueue.empty(); }
+    PendingPayment popPendingPayment() {
+        PendingPayment p = pendingPaymentQueue.front();
+        pendingPaymentQueue.erase(pendingPaymentQueue.begin());
+        return p;
+    }
+    const std::vector<PendingPayment>& getPendingPaymentQueue() const { return pendingPaymentQueue; }
+    // Ambil & hapus properti pertama dari antrian lelang
+    Property* popPendingAuction() {
+        if (pendingAuctionQueue.empty()) return nullptr;
+        Property* p = pendingAuctionQueue.front();
+        pendingAuctionQueue.erase(pendingAuctionQueue.begin());
+        return p;
+    }
 };
 #endif

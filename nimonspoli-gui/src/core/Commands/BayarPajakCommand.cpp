@@ -5,8 +5,9 @@ BayarPajakCommand::BayarPajakCommand(Player *p, TaxTile *tile, Bank *bank,
                                      TransactionLogger *logger, TaxConfig taxConfig, int turn)
     : p(p), tile(tile), bank(bank), logger(logger), taxConfig(taxConfig), turnNumber(turn) {}
 
-void BayarPajakCommand::execute(GameMaster&)
+void BayarPajakCommand::execute(GameMaster& gameMaster)
 {
+    gm = &gameMaster;
     if (tile->getCode() == "PPH")
     {
         handlePPH();
@@ -32,8 +33,11 @@ void BayarPajakCommand::handlePPHChoice(int choice)
     if (choice == 1)
     {
         if (!p->canAfford(flatAmount))
-            throw InsufficientFundsException(p->getUsername(), "Pajak Penghasilan (flat)");
-
+        {
+            // Tidak mampu bayar → trigger bankruptcy flow
+            if (gm) gm->handleDebtPayment(p, flatAmount, nullptr);
+            return;
+        }
         *p -= flatAmount;
         logger->addLog(turnNumber, p->getUsername(), "PAJAK",
                        "Bayar PPH flat M" + std::to_string(flatAmount));
@@ -44,8 +48,11 @@ void BayarPajakCommand::handlePPHChoice(int choice)
         int taxAmt = (wealth * pctAmount) / 100;
 
         if (!p->canAfford(taxAmt))
-            throw InsufficientFundsException(p->getUsername(), "Pajak Penghasilan (%)");
-
+        {
+            // Tidak mampu bayar → trigger bankruptcy flow
+            if (gm) gm->handleDebtPayment(p, taxAmt, nullptr);
+            return;
+        }
         *p -= taxAmt;
         logger->addLog(turnNumber, p->getUsername(), "PAJAK",
                        "Bayar PPH " + std::to_string(pctAmount) +
@@ -58,9 +65,13 @@ void BayarPajakCommand::handlePBM()
     int flatAmount = static_cast<int>(taxConfig.pbmFlat);
 
     if (!p->canAfford(flatAmount))
-        throw InsufficientFundsException(p->getUsername(), "Pajak Barang Mewah");
+    {
+        // Tidak mampu bayar → trigger bankruptcy flow
+        if (gm) gm->handleDebtPayment(p, flatAmount, nullptr);
+        return;
+    }
 
     *p -= flatAmount;
     logger->addLog(turnNumber, p->getUsername(), "PAJAK",
                    "Bayar PBM M" + std::to_string(flatAmount));
-}
+}

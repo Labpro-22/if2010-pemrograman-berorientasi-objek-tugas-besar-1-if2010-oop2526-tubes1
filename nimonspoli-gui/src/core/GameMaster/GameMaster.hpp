@@ -91,6 +91,11 @@ public:
     void sellPropertyToBank(Player* player, Property* prop);
     void mortgageProperty(Player* player, Property* prop);
 
+    // Proses pembayaran berikutnya dari antrian kartu multi-pemain
+    // (ElectionCard / BirthdayCard). Dipanggil oleh kartu saat execute()
+    // dan oleh BankruptcyDialog setiap kali satu pembayaran selesai.
+    void processNextCardPayment();
+
 
     // Kemenangan
     // Hitung & umumkan pemenang (dipanggil saat GAME_OVER)

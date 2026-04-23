@@ -160,6 +160,7 @@ void GameScreen::render(Window& window)
     drawBangunDialog();
     drawJualBangunanDialog();
     drawSkillCardDialog();
+    drawBankruptcyDialog();
 
     DrawFPS(LEFT_PANEL + 4, 4);
 }

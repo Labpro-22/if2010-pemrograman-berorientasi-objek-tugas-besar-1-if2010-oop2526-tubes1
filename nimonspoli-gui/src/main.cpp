@@ -264,18 +264,39 @@ int main() {
             // ini depend ke bayar sewa, bayar pajak, dan efek kartu
 
             if (com && state.getPhase() == GamePhase::BANKRUPTCY) {
-                Player* creditor = nullptr; // ini dicek abis merge yaa
-                int debt = 0; // ini juga
+                Player* creditor = state.getPendingCreditor();
+                int debt = state.getPendingDebt();
 
-                int propIdxToSell = com->getPropertyCount() - 1; 
-                bool sellOverMortgage = false;
+                // Strategi bot: jual properti satu per satu sampai cukup
+                while (com->getBalance() < debt && com->getPropertyCount() > 0) {
+                    // Ambil properti pertama yang bisa dijual (belum digadaikan)
+                    Property* propToSell = nullptr;
+                    for (int pi = 0; pi < com->getPropertyCount(); ++pi) {
+                        Property* candidate = com->getProperties()[pi];
+                        if (candidate && candidate->getStatus() != PropertyStatus::MORTGAGED) {
+                            propToSell = candidate;
+                            break;
+                        }
+                    }
+                    if (!propToSell) break; // semua sudah digadaikan, hentikan loop
 
-                BankruptCommand botBankrupt(
-                    *gameMaster, state, com, creditor, 
-                    debt, sellOverMortgage, propIdxToSell
-                );
-                
-                botBankrupt.execute(*gameMaster);
+                    gameMaster->sellPropertyToBank(com, propToSell);
+                }
+
+                if (com->getBalance() >= debt) {
+                    // Bayar hutang
+                    if (creditor) { *com -= debt; *creditor += debt; }
+                    else          { *com -= debt; }
+                    gameMaster->log(com->getUsername(), "BAYAR_HUTANG_BOT",
+                                    "Bot membayar M" + std::to_string(debt));
+                    state.setPendingDebt(0);
+                    state.setPendingCreditor(nullptr);
+                    state.setPhase(GamePhase::PLAYER_TURN);
+                } else {
+                    // Tidak bisa bayar → bangkrut
+                    if (creditor) gameMaster->handleBankruptcy(com, creditor);
+                    else          gameMaster->handleBankruptcy(com, state.getBank());
+                }
             }
 
             // Reset guard kalau giliran berganti ke pemain baru
