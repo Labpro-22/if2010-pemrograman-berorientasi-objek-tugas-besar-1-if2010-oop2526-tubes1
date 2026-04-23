@@ -206,6 +206,9 @@ private:
         std::string description;
     } cardDialog;
 
+    // Jail Dialog
+    
+
     void triggerCardDialog();   // dipanggil saat phase == SHOW_CARD
     void drawCardDialog();      // render popup panel + tombol OK
 
@@ -310,8 +313,8 @@ private:
     void    drawFestivalDialog();
 
     // ── GameScreenDialogCard.cpp ──────────────────────────────────────────
-    void    triggerCardDialog();
-    void    drawCardDialog();
+    // void    triggerCardDialog();
+    // void    drawCardDialog();
 
     // ── GameScreenDialogJail.cpp ──────────────────────────────────────────
     void    triggerJailDialog();
