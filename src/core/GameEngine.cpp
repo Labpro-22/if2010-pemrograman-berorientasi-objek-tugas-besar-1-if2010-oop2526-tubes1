@@ -49,6 +49,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace {
 std::string normalizeColorGroup(const std::string& raw) {
@@ -65,6 +66,25 @@ std::string normalizeColorGroup(const std::string& raw) {
 
 std::string normalizeTileName(std::string raw) {
     std::replace(raw.begin(), raw.end(), '_', ' ');
+    return raw;
+}
+
+std::string trimCopy(std::string raw) {
+    auto isSpace = [](unsigned char c) {
+        return std::isspace(c) != 0;
+    };
+
+    raw.erase(raw.begin(), std::find_if(raw.begin(), raw.end(),
+        [&](unsigned char c) { return !isSpace(c); }));
+    raw.erase(std::find_if(raw.rbegin(), raw.rend(),
+        [&](unsigned char c) { return !isSpace(c); }).base(), raw.end());
+    return raw;
+}
+
+std::string normalizePlayerNameKey(std::string raw) {
+    raw = trimCopy(raw);
+    std::transform(raw.begin(), raw.end(), raw.begin(),
+        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return raw;
 }
 
@@ -132,6 +152,7 @@ GameEngine::GameEngine()
     turnActionTaken(false),
     diceRolledThisTurn(false),
     extraRollAllowedThisTurn(false),
+      gameOverReason_(GameOverReason::NONE),
       maxTurn(0),
             initialBalance(1000),
       goSalary(200),
@@ -176,10 +197,27 @@ CommandResult GameEngine::startNewGame(int nPlayers, std::vector<std::string> na
     result.commandName = "MULAI";
 
     if (nPlayers < 2 || nPlayers > 4) {
-        throw GameException("Jumlah pemain harus 2 sampai 4.");
+        throw InvalidPlayerCountException(nPlayers);
     }
-    if (static_cast<int>(names.size()) < nPlayers) {
+    if (static_cast<int>(names.size()) != nPlayers) {
         throw GameException("Jumlah nama pemain tidak sesuai.");
+    }
+
+    std::unordered_set<std::string> usedNames;
+    std::vector<std::string> sanitizedNames;
+    sanitizedNames.reserve(names.size());
+    for (const std::string& rawName : names) {
+        const std::string cleanName = trimCopy(rawName);
+        if (cleanName.empty()) {
+            throw InvalidPlayerNameException(rawName);
+        }
+
+        const std::string key = normalizePlayerNameKey(cleanName);
+        if (!usedNames.insert(key).second) {
+            throw DuplicatePlayerNameException(cleanName);
+        }
+
+        sanitizedNames.push_back(cleanName);
     }
 
     for (Player* player : players) {
@@ -189,14 +227,15 @@ CommandResult GameEngine::startNewGame(int nPlayers, std::vector<std::string> na
 
     initBoard();
 
-    for (int i = 0; i < nPlayers && i < static_cast<int>(names.size()); ++i) {
-        players.push_back(new Player(names[i], initialBalance));
+    for (int i = 0; i < nPlayers && i < static_cast<int>(sanitizedNames.size()); ++i) {
+        players.push_back(new Player(sanitizedNames[i], initialBalance));
     }
 
     turnManager.initializeOrder(static_cast<int>(players.size()));
 
     gameOver = false;
     gameStarted = true;
+    gameOverReason_ = GameOverReason::NONE;
     resetTurnActionFlags();
 
     if (logger) {
@@ -248,6 +287,7 @@ CommandResult GameEngine::loadGame(const std::string& filename) {
     }
 
     gameStarted = true;
+    gameOverReason_ = GameOverReason::NONE;
     resetTurnActionFlags();
 
     CommandResult result;
@@ -327,23 +367,80 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
         // Alur pemain yang sedang berada di penjara.
         if (current.isJailed()) {
             if (current.getJailTurns() >= 3) {
+                Player* jailedPlayer = &current;
                 if (!current.canAfford(jailFine)) {
-                    current.setStatus(PlayerStatus::BANKRUPT);
                     flowResult.addEvent(
                         GameEventType::BANKRUPTCY,
-                        UiTone::ERROR,
-                        "Bangkrut di Penjara",
+                        UiTone::WARNING,
+                        "Denda Penjara",
                         current.getUsername() +
-                            " tidak mampu membayar denda penjara sebesar M" +
-                            std::to_string(jailFine) + ".");
-                    current.resetConsecutiveDoubles();
-                    flowResult.append(executeTurn());
+                            " wajib membayar denda penjara M" +
+                            std::to_string(jailFine) +
+                            " pada percobaan ke-4. Jika uang tidak cukup, "
+                            "likuidasi akan dijalankan.");
+                    getBankruptcyManager().handleDebt(current, jailFine, nullptr);
+                    if (hasPendingContinuation()) {
+                        chainPendingContinuation([this, jailedPlayer, total, rolledDouble]() {
+                            CommandResult resumed;
+                            if (jailedPlayer->isBankrupt()) {
+                                jailedPlayer->resetConsecutiveDoubles();
+                                resumed.append(executeTurn());
+                                return resumed;
+                            }
+
+                            jailedPlayer->setStatus(PlayerStatus::ACTIVE);
+                            jailedPlayer->setJailTurns(0);
+                            if (logger) {
+                                logger->log(jailedPlayer->getUsername(), "BAYAR_DENDA",
+                                    "Bayar denda penjara M" + std::to_string(jailFine));
+                            }
+                            resumed.addEvent(
+                                GameEventType::MONEY,
+                                UiTone::WARNING,
+                                "Keluar Penjara",
+                                jailedPlayer->getUsername() +
+                                    " berhasil melunasi denda penjara M" +
+                                    std::to_string(jailFine) +
+                                    " dan keluar dari penjara.");
+                            continueTurnAfterDiceResolution(
+                                resumed, *jailedPlayer, total, rolledDouble);
+                            return resumed;
+                        });
+                        return;
+                    }
+
+                    if (current.isBankrupt()) {
+                        current.resetConsecutiveDoubles();
+                        flowResult.append(executeTurn());
+                        return;
+                    }
+
+                    current.setStatus(PlayerStatus::ACTIVE);
+                    current.setJailTurns(0);
+                    if (logger) {
+                        logger->log(current.getUsername(), "BAYAR_DENDA",
+                            "Bayar denda penjara M" + std::to_string(jailFine));
+                    }
+                    flowResult.addEvent(
+                        GameEventType::MONEY,
+                        UiTone::WARNING,
+                        "Keluar Penjara",
+                        current.getUsername() +
+                            " berhasil melunasi denda penjara M" +
+                            std::to_string(jailFine) +
+                            " dan keluar dari penjara.");
+                    continueTurnAfterDiceResolution(
+                        flowResult, current, total, rolledDouble);
                     return;
                 }
 
-                current.deductMoney(jailFine);
+                getBank().receivePayment(current, jailFine);
                 current.setStatus(PlayerStatus::ACTIVE);
                 current.setJailTurns(0);
+                if (logger) {
+                    logger->log(current.getUsername(), "BAYAR_DENDA",
+                        "Bayar denda penjara M" + std::to_string(jailFine));
+                }
                 flowResult.addEvent(
                     GameEventType::MONEY,
                     UiTone::WARNING,
@@ -351,6 +448,9 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
                     current.getUsername() +
                         " wajib membayar denda M" + std::to_string(jailFine) +
                         " pada percobaan ke-4.");
+                continueTurnAfterDiceResolution(
+                    flowResult, current, total, rolledDouble);
+                return;
             } else {
                 if (!rolledDouble) {
                     current.incrementJailTurns();
@@ -393,80 +493,7 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
             }
         }
 
-        if (rolledDouble) {
-            current.incrementConsecutiveDoubles();
-            if (current.getConsecutiveDoubles() >= 3) {
-                if (!board) {
-                    throw GameException("processCommand: board belum diinisialisasi");
-                }
-
-                current.setPosition(board->getIndexOf("PEN"));
-                current.setStatus(PlayerStatus::JAILED);
-                current.setJailTurns(0);
-                current.resetConsecutiveDoubles();
-
-                flowResult.addEvent(
-                    GameEventType::DICE,
-                    UiTone::WARNING,
-                    "Triple Double",
-                    current.getUsername() +
-                        " melempar double 3 kali berturut-turut. Bidak langsung "
-                        "dipindah ke penjara dan giliran berakhir.");
-
-                flowResult.append(executeTurn());
-                return;
-            }
-        } else {
-            current.resetConsecutiveDoubles();
-        }
-
-        flowResult.append(moveCurrentPlayer(total));
-        if (flowResult.prompt.has_value() || hasPendingContinuation()) {
-            chainPendingContinuation([this, rolledDouble]() {
-                CommandResult resumed;
-                Player& resumedPlayer = getCurrentPlayer();
-
-                if (resumedPlayer.isJailed()) {
-                    resumedPlayer.resetConsecutiveDoubles();
-                    resumed.append(executeTurn());
-                    return resumed;
-                }
-
-                if (rolledDouble) {
-                    extraRollAllowedThisTurn = true;
-                    resumed.addEvent(
-                        GameEventType::TURN,
-                        UiTone::INFO,
-                        "Double",
-                        resumedPlayer.getUsername() +
-                            " mendapatkan giliran tambahan karena melempar double.");
-                    return resumed;
-                }
-
-                resumed.append(executeTurn());
-                return resumed;
-            });
-            return;
-        }
-
-        if (current.isJailed()) {
-            current.resetConsecutiveDoubles();
-            flowResult.append(executeTurn());
-            return;
-        }
-
-        if (rolledDouble) {
-            extraRollAllowedThisTurn = true;
-            flowResult.addEvent(
-                GameEventType::TURN,
-                UiTone::INFO,
-                "Double",
-                current.getUsername() +
-                    " mendapatkan giliran tambahan karena melempar double.");
-            return;
-        }
-
-        flowResult.append(executeTurn());
+        continueTurnAfterDiceResolution(flowResult, current, total, rolledDouble);
     };
 
     switch (cmd.type) {
@@ -716,6 +743,7 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
     case CommandType::PAY_JAIL_FINE: {
         result.commandName = "BAYAR_DENDA";
         Player& current = getCurrentPlayer();
+        Player* jailedPlayer = &current;
 
         if (!current.isJailed()) {
             throw GameException("Kamu tidak sedang di penjara.");
@@ -724,11 +752,49 @@ CommandResult GameEngine::processCommand(const Command& cmd) {
             throw GameException("BAYAR_DENDA harus dilakukan sebelum melempar dadu.");
         }
         if (!current.canAfford(jailFine)) {
-            throw InsufficientFundsException(
-                current.getUsername(), jailFine, current.getMoney());
+            result.addEvent(
+                GameEventType::BANKRUPTCY,
+                UiTone::WARNING,
+                "Denda Penjara",
+                current.getUsername() +
+                    " tidak punya cukup uang tunai untuk membayar denda penjara M" +
+                    std::to_string(jailFine) +
+                    ". Likuidasi akan dijalankan.");
+            getBankruptcyManager().handleDebt(current, jailFine, nullptr);
+
+            if (hasPendingContinuation()) {
+                chainPendingContinuation([this, jailedPlayer]() {
+                    CommandResult resumed;
+                    if (jailedPlayer->isBankrupt()) {
+                        resumed.append(executeTurn());
+                        return resumed;
+                    }
+
+                    jailedPlayer->setStatus(PlayerStatus::ACTIVE);
+                    jailedPlayer->setJailTurns(0);
+                    if (logger) {
+                        logger->log(jailedPlayer->getUsername(), "BAYAR_DENDA",
+                            "Bayar denda penjara M" + std::to_string(jailFine));
+                    }
+                    resumed.addEvent(
+                        GameEventType::MONEY,
+                        UiTone::SUCCESS,
+                        "Keluar Penjara",
+                        jailedPlayer->getUsername() + " membayar denda M" +
+                            std::to_string(jailFine) +
+                            " dan kini bebas dari penjara.");
+                    return resumed;
+                });
+                return finalizeResult();
+            }
+
+            if (current.isBankrupt()) {
+                result.append(executeTurn());
+                return finalizeResult();
+            }
         }
 
-        current.deductMoney(jailFine);
+        getBank().receivePayment(current, jailFine);
         current.setStatus(PlayerStatus::ACTIVE);
         current.setJailTurns(0);
 
@@ -1060,12 +1126,15 @@ CommandResult GameEngine::executeTurn() {
 
     checkWinCondition();
     if (gameOver) {
+        std::string endReasonMessage =
+            (gameOverReason_ == GameOverReason::MAX_TURN)
+                ? "Permainan selesai karena batas giliran tercapai."
+                : "Permainan selesai karena semua pemain lain telah bangkrut.";
         result.addEvent(
             GameEventType::GAME_OVER,
             UiTone::SUCCESS,
             "Permainan Selesai",
-            "Selamat! " + current.getUsername() + " memenangkan permainan!\n"
-            "Semua pemain lain telah bangkrut."
+            endReasonMessage
         );
         flushEvents(result);
         return result;
@@ -1162,6 +1231,86 @@ CommandResult GameEngine::moveCurrentPlayer(int steps) {
     return result;
 }
 
+void GameEngine::continueTurnAfterDiceResolution(CommandResult& flowResult,
+                                                 Player& current,
+                                                 int totalSteps,
+                                                 bool rolledDouble) {
+    if (rolledDouble) {
+        current.incrementConsecutiveDoubles();
+        if (current.getConsecutiveDoubles() >= 3) {
+            if (!board) {
+                throw GameException("processCommand: board belum diinisialisasi");
+            }
+
+            current.setPosition(board->getIndexOf("PEN"));
+            current.setStatus(PlayerStatus::JAILED);
+            current.setJailTurns(0);
+            current.resetConsecutiveDoubles();
+
+            flowResult.addEvent(
+                GameEventType::DICE,
+                UiTone::WARNING,
+                "Triple Double",
+                current.getUsername() +
+                    " melempar double 3 kali berturut-turut. Bidak langsung "
+                    "dipindah ke penjara dan giliran berakhir.");
+
+            flowResult.append(executeTurn());
+            return;
+        }
+    } else {
+        current.resetConsecutiveDoubles();
+    }
+
+    flowResult.append(moveCurrentPlayer(totalSteps));
+    if (flowResult.prompt.has_value() || hasPendingContinuation()) {
+        chainPendingContinuation([this, rolledDouble]() {
+            CommandResult resumed;
+            Player& resumedPlayer = getCurrentPlayer();
+
+            if (resumedPlayer.isJailed()) {
+                resumedPlayer.resetConsecutiveDoubles();
+                resumed.append(executeTurn());
+                return resumed;
+            }
+
+            if (rolledDouble) {
+                extraRollAllowedThisTurn = true;
+                resumed.addEvent(
+                    GameEventType::TURN,
+                    UiTone::INFO,
+                    "Double",
+                    resumedPlayer.getUsername() +
+                        " mendapatkan giliran tambahan karena melempar double.");
+                return resumed;
+            }
+
+            resumed.append(executeTurn());
+            return resumed;
+        });
+        return;
+    }
+
+    if (current.isJailed()) {
+        current.resetConsecutiveDoubles();
+        flowResult.append(executeTurn());
+        return;
+    }
+
+    if (rolledDouble) {
+        extraRollAllowedThisTurn = true;
+        flowResult.addEvent(
+            GameEventType::TURN,
+            UiTone::INFO,
+            "Double",
+            current.getUsername() +
+                " mendapatkan giliran tambahan karena melempar double.");
+        return;
+    }
+
+    flowResult.append(executeTurn());
+}
+
 void GameEngine::handleLanding(Player& p, Tile& t) {
     t.onLand(p, *this);
 }
@@ -1175,11 +1324,13 @@ void GameEngine::checkWinCondition() {
     }
 
     if (activeCount <= 1) {
+        gameOverReason_ = GameOverReason::BANKRUPTCY;
         endGame();
         return;
     }
 
     if (maxTurn > 0 && getCurrentTurn() >= maxTurn) {
+        gameOverReason_ = GameOverReason::MAX_TURN;
         endGame();
     }
 }
@@ -1211,7 +1362,7 @@ void GameEngine::endGame() {
     }
 
     // Rekap pemain → push ke event buffer (UI yang akan tampilkan)
-    const bool isBankruptMode = (maxTurn < 1);
+    const bool isBankruptMode = (gameOverReason_ == GameOverReason::BANKRUPTCY);
     std::ostringstream recap;
     recap << (isBankruptMode
               ? "Mode: Bankruptcy (tanpa batas giliran)\n"
@@ -1452,6 +1603,7 @@ GameSnapshot GameEngine::createSnapshot() const {
 void GameEngine::applySnapshot(const GameSnapshot& snapshot) {
     maxTurn = snapshot.getMaxTurn();
     gameOver = false;
+    gameOverReason_ = GameOverReason::NONE;
 
     for (Player* p : players) {
         delete p;

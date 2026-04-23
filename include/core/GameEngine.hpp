@@ -24,6 +24,12 @@ class TransactionLogger;
 class SaveLoadManager;
 class GameSnapshot;
 
+enum class GameOverReason {
+    NONE,
+    BANKRUPTCY,
+    MAX_TURN
+};
+
 class GameEngine{
     private:
         Board* board;
@@ -33,6 +39,7 @@ class GameEngine{
         bool turnActionTaken;
         bool diceRolledThisTurn;
         bool extraRollAllowedThisTurn;
+        GameOverReason gameOverReason_;
         int maxTurn;
         int initialBalance;
         int goSalary;
@@ -58,6 +65,8 @@ class GameEngine{
         void initBoard();
         void handleJailTurn(Player& p);
         void awardPassGoSalary(Player& p);
+        void continueTurnAfterDiceResolution(CommandResult& result, Player& player,
+                                             int totalSteps, bool rolledDouble);
         vector<bool> buildBankruptFlags() const;
         void resetTurnActionFlags();
     
