@@ -136,7 +136,18 @@ void StreetTile::onLanded(Player &p, GameState &gs)
         if (property->getOwnerId() != p.getUsername())
         {
             // BayarSewaCommand dipanggil dari dispatcher
-            (void)gs;
+            if(!p.isShielded()){
+                try
+                {
+                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
+                    sewa.execute(*gs.getGameMaster());
+                }
+                catch (const InsufficientFundsException &e)
+                {
+                    std::cout << e.what() << "\n";
+                    // Bisa trigger mekanisme bangkrut / jual aset nanti
+                }
+            }
         }
     }
     // MORTGAGED → tidak ada aksi
@@ -179,7 +190,18 @@ void RailRoadTile::onLanded(Player &p, GameState &gs)
     {
         if (property->getOwnerId() != p.getUsername())
         {
-            (void)gs; // BayarSewaCommand handle dari dispatcher
+            if (!p.isShielded())
+            {
+                try
+                {
+                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
+                    sewa.execute(*gs.getGameMaster());
+                }
+                catch (const InsufficientFundsException &e)
+                {
+                    std::cout << e.what() << "\n";
+                }
+            }
         }
     }
 }
@@ -221,7 +243,18 @@ void UtilityTile::onLanded(Player &p, GameState &gs)
     {
         if (property->getOwnerId() != p.getUsername())
         {
-            (void)gs;
+            if (!p.isShielded())
+            {
+                try
+                {
+                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
+                    sewa.execute(*gs.getGameMaster());
+                }
+                catch (const InsufficientFundsException &e)
+                {
+                    std::cout << e.what() << "\n";
+                }
+            }
         }
     }
 }
