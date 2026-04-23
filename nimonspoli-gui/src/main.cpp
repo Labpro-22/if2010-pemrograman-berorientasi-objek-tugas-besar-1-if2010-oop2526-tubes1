@@ -83,6 +83,7 @@ int main() {
         auto specialCfg    = cfg.loadSpecial();
         auto miscCfg       = cfg.loadMisc();
         auto actData = cfg.loadActions();
+        auto taxData = cfg.loadTax();
 
         properties = PropertyFactory::createProperties(
             propData, railroadRent, utilityFactor);
@@ -116,7 +117,7 @@ int main() {
 
             GameState gs(
                 miscCfg.maxTurn, players, board, bank, dice,
-                auctionMgr, chanceDeck, communityDeck, skillDeck, logger
+                auctionMgr, chanceDeck, communityDeck, skillDeck, logger,taxData
             );
             gameMaster = new GameMaster(gs);
 
@@ -153,7 +154,7 @@ int main() {
 
             GameState gs(
                 miscCfg.maxTurn, players, board, bank, dice,
-                auctionMgr, chanceDeck, communityDeck, skillDeck, logger
+                auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData
             );
             gameMaster = new GameMaster(gs);
 

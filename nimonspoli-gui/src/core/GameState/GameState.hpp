@@ -16,6 +16,7 @@ class GameMaster;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
+#include "../utils/ConfigLoader.hpp"
 
 // ─────────────────────────────────────────────
 //  Enum fase permainan
@@ -58,6 +59,7 @@ private:
     CardDeck<Card>*    skillCardDeck;
     TransactionLogger* logger;
     GameMaster*        gameMaster;
+    TaxConfig taxcfg;
 
 public:
     // ── Konstruktor & destruktor ─────────────────
@@ -72,7 +74,8 @@ public:
         CardDeck<Card>*     chanceDeck,
         CardDeck<Card>*     communityDeck,
         CardDeck<Card>*     skillDeck,
-        TransactionLogger*  logger
+        TransactionLogger*  logger,
+        TaxConfig taxcfg
     );
     ~GameState() = default;
 
@@ -103,6 +106,7 @@ public:
     CardDeck<Card>*    getSkillDeck()     const;
     TransactionLogger* getLogger()        const;
     GameMaster*        getGameMaster()    const;
+    TaxConfig          getTaxConfig()     const;
 
     // ── Setter: turn & fase ─────────────────────
     void setPhase(GamePhase p);

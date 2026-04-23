@@ -379,9 +379,26 @@ TaxTile::TaxTile(int id, string display, TileType type, string name, string code
 
 // FIX #17: BayarPajakCommand tidak di-instantiate di sini
 // onLanded hanya set fase; Command dispatcher yang panggil BayarPajakCommand
-void TaxTile::onLanded(Player & /*p*/, GameState &gs)
+void TaxTile::onLanded(Player &p, GameState &gs)
 {
-    gs.setPhase(GamePhase::PLAYER_TURN);
+    TransactionLogger *logger = gs.getLogger();
+    int turn = gs.getCurrTurn();
+    TaxConfig taxCfg = gs.getTaxConfig(); 
+    Bank *bank = gs.getBank();
+    GameMaster *gm = gs.getGameMaster();
+
+    BayarPajakCommand cmd(&p, this, bank, logger, taxCfg, turn);
+    try
+    {
+        cmd.execute(*gm);
+    }
+    catch (const InsufficientFundsException &)
+    {
+        // Propagate ke GameMaster untuk alur bangkrut
+        gs.setPhase(GamePhase::BANKRUPTCY);
+        // gs.setPendingCreditor(nullptr); // kreditor = Bank
+        throw;
+    }
 }
 
 // ═════════════════════════════════════════════
@@ -401,15 +418,25 @@ void CardTile::onLanded(Player &p, GameState &gs)
     if (!card)
         return;
 
-    Card *kartu = card->draw();
-    if (!kartu)
-        return;
+    std::string label = (code == "KSP") ? "Kesempatan" : "Dana Umum";
 
-    kartu->execute(p, gs);
+    TransactionLogger *logger = gs.getLogger();
+    int turn = gs.getCurrTurn();
+    GameMaster* gm = gs.getGameMaster();
 
-    card->discard(kartu);
+
+    CardCommand cmd(&p, card, &gs, logger, turn, label);
+    try
+    {
+        cmd.execute(*gm);
+    }
+    catch (const InsufficientFundsException &)
+    {
+        gs.setPhase(GamePhase::BANKRUPTCY);
+        // gs.setPendingCreditor(nullptr); // kreditor = Bank (kartu bayar ke bank)
+        throw;
+    }
 }
-
 // ═════════════════════════════════════════════
 //  FestivalTile
 // ═════════════════════════════════════════════
@@ -418,8 +445,12 @@ FestivalTile::FestivalTile(int id, string display, TileType type, string name, s
     : ActionTile(id, display, type, name, code) {}
 
 // FIX #19: parameter anonymous diberi nama; FestivalCommand dihandle dispatcher
-void FestivalTile::onLanded(Player & /*p*/, GameState &gs)
+void FestivalTile::onLanded(Player &p, GameState &gs)
 {
-    // TODO: FestivalCommand dipanggil dari dispatcher
-    gs.setPhase(GamePhase::PLAYER_TURN);
+    TransactionLogger *logger = gs.getLogger();
+    int turn = gs.getCurrTurn();
+    GameMaster* gm = gs.getGameMaster();
+
+    FestivalCommand cmd(&p, logger, turn);
+    cmd.execute(*gm);
 }
