@@ -6,6 +6,7 @@
 class PropertyPlot: public Plot{
 protected:
     Color color;
+    int buyPrice;
     int mortgageValue;
     PropertyStatus propertyStatus;
     Player* owner;
@@ -15,10 +16,11 @@ protected:
     bool isFestival() const;
 
 public:
-    PropertyPlot(std::string name, std::string code, Color color, int mortgageValue, Player* owner, 
-                 PropertyStatus propertyStatus, int festivalDuration, int festivalMultiplier);
+    PropertyPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
+                 Player* owner, PropertyStatus propertyStatus, int festivalDuration, int festivalMultiplier);
     virtual ~PropertyPlot() = default;
 
+    int getBuyPrice() const;
     int getMortgageValue() const;
     PropertyStatus getPropertyStatus() const;
     int getFestivalDuration() const;
@@ -27,7 +29,9 @@ public:
     virtual int getRentPrice(int level) const = 0;
     Color getColor() const override;
     Player* getOwner() const override;
+    void setOwner(Player* player);
 
+    bool isOwned() const;
     bool isMortgaged() const;
     void applyFestival();
     void endFestival();

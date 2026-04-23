@@ -7,7 +7,7 @@ private:
     static std::map<int, int> rentPriceTable;
 
 public:
-    StationPlot(std::string name, std::string code, Color color, int mortgageValue,
+    StationPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
             Player* owner, PropertyStatus propertyStatus, int festivalDuration, int festivalMultiplier);
     ~StationPlot() = default;
 

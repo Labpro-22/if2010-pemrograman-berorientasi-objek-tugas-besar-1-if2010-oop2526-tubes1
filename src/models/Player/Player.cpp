@@ -97,7 +97,7 @@ int Player::getTotalWealth() const {
     for (const std::reference_wrapper<Plot>& propertyRef : ownedProperties) {
         const Plot& property = propertyRef.get();
         if (const auto* land = dynamic_cast<const LandPlot*>(&property)) {
-            wealth += land->getBuyPrice();
+            wealth += land->getBuyPrice(); //TODO: hindari penggunaan dynamic cast dan hitung harga bangunan
             continue;
         }
 
@@ -109,12 +109,12 @@ int Player::getTotalWealth() const {
 }
 
 void Player::move() {
-    move(1, 40);
+    move(1, 40); //TODO: Sesuaikan dengan dynamic board
 }
 
 void Player::move(int steps, int boardSize) {
     if (boardSize <= 0) {
-        throw std::invalid_argument("boardSize harus lebih dari 0.");
+        throw std::invalid_argument("boardSize harus lebih dari 0."); //TODO: Buat exception
     }
 
     int next = (position + steps) % boardSize;
@@ -125,11 +125,11 @@ void Player::move(int steps, int boardSize) {
 }
 
 void Player::moveTo(int index, int boardSize) {
-    if (boardSize <= 0) {
-        throw std::invalid_argument("boardSize harus lebih dari 0.");
+    if (boardSize <= 0) { 
+        throw std::invalid_argument("boardSize harus lebih dari 0."); //TODO: Buat exception
     }
     if (index < 0 || index >= boardSize) {
-        throw std::out_of_range("Posisi tujuan di luar board.");
+        throw std::out_of_range("Posisi tujuan di luar board."); //TODO: Buat exception
     }
 
     position = index;
@@ -137,7 +137,7 @@ void Player::moveTo(int index, int boardSize) {
 
 void Player::pay(int amount) {
     if (amount < 0) {
-        throw std::invalid_argument("Nilai pembayaran tidak boleh negatif.");
+        throw std::invalid_argument("Nilai pembayaran tidak boleh negatif."); //TODO: Buat exception
     }
     if (cash < amount) {
         throw InsufficientFundException();
@@ -150,33 +150,20 @@ void Player::payTaxes() {
         shieldActive = false;
         return;
     }
-    pay(cash / 10);
+    pay(cash / 10); //FIXME
 }
 
-bool Player::buyProperty(Plot& property) {
-    const auto alreadyOwned = std::find_if(
-        ownedProperties.begin(),
-        ownedProperties.end(),
-        [&](const std::reference_wrapper<Plot>& ownedProperty) {
-            return ownedProperty.get().getCode() == property.getCode();
-        }
-    );
-    if (alreadyOwned != ownedProperties.end()) {
-        return false;
+bool Player::buyProperty(PropertyPlot& property) { //TODO: ubah jadi void
+    if (property.getOwner() == this) {
+        return false; //TODO: throw exception
     }
 
-    int price = 0;
-    if (const auto* land = dynamic_cast<const LandPlot*>(&property)) {
-        price = land->getBuyPrice();
-    } else if (const auto* genericProperty = dynamic_cast<const PropertyPlot*>(&property)) {
-        price = genericProperty->getMortgageValue() * 2;
-    } else {
-        throw std::invalid_argument("Plot yang dibeli harus berupa properti.");
-    }
+    int price = property.getBuyPrice();
 
     pay(price);
     ownedProperties.push_back(property);
-    return true;
+    property.setOwner(this);
+    return true; //TODO: hapus jika return void
 }
 
 bool Player::useCards(std::size_t cardIndex, SkillContext& ctx) {
@@ -213,7 +200,7 @@ bool Player::dropCard(std::size_t cardIndex) {
 
 void Player::receive(int amount) {
     if (amount < 0) {
-        throw std::invalid_argument("Nilai penerimaan tidak boleh negatif.");
+        throw std::invalid_argument("Nilai penerimaan tidak boleh negatif."); //TODO: Buat exception
     }
     cash += amount;
 }

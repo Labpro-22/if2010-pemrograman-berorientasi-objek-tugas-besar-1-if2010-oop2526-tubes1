@@ -1,17 +1,13 @@
 #include "models/Plot/PropertyPlot/LandPlot.hpp"
 
 LandPlot::LandPlot(std::string name, std::string code, Color color,
-            int mortgageValue, int buyPrice, int upgHousePrice, int upgHotelPrice,
-            std::map<int, int> rentPriceTable, Player* owner, 
-            PropertyStatus propertyStatus = PropertyStatus::BANK,
-            int festivalDuration = 0, int festivalMultiplier = 1):
-    PropertyPlot(name, code, color, mortgageValue, owner, propertyStatus, festivalDuration, festivalMultiplier),
+             int buyPrice,int mortgageValue, int upgHousePrice, int upgHotelPrice,
+             std::map<int, int> rentPriceTable, Player* owner, 
+             PropertyStatus propertyStatus = PropertyStatus::BANK,
+             int festivalDuration = 0, int festivalMultiplier = 1):
+    PropertyPlot(name, code, color, buyPrice, mortgageValue, owner, propertyStatus, festivalDuration, festivalMultiplier),
     upgHousePrice(upgHousePrice), upgHotelPrice(upgHotelPrice),
     rentPriceTable(rentPriceTable) {}
-
-int LandPlot::getBuyPrice() const {
-    return buyPrice;
-}
 
 int LandPlot::getUpgHousePrice() const {
     return upgHotelPrice;
@@ -103,5 +99,10 @@ std::string LandPlot::getType() const {
 }
 
 void LandPlot::startEvent(PlotContext& ctx) {
+    if (!isOwned()){
+        
+    }
+    else{
 
+    }
 }
