@@ -187,7 +187,6 @@ void GameCLI::cmdLemparDadu() {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
     } else {
         turnOver_ = false; 
-        if (!game_.isOver()) turnOver_ = true;
     }
 }
 
@@ -205,7 +204,7 @@ void GameCLI::cmdAturDadu(const string& args) {
     } else if (d.isDouble()) {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
     } else {
-        turnOver_ = true;
+        turnOver_ = false;
     }
 }
 
