@@ -74,4 +74,17 @@ void LemparDaduCommand::execute(GameMaster &gm)
         // Bukan double → reset counter (rollRandom sudah reset, tapi reset eksplisit lebih aman)
         gameMaster.setExtraTurn(false);
     }
+    GamePhase currentPhase = gameMaster.getState().getPhase();
+    if (currentPhase != GamePhase::AWAITING_BUY &&
+        currentPhase != GamePhase::AUCTION      &&
+        currentPhase != GamePhase::BANKRUPTCY   &&
+        currentPhase != GamePhase::GAME_OVER) {
+        gameMaster.getState().setPhase(GamePhase::PLAYER_TURN);
+    }
+
+    std::cout << "DEBUG phase setelah execute: " 
+          << (int)gameMaster.getState().getPhase() 
+          << " hasRolled: " 
+          << gameMaster.getState().getHasRolled() 
+          << std::endl;
 }

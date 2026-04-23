@@ -1,4 +1,5 @@
 #include "GUIManager.hpp"
+#include "screens/GameScreen.hpp"
 
 GUIManager::GUIManager(int w, int h, string& t, int fps) : window(w, h, t, fps) {}
 
@@ -36,16 +37,5 @@ void GUIManager::shutdown() {
     while (!commandQueue.empty()) {
         delete commandQueue.front();
         commandQueue.pop();
-    }
-}
-
-void GUIManager::run() {
-    while (window.isOpen()) {
-        float dt = GetFrameTime();
-        flushCommands();
-        if (currentScreen) currentScreen->update(dt);
-        window.beginFrame();
-        if (currentScreen) currentScreen->render(window);
-        window.endFrame();
     }
 }

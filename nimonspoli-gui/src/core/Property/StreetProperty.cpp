@@ -199,3 +199,8 @@ string StreetProperty::formattingTXT() const
            to_string(festivalDuration) + " " +
            bangunanStr;
 }
+
+void StreetProperty::resetBuildings(){
+    buildingCount = 0;
+    hasHotel = false;
+}

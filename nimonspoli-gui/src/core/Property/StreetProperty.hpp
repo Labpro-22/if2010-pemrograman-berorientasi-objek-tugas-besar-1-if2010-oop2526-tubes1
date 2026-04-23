@@ -45,6 +45,7 @@ public:
     int calculateSellPrice() const override;
     string formattingTXT() const override;
     friend ostream &operator<<(ostream &os, const StreetProperty &p);
+    void resetBuildings();
 };
 
 #endif

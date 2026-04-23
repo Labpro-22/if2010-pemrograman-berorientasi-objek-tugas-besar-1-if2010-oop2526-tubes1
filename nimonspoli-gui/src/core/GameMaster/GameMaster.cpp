@@ -75,22 +75,22 @@ void GameMaster::handleCommand(const std::string &rawInput)
     (void)rawInput; // placeholder — diisi oleh tim CLI/GUI
 }
 
-void GameMaster::beginTurn()
-{
-    state.setPhase(GamePhase::PLAYER_TURN);
-    state.setHasRolled(false);
-    state.setHasUsedCard(false);
-    state.setHasExtraTurn(false);
-
-    distributeSkillCards();
-
-    Player *cur = state.getCurrPlayer();
-    if (cur)
+    void GameMaster::beginTurn()
     {
-        log(cur->getUsername(), "TURN_START",
-            "Giliran Turn " + std::to_string(state.getCurrTurn()));
+        state.setPhase(GamePhase::PLAYER_TURN);
+        state.setHasRolled(false);
+        state.setHasUsedCard(false);
+        state.setHasExtraTurn(false);
+
+        distributeSkillCards();
+
+        Player *cur = state.getCurrPlayer();
+        if (cur)
+        {
+            log(cur->getUsername(), "TURN_START",
+                "Giliran Turn " + std::to_string(state.getCurrTurn()));
+        }
     }
-}
 
 void GameMaster::endTurn()
 {
@@ -545,7 +545,7 @@ int GameMaster::countPlayerRailroads(Player *player) const
     int count = 0;
     for (int i = 0; i < board->getSize(); i++)
     {
-        RailroadTile *rt = dynamic_cast<RailroadTile *>(board->getTile(i));
+        RailRoadTile *rt = dynamic_cast<RailRoadTile *>(board->getTile(i));
         if (!rt)
             continue;
         Property *prop = rt->getProperty();
@@ -583,7 +583,7 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     for (int step = 1; step < size; step++)
     {
         int idx = (currentPosition + step) % size;
-        if (dynamic_cast<RailroadTile *>(board->getTile(idx)))
+        if (dynamic_cast<RailRoadTile *>(board->getTile(idx)))
             return idx;
     }
     return -1;

@@ -12,6 +12,11 @@ MoveCard::~MoveCard()
 {
 }
 
+int MoveCard::getSteps() const
+{
+    return steps;
+}
+
 void MoveCard::execute(Player &p, GameState &gs)
 {
     GameMaster *gm = gs.getGameMaster();

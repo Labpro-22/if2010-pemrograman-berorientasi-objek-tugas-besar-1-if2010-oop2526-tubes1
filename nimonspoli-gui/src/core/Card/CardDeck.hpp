@@ -73,6 +73,12 @@ public:
     // ── Getter (untuk save/load serialisasi) ─────
     const std::vector<T*>& getDrawPile()    const { return drawPile; }
     const std::vector<T*>& getDiscardPile() const { return discardPile; }
+
+    void setCardsNoShuffle(const std::vector<T*>& cards) {
+    drawPile    = cards;
+    discardPile.clear();
+    // tidak memanggil shuffle()
+}
 };
 
 #endif

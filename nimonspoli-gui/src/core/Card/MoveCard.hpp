@@ -13,7 +13,8 @@ public:
     MoveCard();
     MoveCard(int steps);
     ~MoveCard();
-    void execute(Player &p, GameState &gs) override;
+    void execute(Player &p, GameState &g) override;
+    int getSteps() const;
 };
 
 #endif

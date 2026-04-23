@@ -3,6 +3,7 @@
 #include "../IScreen.hpp"
 #include "../../core/utils/TransactionLogger.hpp"
 #include "../GUIManager.hpp"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -54,6 +55,7 @@ public:
     GameScreen();
     ~GameScreen() override;
 
+    
     void onEnter() override;
     void onExit()  override;
     void update(float dt) override;
@@ -63,8 +65,37 @@ public:
     int  activePlayerCount = 4;
     bool gameOver = false;
     bool isGameOver() const { return gameOver; }
+    // Methods untuk sinkronisasi dengan GameMaster (mode real)
+    void    syncFromGameMaster(); 
+    bool    isRealMode() const;
+    void    syncDiceResult(); 
+
+    // ── Player colors ────────────────────────────────────────────────────
+    Color playerColors[4] = {
+        {220,  50,  50, 255},  // P1 red
+        {240, 200,  50, 255},  // P2 yellow
+        { 50, 180,  50, 255},  // P3 green
+        { 50, 200, 220, 255},  // P4 cyan
+    };
 
 private:
+
+    // ── Save Tools ────────────
+    struct SavePopup {
+        bool    visible     = false;
+        bool    confirmOverwrite = false;   // true = sedang tanya "timpa?"
+        bool    resultVisible = false;      // true = tampilkan pesan hasil
+        bool    resultOk    = false;
+        float   resultTimer = 0.f;
+        std::string fileNameInput = "save"; // buffer nama file tanpa ekstensi
+        std::string resultMsg;
+    } savePopup;
+ 
+    void handleSimpan();
+    void drawSavePopup();
+    void doSave(const std::string& filepath);
+    
+
     // ── Layout ──────────────────────────────────────────────────────────
     static constexpr int   SCREEN_W    = 1920;
     static constexpr int   SCREEN_H    = 1080;
@@ -142,19 +173,23 @@ private:
     void drawDiceArea();            // gambar dadu di center board
     void handleLemparDadu();        // buat & push LemparDaduCommand
 
-    // ── Player colors ────────────────────────────────────────────────────
-    Color playerColors[4] = {
-        {220,  50,  50, 255},  // P1 red
-        {240, 200,  50, 255},  // P2 yellow
-        { 50, 180,  50, 255},  // P3 green
-        { 50, 200, 220, 255},  // P4 cyan
-    };
+    // ── State dialog beli ────────────────────────────────────────────────
+    struct BuyDialogState {
+        bool visible   = false;
+        int  tileIdx   = -1;   // indeks petak properti yang diinjak
+        bool canAfford = true; // apakah pemain mampu bayar?
+    } buyDialog;
+
+    void drawBuyDialog();    // render dialog beli/skip
+    void triggerBuyDialog(int tileIdx); // dipanggil setelah dadu mendarat di properti BANK
+
+    
 
     // ── Private methods ──────────────────────────────────────────────────
     Color   getGroupColor(const std::string& group);
     void    loadTextures();
     void    initMockState();
-
+     
     void    handleInput();
     void    drawBoard();
     void    drawTile(int idx, float cx, float cy, float rotation);
@@ -169,5 +204,9 @@ private:
     Vector2   getTileCenter(int idx);
     Rectangle getTileRect(int idx);
     int       tileAtPoint(Vector2 pt);
+
+    
+
+    
 
 };

@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <algorithm>
+#include "../Property/Property.hpp"
 
 using namespace std;
 
@@ -39,9 +40,10 @@ private:
 
 public:
     Player(const std::string &username, int startingBalance);
-    ~Player();
+    virtual ~Player();
 
     // GET
+    void setUsername(const std::string& name) {username = name;}
     string getUsername() const;
     int getBalance() const;
     int getPosition() const;
@@ -52,6 +54,7 @@ public:
     void setPosition(int tileIndex);
     void setStatus(PlayerStatus newStatus);
     void setJailTurns(int turns);
+    void setBalance(int amount);
 
     // KEUANGAN
     Player &operator+=(int amount);
@@ -92,6 +95,8 @@ public:
 
     // TURN
     void onTurnStart();
+
+    int getWealth() const;
 };
 
 #endif
