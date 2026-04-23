@@ -119,7 +119,11 @@ void SaveLoadManager::savePlayers(ofstream& out, const GameState& state) {
         // Kode petak posisi saat ini
         string tileCode = "GO";
         if (state.getBoard()) {
+            std::cout << "[DEBUG save] " << p->getUsername()
+                    << " getPosition()=" << p->getPosition()
+                    << " boardSize=" << state.getBoard()->getSize() << std::endl;
             Tile* t = state.getBoard()->getTile(p->getPosition());
+            std::cout << "[DEBUG save] tile=" << (t ? t->getCode() : "null") << std::endl;
             if (t) tileCode = t->getCode();
         }
 
@@ -400,11 +404,12 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
             *p -= (-diff);
 
         // Posisi
-        if (state.getBoard())
-        {
+        if (state.getBoard()) {
             int idx = state.getBoard()->findTileIndexByCode(tok[2]);
-            if (idx >= 0)
-                p->setPosition(idx);
+            std::cout << "[DEBUG load] " << tok[0] 
+                    << " tileCode=" << tok[2] 
+                    << " idx=" << idx << std::endl;
+            if (idx > 0) p->setPosition(idx);
         }
 
         // Status

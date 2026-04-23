@@ -72,7 +72,7 @@ static void DrawRoundedBorder(Rectangle rec, float roundness, int segments, floa
     for (float i = 0.f; i < thick; i += 0.5f)
     {
         Rectangle r = {rec.x - i, rec.y - i, rec.width + i * 2, rec.height + i * 2};
-        DrawRectangleRoundedLines(r, roundness, segments, thick, color);
+        DrawRectangleRoundedLines(r, roundness, segments, color);
     }
 }
 
@@ -529,6 +529,18 @@ void GameScreen::handleInput()
     // Testing — tekan W untuk simulasi game over
     if (IsKeyPressed(KEY_W))
         gameOver = true;
+
+    // Di handleInput(), tambahkan:
+    if (IsKeyPressed(KEY_T) && isRealMode()) {
+        // Teleport current player ke selectedTile + 1 (karena offset)
+        GameMaster* gm = guiManager->getGameMaster();
+        Player* cur = gm->getState().getCurrPlayer();
+        if (cur && selectedTile >= 0) {
+            cur->setPosition(selectedTile + 1);  // +1 karena id mulai dari 1
+            std::cout << "[DEBUG] Teleport ke tile " << selectedTile + 1 
+                    << " (" << TILE_DEFS[selectedTile].code << ")" << std::endl;
+        }
+    }
 
     Vector2 mouse = GetMousePosition();
 

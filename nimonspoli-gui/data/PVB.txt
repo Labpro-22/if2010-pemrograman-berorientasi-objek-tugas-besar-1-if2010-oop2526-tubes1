@@ -1,26 +1,21 @@
-4 15
+2 15
 2
-po 1000 GO ACTIVE HUMAN
+player 1000 PLN ACTIVE HUMAN
 0
-COM2 1000 GO ACTIVE COM MEDIUM
+COM2 1000 PEN ACTIVE COM MEDIUM
 0
-po COM2 
-po
+player COM2 
+player
 4
 GRT street BANK BANK 1 0 0
-GBR railroad COM2 OWNED 1 0 0
-PLN utiliy BANK BANK 1 0 0
+GBR railroad BANK BANK 1 0 0
+PLN utiliy player OWNED 1 0 0
 JKT street BANK BANK 1 0 0
 0
 0
-10
-1 po TURN_START Giliran Turn 1
-1 po MOVE Mendarat di BBP (Bebas_Parkir)
+5
+1 player TURN_START Giliran Turn 1
+1 player MOVE Mendarat di PLN (PLN)
 1 COM2 TURN_START Giliran Turn 1
-1 COM2 MOVE Mendarat di GBR (STASIUN_GAMBIR)
-1 COM2 MOVE Mendarat di KSP (Kesempatan)
-2 po TURN_START Giliran Turn 2
-2 COM2 TURN_START Giliran Turn 2
-3 po TURN_START Giliran Turn 3
-3 COM2 TURN_START Giliran Turn 3
-4 po TURN_START Giliran Turn 4
+1 COM2 MOVE Mendarat di PEN (Penjara)
+2 player TURN_START Giliran Turn 2

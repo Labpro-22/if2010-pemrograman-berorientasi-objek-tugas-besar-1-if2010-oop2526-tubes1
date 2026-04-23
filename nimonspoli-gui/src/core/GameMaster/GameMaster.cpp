@@ -215,6 +215,7 @@ JailTile *GameMaster::findJailTile() const
 
 int GameMaster::findJailIndex() const
 {
+    
     Board *board = state.getBoard();
     if (!board)
         return -1;
@@ -226,20 +227,23 @@ int GameMaster::findJailIndex() const
     return -1;
 }
 
-void GameMaster::sendPlayerToJail(Player *player)
-{
-    if (!player)
-        return;
+void GameMaster::sendPlayerToJail(Player* player) {
+    
+    if (!player) return;
 
-    JailTile *jail = findJailTile();
-    if (jail)
-    {
+    int jailIdx = findJailIndex();
+    if (jailIdx >= 0)
+        player->setPosition(jailIdx);  // ← ini sudah ada belum?
+    
+        std::cout << "[DEBUG jail] jailIdx=" << jailIdx 
+          << " player pos after=" << player->getPosition() << std::endl;
+          
+    JailTile* jail = findJailTile();
+    if (jail) {
         jail->sendToJail(*player);
         log(player->getUsername(), "JAIL",
             player->getUsername() + " dimasukkan ke penjara!");
     }
-
-    // flag JAILED sudah di-set oleh JailTile::sendToJail()
     endCurrentTurn();
 }
 
