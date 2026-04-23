@@ -6,6 +6,7 @@
 #include "models/Plot/Colors.hpp"
 #include "models/Player/Player.hpp"
 #include "core/PlotContext.hpp"
+#include "core/GameException.hpp"
 
 class Plot{
 protected:
@@ -21,6 +22,6 @@ public:
 
     virtual std::string getType() const = 0;
     virtual Color getColor() const;
-    virtual Player* getOwner(PlotContext& context) const;
-    virtual void startEvent() = 0;
+    virtual Player* getOwner() const;
+    virtual void startEvent(PlotContext& ctx) = 0;
 };

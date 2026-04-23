@@ -27,6 +27,8 @@ public:
     void build();
     void sellBuildings();
     bool canBuild() const;
+    int getBuildCost() const;
+    bool isStreetOwned() const;
     int calculateRentPrice() const override;
     std::string getType() const override;
     void startEvent(PlotContext& ctx) override;
