@@ -6,12 +6,12 @@
 #include "../Card/SkillCard.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
 #include "../Property/Property.hpp"
-#include "../Property/StreetProperty.hpp"
 #include "../utils/TransactionLogger.hpp"
 
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include <limits>
 
 // ─────────────────────────────────────────────
 //  Konstruktor
@@ -78,7 +78,6 @@ void GameMaster::handleCommand(const std::string &rawInput)
 
 void GameMaster::beginTurn()
 {
-    if (state.getPhase() == GamePhase::GAME_OVER) return;
     state.setPhase(GamePhase::PLAYER_TURN);
     state.setHasRolled(false);
     state.setHasUsedCard(false);
@@ -87,9 +86,7 @@ void GameMaster::beginTurn()
     distributeSkillCards();
 
     Player *cur = state.getCurrPlayer();
-    if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT) 
-        return;
-    else if (cur)
+    if (cur)
     {
         log(cur->getUsername(), "TURN_START",
             "Giliran Turn " + std::to_string(state.getCurrTurn()));
@@ -111,7 +108,6 @@ void GameMaster::endTurn()
             state.advanceTurn();
         }
     }
-    checkWinCondition();
     // Jika hasExtraTurn, pemain yang sama jalan lagi — tidak nextPlayer()
 }
 
@@ -143,7 +139,7 @@ void GameMaster::movePlayer(Player *player, int steps)
             log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
-}
+    }
 
     player->setPosition(targetIdx);
 
@@ -219,7 +215,7 @@ JailTile *GameMaster::findJailTile() const
 
 int GameMaster::findJailIndex() const
 {
-    
+
     Board *board = state.getBoard();
     if (!board)
         return -1;
@@ -231,21 +227,22 @@ int GameMaster::findJailIndex() const
     return -1;
 }
 
-void GameMaster::sendPlayerToJail(Player* player)
+void GameMaster::sendPlayerToJail(Player *player)
 {
-    if (!player) return;
+    if (!player)
+        return;
 
     int jailIdx = findJailIndex();
     if (jailIdx >= 0)
         player->setPosition(jailIdx);
 
-    Dice* dice = state.getDice();
+    Dice *dice = state.getDice();
     if (dice)
         dice->resetConsecutiveDoubles(); // FIX
 
     state.setHasRolled(true); // FIX: stop movement
 
-    JailTile* jail = findJailTile();
+    JailTile *jail = findJailTile();
     if (jail)
     {
         jail->sendToJail(*player);
@@ -280,7 +277,7 @@ void GameMaster::setExtraTurn(bool val)
 void GameMaster::endCurrentTurn()
 {
     state.setHasExtraTurn(false);
-    state.setHasRolled(true);  // block: pemain tidak bisa lempar dadu lagi
+    state.setHasRolled(true); // block: pemain tidak bisa lempar dadu lagi
     state.setPhase(GamePhase::PLAYER_TURN);
     // nextPlayer() dan advanceTurn() tetap dilakukan oleh endTurn()
 }
@@ -334,7 +331,7 @@ void GameMaster::startAuction(Property *prop, Player *triggerPlayer)
     Player *initiator = triggerPlayer ? triggerPlayer : all.front();
 
     // Logika urutan peserta sepenuhnya diserahkan ke AuctionManager::setupAuction()
-    am->setupAuction(prop, initiator, all); 
+    am->setupAuction(prop, initiator, all);
     state.setPhase(GamePhase::AUCTION);
 
     // Proses lelang akan berjalan di GUI
@@ -354,7 +351,7 @@ int GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
 
     // Hitung maksimum yang bisa didapat dari likuidasi
     // (perhitungan detail ada di BankruptcyManager / BangkrutCommand)
-    
+
     int cash = debtor->getBalance();
     if (cash >= debt)
     {
@@ -382,14 +379,14 @@ int GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
         log(debtor->getUsername(), "BANKRUPTCY_START",
             "Harus likuidasi untuk bayar M" + std::to_string(debt));
         // Pilih mau likuidasi asset yang mana (how? need to integrate this into GUI)
-        
+
         // Jujur gw gatau cara buat milih propnya gimana
         // Likuidasi --> Handle
 
         // Dia butuh input, how?
         // while(debtor->getBalance() < debt) {
         //     for (Property* p : debtor->getProperties()) {
-                
+
         //     }
         // }
         return 1;
@@ -409,7 +406,6 @@ int GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
     }
 }
 
-// Bankruptcy Player
 void GameMaster::handleBankruptcy(Player *from, Player *to)
 {
     if (!from || !to)
@@ -434,7 +430,6 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
         {
             p->setOwner(to->getUsername());
             to->addProperty(p);
-            from->removeProperty(p);
         }
     }
 
@@ -448,7 +443,6 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
     }
 }
 
-// Bankruptcy to Bank
 void GameMaster::handleBankruptcy(Player *from, Bank *bank)
 {
     if (!from || !bank)
@@ -469,14 +463,11 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     {
         Property *p = from->getProperties()[i];
         if (p)
-        {   
-            // Hancurkan bangunan jika ada (StreetProperty)
-            auto* sp = dynamic_cast<StreetProperty*>(p);
-            if (sp) sp->resetBuildings();
-
+        {
             p->clearOwner();
             p->setStatus(PropertyStatus::BANK);
-            from->removeProperty(p);
+            // Hancurkan bangunan jika ada (StreetProperty)
+            // → dilakukan di StreetProperty::resetBuildings() jika ada
             startAuction(p, nullptr);
         }
     }
@@ -493,16 +484,21 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
 //  Helper
 // ─────────────────────────────────────────────
 
-void GameMaster::sellPropertyToBank(Player* player, Property* prop) {
-    if (!player || !prop) return;
-    if (prop->getOwnerId() != player->getUsername()) return;
-    if (prop->getStatus() == PropertyStatus::MORTGAGED) return;
+void GameMaster::sellPropertyToBank(Player *player, Property *prop)
+{
+    if (!player || !prop)
+        return;
+    if (prop->getOwnerId() != player->getUsername())
+        return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED)
+        return;
 
     int value;
-    auto* sp = dynamic_cast<StreetProperty*>(prop);
+    auto *sp = dynamic_cast<StreetProperty *>(prop);
     value = sp->calculateSellPrice();
 
-    if (sp) {
+    if (sp)
+    {
         sp->resetBuildings();
     }
 
@@ -511,23 +507,28 @@ void GameMaster::sellPropertyToBank(Player* player, Property* prop) {
     player->removeProperty(prop);
     *player += value;
 
-    log(player->getUsername(), "SELL_PROPERTY", 
+    log(player->getUsername(), "SELL_PROPERTY",
         prop->getName() + " dijual ke bank seharga M" + std::to_string(value));
 }
 
-void GameMaster::mortgageProperty(Player* player, Property* prop) {
-    if (!player || !prop) return;
-    if (prop->getOwnerId() != player->getUsername()) return;
-    if (prop->getStatus() == PropertyStatus::MORTGAGED) return;
+void GameMaster::mortgageProperty(Player *player, Property *prop)
+{
+    if (!player || !prop)
+        return;
+    if (prop->getOwnerId() != player->getUsername())
+        return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED)
+        return;
 
-    auto* sp = dynamic_cast<StreetProperty*>(prop);
-    if (sp && sp->getBuildingCount() > 0) return;
+    auto *sp = dynamic_cast<StreetProperty *>(prop);
+    if (sp && sp->getBuildingCount() > 0)
+        return;
 
     int mortgageValue = prop->getMortageValue();
     prop->setStatus(PropertyStatus::MORTGAGED);
     *player += mortgageValue;
 
-    log(player->getUsername(), "MORTGAGE", 
+    log(player->getUsername(), "MORTGAGE",
         prop->getName() + " digadaikan, menerima M" + std::to_string(mortgageValue));
 }
 
@@ -651,22 +652,6 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     return -1;
 }
 
-int GameMaster::calculateWealth(Player *player) const
-{
-    if (!player)
-        return 0;
-    int wealth = player->getBalance();
-    for (int i = 0; i < player->getPropertyCount(); i++)
-    {
-        Property *p = player->getProperties()[i];
-        if (!p || p->getStatus() == PropertyStatus::MORTGAGED) continue;
-        wealth += p->calculateSellPrice();
-        // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
-        // jika ada override — di sini gunakan purchasePrice sebagai baseline
-    }
-    return wealth;
-}
-
 void GameMaster::log(const std::string &username,
                      const std::string &action,
                      const std::string &detail)
@@ -697,24 +682,22 @@ void GameMaster::distributeSkillCards()
         // (dipicu otomatis dari sini atau dari Command dispatcher)
         // Di sini cukup addCard; overflow check ada di Player atau Command
         Card *drawn = deck->draw();
-        if (drawn) {
-            SkillCard* sc = dynamic_cast<SkillCard*>(drawn);
-            if (sc) p->addSkillCard(sc);
-            // p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
-        }
+        if (drawn)
+            p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
     }
 }
 
 void GameMaster::tickFestivalDurations()
 {
-    for (Player* p : state.getActivePlayers())
+    for (Player *p : state.getActivePlayers())
     {
         for (int i = 0; i < p->getPropertyCount(); i++)
         {
-            Property* prop = p->getProperties()[i];
-            if (!prop) continue;
+            Property *prop = p->getProperties()[i];
+            if (!prop)
+                continue;
 
-            auto* sp = dynamic_cast<StreetProperty*>(prop);
+            auto *sp = dynamic_cast<StreetProperty *>(prop);
             if (sp)
             {
                 sp->decrementFestivalDuration();
@@ -742,6 +725,135 @@ void GameMaster::checkWinCondition()
     // Kondisi 3: maxTurn < 1 → mode BANKRUPTCY, game terus tanpa batas
 }
 
+// ─────────────────────────────────────────────
+//  Proxy metode dialog GUI
+// ─────────────────────────────────────────────
+
+void GameMaster::handleGadai(Property *prop)
+{
+    if (!prop)
+        return;
+    if (prop->getStatus() == PropertyStatus::OWNED)
+    {
+        prop->setStatus(PropertyStatus::MORTGAGED);
+        int gadaiVal = prop->getPurchasePrice() / 2; // Asumsi gadai setengah harga
+        Player *cur = state.getCurrPlayer();
+        *cur += gadaiVal;
+        log(cur->getUsername(), "GADAI", "Menggadaikan " + prop->getName() + " seharga M" + std::to_string(gadaiVal));
+    }
+}
+
+void GameMaster::handleTebus(Property *prop)
+{
+    if (!prop)
+        return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED)
+    {
+        int tebusVal = prop->getPurchasePrice(); // Asumsi harga tebus sama dengan harga beli penuh
+        Player *cur = state.getCurrPlayer();
+        if (cur->getBalance() >= tebusVal)
+        {
+            *cur -= tebusVal;
+            prop->setStatus(PropertyStatus::OWNED);
+            log(cur->getUsername(), "TEBUS", "Menebus " + prop->getName() + " seharga M" + std::to_string(tebusVal));
+        }
+    }
+}
+
+void GameMaster::handleBangun(StreetProperty *sp)
+{
+    if (!sp)
+        return;
+    Player *cur = state.getCurrPlayer();
+    int cost = sp->getHouseUpgCost();
+    if (cur->getBalance() >= cost && !sp->gethasHotel())
+    {
+        *cur -= cost;
+        // Asumsikan build function, ini placeholder. Bisa diimplementasikan spesifik nanti oleh anggota lain.
+        log(cur->getUsername(), "BANGUN", "Membangun di " + sp->getName() + " seharga M" + std::to_string(cost));
+    }
+}
+
+void GameMaster::handleJualBangunan(StreetProperty *sp)
+{
+    if (!sp)
+        return;
+    Player *cur = state.getCurrPlayer();
+    if (sp->getBuildingCount() > 0 || sp->gethasHotel())
+    {
+        int sellVal = sp->getHouseUpgCost() / 2;
+        // Asumsikan sell function placeholder.
+        *cur += sellVal;
+        log(cur->getUsername(), "JUAL_BANGUNAN", "Menjual bangunan di " + sp->getName() + " seharga M" + std::to_string(sellVal));
+    }
+}
+
+void GameMaster::handleSkillCardOverflow(Player *player)
+{
+    if (player == nullptr)
+        return;
+
+    while (player->getHandSize() > 3)
+    {
+        cout << "PERINGATAN: Kamu sudah memiliki "
+             << player->getHandSize()
+             << " kartu di tangan (Maksimal 3)! "
+             << "Kamu diwajibkan membuang 1 kartu.\n\n";
+
+        cout << player->printSkillCards() << "\n";
+
+        int pilihan;
+        while (true)
+        {
+            cout << "Pilih nomor kartu yang ingin dibuang (1-"
+                 << player->getHandSize() << "): ";
+
+            if (!(cin >> pilihan))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Input tidak valid. Masukkan angka.\n";
+                continue;
+            }
+
+            if (pilihan < 1 || pilihan > player->getHandSize())
+            {
+                cout << "Pilihan di luar rentang.\n";
+                continue;
+            }
+
+            break;
+        }
+
+        SkillCard *kartuDibuang = player->getHand()[pilihan - 1];
+        string namaKartu = kartuDibuang ? kartuDibuang->getType() : "Kartu";
+
+        player->discardSkillCard(pilihan - 1);
+
+        cout << "\n"
+             << namaKartu << " telah dibuang. "
+             << "Sekarang kamu memiliki "
+             << player->getHandSize()
+             << " kartu di tangan.\n";
+    }
+}
+
+void GameMaster::giveSkillCardToPlayer(Player *player, SkillCard *card)
+{
+    if (player == nullptr || card == nullptr)
+        return;
+
+    cout << "Kamu mendapatkan 1 kartu acak baru!\n";
+    cout << "Kartu yang didapat: " << card->getType() << ".\n";
+
+    player->forceAddSkillCard(card);
+
+    if (player->getHandSize() > 3)
+    {
+        handleSkillCardOverflow(player);
+    }
+}
+
 void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
 {
     if (!player || !card)
@@ -765,54 +877,4 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
         }
     }
     gs.setHasUsedCard(true);
-}
-
-// ─────────────────────────────────────────────
-//  Proxy metode dialog GUI
-// ─────────────────────────────────────────────
-
-void GameMaster::handleGadai(Property* prop) {
-    if (!prop) return;
-    if (prop->getStatus() == PropertyStatus::OWNED) {
-        prop->setStatus(PropertyStatus::MORTGAGED);
-        int gadaiVal = prop->getPurchasePrice() / 2; // Asumsi gadai setengah harga
-        Player* cur = state.getCurrPlayer();
-        *cur += gadaiVal;
-        log(cur->getUsername(), "GADAI", "Menggadaikan " + prop->getName() + " seharga M" + std::to_string(gadaiVal));
-    }
-}
-
-void GameMaster::handleTebus(Property* prop) {
-    if (!prop) return;
-    if (prop->getStatus() == PropertyStatus::MORTGAGED) {
-        int tebusVal = prop->getPurchasePrice(); // Asumsi harga tebus sama dengan harga beli penuh
-        Player* cur = state.getCurrPlayer();
-        if (cur->getBalance() >= tebusVal) {
-            *cur -= tebusVal;
-            prop->setStatus(PropertyStatus::OWNED);
-            log(cur->getUsername(), "TEBUS", "Menebus " + prop->getName() + " seharga M" + std::to_string(tebusVal));
-        }
-    }
-}
-
-void GameMaster::handleBangun(StreetProperty* sp) {
-    if (!sp) return;
-    Player* cur = state.getCurrPlayer();
-    int cost = sp->getHouseUpgCost();
-    if (cur->getBalance() >= cost && !sp->gethasHotel()) {
-        *cur -= cost;
-        // Asumsikan build function, ini placeholder. Bisa diimplementasikan spesifik nanti oleh anggota lain.
-        log(cur->getUsername(), "BANGUN", "Membangun di " + sp->getName() + " seharga M" + std::to_string(cost));
-    }
-}
-
-void GameMaster::handleJualBangunan(StreetProperty* sp) {
-    if (!sp) return;
-    Player* cur = state.getCurrPlayer();
-    if (sp->getBuildingCount() > 0 || sp->gethasHotel()) {
-        int sellVal = sp->getHouseUpgCost()/ 2;
-        // Asumsikan sell function placeholder.
-        *cur += sellVal;
-        log(cur->getUsername(), "JUAL_BANGUNAN", "Menjual bangunan di " + sp->getName() + " seharga M" + std::to_string(sellVal));
-    }
 }
