@@ -51,6 +51,8 @@ bool SaveLoadManager::fileExists(const string& filename) const {
     return f.good();
 }
 
+SaveLoadManager::SaveLoadManager() {}
+
 // Save
 
 void SaveLoadManager::save(const GameState& state, const string& filename){
@@ -207,7 +209,7 @@ void SaveLoadManager::saveProperties(ofstream& out, const GameState& state){
             type = "railroad";
         }
         else if(dynamic_cast<UtilityProperty*>(prop)){
-            type = "utiliyy";
+            type = "utiliy";
         }
         // <KODE_PETAK> <JENIS> <PEMILIK> <STATUS> <FMULT> <FDUR> <N_BANGUNAN>
         out << prop->getCode() << " " << type << " " << owner << " " << statusStr << " " << fmult << " " << fdur << " " << bldStr << "\n";
@@ -329,7 +331,7 @@ void SaveLoadManager::loadPlayers(std::ifstream& in, GameState& state) {
         getline(in, line);
         auto tok = tokenize(line);
         if (tok.empty()) throw runtime_error("Format rusak (giliran aktif)");
-        string activeUsername = tok[0];
+        p->setUsername(tok[0]);
         if (tok.size() < 4) continue;
  
         // Balance — restore dengan operator+=
@@ -364,6 +366,7 @@ void SaveLoadManager::loadPlayers(std::ifstream& in, GameState& state) {
             if (ctok.empty()) continue;
  
             string type = ctok[0];
+
             double value     = ctok.size() > 1 ? stod(ctok[1]) : 0;
             int    duration  = ctok.size() > 2 ? stoi(ctok[2]) : 0;
  

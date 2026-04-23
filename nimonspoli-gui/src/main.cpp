@@ -16,7 +16,8 @@
 #include "core/utils/TransactionLogger.hpp"
 #include "core/utils/ConfigLoader.hpp"
 #include "core/Property/PropertyFactory.hpp"
-
+#include "core/utils/SaveLoadManager.hpp"
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <string>
@@ -160,56 +161,90 @@ int main() {
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
-        // ── Transisi: Menu → Game ─────────────────────────────────────────
-        if (menuScreen->isReadyToStart()) {
-            auto setup = menuScreen->getSetup();
-            menuScreen->resetReady();
-            cleanupGame();
+    // ── Transisi: Menu → Game ─────────────────────────────────────────
+    if (menuScreen->isReadyToStart()) {
+        auto setup = menuScreen->getSetup();
+        menuScreen->resetReady();
+        cleanupGame();
 
-            // Load config
-            ConfigLoader cfg("config");
-            auto propData      = cfg.loadProperties();
-            auto railroadRent  = cfg.loadRailroad();
-            auto utilityFactor = cfg.loadUtility();
-            auto specialCfg    = cfg.loadSpecial();
-            auto miscCfg       = cfg.loadMisc();
+        // Load config
+        ConfigLoader cfg("config");
+        auto propData      = cfg.loadProperties();
+        auto railroadRent  = cfg.loadRailroad();
+        auto utilityFactor = cfg.loadUtility();
+        auto specialCfg    = cfg.loadSpecial();
+        auto miscCfg       = cfg.loadMisc();
 
-            // Buat semua Property via factory
-            properties = PropertyFactory::createProperties(
-                propData, railroadRent, utilityFactor);
+        properties = PropertyFactory::createProperties(
+            propData, railroadRent, utilityFactor);
 
-            // Buat entitas
-            bank          = new Bank(32, 12);
-            dice          = new Dice();
-            auctionMgr    = new AuctionManager();
-            logger        = new TransactionLogger();
-            chanceDeck    = new CardDeck<Card>();
-            communityDeck = new CardDeck<Card>();
-            skillDeck     = new CardDeck<Card>();
+        bank          = new Bank(32, 12);
+        dice          = new Dice();
+        auctionMgr    = new AuctionManager();
+        logger        = new TransactionLogger();
+        chanceDeck    = new CardDeck<Card>();
+        communityDeck = new CardDeck<Card>();
+        skillDeck     = new CardDeck<Card>();
 
-            // Buat pemain
-            int count = std::max(2, std::min(4, setup.playerCount));
-            for (int i = 0; i < count; ++i) {
-                std::string name = (i < (int)setup.names.size() && !setup.names[i].empty())
-                                 ? setup.names[i]
-                                 : ("Pemain" + std::to_string(i + 1));
-                players.push_back(new Player(name, miscCfg.initialBalance));
-            }
+        board = buildBoard(properties, specialCfg.goSalary, specialCfg.jailFine,
+                        chanceDeck, communityDeck);
 
-            // Buat Board — property sudah ter-assign via setProperty()
-            board = buildBoard(properties, specialCfg.goSalary, specialCfg.jailFine,
-                               chanceDeck, communityDeck);
+        if (setup.isLoadGame) {
+            // ── LOAD GAME ─────────────────────────────────────────────
+            // Buat dummy players dulu — loadPlayers() akan restore state-nya
+            // Jumlah pemain dibaca dari file saat load
+            // Kita perlu baca dulu berapa pemain di file sebelum buat Player*
 
-            // Buat GameState
+            // Baca jumlah pemain dari file save
+            std::ifstream peek(setup.saveFile);
+            std::string line;
+            std::getline(peek, line); // skip baris 1 (turn maxTurn)
+            std::getline(peek, line); // baris 2 = jumlah pemain
+            int savedCount = std::stoi(line);
+            peek.close();
+
+            for (int i = 0; i < savedCount; ++i)
+                players.push_back(new Player("_tmp_" + std::to_string(i), miscCfg.initialBalance));
+
             GameState gs(
                 miscCfg.maxTurn, players, board, bank, dice,
                 auctionMgr, chanceDeck, communityDeck, skillDeck, logger
             );
-
-            // Buat GameMaster
             gameMaster = new GameMaster(gs);
 
-            // Hubungkan ke GUI
+            // Restore state dari file
+            try {
+                SaveLoadManager slm;
+                slm.load(setup.saveFile, gameMaster->getState());
+                std::cout << "[MUAT] Berhasil dimuat dari: " << setup.saveFile << std::endl;
+                gameMaster->beginTurn();
+            } catch (const std::exception& e) {
+                std::cerr << "[MUAT] Gagal: " << e.what() << std::endl;
+            }
+
+            int count = (int)players.size();
+            gui.setGameMaster(gameMaster);
+            gameScreen->setGUIManager(&gui);
+            gameScreen->setPlayerCount(count);
+            gui.setScreen(gameScreen);
+            // Tidak perlu beginTurn() — turn sudah di-restore dari file
+
+        } else {
+            // ── NEW GAME ──────────────────────────────────────────────
+            int count = std::max(2, std::min(4, setup.playerCount));
+            for (int i = 0; i < count; ++i) {
+                std::string name = (i < (int)setup.names.size() && !setup.names[i].empty())
+                                ? setup.names[i]
+                                : ("Pemain" + std::to_string(i + 1));
+                players.push_back(new Player(name, miscCfg.initialBalance));
+            }
+
+            GameState gs(
+                miscCfg.maxTurn, players, board, bank, dice,
+                auctionMgr, chanceDeck, communityDeck, skillDeck, logger
+            );
+            gameMaster = new GameMaster(gs);
+
             gui.setGameMaster(gameMaster);
             gameScreen->setGUIManager(&gui);
             gameScreen->setPlayerCount(count);
@@ -217,6 +252,7 @@ int main() {
 
             gameMaster->beginTurn();
         }
+    }
 
         // ── Transisi: Game → Win ──────────────────────────────────────────
         if (gameScreen->isGameOver()) {

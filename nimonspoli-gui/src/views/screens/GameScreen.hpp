@@ -55,6 +55,7 @@ public:
     GameScreen();
     ~GameScreen() override;
 
+    
     void onEnter() override;
     void onExit()  override;
     void update(float dt) override;
@@ -78,6 +79,23 @@ public:
     };
 
 private:
+
+    // ── Save Tools ────────────
+    struct SavePopup {
+        bool    visible     = false;
+        bool    confirmOverwrite = false;   // true = sedang tanya "timpa?"
+        bool    resultVisible = false;      // true = tampilkan pesan hasil
+        bool    resultOk    = false;
+        float   resultTimer = 0.f;
+        std::string fileNameInput = "save"; // buffer nama file tanpa ekstensi
+        std::string resultMsg;
+    } savePopup;
+ 
+    void handleSimpan();
+    void drawSavePopup();
+    void doSave(const std::string& filepath);
+    
+
     // ── Layout ──────────────────────────────────────────────────────────
     static constexpr int   SCREEN_W    = 1920;
     static constexpr int   SCREEN_H    = 1080;

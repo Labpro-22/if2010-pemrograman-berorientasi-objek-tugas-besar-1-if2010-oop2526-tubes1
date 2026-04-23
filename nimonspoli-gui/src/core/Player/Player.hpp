@@ -43,6 +43,7 @@ public:
     ~Player();
 
     // GET
+    void setUsername(const std::string& name) {username = name;}
     string getUsername() const;
     int getBalance() const;
     int getPosition() const;
