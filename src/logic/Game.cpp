@@ -5,6 +5,7 @@
 #include "core/Tiles.hpp"
 #include "logic/Auction.hpp"
 #include "logic/TransactionLogger.hpp"
+#include <iostream>
 namespace logic {
 
 Game::Game(std::vector<core::Player *> players, TransactionLogger *logger)
@@ -76,11 +77,8 @@ void Game::moveCurrentPlayer() {
 
   if (p->getInJail()) {
     return;
-
-    if (p->getInJail()) {
-      return;
-    }
   }
+  
   int steps = lastDiceRoll_.first + lastDiceRoll_.second;
   int boardSize = board_.getTileCount();
 
@@ -92,7 +90,10 @@ void Game::moveCurrentPlayer() {
   int newPos = (currentPos + steps) % boardSize;
 
   if (newPos < currentPos && newPos != 0) {
-    bank_.pay(*p, 200);
+    core::Tile* goTile = board_.getTile(0);
+    if (goTile) {
+      goTile->onPassed(*p, *this);
+    }
   }
 
   p->setPosition(newPos);
@@ -253,4 +254,47 @@ core::Player *Game::getCurrentPlayer() const {
 
 GameState Game::getState() const { return state_; }
 	
+
+std::pair<int, int> Game::getLastDiceRoll() const { return lastDiceRoll_; }
+int Game::getTurnCount() const { return turnCount_; }
+
+void Game::offerProperty(core::Player* p, core::Property* prop) {
+  if (p->canAfford(prop->getPrice())) {
+    buyProperty(prop);
+  } 
+}
+
+void Game::chargeRent(core::Player* p, core::Property* prop) {
+  int rent = prop->calculateRent(lastDiceRoll_.first + lastDiceRoll_.second, 1, false);
+  *p -= rent;
+  *(prop->getOwner()) + rent;
+}
+
+void Game::sendToJail(core::Player& p) { 
+    p.goToJail(); 
+}
+
+void Game::chargeTax(core::Player* p, int rate, bool isPercentage) {
+  int amount = isPercentage ? (p->getBalance() * rate / 100) : rate;
+  *p -= amount;
+  bank_.receive(amount);
+}
+
+void Game::activateFestival(core::Player* p) { 
+}
+
+void Game::drawChanceCard(core::Player* p) { 
+}
+
+void Game::drawCommunityChestCard(core::Player* p) { 
+}
+
+void Game::payPlayerFromBank(core::Player& p, int amount) { 
+    bank_.pay(p, amount); 
+}
+
+int Game::getGoSalary() const { 
+    return 200; 
+}
+
 } // namespace logic

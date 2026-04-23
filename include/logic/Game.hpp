@@ -2,6 +2,7 @@
 
 #include "logic/Bank.hpp"
 #include "logic/Board.hpp"
+#include "core/GameContext.hpp"
 #include <string>
 #include <utility>
 #include <vector>
@@ -12,7 +13,6 @@ class Player;
 class Tile;
 class Property;
 } // namespace core
-
 namespace logic {
 class TransactionLogger;
 }
@@ -27,7 +27,7 @@ enum class GameState {
   GAME_OVER
 };
 
-class Game {
+class Game : public core::GameContext{
 private:
   Board board_;
   std::vector<core::Player *> players_;
@@ -49,6 +49,11 @@ public:
   void nextTurn();
   bool checkWinCondition() const;
 
+  std::pair<int, int> getLastDiceRoll() const override;
+  int getTurnCount() const;
+
+  void setDice(int d1, int d2);
+
   Board &getBoard();
 
   void rollDice();
@@ -60,8 +65,16 @@ public:
   void sellHouse(core::Player *seller, core::Tile *at);
   void mortgageProperty(core::Property *prop);
   void unmortgageProperty(core::Property *prop);
-
   void startAuction(core::Property *prop);
+  void offerProperty(core::Player* p, core::Property* prop) override;
+  void chargeRent(core::Player* p, core::Property* prop) override;
+  void sendToJail(core::Player& p) override;
+  void chargeTax(core::Player* p, int rate, bool isPercentage) override;
+  void activateFestival(core::Player* p) override;
+  void drawChanceCard(core::Player* p) override;
+  void drawCommunityChestCard(core::Player* p) override;
+  void payPlayerFromBank(core::Player& p, int amount) override;
+  int getGoSalary() const override;
 
   void logEvent(const std::string &action, core::Player &p, int value);
   void logEvent(const std::string &action, core::Player &p,
