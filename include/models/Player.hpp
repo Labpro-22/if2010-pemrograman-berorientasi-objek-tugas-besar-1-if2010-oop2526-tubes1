@@ -40,6 +40,7 @@ public:
     void setFree();
     void startTurn();
     void endTurn();
+    int getPosition();
 };
 
 class Effect {
