@@ -151,4 +151,5 @@ public:
     void setPendingPphFlat(int v) { pendingPphFlat = v; }
     void setPendingPphPct(int v)  { pendingPphPct  = v; }
 };
+
 #endif

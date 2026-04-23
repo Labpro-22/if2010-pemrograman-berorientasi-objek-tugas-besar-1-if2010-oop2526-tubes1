@@ -88,9 +88,8 @@ public:
     void handleBankruptcy(Player *from, Bank *bank);
 
     // Helper likuidasi
-    void sellPropertyToBank(Player* player, Property* prop);
-    void mortgageProperty(Player* player, Property* prop);
-
+    void sellPropertyToBank(Player *player, Property *prop);
+    void mortgageProperty(Player *player, Property *prop);
 
     // Kemenangan
     // Hitung & umumkan pemenang (dipanggil saat GAME_OVER)
@@ -121,10 +120,13 @@ public:
     void useSkillCard(Player *player, SkillCard *card, GameState &gs);
 
     // Proxy metode dialog
-    void handleGadai(Property* prop);
-    void handleTebus(Property* prop);
-    void handleBangun(StreetProperty* sp);
-    void handleJualBangunan(StreetProperty* sp);
+    void handleGadai(Property *prop);
+    void handleTebus(Property *prop);
+    void handleBangun(StreetProperty *sp);
+    void handleJualBangunan(StreetProperty *sp);
+
+    void handleSkillCardOverflow(Player *player);
+    void giveSkillCardToPlayer(Player *player, SkillCard *card);
 };
 
 #endif
