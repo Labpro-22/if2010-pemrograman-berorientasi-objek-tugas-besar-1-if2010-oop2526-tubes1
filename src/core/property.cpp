@@ -136,4 +136,30 @@ void Street::applyFestivalBoost(Player& player, Game& game) {
     game.logger().log(game.currentTurn(), player.username(), "FESTIVAL", name_ + ": sewa x" + std::to_string(festival_.multiplier()) + " selama 3 giliran");
 }
 
+
+void Property::performLiquidation(Player& player, Game& game) {
+    if (owner_ != &player) throw std::invalid_argument("Properti bukan milikmu.");
+    if (isMortgaged()) throw std::logic_error("Properti tergadai tidak bisa langsung dijual ke Bank.");
+
+    int val = liquidationValue();
+    game.bank().pay(player, val);
+    
+    setOwner(nullptr);
+    setStatus(PropertyStatus::BANK);
+    player.removeProperty(this);
+    game.refreshPropertyCounts(&player);
+    
+    game.logger().log(game.currentTurn(), player.username(), "JUAL", name_ + " -> M" + std::to_string(val));
+    game.handleAuction(*this);
+}
+
+void Street::performLiquidation(Player& player, Game& game) {
+    if (owner_ != &player) throw std::invalid_argument("Properti bukan milikmu.");
+    
+    // Hancurkan semua bangunan terlebih dahulu
+    demolishAll(); 
+    
+    // Lanjutkan dengan likuidasi standar milik Property
+    Property::performLiquidation(player, game);
+}
 }

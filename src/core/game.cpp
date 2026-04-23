@@ -275,11 +275,7 @@ void Game::handleFestival(Player& player) {
 }
 
 void Game::applyFestival(Player& player, const string& code) {
-    Property* prop = board_->getProperty(code);
-    if (!prop || prop->type() != PropertyType::STREET) throw invalid_argument("Kode properti tidak valid.");
-    if (prop->owner() != &player) throw invalid_argument("Properti bukan milikmu.");
-    auto* street = static_cast<Street*>(prop);
-    street->applyFestivalBoost(player, *this);
+    player.applyFestival(code, *this);
 }
 
 void Game::handleAuction(Property& prop) {
@@ -295,68 +291,31 @@ void Game::handleBankruptcy(Player& debtor, Player* creditor, int required) {
 }
 
 void Game::cmdBuild(const string& code) {
-    Player& player = currentPlayer();
-    Property* prop = board_->getProperty(code);
-    if (!prop || prop->type() != PropertyType::STREET) throw invalid_argument("Kode properti tidak valid atau bukan Street.");
-    if (prop->owner() != &player) throw invalid_argument("Properti bukan milikmu.");
-    auto* street = static_cast<Street*>(prop);
-    street->buildHouseOrHotel(player, *this);
+    currentPlayer().buildProperty(code, *this);
 }
 
 void Game::cmdMortgage(const string& code) {
-    Player& player = currentPlayer();
-    Property* prop = board_->getProperty(code);
-    if (!prop || prop->owner() != &player) throw invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
-    prop->performMortgage(player, *this);
+    currentPlayer().mortgageProperty(code, *this);
 }
 
 void Game::cmdRedeem(const string& code) {
-    Player& player = currentPlayer();
-    Property* prop = board_->getProperty(code);
-    if (!prop || prop->owner() != &player) throw invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
-    prop->performRedeem(player, *this);
+    currentPlayer().redeemProperty(code, *this);
 }
 
 void Game::cmdUseSkillCard(int handIndex) {
-    Player& player = currentPlayer();
-    if (player.hasRolled()) throw logic_error("Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.");
-    if (player.usedCardThisTurn()) throw logic_error("Penggunaan kartu dibatasi maksimal 1 kali dalam 1 giliran.");
-    if (handIndex < 0 || handIndex >= player.handSize()) throw out_of_range("Indeks kartu tidak valid.");
-    SkillCard* card = player.hand()[handIndex];
-    player.removeFromHand(handIndex);
-    card->use(player, *this);
-    player.setUsedCard(true);
-    skillDeck_.discard(card);
-    logger_.log(currentTurn_, player.username(), "KARTU", "Pakai " + card->description());
+    currentPlayer().useSkillCard(handIndex, *this);
 }
 
 void Game::cmdDropCard(int handIndex) {
-    Player& player = currentPlayer();
-    if (handIndex < 0 || handIndex >= player.handSize()) throw out_of_range("Indeks kartu tidak valid.");
-    SkillCard* card = player.hand()[handIndex];
-    player.removeFromHand(handIndex);
-    skillDeck_.discard(card);
-    logger_.log(currentTurn_, player.username(), "DROP_KARTU", "Membuang " + card->description());
+    currentPlayer().dropSkillCard(handIndex, *this);
 }
 
 void Game::cmdLiquidateSell(const string& code) {
     Player& player = currentPlayer();
     Property* prop = board_->getProperty(code);
-    if (!prop || prop->owner() != &player) throw invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
-    if (prop->isMortgaged()) throw logic_error("Properti tergadai tidak bisa langsung dijual ke Bank.");
-
-    int val = prop->liquidationValue();
-    if (prop->type() == PropertyType::STREET) {
-        static_cast<Street*>(prop)->demolishAll();
-    }
-    bank_.pay(player, val);
-    prop->setOwner(nullptr);
-    prop->setStatus(PropertyStatus::BANK);
-    player.removeProperty(prop);
-    refreshPropertyCounts(&player);
-
-    logger_.log(currentTurn_, player.username(), "JUAL", prop->name() + " -> M" + to_string(val));
-    handleAuction(*prop);
+    if (!prop) throw invalid_argument("Properti tidak ditemukan.");
+    
+    prop->performLiquidation(player, *this);
 }
 
 void Game::cmdPrintLog(int n) const { logger_.print(n); }

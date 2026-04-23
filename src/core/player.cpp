@@ -112,7 +112,6 @@ void Player::declareBankruptcy(Player* creditor, int required, Game& game) {
     } else {
         for (auto* prop : assets) {
             if (prop->type() == PropertyType::STREET) {
-                // Cast aman karena kita tahu ini Street
                 static_cast<Street*>(prop)->demolishAll();
             }
             prop->setOwner(nullptr);
@@ -125,5 +124,67 @@ void Player::declareBankruptcy(Player* creditor, int required, Game& game) {
     }
     
     clearProperties();
+}
+
+void Player::useSkillCard(int handIndex, Game& game) {
+    if (hasRolled_) throw std::logic_error("Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.");
+    if (usedCardThisTurn_) throw std::logic_error("Penggunaan kartu dibatasi maksimal 1 kali dalam 1 giliran.");
+    if (handIndex < 0 || handIndex >= handSize()) throw std::out_of_range("Indeks kartu tidak valid.");
+    
+    SkillCard* card = hand_[handIndex];
+    removeFromHand(handIndex);
+    
+    card->use(*this, game);
+    
+    setUsedCard(true);
+    game.skillDeck().discard(card);
+    game.logger().log(game.currentTurn(), username_, "KARTU", "Pakai " + card->description());
+}
+
+void Player::dropSkillCard(int handIndex, Game& game) {
+    if (handIndex < 0 || handIndex >= handSize()) throw std::out_of_range("Indeks kartu tidak valid.");
+    
+    SkillCard* card = hand_[handIndex];
+    removeFromHand(handIndex);
+    game.skillDeck().discard(card);
+    game.logger().log(game.currentTurn(), username_, "DROP_KARTU", "Membuang " + card->description());
+}
+
+
+Property* Player::getOwnedProperty(const std::string& code) const {
+    for (auto* prop : properties_) {
+        if (prop->code() == code) return prop;
+    }
+    return nullptr; 
+}
+
+void Player::buildProperty(const std::string& code, Game& game) {
+    Property* prop = getOwnedProperty(code);
+    if (!prop) throw std::invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
+    if (prop->type() != PropertyType::STREET) throw std::invalid_argument("Hanya properti Street yang bisa dibangun.");
+    
+    static_cast<Street*>(prop)->buildHouseOrHotel(*this, game);
+}
+
+void Player::mortgageProperty(const std::string& code, Game& game) {
+    Property* prop = getOwnedProperty(code);
+    if (!prop) throw std::invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
+    
+    prop->performMortgage(*this, game);
+}
+
+void Player::redeemProperty(const std::string& code, Game& game) {
+    Property* prop = getOwnedProperty(code);
+    if (!prop) throw std::invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
+    
+    prop->performRedeem(*this, game);
+}
+
+void Player::applyFestival(const std::string& code, Game& game) {
+    Property* prop = getOwnedProperty(code);
+    if (!prop) throw std::invalid_argument("Properti tidak ditemukan atau bukan milikmu.");
+    if (prop->type() != PropertyType::STREET) throw std::invalid_argument("Hanya properti Street yang dapat mengadakan festival.");
+    
+    static_cast<Street*>(prop)->applyFestivalBoost(*this, game);
 }
 }
