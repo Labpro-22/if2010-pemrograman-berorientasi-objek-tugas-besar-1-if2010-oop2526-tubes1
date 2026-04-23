@@ -140,7 +140,7 @@ void GameMaster::movePlayer(Player *player, int steps)
         }
 }
 
-player->setPosition(targetIdx);
+    player->setPosition(targetIdx);
 
     Tile *landedTile = board->getTile(targetIdx);
     if (landedTile)
@@ -149,6 +149,11 @@ player->setPosition(targetIdx);
             "Mendarat di " + landedTile->getCode() +
                 " (" + landedTile->getTileName() + ")");
         landedTile->onLanded(*player, state);
+        if (state.getPhase() != GamePhase::PLAYER_TURN &&
+            state.getPhase() != GamePhase::DICE_ROLLED)
+        {
+            return; // STOP di sini → tunggu dialog selesai
+        }
     }
 }
 
