@@ -212,6 +212,8 @@ private:
         int jailFine    = 50;
         bool canAffordFine  = true;
         int jailTurnsLeft   = 0;
+        bool forcedPay      = false; // giliran ke-4, wajib bayar denda
+        bool rolledThisTurn = false; // sudah lempar dadu untuk coba double
     } jailDialog;
 
 
