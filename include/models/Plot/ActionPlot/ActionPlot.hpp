@@ -3,13 +3,9 @@
 #include "models/Plot/Plot.hpp"
 
 class ActionPlot : public Plot {
-protected:
-    bool isActionPlot;
-
 public:
-    ActionPlot(std::string name, std::string code);
+    ActionPlot(std::string name, std::string code, Color color);
     virtual ~ActionPlot() = default;
-    Color getColor() const override;
+    
     std::string getType() const override;
-    bool getIsActionPlot() const;
 };

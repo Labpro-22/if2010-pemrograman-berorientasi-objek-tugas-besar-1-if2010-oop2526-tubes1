@@ -7,8 +7,9 @@ private:
     static std::map<int, int> rentPriceTable;
 
 public:
-    StationPlot(std::string name, std::string code, Color color, int mortgageValue,
-            PropertyStatus propertyStatus = PropertyStatus::BANK);
+    StationPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
+            Player* owner = NULL, PropertyStatus propertyStatus = PropertyStatus::BANK,
+            int festivalDuration = 0, int festivalMultiplier = 1);
     ~StationPlot() = default;
 
     std::map<int, int> getRentPriceTable() const override;

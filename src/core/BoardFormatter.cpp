@@ -1,4 +1,4 @@
-#include "core/Formatter.hpp"
+#include "core/BoardFormatter.hpp"
 #include "models/Board/Board.hpp"
 #include "models/Player/Player.hpp"
 #include "models/Player/PlayerStatus.hpp"

@@ -2,10 +2,10 @@
 
 #include "models/Plot/SpecialPlot/SpecialPlot.hpp"
 
-class StartPlot : public SpecialPlot {
+class FreeParkPlot : public SpecialPlot {
 public:
-    StartPlot(std::string name, std::string code, Color color);
-    ~StartPlot() = default;
+    FreeParkPlot(std::string name, std::string code, Color color);
+    ~FreeParkPlot() = default;
 
     std::string getType() const override;
     void startEvent(PlotContext& ctx) override;
