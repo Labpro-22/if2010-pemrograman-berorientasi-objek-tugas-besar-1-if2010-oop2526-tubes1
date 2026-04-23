@@ -109,9 +109,18 @@ void GameScreen::drawDiceArea()
 void GameScreen::handleLemparDadu()
 {
     if (guiManager && guiManager->getGameMaster()) {
-        GameMaster* gm     = guiManager->getGameMaster();
-        Player*     player = gm->getState().getCurrPlayer();
-        Dice*       dice   = gm->getState().getDice();
+        GameMaster*      gm    = guiManager->getGameMaster();
+        const GameState& gs    = gm->getState();
+
+        // Blok roll jika ada aksi pending (beli, pajak, festival, lelang, dll)
+        GamePhase phase = gs.getPhase();
+        if (phase != GamePhase::PLAYER_TURN) return;
+
+        // Blok jika sudah roll (termasuk saat extra turn menunggu aksi selesai)
+        if (gs.getHasRolled()) return;
+
+        Player* player = gs.getCurrPlayer();
+        Dice*   dice   = gs.getDice();
         if (player && dice)
             guiManager->pushCommand(new LemparDaduCommand(*gm, player, *dice));
         return;

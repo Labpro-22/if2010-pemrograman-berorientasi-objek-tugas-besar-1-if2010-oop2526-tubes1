@@ -66,8 +66,6 @@ void LemparDaduCommand::execute(GameMaster &gm)
                   << " mendapat giliran tambahan." << std::endl;
         gameMaster.setExtraTurn(true);
 
-        // Reset hasRolled agar pemain bisa lempar lagi di giliran tambahan
-        gameMaster.getState().setHasRolled(false);
     }
     else
     {
