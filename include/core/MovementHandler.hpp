@@ -2,7 +2,7 @@
 #define MOVEMENTHANDLER_H
 
 #pragma once
-#include "JailTile.hpp"
+#include "../models/JailTile.hpp"
 
 class GameBoard;
 class Player;

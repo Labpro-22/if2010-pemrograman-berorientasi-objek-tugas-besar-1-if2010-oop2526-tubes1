@@ -14,6 +14,22 @@ void SkillCard::decrementDuration() {
     if (remainingDuration > 0) remainingDuration--;
 }
 
+string SkillCard::getCardType() const {
+    return cardType;
+}
+
+int SkillCard::getValue() const {
+    return value;
+}
+
+int SkillCard::getRemainingDuration() const {
+    return remainingDuration;
+}
+
+void SkillCard::setRemainingDuration(int d) {
+    remainingDuration = d;
+}
+
 // Turunan Skillcard
 
 MoveCard::MoveCard(int steps)
@@ -32,6 +48,8 @@ string MoveCard::getDescription() {
     return "Maju " + to_string(value) + " langkah";
 }
 
+string MoveCard::getCardType() const { return "MoveCard"; }
+
 ShieldCard::ShieldCard()
     : SkillCard("SHIELD", 0, 1) {}
 
@@ -47,6 +65,8 @@ void ShieldCard::activate(Player* player, GameContext* ctx) {
 string ShieldCard::getDescription() {
     return "Menahan pembayaran berikutnya";
 }
+
+string ShieldCard::getCardType() const { return "ShieldCard"; }
 
 TeleportCard::TeleportCard(int target)
     : SkillCard("TELEPORT", target, 0) {}
@@ -65,6 +85,8 @@ string TeleportCard::getDescription() {
     return "Teleport ke posisi " + to_string(value);
 }
 
+string TeleportCard::getCardType() const { return "TeleportCard"; }
+
 
 DiscountCard::DiscountCard(int percent)
     : SkillCard("DISCOUNT", percent, 1) {}
@@ -81,6 +103,8 @@ string DiscountCard::getDescription() {
     return "Diskon " + to_string(value) + "%";
 }
 
+string DiscountCard::getCardType() const { return "DiscountCard"; }
+
 LassoCard::LassoCard()
     : SkillCard("LASSO", 0, 0) {}
 
@@ -94,6 +118,8 @@ string LassoCard::getDescription() {
     return "Menarik pemain lain ke posisi kamu";
 }
 
+string LassoCard::getCardType() const { return "LassoCard"; }
+
 DemolitionCard::DemolitionCard()
     : SkillCard("DEMOLITION", 0, 0) {}
 
@@ -104,3 +130,5 @@ void DemolitionCard::activate(Player* player, GameContext* ctx) {
 string DemolitionCard::getDescription() {
     return "Menghancurkan bangunan lawan";
 }
+
+string DemolitionCard::getCardType() const { return "DemolitionCard"; }

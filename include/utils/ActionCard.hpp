@@ -22,6 +22,7 @@ class ActionCard {
 public:
     virtual void execute(Player* player, GameContext* ctx) = 0;
     virtual std::string getDescription() = 0;
+    virtual std::string getCardType() const = 0;
     virtual ~ActionCard() {}
 };
 
@@ -35,6 +36,9 @@ public:
     ChanceCard(ActionCardType t, int v, std::string d);
     void execute(Player* player, GameContext* ctx) override;
     std::string getDescription() override;
+    std::string getCardType() const override;
+    ActionCardType getType() const;
+    int getValue() const;
 };
 
 class CommunityCard : public ActionCard {
@@ -47,6 +51,9 @@ public:
     CommunityCard(ActionCardType t, int v, std::string d);
     void execute(Player* player, GameContext* ctx) override;
     std::string getDescription() override;
+    std::string getCardType() const override;
+    ActionCardType getType() const;
+    int getValue() const;
 };
 
 #endif

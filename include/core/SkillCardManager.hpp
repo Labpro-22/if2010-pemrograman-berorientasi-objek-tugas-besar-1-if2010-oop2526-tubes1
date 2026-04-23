@@ -2,8 +2,8 @@
 #define SKILLCARDMANAGER_H
 
 #include <vector>
-#include "CardDeck.hpp"
-#include "SkillCard.hpp"
+#include "../utils/CardDeck.hpp"
+#include "../utils/SkillCard.hpp"
 
 using namespace std;
 

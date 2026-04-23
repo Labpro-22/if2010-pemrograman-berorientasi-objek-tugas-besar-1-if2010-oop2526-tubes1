@@ -10,6 +10,10 @@ ActionCard* ChanceTile::drawCard() {
     return deck->drawTop();
 }
 
+CardDeck<ActionCard>* ChanceTile::getDeck() const {
+    return deck;
+}
+
 void ChanceTile::executeAction(Player* player, GameContext* ctx) {
     if (player == nullptr || ctx == nullptr) return;
 

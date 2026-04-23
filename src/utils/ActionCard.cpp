@@ -46,6 +46,9 @@ void ChanceCard::execute(Player* player, GameContext* ctx) {
 }
 
 string ChanceCard::getDescription() { return desc; }
+string ChanceCard::getCardType() const { return "ChanceCard"; }
+ActionCardType ChanceCard::getType() const { return type; }
+int ChanceCard::getValue() const { return value; }
 
 void CommunityCard::execute(Player* player, GameContext* ctx) {
     if (!player || !ctx) return;
@@ -76,3 +79,6 @@ void CommunityCard::execute(Player* player, GameContext* ctx) {
 }
 
 string CommunityCard::getDescription() { return desc; }
+string CommunityCard::getCardType() const { return "CommunityCard"; }
+ActionCardType CommunityCard::getType() const { return type; }
+int CommunityCard::getValue() const { return value; }

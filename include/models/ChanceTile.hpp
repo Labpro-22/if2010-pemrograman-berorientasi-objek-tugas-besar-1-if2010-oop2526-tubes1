@@ -1,7 +1,7 @@
 #pragma once
 #include "ActionTile.hpp"
 #include "../utils/CardDeck.hpp"
-#include "ActionCard.hpp"
+#include "../utils/ActionCard.hpp"
 
 class GameContext;
 
@@ -15,5 +15,6 @@ public:
     ~ChanceTile() = default;
 
     ActionCard* drawCard();
+    CardDeck<ActionCard>* getDeck() const;
     void executeAction(Player* player, GameContext* ctx) override;
 };

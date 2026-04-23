@@ -15,3 +15,11 @@ std::string Tile::getName() const {
 std::string Tile::getColor() const {
     return color;
 }
+
+std::string Tile::getCode() const {
+    return code;
+}
+
+void Tile::setCode(const std::string& c) {
+    code = c;
+}

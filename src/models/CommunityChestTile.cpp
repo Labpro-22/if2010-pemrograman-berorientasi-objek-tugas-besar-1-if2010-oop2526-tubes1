@@ -10,6 +10,10 @@ ActionCard* CommunityChestTile::drawCard() {
     return deck->drawTop();
 }
 
+CardDeck<ActionCard>* CommunityChestTile::getDeck() const {
+    return deck;
+}
+
 void CommunityChestTile::executeAction(Player* player, GameContext* ctx) {
     if (player == nullptr || ctx == nullptr) return;
 
