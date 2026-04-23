@@ -36,3 +36,12 @@ void GameRenderer::showSaveFailed(string filename) {
 void GameRenderer::showLogger(const LogEntry& entry){
     cout << "[" << entry.turn << "] " << entry.username << " | " << entry.actionType << " | " << entry.detail << endl; 
 }
+
+void GameRenderer::showBoard(const GameState& state) {
+    cout << Formatter::boardFormat(
+        state.getBoard(),
+        state.getPlayers(),
+        state.getCurrentTurn(),
+        state.getMaxTurn()
+    );
+};
