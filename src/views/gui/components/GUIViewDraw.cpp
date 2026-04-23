@@ -49,7 +49,7 @@ void drawTileCard(sf::RenderWindow& rw,
 
     const sf::Texture* tex = am.tileTexture(tv.code);
     if (tex) {
-        const float pad = tileSz * 0.06f;
+        const float pad = tileSz * 0.02f;
         const float drawSz = tileSz - pad * 2.0f;
         auto texSz = tex->getSize();
         float scale = std::min(drawSz / static_cast<float>(texSz.x),
@@ -96,8 +96,8 @@ void drawTileCard(sf::RenderWindow& rw,
     rw.draw(badge, rs);
 
     const sf::Font& font = am.font("bold");
-    unsigned charSz = static_cast<unsigned>(tileSz * 0.17f);
-    if (charSz < 6u) charSz = 6u;
+    unsigned charSz = static_cast<unsigned>(tileSz * 0.22f);
+    if (charSz < 8u) charSz = 8u;
     sf::Text label(font, tv.code, charSz);
     sf::Color textColor = hasGroup ? grpColor : sf::Color(200, 200, 200);
     if (tv.color == Color::YELLOW)

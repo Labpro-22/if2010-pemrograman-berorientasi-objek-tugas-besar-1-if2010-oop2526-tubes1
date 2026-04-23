@@ -55,7 +55,7 @@ void GUIView::showBoard(const GameStateView& state) {
     const float cW = boardRight - boardLeft;
     const float cH = boardBottom - boardTop;
 
-    const float boardSz = std::min(cW, cH) * 0.97f;
+    const float boardSz = std::min(cW, cH);
     const sf::Vector2f origin{
         boardLeft + (cW - boardSz) * 0.5f,
         boardTop + (cH - boardSz) * 0.5f,
