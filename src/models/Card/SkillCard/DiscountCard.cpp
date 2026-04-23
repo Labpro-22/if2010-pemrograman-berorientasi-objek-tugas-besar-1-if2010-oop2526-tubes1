@@ -6,8 +6,8 @@ void DiscountCard::activate(GameState& state) {
     uniform_int_distribution<> number(1,100);
 
     int discountPercent = number(g);
-    // TODO:
-
+    state.getCurrentPlayer().setDiscountValue(discountPercent);
+    state.getCurrentPlayer().setDiscountTurnLeft(1);
 }
 
 const string DiscountCard::getName() const {

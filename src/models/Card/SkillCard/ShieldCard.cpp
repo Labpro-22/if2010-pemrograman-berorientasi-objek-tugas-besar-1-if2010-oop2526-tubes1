@@ -3,6 +3,7 @@
 void ShieldCard::activate(GameState& state) {
     state.getCurrentPlayer().setShieldActive(true);
     state.getCurrentPlayer().setUsedSkillThisTurn(true);
+    state.getCurrentPlayer().setShieldTurnLeft(1);
 }
 
 const string ShieldCard::getName() const {
