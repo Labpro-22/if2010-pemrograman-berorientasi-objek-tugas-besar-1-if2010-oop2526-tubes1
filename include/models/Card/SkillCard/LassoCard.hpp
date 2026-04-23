@@ -3,9 +3,9 @@
 
 class LassoCard : public SkillCard {
     public:
-        LassoCard();
-        ~LassoCard();
-        void activate();
-        string getName();
-        string getDescription();
+        LassoCard() = default;
+        ~LassoCard() = default;
+        void activate(GameState&);
+        const string getName() const;
+        const string getDescription() const;
 };

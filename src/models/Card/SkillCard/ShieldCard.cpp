@@ -1,21 +1,15 @@
 #include "models/Card/SkillCard/ShieldCard.hpp"
 
-ShieldCard::ShieldCard() {
-
+void ShieldCard::activate(GameState& state) {
+    state.getCurrentPlayer().setShieldActive(true);
+    state.getCurrentPlayer().setUsedSkillThisTurn(true);
+    state.getCurrentPlayer().setShieldTurnLeft(1);
 }
 
-ShieldCard::~ShieldCard() {
-
-}
-
-void ShieldCard::activate() {
-     // TODO: 
-}
-
-string ShieldCard::getName() {
+const string ShieldCard::getName() const {
     return "ShieldCard";
 }
 
-string ShieldCard::getDescription() {
+const string ShieldCard::getDescription() const {
     return "Melindungi pemain dari tagihan sewa maupun sanksi apapun yang merugikan selama 1 giliran.";
 }

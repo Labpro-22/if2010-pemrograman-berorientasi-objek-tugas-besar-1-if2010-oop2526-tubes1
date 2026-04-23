@@ -3,9 +3,9 @@
 
 class MoveCard : public SkillCard {
     public:
-        MoveCard();
-        ~MoveCard();
-        void activate();
-        string getName();
-        string getDescription();
+        MoveCard() = default;
+        ~MoveCard() = default;
+        void activate(GameState&);
+        const string getName() const;
+        const string getDescription() const;
 };
