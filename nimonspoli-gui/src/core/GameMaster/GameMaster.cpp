@@ -75,22 +75,22 @@ void GameMaster::handleCommand(const std::string &rawInput)
     (void)rawInput; // placeholder — diisi oleh tim CLI/GUI
 }
 
-    void GameMaster::beginTurn()
+void GameMaster::beginTurn()
+{
+    state.setPhase(GamePhase::PLAYER_TURN);
+    state.setHasRolled(false);
+    state.setHasUsedCard(false);
+    state.setHasExtraTurn(false);
+
+    distributeSkillCards();
+
+    Player *cur = state.getCurrPlayer();
+    if (cur)
     {
-        state.setPhase(GamePhase::PLAYER_TURN);
-        state.setHasRolled(false);
-        state.setHasUsedCard(false);
-        state.setHasExtraTurn(false);
-
-        distributeSkillCards();
-
-        Player *cur = state.getCurrPlayer();
-        if (cur)
-        {
-            log(cur->getUsername(), "TURN_START",
-                "Giliran Turn " + std::to_string(state.getCurrTurn()));
-        }
+        log(cur->getUsername(), "TURN_START",
+            "Giliran Turn " + std::to_string(state.getCurrTurn()));
     }
+}
 
 void GameMaster::endTurn()
 {
@@ -685,13 +685,13 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
         return;
     if (gs.getHasUsedCard())
         return;
-    if (card->getUsed())
+    if (card->isUsed())
         return;
 
     card->execute(*player, gs);
     gs.getLogger()->addLog(gs.getCurrTurn(), player->getUsername(), "SKILL_CARD", card->getDescription());
 
-    card->setUsed(true);
+    card->markUsed();
     const vector<SkillCard *> &hand = player->getHand();
     for (int i = 0; i < (int)hand.size(); i++)
     {
