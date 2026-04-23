@@ -20,18 +20,19 @@ void DoctorFeeCard::execute(Player &p, GameState &gs)
 {
     // Cek apakah player akan Bankrupt? <-- belum dihandle
     GameMaster* gm = gs.getGameMaster();
-    Bank* bank = gs.getBank();
-    if (p.getBalance() < doctorFee) {
+    // Bank* bank = gs.getBank();
+    // if (p.getBalance() < doctorFee) {
         // p.setStatus(PlayerStatus::BANKRUPT);
         // Handle bankrupt
         if (p.getStatus() == PlayerStatus::BANKRUPT) {
             return;
         }
         // Handle Bankrupt?
-        if (p.getBalance() < 700) {
-            gm->handleBankruptcy(&p, bank);
+        if (p.getBalance() < doctorFee) {
+            gm->handleDebtPayment(&p, doctorFee, nullptr);
+            // ini harus nunggu dialog? then proceed
         }
         else p -= doctorFee;
-    }
+    // }
     // p -= doctorFee;
 }

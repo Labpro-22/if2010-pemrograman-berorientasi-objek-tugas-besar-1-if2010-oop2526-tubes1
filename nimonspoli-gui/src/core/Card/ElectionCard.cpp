@@ -22,16 +22,22 @@ void ElectionCard::execute(Player &p, GameState &gs)
     GameMaster* gm = gs.getGameMaster();
     for (Player *other : players)
     {
-        if (other == &p)
+        if (other == &p || p.getStatus() == PlayerStatus::BANKRUPT)
             continue;
         // Cek apakah player akan Bankrupt? <-- belum dihandle
-        if (p.getBalance() < amountPerPlayer) {
+        if (p.getBalance() >= amountPerPlayer) 
+        {
+            p -= amountPerPlayer;
+            *other += amountPerPlayer;
+        } else
+        {
             // p.setStatus(PlayerStatus::BANKRUPT);
             if (p.getStatus() == PlayerStatus::BANKRUPT) {
                 break;
             }
             // Handle Bankrupt?
             gm->handleDebtPayment(&p, amountPerPlayer, other);
+            // ini harus nunggu dialog baru proceed
         }
         // p -= amountPerPlayer;
         // *other += amountPerPlayer;

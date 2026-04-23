@@ -14,42 +14,52 @@ void BankruptCommand::execute(GameMaster& gm)
     if (liquidation == 0)
     {
         // Handle Transfer
-        std::cout << "Melakukan Transfer Balance ke ";
+        // std::cout << "Melakukan Transfer Balance ke ";
         if (to)
         {
             *from -= debt;
             *to += debt;
-            std::cout << to->getUsername() << std::endl;
+            // std::cout << to->getUsername() << std::endl;
         }
         else
         {
             *from -= debt;
-            std::cout << "Bank" << std::endl;
+            // std::cout << "Bank" << std::endl;
         }
+        gs.setPhase(GamePhase::PLAYER_TURN);
     }
     else if (liquidation == 1) 
     {
-        while (from->getBalance() < debt) {
+        // while (from->getBalance() < debt) {
             // Belum ada guardnyaaaaaaaaa
-            std::cout << "Prop idx: ";
-            std::cin >> propToSell;
-            std::cout << "State: ";
-            std::cin >> sellOverMortgage;
+            // std::cout << "Prop idx: ";
+            // std::cin >> propToSell;
+            // std::cout << "State: ";
+            // std::cin >> sellOverMortgage;
             if (propToSell < 0 || propToSell >= from->getPropertyCount()) {
                 // err idx out of bounds
-                continue;
+                return;
             }
             Property* prop = from->getProperties()[propToSell];
             if (sellOverMortgage)
             {
-                std::cout << "Menjual properti " << prop->getName() << std::endl;
+                // std::cout << "Menjual properti " << prop->getName() << std::endl;
                 gm.sellPropertyToBank(from, prop);
             }
             else
             {
-                std::cout << "Menggadaikan properti " << prop->getName() << std::endl;
+                // std::cout << "Menggadaikan properti " << prop->getName() << std::endl;
                 gm.mortgageProperty(from, prop);
             }
+        // }
+        if (from->getBalance() >= debt) {
+            if (to) {
+                *from -= debt;
+                *to += debt;
+            } else {
+                *from -= debt;
+            }
+            gs.setPhase(GamePhase::PLAYER_TURN);
         }
          
     }
