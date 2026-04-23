@@ -6,6 +6,7 @@
 #include "../Card/SkillCard.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
 #include "../Property/Property.hpp"
+#include "../Property/StreetProperty.hpp"
 #include "../utils/TransactionLogger.hpp"
 
 #include <iostream>
@@ -357,52 +358,68 @@ void GameMaster::startAuction(Property *prop, Player *triggerPlayer)
 //  Kebangkrutan
 // ─────────────────────────────────────────────
 
-void GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
+int GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
 {
     if (!debtor)
-        return;
+        return -1;
 
     // Hitung maksimum yang bisa didapat dari likuidasi
     // (perhitungan detail ada di BankruptcyManager / BangkrutCommand)
+    
     int cash = debtor->getBalance();
     if (cash >= debt)
     {
         // Cukup bayar langsung
-        if (creditor)
-        {
-            *debtor -= debt;
-            *creditor += debt;
-        }
-        else
-        {
-            *debtor -= debt;
-        }
-        return;
+        // if (creditor)
+        // {
+        //     *debtor -= debt;
+        //     *creditor += debt;
+        // }
+        // else
+        // {
+        //     *debtor -= debt;
+        // }
+        return 0;
     }
 
     // Tidak cukup cash → cek potensi likuidasi
+    state.setPhase(GamePhase::BANKRUPTCY);
     int potential = calculateWealth(debtor);
     if (potential >= debt)
     {
         // Wajib likuidasi — BangkrutCommand yang handle panel likuidasi
-        state.setPhase(GamePhase::BANKRUPTCY);
+        // state.setPhase(GamePhase::BANKRUPTCY);
         log(debtor->getUsername(), "BANKRUPTCY_START",
             "Harus likuidasi untuk bayar M" + std::to_string(debt));
+        // Pilih mau likuidasi asset yang mana (how? need to integrate this into GUI)
+        
+        // Jujur gw gatau cara buat milih propnya gimana
+        // Likuidasi --> Handle
+
+        // Dia butuh input, how?
+        // while(debtor->getBalance() < debt) {
+        //     for (Property* p : debtor->getProperties()) {
+                
+        //     }
+        // }
+        return 1;
     }
     else
     {
         // Tidak bisa bayar → bangkrut
-        if (creditor)
-        {
-            handleBankruptcy(debtor, creditor);
-        }
-        else
-        {
-            handleBankruptcy(debtor, state.getBank());
-        }
+        // if (creditor)
+        // {
+        //     handleBankruptcy(debtor, creditor);
+        // }
+        // else
+        // {
+        //     handleBankruptcy(debtor, state.getBank());
+        // }
+        return 2;
     }
 }
 
+// Bankruptcy Player
 void GameMaster::handleBankruptcy(Player *from, Player *to)
 {
     if (!from || !to)
@@ -427,6 +444,7 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
         {
             p->setOwner(to->getUsername());
             to->addProperty(p);
+            from->removeProperty(p);
         }
     }
 
@@ -440,6 +458,7 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
     }
 }
 
+// Bankruptcy to Bank
 void GameMaster::handleBankruptcy(Player *from, Bank *bank)
 {
     if (!from || !bank)
@@ -460,11 +479,14 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     {
         Property *p = from->getProperties()[i];
         if (p)
-        {
+        {   
+            // Hancurkan bangunan jika ada (StreetProperty)
+            auto* sp = dynamic_cast<StreetProperty*>(p);
+            if (sp) sp->resetBuildings();
+
             p->clearOwner();
             p->setStatus(PropertyStatus::BANK);
-            // Hancurkan bangunan jika ada (StreetProperty)
-            // → dilakukan di StreetProperty::resetBuildings() jika ada
+            from->removeProperty(p);
             startAuction(p, nullptr);
         }
     }
@@ -475,6 +497,48 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     {
         state.setPhase(GamePhase::GAME_OVER);
     }
+}
+
+// ─────────────────────────────────────────────
+//  Helper
+// ─────────────────────────────────────────────
+
+void GameMaster::sellPropertyToBank(Player* player, Property* prop) {
+    if (!player || !prop) return;
+    if (prop->getOwnerId() != player->getUsername()) return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED) return;
+
+    int value;
+    auto* sp = dynamic_cast<StreetProperty*>(prop);
+    value = sp->calculateSellPrice();
+
+    if (sp) {
+        sp->resetBuildings();
+    }
+
+    prop->clearOwner();
+    prop->setStatus(PropertyStatus::BANK);
+    player->removeProperty(prop);
+    *player += value;
+
+    log(player->getUsername(), "SELL_PROPERTY", 
+        prop->getName() + " dijual ke bank seharga M" + std::to_string(value));
+}
+
+void GameMaster::mortgageProperty(Player* player, Property* prop) {
+    if (!player || !prop) return;
+    if (prop->getOwnerId() != player->getUsername()) return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED) return;
+
+    auto* sp = dynamic_cast<StreetProperty*>(prop);
+    if (sp && sp->getBuildingCount() > 0) return;
+
+    int mortgageValue = prop->getMortageValue();
+    prop->setStatus(PropertyStatus::MORTGAGED);
+    *player += mortgageValue;
+
+    log(player->getUsername(), "MORTGAGE", 
+        prop->getName() + " digadaikan, menerima M" + std::to_string(mortgageValue));
 }
 
 // ─────────────────────────────────────────────
@@ -605,8 +669,8 @@ int GameMaster::calculateWealth(Player *player) const
     for (int i = 0; i < player->getPropertyCount(); i++)
     {
         Property *p = player->getProperties()[i];
-        if (p)
-            wealth += static_cast<int>(p->getPurchasePrice());
+        if (!p || p->getStatus() == PropertyStatus::MORTGAGED) continue;
+        wealth += p->calculateSellPrice();
         // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
         // jika ada override — di sini gunakan purchasePrice sebagai baseline
     }
