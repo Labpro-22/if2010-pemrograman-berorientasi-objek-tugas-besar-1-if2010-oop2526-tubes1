@@ -237,10 +237,10 @@ int main() {
             if (com && state.getPhase() == GamePhase::PLAYER_TURN
                     && !state.getHasRolled()) {
                 com->executeTurn(*gameMaster);
-                if (state.getPhase() != GamePhase::GAME_OVER) {
+                if (state.getPhase() != GamePhase::GAME_OVER)
                     gameMaster->endTurn();
+                if (state.getPhase() != GamePhase::GAME_OVER) 
                     gameMaster->beginTurn();
-                }
             }
         }
 

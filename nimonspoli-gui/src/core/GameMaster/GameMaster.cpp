@@ -107,6 +107,7 @@ void GameMaster::endTurn()
             state.advanceTurn();
         }
     }
+    checkWinCondition();
     // Jika hasExtraTurn, pemain yang sama jalan lagi — tidak nextPlayer()
 }
 
