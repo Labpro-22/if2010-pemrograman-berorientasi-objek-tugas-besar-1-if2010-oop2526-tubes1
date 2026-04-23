@@ -15,11 +15,10 @@ void GameScreen::triggerFestivalDialog()
     if (!curP) return;
 
     festivalDialog.streets.clear();
-    for (Property* prop : curP->getProperties()) {
-        StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
-        if (sp && sp->getStatus() != PropertyStatus::MORTGAGED)
-            festivalDialog.streets.push_back(sp);
-    }
+    // Gunakan FestivalCommand untuk mendapatkan daftar properti yang eligible
+    FestivalCommand cmd(curP, gs.getLogger(), gs.getCurrTurn());
+    festivalDialog.streets = cmd.getEligibleStreets();
+    
     festivalDialog.scrollY    = 0.f;
     festivalDialog.hoveredIdx = -1;
     festivalDialog.visible    = true;

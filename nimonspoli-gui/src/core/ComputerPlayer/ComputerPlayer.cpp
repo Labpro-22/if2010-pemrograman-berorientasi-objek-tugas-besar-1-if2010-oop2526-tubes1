@@ -908,9 +908,56 @@ void ComputerPlayer::executeTurn(GameMaster& gm) {
         }
     }
 
-    // ── 4. Aksi pasca-gerak: bangun & tebus ─────────────────────────
+    // ── 4. Tangani Interaksi (Beli, Pajak, Festival, dsb.) ─────────
+    GamePhase currentPhase = gs.getPhase();
+    
+    // Jika phase masih interaktif, COM harus mengambil keputusan
+    if (currentPhase == GamePhase::AWAITING_BUY) {
+        Tile* landed = gs.getBoard()->getTile(getPosition());
+        PropertyTile* pt = dynamic_cast<PropertyTile*>(landed);
+        if (pt && pt->getProperty()) {
+            if (decideAndBuy(pt->getProperty(), gs)) {
+                // Execute beli via Command atau langsung
+                // (Untuk COM, biasanya langsung execute di GM)
+                gm.handlePropertyLanding(this, pt->getProperty());
+            } else {
+                // Dilempar ke lelang
+                gm.startAuction(pt->getProperty(), this);
+            }
+        }
+    } else if (currentPhase == GamePhase::AWAITING_FESTIVAL) {
+        Property* best = chooseBestFestivalProperty(gs);
+        if (best) {
+            StreetProperty* sp = dynamic_cast<StreetProperty*>(best);
+            if (sp) {
+                FestivalCommand cmd(this, gs.getLogger(), gs.getCurrTurn());
+                cmd.executeWithProperty(sp);
+            }
+        }
+        gs.setPhase(GamePhase::PLAYER_TURN);
+    } else if (currentPhase == GamePhase::AWAITING_TAX) {
+        // COM pilih yang termurah antara flat vs percentage
+        int taxFlat = gs.getPendingPphFlat();
+        int taxPct = (int)(gm.calculateWealth(this) * (gs.getPendingPphPct() / 100.0));
+        
+        // Pura-pura panggil logic bayar pajak (Command)
+        // Disini kita sederhanakan:
+        if (taxFlat < taxPct) {
+            *this -= taxFlat;
+            gm.log(getUsername(), "TAX", "Bayar PPH Flat: M" + std::to_string(taxFlat));
+        } else {
+            *this -= taxPct;
+            gm.log(getUsername(), "TAX", "Bayar PPH %: M" + std::to_string(taxPct));
+        }
+        gs.setPhase(GamePhase::PLAYER_TURN);
+    } else if (currentPhase == GamePhase::SHOW_CARD) {
+        // COM hanya skip card dialog
+        gs.setPhase(GamePhase::PLAYER_TURN);
+    }
+
+    // ── 5. Aksi pasca-gerak: bangun & tebus ─────────────────────────
     //  (hanya MEDIUM dan HARD)
-    if (difficulty != COMDifficulty::EASY) {
+    if (difficulty != COMDifficulty::EASY && gs.getPhase() == GamePhase::PLAYER_TURN) {
         // Coba bangun
         auto [colorGroup, propCode] = decideBuild(gs);
         if (!propCode.empty()) {

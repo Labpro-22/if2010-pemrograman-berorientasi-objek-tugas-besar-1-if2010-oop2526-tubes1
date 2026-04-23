@@ -43,6 +43,33 @@ static void DrawRotatedBorder(float cx, float cy, float tw, float th,
         DrawLineEx(world[i], world[(i + 1) % 4], thick, color);
 }
 
+// Helper: gambar text yang ikut rotasi tile (agar tidak menabrak tetangga di samping)
+static void DrawRotatedText(const char* text, float cx, float cy, float localX, float localY, 
+                            float rotation, int fontSize, Color color, bool bold = true)
+{
+    float rad = rotation * DEG2RAD;
+    float cosR = cosf(rad), sinR = sinf(rad);
+    
+    // Transform local tile coordinate (x,y) to world screen coordinate
+    Vector2 pos = {
+        cx + localX * cosR - localY * sinR,
+        cy + localX * sinR + localY * cosR
+    };
+    
+    Font font = GetFontDefault();
+    float spacing = 1.0f;
+    Vector2 size = MeasureTextEx(font, text, (float)fontSize, spacing);
+    Vector2 origin = { size.x / 2.f, size.y / 2.f }; // Center alignment
+    
+    if (bold) {
+        // Shadow effect
+        Vector2 shadowPos = { pos.x + 1.5f, pos.y + 1.5f };
+        DrawTextPro(font, text, shadowPos, origin, rotation, (float)fontSize, spacing, {0,0,0,220});
+    }
+    
+    DrawTextPro(font, text, pos, origin, rotation, (float)fontSize, spacing, color);
+}
+
 // ─── Tile geometry ────────────────────────────────────────────────────────────
 Vector2 GameScreen::getTileCenter(int idx)
 {
@@ -90,9 +117,9 @@ Rectangle GameScreen::getTileRect(int idx)
     if (td.corner) {
         hw = CORNER_SZ / 2.f; hh = CORNER_SZ / 2.f;
     } else if (td.side == "BOTTOM" || td.side == "TOP") {
-        hw = TILE_H / 2.f; hh = TILE_W / 2.f;
+        hw = TILE_W / 2.f; hh = TILE_H / 2.f; // Spacing is W, Length is H
     } else {
-        hw = TILE_W / 2.f; hh = TILE_H / 2.f;
+        hw = TILE_H / 2.f; hh = TILE_W / 2.f; // Rotated: Spacing is W, Length is H
     }
     return {c.x - hw, c.y - hh, hw * 2, hh * 2};
 }
@@ -127,19 +154,6 @@ void GameScreen::drawTile(int idx, float cx, float cy, float rotation)
         DrawText(td.code.c_str(), (int)(cx - fw/2), (int)(cy - 5), 9, WHITE);
     }
 
-    if (prop.festivalMult > 1) {
-        float pulse = 0.7f + 0.3f * sinf(glowTimer * 4.f);
-        float thick = 1.5f * log2f((float)prop.festivalMult);
-        Color rc;
-        if      (prop.festivalMult == 2) rc = {239, 159,  39, (unsigned char)(200 * pulse)};
-        else if (prop.festivalMult == 4) rc = {186, 117,  23, (unsigned char)(220 * pulse)};
-        else                             rc = {133,  79,  11, (unsigned char)(240 * pulse)};
-        // Gambar di luar tile dengan offset thick, ikut rotasi
-        DrawRotatedBorder(cx, cy, tw + thick*2, th + thick*2, rotation, thick, rc);
-        std::string lbl = "x" + std::to_string(prop.festivalMult);
-        DrawText(lbl.c_str(), (int)(cx-tw/2.f+2), (int)(cy-th/2.f+2), 10, rc);
-    }
-
     if (prop.owner >= 0 && prop.type == "STREET") {
         drawBuildingStrip(cx, cy, rotation, prop.buildings, playerColors[prop.owner]);
         // Border ikut rotasi tile — fix bug marker terbalik di LEFT/RIGHT
@@ -153,6 +167,31 @@ void GameScreen::drawTile(int idx, float cx, float cy, float rotation)
         // Railroad / Utility
         DrawRotatedBorder(cx, cy, tw, th, rotation, 3.f, playerColors[prop.owner]);
     }
+
+    // --- FESTIVAL EFFECT (Moved to end for Z-order & Rainbow) ---
+    if (prop.festivalMult > 1) {
+        float pulse = 0.7f + 0.3f * sinf(glowTimer * 6.f);
+        float thick = 2.0f * log2f((float)prop.festivalMult) + 3.0f;
+        
+        // RAINBOW COLOR: Cycle hue over time
+        float hue = fmodf(glowTimer * 120.f, 360.f);
+        Color rc = ColorFromHSV(hue, 0.8f, 1.0f);
+        rc.a = (unsigned char)(220 * pulse);
+        
+        // Draw multiple borders for a "neon" effect above everything
+        DrawRotatedBorder(cx, cy, tw + thick, th + thick, rotation, thick, rc);
+        DrawRotatedBorder(cx, cy, tw + thick + 2, th + thick + 2, rotation, 1.5f, {255, 255, 255, 120});
+
+        // "FESTIVAL" Label - ROTATED & FACING INSIDE
+        // localY positif (setelah diputar) berarti bergerak ke arah tengah papan
+        DrawRotatedText("FESTIVAL", cx, cy, 0, th/2 - 12, rotation, 13, rc);
+
+        // Multiplier Label (x2, x4, x8) - ROTATED, LARGE & BOLDER
+        std::string multLabel = "x" + std::to_string(prop.festivalMult);
+        DrawRotatedText(multLabel.c_str(), cx, cy, 0, -th/4, rotation, 26, WHITE);
+        // Rainbow glow effect for the multiplier text
+        DrawRotatedText(multLabel.c_str(), cx, cy, 0, -th/4, rotation, 26, rc, false); 
+    }
 }
 
 // ─── Building strip ───────────────────────────────────────────────────────────
@@ -160,7 +199,8 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
                                    int buildings, Color ownerColor)
 {
     float sw = STRIP_W, sh = STRIP_H;
-    float localY = TILE_H/2.f - sh/2.f;
+    // localY diubah jadi negatif agar strip digambar di sisi "dalam" (menghadap tengah papan)
+    float localY = -(TILE_H/2.f - sh/2.f); 
     float rad = rotation * DEG2RAD;
     float cosR = cosf(rad), sinR = sinf(rad);
     float sx = cx - localY * sinR;
@@ -169,7 +209,8 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
 
     if (buildings == 0) return;
 
-    float bldLocalY = localY - sh;
+    // bangunan digambar lebih "dalam" lagi (offset ditambah sh karena localY negatif)
+    float bldLocalY = localY + sh;
     bool  isHotel   = (buildings == 5);
     if (isHotel) {
         float hw = sw * 0.85f, hh = sh * 0.7f;

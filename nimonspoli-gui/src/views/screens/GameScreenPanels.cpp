@@ -100,6 +100,9 @@ void GameScreen::drawRightPanel()
     DrawLine((int)rx+8, 112, SCREEN_W-8, 112, {60,60,80,255});
     DrawText("AKSI", (int)rx+10, 120, 12, {150,150,180,255});
 
+    bool hasExtraTurn = false;
+    if (isRealMode()) hasExtraTurn = guiManager->getGameMaster()->getState().getHasExtraTurn();
+
     struct Btn { const char* label; Color col; };
     Btn btns[] = {
         {"LEMPAR DADU",   {70,130,180,255}},
@@ -110,7 +113,7 @@ void GameScreen::drawRightPanel()
         {"TEBUS",         {160,120,80,255}},
         {"JUAL BANGUNAN", {160,80,80,255}},
         {"SAVE",          {100,100,160,255}},
-        {"END TURN",      {80,100,160,255}},
+        {hasExtraTurn ? "START EXTRA TURN" : "END TURN",      {80,100,160,255}},
     };
 
     Vector2 mouse = GetMousePosition();
