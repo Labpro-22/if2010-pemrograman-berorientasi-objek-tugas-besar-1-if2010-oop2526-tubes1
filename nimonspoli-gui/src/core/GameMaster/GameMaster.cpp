@@ -4,6 +4,7 @@
 #include "../Bank/Bank.hpp"
 #include "../Dice/Dice.hpp"
 #include "../Card/SkillCard.hpp"
+#include "../Card/CardDeck.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
 #include "../Property/Property.hpp"
 #include "../utils/TransactionLogger.hpp"
@@ -81,16 +82,15 @@ void GameMaster::beginTurn()
     state.setPhase(GamePhase::PLAYER_TURN);
     state.setHasRolled(false);
     state.setHasUsedCard(false);
-    state.setHasExtraTurn(false);
+
+    Player *cur = state.getCurrPlayer();
+    if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT)
+        return;
 
     distributeSkillCards();
 
-    Player *cur = state.getCurrPlayer();
-    if (cur)
-    {
-        log(cur->getUsername(), "TURN_START",
-            "Giliran Turn " + std::to_string(state.getCurrTurn()));
-    }
+    log(cur->getUsername(), "TURN_START",
+        "Giliran Turn " + std::to_string(state.getCurrTurn()));
 }
 
 void GameMaster::endTurn()
@@ -669,21 +669,26 @@ void GameMaster::log(const std::string &username,
 
 void GameMaster::distributeSkillCards()
 {
-    // Setiap pemain aktif dapat 1 kartu dari skillDeck
-    CardDeck<Card> *deck = state.getSkillDeck();
+    CardDeck<SkillCard> *deck = state.getSkillDeck();
     if (!deck)
         return;
 
     for (Player *p : state.getActivePlayers())
     {
-        if (!p)
+        if (!p || p->getStatus() == PlayerStatus::BANKRUPT)
             continue;
-        // Jika tangan sudah 3 kartu, flag akan di-handle oleh DropKartuCommand
-        // (dipicu otomatis dari sini atau dari Command dispatcher)
-        // Di sini cukup addCard; overflow check ada di Player atau Command
-        Card *drawn = deck->draw();
-        if (drawn)
-            p->addSkillCard(dynamic_cast<SkillCard *>(drawn));
+
+        SkillCard *skill = deck->draw();
+        if (!skill)
+        {
+            std::cout << "[DEBUG] Skill deck kosong.\n";
+            continue;
+        }
+
+        giveSkillCardToPlayer(p, skill);
+
+        log(p->getUsername(), "DRAW_SKILL_CARD",
+            "Mendapat kartu kemampuan: " + skill->getType());
     }
 }
 

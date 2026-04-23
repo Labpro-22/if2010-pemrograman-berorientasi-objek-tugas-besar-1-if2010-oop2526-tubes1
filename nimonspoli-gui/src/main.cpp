@@ -8,12 +8,10 @@
 #include "core/GameState/GameState.hpp"
 #include "core/Board/Board.hpp"
 #include "core/Player/Player.hpp"
-#include "core/ComputerPlayer/ComputerPlayer.hpp"  // ← TAMBAHAN
+#include "core/ComputerPlayer/ComputerPlayer.hpp" // ← TAMBAHAN
 #include "core/Bank/Bank.hpp"
 #include "core/Dice/Dice.hpp"
 #include "core/AuctionManager/AuctionManager.hpp"
-#include "core/Card/CardDeck.hpp"
-#include "core/Card/Card.hpp"
 #include "core/utils/TransactionLogger.hpp"
 #include "core/utils/ConfigLoader.hpp"
 #include "core/Property/PropertyFactory.hpp"
@@ -21,95 +19,123 @@
 #include "core/utils/SaveLoadManager.hpp"
 #include "core/Commands/BankruptCommand.hpp"
 #include <fstream>
-#include <sstream>   // ← TAMBAHAN untuk std::istringstream
+#include <sstream> // ← TAMBAHAN untuk std::istringstream
 #include <memory>
 #include <vector>
 #include <string>
 
-int main() {
+// CARD
+#include "core/Card/CardDeck.hpp"
+#include "core/Card/Card.hpp"
+#include "core/Card/SkillCard.hpp"
+#include "core/Card/MoveCard.hpp"
+#include "core/Card/DiscountCard.hpp"
+#include "core/Card/ShieldCard.hpp"
+#include "core/Card/TeleportCard.hpp"
+#include "core/Card/LassoCard.hpp"
+#include "core/Card/DemolitionCard.hpp"
+#include "core/Card/DeckFactory.hpp"
+
+int main()
+{
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     std::string title = "Nimonspoli";
     std::cout << "Before GUIManager" << std::endl;
     GUIManager gui(1920, 1080, title, 60);
     std::cout << "Before MenuScreen" << std::endl;
-    MainMenuScreen* menuScreen = new MainMenuScreen();
+    MainMenuScreen *menuScreen = new MainMenuScreen();
     std::cout << "Before GameScreen" << std::endl;
-    GameScreen* gameScreen = new GameScreen();
+    GameScreen *gameScreen = new GameScreen();
     std::cout << "Before WinScreen" << std::endl;
-    WinScreen* winScreen = new WinScreen();
+    WinScreen *winScreen = new WinScreen();
 
     std::cout << "Before setScreen" << std::endl;
     gui.setScreen(menuScreen);
     std::cout << "Entering loop" << std::endl;
 
-    GameMaster*        gameMaster    = nullptr;
-    Bank*              bank          = nullptr;
-    Dice*              dice          = nullptr;
-    AuctionManager*    auctionMgr    = nullptr;
-    CardDeck<Card>*    chanceDeck    = nullptr;
-    CardDeck<Card>*    communityDeck = nullptr;
-    CardDeck<Card>*    skillDeck     = nullptr;
-    TransactionLogger* logger        = nullptr;
-    Board*             board         = nullptr;
-    std::vector<Player*> players;
+    GameMaster *gameMaster = nullptr;
+    Bank *bank = nullptr;
+    Dice *dice = nullptr;
+    AuctionManager *auctionMgr = nullptr;
+    CardDeck<Card> *chanceDeck = nullptr;
+    CardDeck<Card> *communityDeck = nullptr;
+    CardDeck<SkillCard> *skillDeck = nullptr;
+    TransactionLogger *logger = nullptr;
+    Board *board = nullptr;
+    std::vector<Player *> players;
     std::vector<std::unique_ptr<Property>> properties;
 
-    auto cleanupGame = [&]() {
-        delete gameMaster;    gameMaster    = nullptr;
-        delete bank;          bank          = nullptr;
-        delete dice;          dice          = nullptr;
-        delete auctionMgr;    auctionMgr    = nullptr;
-        delete chanceDeck;    chanceDeck    = nullptr;
-        delete communityDeck; communityDeck = nullptr;
-        delete skillDeck;     skillDeck     = nullptr;
-        delete logger;        logger        = nullptr;
-        delete board;         board         = nullptr;
-        for (auto* p : players) delete p;
+    auto cleanupGame = [&]()
+    {
+        delete gameMaster;
+        gameMaster = nullptr;
+        delete bank;
+        bank = nullptr;
+        delete dice;
+        dice = nullptr;
+        delete auctionMgr;
+        auctionMgr = nullptr;
+        delete chanceDeck;
+        chanceDeck = nullptr;
+        delete communityDeck;
+        communityDeck = nullptr;
+        delete skillDeck;
+        skillDeck = nullptr;
+        delete logger;
+        logger = nullptr;
+        delete board;
+        board = nullptr;
+        for (auto *p : players)
+            delete p;
         players.clear();
         properties.clear();
     };
-    
+
     bool comHasActed = false;
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose())
+    {
         float dt = GetFrameTime();
 
         // ── Transisi: Menu → Game ─────────────────────────────────────────
-        if (menuScreen->isReadyToStart()) {
+        if (menuScreen->isReadyToStart())
+        {
             auto setup = menuScreen->getSetup();
             menuScreen->resetReady();
             cleanupGame();
 
-        // Load config
-        ConfigLoader cfg("config");
-        auto propData      = cfg.loadProperties();
-        auto railroadRent  = cfg.loadRailroad();
-        auto utilityFactor = cfg.loadUtility();
-        auto specialCfg    = cfg.loadSpecial();
-        auto miscCfg       = cfg.loadMisc();
-        auto actData = cfg.loadActions();
-        auto taxData = cfg.loadTax();
+            // Load config
+            ConfigLoader cfg("config");
+            auto propData = cfg.loadProperties();
+            auto railroadRent = cfg.loadRailroad();
+            auto utilityFactor = cfg.loadUtility();
+            auto specialCfg = cfg.loadSpecial();
+            auto miscCfg = cfg.loadMisc();
+            auto actData = cfg.loadActions();
+            auto taxData = cfg.loadTax();
 
             properties = PropertyFactory::createProperties(propData, railroadRent, utilityFactor);
 
-            bank          = new Bank(32, 12);
-            dice          = new Dice();
-            auctionMgr    = new AuctionManager();
-            logger        = new TransactionLogger();
-            chanceDeck    = new CardDeck<Card>();
-            communityDeck = new CardDeck<Card>();
-            skillDeck     = new CardDeck<Card>();
+            bank = new Bank(32, 12);
+            dice = new Dice();
+            auctionMgr = new AuctionManager();
+            logger = new TransactionLogger();
+            chanceDeck = DeckFactory::createChanceDeck();
+            communityDeck = DeckFactory::createCommunityDeck();
+            skillDeck = DeckFactory::createSkillDeck();
 
             board = BoardFactory::createBoard(propData, actData, specialCfg,
                                               chanceDeck, communityDeck, properties);
 
-            if (setup.isLoadGame) {
+            if (setup.isLoadGame)
+            {
                 // ── LOAD GAME ─────────────────────────────────────────────
                 // Peek file dulu untuk tahu tipe tiap player (HUMAN/COM)
                 // sebelum construct — karena tidak bisa downcast setelah buat
 
-                struct PlayerInfo {
-                    std::string   name;
-                    bool          isBot;
+                struct PlayerInfo
+                {
+                    std::string name;
+                    bool isBot;
                     COMDifficulty diff;
                 };
                 std::vector<PlayerInfo> infos;
@@ -121,21 +147,26 @@ int main() {
                     std::getline(peek, line); // baris 2: jumlah pemain
                     int savedCount = std::stoi(line);
 
-                    for (int i = 0; i < savedCount; i++) {
+                    for (int i = 0; i < savedCount; i++)
+                    {
                         std::getline(peek, line); // baris player
 
                         std::vector<std::string> tok;
                         std::istringstream ss(line);
                         std::string w;
-                        while (ss >> w) tok.push_back(w);
+                        while (ss >> w)
+                            tok.push_back(w);
 
                         PlayerInfo info;
-                        info.name  = tok.size() > 0 ? tok[0] : "_tmp_";
+                        info.name = tok.size() > 0 ? tok[0] : "_tmp_";
                         info.isBot = tok.size() > 4 && tok[4] == "COM";
-                        info.diff  = COMDifficulty::MEDIUM;
-                        if (tok.size() > 5) {
-                            if (tok[5] == "EASY") info.diff = COMDifficulty::EASY;
-                            if (tok[5] == "HARD") info.diff = COMDifficulty::HARD;
+                        info.diff = COMDifficulty::MEDIUM;
+                        if (tok.size() > 5)
+                        {
+                            if (tok[5] == "EASY")
+                                info.diff = COMDifficulty::EASY;
+                            if (tok[5] == "HARD")
+                                info.diff = COMDifficulty::HARD;
                         }
                         infos.push_back(info);
 
@@ -147,8 +178,9 @@ int main() {
                 }
 
                 // Construct player dengan tipe yang benar
-                for (auto& info : infos) {
-                    Player* p;
+                for (auto &info : infos)
+                {
+                    Player *p;
                     if (info.isBot)
                         p = new ComputerPlayer(info.name, miscCfg.initialBalance, info.diff);
                     else
@@ -161,12 +193,15 @@ int main() {
                              auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData);
                 gameMaster = new GameMaster(gs);
 
-                try {
+                try
+                {
                     SaveLoadManager slm;
                     slm.load(setup.saveFile, gameMaster->getState());
                     gameMaster->beginTurn();
                     std::cout << "[MUAT] Berhasil dimuat dari: " << setup.saveFile << std::endl;
-                } catch (const std::exception& e) {
+                }
+                catch (const std::exception &e)
+                {
                     std::cerr << "[MUAT] Gagal: " << e.what() << std::endl;
                 }
 
@@ -176,16 +211,19 @@ int main() {
                 gameScreen->setPlayerCount(count);
                 gui.setScreen(gameScreen);
 
-                        // Debug memory — print setiap 60 frame
-            } else {
+                // Debug memory — print setiap 60 frame
+            }
+            else
+            {
                 // ── NEW GAME ──────────────────────────────────────────────
                 int count = std::max(2, std::min(4, setup.playerCount));
-                for (int i = 0; i < count; ++i) {
+                for (int i = 0; i < count; ++i)
+                {
                     std::string name = (i < (int)setup.names.size() && !setup.names[i].empty())
-                                     ? setup.names[i]
-                                     : ("Pemain" + std::to_string(i + 1));
+                                           ? setup.names[i]
+                                           : ("Pemain" + std::to_string(i + 1));
 
-                    Player* p;
+                    Player *p;
                     if (setup.isBot[i])
                         p = new ComputerPlayer(name, miscCfg.initialBalance, setup.botDifficulty);
                     else
@@ -208,13 +246,15 @@ int main() {
         }
 
         // ── Transisi: Game → Win ──────────────────────────────────────────
-        if (gameScreen->isGameOver()) {
+        if (gameScreen->isGameOver())
+        {
             std::vector<PlayerResult> results;
-            for (int i = 0; i < (int)players.size(); ++i) {
+            for (int i = 0; i < (int)players.size(); ++i)
+            {
                 PlayerResult r;
                 r.username = players[i]->getUsername();
-                r.money    = players[i]->getBalance();
-                r.color    = gameScreen->playerColors[i];
+                r.money = players[i]->getBalance();
+                r.color = gameScreen->playerColors[i];
                 results.push_back(r);
             }
             winScreen->setResults(results, WinScenario::MAX_TURN);
@@ -224,38 +264,43 @@ int main() {
         }
 
         // ── Transisi: Win → Menu ──────────────────────────────────────────
-        if (winScreen->goToMainMenu()) {
+        if (winScreen->goToMainMenu())
+        {
             winScreen->reset();
             cleanupGame();
             gui.setScreen(menuScreen);
         }
-        if (winScreen->goToExit()) break;
+        if (winScreen->goToExit())
+            break;
 
         // ── Game logic ────────────────────────────────────────────────────
         gui.flushCommands();
 
-        if (gui.getCurrentScreen()) {
-            auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
-            if (gs) gs->syncDiceResult();
-            if (gs && gameMaster && gameMaster->getState().getPhase() == GamePhase::GAME_OVER) {
+        if (gui.getCurrentScreen())
+        {
+            auto *gs = dynamic_cast<GameScreen *>(gui.getCurrentScreen());
+            if (gs)
+                gs->syncDiceResult();
+            if (gs && gameMaster && gameMaster->getState().getPhase() == GamePhase::GAME_OVER)
+            {
                 gs->gameOver = true;
             }
         }
 
         // Di dalam loop, ganti bagian COM auto-play:
-        if (gameMaster) {
-            GameState& state = gameMaster->getState();
-            Player* curr     = state.getCurrPlayer();
-            ComputerPlayer* com = dynamic_cast<ComputerPlayer*>(curr);
+        if (gameMaster)
+        {
+            GameState &state = gameMaster->getState();
+            Player *curr = state.getCurrPlayer();
+            ComputerPlayer *com = dynamic_cast<ComputerPlayer *>(curr);
 
-            if (com && state.getPhase() == GamePhase::PLAYER_TURN
-                    && !state.getHasRolled()
-                    && !comHasActed) {          // ← guard tambahan
-                comHasActed = true;             // ← set dulu sebelum execute
+            if (com && state.getPhase() == GamePhase::PLAYER_TURN && !state.getHasRolled() && !comHasActed)
+            {                       // ← guard tambahan
+                comHasActed = true; // ← set dulu sebelum execute
                 com->executeTurn(*gameMaster);
                 if (state.getPhase() != GamePhase::GAME_OVER && state.getPhase() != GamePhase::BANKRUPTCY)
                     gameMaster->endTurn();
-                if (state.getPhase() != GamePhase::GAME_OVER && state.getPhase() != GamePhase::BANKRUPTCY) 
+                if (state.getPhase() != GamePhase::GAME_OVER && state.getPhase() != GamePhase::BANKRUPTCY)
                     gameMaster->beginTurn();
 
                 gui.clearCommands();
@@ -263,39 +308,44 @@ int main() {
 
             // ini depend ke bayar sewa, bayar pajak, dan efek kartu
 
-            if (com && state.getPhase() == GamePhase::BANKRUPTCY) {
-                Player* creditor = nullptr; // ini dicek abis merge yaa
-                int debt = 0; // ini juga
+            if (com && state.getPhase() == GamePhase::BANKRUPTCY)
+            {
+                Player *creditor = nullptr; // ini dicek abis merge yaa
+                int debt = 0;               // ini juga
 
-                int propIdxToSell = com->getPropertyCount() - 1; 
+                int propIdxToSell = com->getPropertyCount() - 1;
                 bool sellOverMortgage = false;
 
                 BankruptCommand botBankrupt(
-                    *gameMaster, state, com, creditor, 
-                    debt, sellOverMortgage, propIdxToSell
-                );
-                
+                    *gameMaster, state, com, creditor,
+                    debt, sellOverMortgage, propIdxToSell);
+
                 botBankrupt.execute(*gameMaster);
             }
 
             // Reset guard kalau giliran berganti ke pemain baru
-            if (!com || state.getHasRolled() == false) {
+            if (!com || state.getHasRolled() == false)
+            {
                 comHasActed = false;
             }
         }
-        if (gui.getCurrentScreen()) {
-            auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
-            if (gs) gs->syncDiceResult();
+        if (gui.getCurrentScreen())
+        {
+            auto *gs = dynamic_cast<GameScreen *>(gui.getCurrentScreen());
+            if (gs)
+                gs->syncDiceResult();
         }
 
         // Debug memory — print setiap 60 frame
         static int frameCount = 0;
-        if (++frameCount % 60 == 0) {
+        if (++frameCount % 60 == 0)
+        {
             TraceLog(LOG_INFO, "Frame %d - queue size: (check manually)", frameCount);
         }
         // ── Update + Render ───────────────────────────────────────────────
         BeginDrawing();
-        if (gui.getCurrentScreen()) {
+        if (gui.getCurrentScreen())
+        {
             gui.getCurrentScreen()->update(dt);
             gui.getCurrentScreen()->render(gui.getWindow());
         }

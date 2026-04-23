@@ -11,6 +11,7 @@ class Bank;
 class Dice;
 class AuctionManager;
 class Card;
+class SkillCard;
 class TransactionLogger;
 class GameMaster;
 
@@ -21,104 +22,105 @@ class GameMaster;
 // ─────────────────────────────────────────────
 //  Enum fase permainan
 // ─────────────────────────────────────────────
-enum class GamePhase {
+enum class GamePhase
+{
     NOT_STARTED,
-    PLAYER_TURN,        // menunggu input pemain (sebelum lempar dadu)
-    DICE_ROLLED,        // sudah lempar dadu, menunggu resolusi petak
-    AWAITING_BUY,       // menunggu keputusan beli properti
-    AWAITING_TAX,       // menunggu pilihan user untuk PPH (flat vs persen)
-    AWAITING_FESTIVAL,  // menunggu user pilih properti festival
-    SHOW_CARD,          // menampilkan hasil kartu Kesempatan/Dana Umum
-    AUCTION,            // lelang sedang berjalan
-    BANKRUPTCY,         // proses likuidasi/kebangkrutan
-    GAME_OVER           // permainan selesai
+    PLAYER_TURN,       // menunggu input pemain (sebelum lempar dadu)
+    DICE_ROLLED,       // sudah lempar dadu, menunggu resolusi petak
+    AWAITING_BUY,      // menunggu keputusan beli properti
+    AWAITING_TAX,      // menunggu pilihan user untuk PPH (flat vs persen)
+    AWAITING_FESTIVAL, // menunggu user pilih properti festival
+    SHOW_CARD,         // menampilkan hasil kartu Kesempatan/Dana Umum
+    AUCTION,           // lelang sedang berjalan
+    BANKRUPTCY,        // proses likuidasi/kebangkrutan
+    GAME_OVER          // permainan selesai
 };
 
 // ─────────────────────────────────────────────
 //  GameState: snapshot seluruh data permainan
 //  Diakses oleh GameMaster dan semua Command
 // ─────────────────────────────────────────────
-class GameState {
+class GameState
+{
 private:
     // ── Turn & fase ─────────────────────────────
-    int         currTurn;
-    int         maxTurn;
-    GamePhase   phase;
+    int currTurn;
+    int maxTurn;
+    GamePhase phase;
 
     // ── Pemain ──────────────────────────────────
-    std::vector<Player*> listPlayer;    // urutan giliran
-    int                  currPlayerIdx; // indeks pemain aktif di listPlayer
-    bool                 hasExtraTurn;  // flag double dadu
-    bool                 hasRolled;     // sudah lempar dadu giliran ini?
-    bool                 hasUsedCard;   // sudah pakai skill card giliran ini?
+    std::vector<Player *> listPlayer; // urutan giliran
+    int currPlayerIdx;                // indeks pemain aktif di listPlayer
+    bool hasExtraTurn;                // flag double dadu
+    bool hasRolled;                   // sudah lempar dadu giliran ini?
+    bool hasUsedCard;                 // sudah pakai skill card giliran ini?
 
     // ── Entitas inti ────────────────────────────
-    Board*          gameBoard;
-    Bank*           gameBank;
-    Dice*           gameDice;
-    AuctionManager* auctionManager;
-    CardDeck<Card>*    chanceCardDeck;
-    CardDeck<Card>*    communityCardDeck;
-    CardDeck<Card>*    skillCardDeck;
-    TransactionLogger* logger;
-    GameMaster*        gameMaster;
+    Board *gameBoard;
+    Bank *gameBank;
+    Dice *gameDice;
+    AuctionManager *auctionManager;
+    CardDeck<Card> *chanceCardDeck;
+    CardDeck<Card> *communityCardDeck;
+    CardDeck<SkillCard> *skillCardDeck;
+    TransactionLogger *logger;
+    GameMaster *gameMaster;
     TaxConfig taxcfg;
 
     // ── Pending data untuk GUI dialog ────────────
     // Untuk SHOW_CARD (CardDialog)
-    std::string pendingCardDesc;    // deskripsi kartu yang ditarik
-    std::string pendingCardDeck;    // "Kesempatan" atau "Dana Umum"
+    std::string pendingCardDesc; // deskripsi kartu yang ditarik
+    std::string pendingCardDeck; // "Kesempatan" atau "Dana Umum"
 
     // Untuk AWAITING_TAX (TaxDialog — PPH saja)
-    int pendingPphFlat = 0;         // jumlah flat M
-    int pendingPphPct  = 0;         // persentase %
+    int pendingPphFlat = 0; // jumlah flat M
+    int pendingPphPct = 0;  // persentase %
 
 public:
     // ── Konstruktor & destruktor ─────────────────
     GameState();
     GameState(
         int maxTurn,
-        std::vector<Player*> listPlayer,
-        Board*              board,
-        Bank*               bank,
-        Dice*               dice,
-        AuctionManager*     auctionMgr,
-        CardDeck<Card>*     chanceDeck,
-        CardDeck<Card>*     communityDeck,
-        CardDeck<Card>*     skillDeck,
-        TransactionLogger*  logger,
-        TaxConfig taxcfg
-    );
+        std::vector<Player *> listPlayer,
+        Board *board,
+        Bank *bank,
+        Dice *dice,
+        AuctionManager *auctionMgr,
+        CardDeck<Card> *chanceDeck,
+        CardDeck<Card> *communityDeck,
+        CardDeck<SkillCard> *skillDeck,
+        TransactionLogger *logger,
+        TaxConfig taxcfg);
     ~GameState() = default;
 
     // ── Getter: turn & fase ─────────────────────
-    int       getCurrTurn()  const;
-    int       getMaxTurn()   const;
-    GamePhase getPhase()     const;
-    bool      isGameOver()   const;
+    int getCurrTurn() const;
+    int getMaxTurn() const;
+    GamePhase getPhase() const;
+    bool isGameOver() const;
 
     // ── Getter: pemain ───────────────────────────
-    Player*              getCurrPlayer()  const;   // pemain aktif saat ini
-    int                  getCurrPlayerIdx() const;
-    std::vector<Player*> getPlayers()    const;
-    std::vector<Player*> getActivePlayers() const; // exclude BANKRUPT
-    Player*              getPlayerById(const std::string& id) const;
-    int                  getPlayerCount() const;
-    bool                 getHasExtraTurn() const;
-    bool                 getHasRolled()    const;
-    bool                 getHasUsedCard()  const;
+    Player *getCurrPlayer() const; // pemain aktif saat ini
+    int getCurrPlayerIdx() const;
+    std::vector<Player *> getPlayers() const;
+    std::vector<Player *> getActivePlayers() const; // exclude BANKRUPT
+    Player *getPlayerById(const std::string &id) const;
+    int getPlayerCount() const;
+    bool getHasExtraTurn() const;
+    bool getHasRolled() const;
+    bool getHasUsedCard() const;
 
     // ── Getter: entitas ──────────────────────────
-    Board*             getBoard()         const;
-    Bank*              getBank()          const;
-    Dice*              getDice()          const;
-    AuctionManager*    getAuctionManager() const;
-    CardDeck<Card>*    getChanceDeck()    const;
-    CardDeck<Card>*    getCommunityDeck() const;
-    CardDeck<Card>*    getSkillDeck()     const;
-    TransactionLogger* getLogger()        const;
-    GameMaster*        getGameMaster()    const;
-    TaxConfig          getTaxConfig()     const;
+    Board *getBoard() const;
+    Bank *getBank() const;
+    Dice *getDice() const;
+    AuctionManager *getAuctionManager() const;
+    CardDeck<Card> *getChanceDeck() const;
+    CardDeck<Card> *getCommunityDeck() const;
+    CardDeck<SkillCard> *getSkillDeck() const;
+    TransactionLogger *getLogger() const;
+    GameMaster *getGameMaster() const;
+    TaxConfig getTaxConfig() const;
 
     // ── Setter: turn & fase ─────────────────────
     void setPhase(GamePhase p);
@@ -127,27 +129,27 @@ public:
     void setHasUsedCard(bool val);
 
     // ── Setter: navigasi giliran ─────────────────
-    void advanceTurn();         // naikkan currTurn, reset flag giliran
-    void nextPlayer();          // pindah ke pemain aktif berikutnya
-    void removePlayer(Player* p); // keluarkan pemain bankrut dari urutan
+    void advanceTurn();           // naikkan currTurn, reset flag giliran
+    void nextPlayer();            // pindah ke pemain aktif berikutnya
+    void removePlayer(Player *p); // keluarkan pemain bankrut dari urutan
     void setCurrTurn(int t);
     void setCurrPlayerIdx(int idx);
     void setMaxTurn(int m);
-    void setGameMaster(GameMaster* gm);
+    void setGameMaster(GameMaster *gm);
 
     // ── Helper ───────────────────────────────────
     bool isMaxTurnReached() const;
-    int  countActivePlayers() const;
+    int countActivePlayers() const;
 
     // ── Getter/Setter pending dialog data ────────
-    const std::string& getPendingCardDesc()  const { return pendingCardDesc; }
-    const std::string& getPendingCardDeck()  const { return pendingCardDeck; }
-    int  getPendingPphFlat() const { return pendingPphFlat; }
-    int  getPendingPphPct()  const { return pendingPphPct;  }
+    const std::string &getPendingCardDesc() const { return pendingCardDesc; }
+    const std::string &getPendingCardDeck() const { return pendingCardDeck; }
+    int getPendingPphFlat() const { return pendingPphFlat; }
+    int getPendingPphPct() const { return pendingPphPct; }
 
-    void setPendingCardDesc(const std::string& s) { pendingCardDesc = s; }
-    void setPendingCardDeck(const std::string& s) { pendingCardDeck = s; }
+    void setPendingCardDesc(const std::string &s) { pendingCardDesc = s; }
+    void setPendingCardDeck(const std::string &s) { pendingCardDeck = s; }
     void setPendingPphFlat(int v) { pendingPphFlat = v; }
-    void setPendingPphPct(int v)  { pendingPphPct  = v; }
+    void setPendingPphPct(int v) { pendingPphPct = v; }
 };
 #endif
