@@ -409,7 +409,7 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
             std::cout << "[DEBUG load] " << tok[0] 
                     << " tileCode=" << tok[2] 
                     << " idx=" << idx << std::endl;
-            if (idx > 0) p->setPosition(idx);
+            if (idx >= 0) p->setPosition(idx);
         }
 
         // Status

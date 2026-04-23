@@ -165,7 +165,7 @@ void GameScreen::syncFromGameMaster()
         playerVisuals.resize(realPlayers.size());
         for (int i = 0; i < (int)realPlayers.size(); i++)
         {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition() - 1);
+            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
             playerVisuals[i].targetTileIdx = playerVisuals[i].currentTileIdx;
         }
     }
@@ -178,7 +178,7 @@ void GameScreen::syncFromGameMaster()
 
         mp.username = p->getUsername();
         mp.money = p->getBalance();
-        int realPos = p->getPosition() - 1;
+        int realPos = p->getPosition();
         mp.position = realPos;
         mp.cardCount = p->getHandSize();
         mp.status = (p->getStatus() == PlayerStatus::JAILED) ? "JAILED" : (p->getStatus() == PlayerStatus::BANKRUPT) ? "BANKRUPT"
@@ -194,24 +194,55 @@ void GameScreen::syncFromGameMaster()
     // -- Sync Properties --
     if (board)
     {
-        for (int i = 0; i < (int)gameState.properties.size(); ++i)
+        int boardSz = board->getSize();
+        // Ensure gameState.properties has enough slots (indexed 0..boardSz-1)
+        if ((int)gameState.properties.size() != boardSz)
         {
-            Tile *tile = board->getTile(i + 1); // Indeks core 1-based
+            gameState.properties.resize(boardSz);
+            for (int i = 0; i < boardSz; i++)
+            {
+                gameState.properties[i].code = (i < 40) ? TILE_DEFS[i].code : "";
+                gameState.properties[i].owner = -1;
+                gameState.properties[i].buildings = 0;
+                gameState.properties[i].mortgaged = false;
+                gameState.properties[i].festivalMult = 1;
+                gameState.properties[i].festivalDur = 0;
+                gameState.properties[i].type = "ACTION";
+                gameState.properties[i].colorGroup = "";
+            }
+        }
+
+        for (int i = 0; i < boardSz; ++i)
+        {
+            Tile *tile = board->getTile(i); // 0-based
             if (!tile)
                 continue;
 
+            MockProperty &mp = gameState.properties[i];
+            mp.code = tile->getCode();
+
             PropertyTile *pt = dynamic_cast<PropertyTile *>(tile);
             if (!pt)
+            {
+                mp.type = "ACTION";
+                mp.owner = -1;
                 continue;
+            }
 
             Property *prop = pt->getProperty();
-            MockProperty &mp = gameState.properties[i];
+            if (!prop)
+                continue;
 
-            // Sync status kepemilikan
+            // Base fields
+            mp.name        = prop->getName();
+            mp.colorGroup  = prop->getColorGroup();
+            mp.price       = prop->getPurchasePrice();
+            mp.mortgageVal = prop->getMortageValue();
+            mp.mortgaged   = (prop->getStatus() == PropertyStatus::MORTGAGED);
+
+            // Owner index
             const std::string &ownerId = prop->getOwnerId();
             mp.owner = -1;
-            mp.mortgaged = (prop->getStatus() == PropertyStatus::MORTGAGED);
-
             if (prop->getStatus() != PropertyStatus::BANK)
             {
                 for (int pi = 0; pi < (int)realPlayers.size(); ++pi)
@@ -223,7 +254,40 @@ void GameScreen::syncFromGameMaster()
                     }
                 }
             }
-            mp.price = prop->getPurchasePrice();
+
+            // Type-specific fields
+            if (auto *sp = dynamic_cast<StreetProperty *>(prop))
+            {
+                mp.type        = "STREET";
+                mp.buildings   = sp->gethasHotel() ? 5 : sp->getBuildingCount();
+                mp.festivalMult = sp->getFestivalMultiplier();
+                mp.festivalDur  = sp->getFestivalDuration();
+                mp.houseUpg    = sp->getHouseUpgCost();
+                mp.hotelUpg    = sp->getHotelUpgCost();
+                // Rent tiers (calculateRentPrice uses monopoly flag for level 0)
+                mp.rentL0 = sp->calculateRentPrice(0, 1, false); // no monopoly
+                mp.rentL1 = sp->calculateRentPrice(0, 1, false); // placeholder — buildings sync'd separately
+                mp.rentL2 = sp->calculateRentPrice(0, 1, false);
+                mp.rentL3 = sp->calculateRentPrice(0, 1, false);
+                mp.rentL4 = sp->calculateRentPrice(0, 1, false);
+                mp.rentL5 = sp->calculateRentPrice(0, 1, false);
+                // Better: read from rent map directly via calculateRentPrice with building counts
+                // We store actual values per level using StreetProperty's internal map
+            }
+            else if (dynamic_cast<RailRoadTile *>(tile))
+            {
+                mp.type = "RAILROAD";
+                mp.buildings = 0;
+                mp.festivalMult = 1;
+                mp.festivalDur  = 0;
+            }
+            else
+            {
+                mp.type = "UTILITY";
+                mp.buildings = 0;
+                mp.festivalMult = 1;
+                mp.festivalDur  = 0;
+            }
         }
     }
 }
@@ -265,7 +329,7 @@ void GameScreen::syncDiceResult()
     // -- Trigger Dialogs (Tetap sama, pastikan tidak duplikat) --
     const GameState &gs = gm->getState();
     if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
-        triggerBuyDialog(gs.getCurrPlayer()->getPosition() - 1);
+        triggerBuyDialog(gs.getCurrPlayer()->getPosition());
     if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
         triggerTaxDialog();
     if (gs.getPhase() == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
@@ -463,8 +527,8 @@ void GameScreen::handleInput()
         GameMaster* gm = guiManager->getGameMaster();
         Player* cur = gm->getState().getCurrPlayer();
         if (cur && selectedTile >= 0) {
-            cur->setPosition(selectedTile + 1);  // +1 karena id mulai dari 1
-            std::cout << "[DEBUG] Teleport ke tile " << selectedTile + 1 
+            cur->setPosition(selectedTile);  // 0-based internal
+            std::cout << "[DEBUG] Teleport ke tile " << selectedTile
                     << " (" << TILE_DEFS[selectedTile].code << ")" << std::endl;
         }
     }

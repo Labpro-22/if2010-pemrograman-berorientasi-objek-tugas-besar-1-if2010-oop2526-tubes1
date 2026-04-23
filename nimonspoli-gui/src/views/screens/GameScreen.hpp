@@ -4,6 +4,13 @@
 #include "../../core/utils/TransactionLogger.hpp"
 #include "../GUIManager.hpp"
 #include "../../core/Property/StreetProperty.hpp"
+#include "../../core/Card/SkillCard.hpp"
+#include "../../core/Card/MoveCard.hpp"
+#include "../../core/Card/DiscountCard.hpp"
+#include "../../core/Card/ShieldCard.hpp"
+#include "../../core/Card/TeleportCard.hpp"
+#include "../../core/Card/LassoCard.hpp"
+#include "../../core/Card/DemolitionCard.hpp"
 
 #include <string>
 #include <vector>
@@ -227,6 +234,66 @@ private:
 
     void triggerCardDialog();   // dipanggil saat phase == SHOW_CARD
     void drawCardDialog();      // render popup panel + tombol OK
+
+    // ── Dialog Gadai ──────────────────────────────────────────────────────
+    struct GadaiDialogState {
+        bool visible = false;
+        float scrollY = 0.f;
+        // list PropertyTile* yang bisa digadaikan
+        struct Entry { Property* prop; int tileIdx; };
+        std::vector<Entry> entries;
+        int hoveredIdx = -1;
+    } gadaiDialog;
+    void triggerGadaiDialog();
+    void drawGadaiDialog();
+
+    // ── Dialog Tebus ──────────────────────────────────────────────────────
+    struct TebusDialogState {
+        bool visible = false;
+        float scrollY = 0.f;
+        struct Entry { Property* prop; int tileIdx; };
+        std::vector<Entry> entries;
+        int hoveredIdx = -1;
+    } tebusDialog;
+    void triggerTebusDialog();
+    void drawTebusDialog();
+
+    // ── Dialog Bangun ─────────────────────────────────────────────────────
+    struct BangunDialogState {
+        bool visible = false;
+        float scrollY = 0.f;
+        // Group terpilih: -1 = belum pilih group
+        int selectedGroupIdx = -1;
+        // Map: colorGroup → list StreetProperty*
+        std::vector<std::pair<std::string, std::vector<StreetProperty*>>> groups;
+        int hoveredIdx = -1;
+    } bangunDialog;
+    void triggerBangunDialog();
+    void drawBangunDialog();
+
+    // ── Dialog Jual Bangunan ──────────────────────────────────────────────
+    struct JualBangunanDialogState {
+        bool visible = false;
+        float scrollY = 0.f;
+        struct Entry { StreetProperty* prop; int tileIdx; };
+        std::vector<Entry> entries;
+        int hoveredIdx = -1;
+    } jualBangunanDialog;
+    void triggerJualBangunanDialog();
+    void drawJualBangunanDialog();
+
+    // ── Dialog Skill Card (USE CARD) ──────────────────────────────────────
+    struct SkillCardDialogState {
+        bool visible = false;
+        int hoveredIdx = -1;
+        // TeleportCard needs tile selection
+        bool awaitingTeleportTile = false;
+        // LassoCard needs target player selection
+        bool awaitingLassoTarget = false;
+        int selectedCardIdx = -1;
+    } skillCardDialog;
+    void triggerSkillCardDialog();
+    void drawSkillCardDialog();
 
 
     // ── Private methods ──────────────────────────────────────────────────
