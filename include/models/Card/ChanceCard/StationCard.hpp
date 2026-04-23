@@ -3,9 +3,9 @@
 
 class StationCard : public ChanceCard{
     public:
-        StationCard();
-        ~StationCard();
-        string getName();
-        string getDescription();
-        void activate();
+        StationCard() = default;
+        ~StationCard() = default;
+        const string getName() const;
+        const string getDescription() const;
+        void activate(GameState&);
 };

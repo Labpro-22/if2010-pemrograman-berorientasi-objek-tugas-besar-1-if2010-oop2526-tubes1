@@ -3,9 +3,9 @@
 
 class ShieldCard : public SkillCard {
     public:
-        ShieldCard();
-        ~ShieldCard();
-        void activate();
-        string getName();
-        string getDescription();
+        ShieldCard() = default;
+        ~ShieldCard() = default;
+        void activate(GameState&);
+        const string getName() const;
+        const string getDescription() const;
 };

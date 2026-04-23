@@ -3,9 +3,9 @@
 
 class DemolitionCard : public SkillCard {
     public:
-        DemolitionCard();
-        ~DemolitionCard();
-        void activate();
-        string getName();
-        string getDescription();
+        DemolitionCard() = default;
+        ~DemolitionCard() = default;
+        void activate(GameState&);
+        const string getName() const;
+        const string getDescription() const;
 };

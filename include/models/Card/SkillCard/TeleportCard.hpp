@@ -2,10 +2,12 @@
 #include "models/Card/SkillCard/SkillCard.hpp"
 
 class TeleportCard : public SkillCard {
+    private:
+        int targetIndex;
     public:
-        TeleportCard();
+        TeleportCard(int targetIndex);
         ~TeleportCard();
-        void activate();
-        string getName();
-        string getDescription();
+        void activate(GameState&);
+        const string getName() const;
+        const string getDescription() const;
 };

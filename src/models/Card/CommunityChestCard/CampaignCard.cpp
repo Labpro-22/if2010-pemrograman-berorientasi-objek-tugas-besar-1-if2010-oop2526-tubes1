@@ -1,5 +1,6 @@
 #include "models/Card/CommunityChestCard/CampaignCard.hpp"
- 
+#include "core/GameEngine.hpp"
+
 string CampaignCard::getName() {
     return "CampaignCard";
 }

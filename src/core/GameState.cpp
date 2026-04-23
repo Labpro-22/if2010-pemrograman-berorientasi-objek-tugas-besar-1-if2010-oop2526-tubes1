@@ -114,12 +114,28 @@ bool GameState::hasSingleActivePlayer() const {
     return countActivePlayers() == 1;
 }
 
-void GameState::addLog(const std::string& entry) {
-    logs.push_back(entry);
+void GameState::addLog(const std::string& detail) {
+    addLog(getCurrentPlayerNameOrSystem(), "INFO", detail);
 }
 
-const std::vector<std::string>& GameState::getLogs() const {
-    return logs;
+void GameState::addLog(const std::string& username, const std::string& actionType, const std::string& detail) {
+    logger.log(LogEntry{currentTurn, username, actionType, detail});
+}
+
+std::vector<LogEntry> GameState::getLogs() const {
+    return logger.getAll();
+}
+
+std::vector<LogEntry> GameState::getRecentLogs(int n) const {
+    return logger.getRecent(n);
+}
+
+Logger& GameState::getLogger() {
+    return logger;
+}
+
+const Logger& GameState::getLogger() const {
+    return logger;
 }
 
 Dice& GameState::getDice() {
@@ -188,4 +204,16 @@ int GameState::countActivePlayers() const {
         }
     }
     return activeCount;
+}
+
+std::string GameState::getCurrentPlayerNameOrSystem() const {
+    if (players.empty()) {
+        return "SYSTEM";
+    }
+
+    int safeIdx = currentPlayerIdx;
+    if (safeIdx < 0 || safeIdx >= static_cast<int>(players.size())) {
+        safeIdx = 0;
+    }
+    return players[static_cast<std::size_t>(safeIdx)].getUsername();
 }

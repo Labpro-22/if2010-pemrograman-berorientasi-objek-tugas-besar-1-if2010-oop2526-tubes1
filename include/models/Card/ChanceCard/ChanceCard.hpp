@@ -1,10 +1,11 @@
 #pragma once
 #include "models/Board/CardDeck.hpp"
+#include "core/GameEngine.hpp"
 
 class ChanceCard {
     public:
-        virtual void activate() = 0;
-        virtual string getName() = 0;
-        virtual string getDescription() = 0;
+        virtual void activate(GameState&) = 0;
+        virtual const string getName() const = 0;
+        virtual const string getDescription() const = 0;
 };
 

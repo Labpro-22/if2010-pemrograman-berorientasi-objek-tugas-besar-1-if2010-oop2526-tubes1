@@ -3,9 +3,9 @@
 
 class PrisonCard : public ChanceCard{
     public:
-        PrisonCard();
-        ~PrisonCard();
-        string getName();
-        string getDescription();
-        void activate();
+        PrisonCard() = default;
+        ~PrisonCard() = default;
+        const string getName() const;
+        const string getDescription() const;
+        void activate(GameState&);
 };

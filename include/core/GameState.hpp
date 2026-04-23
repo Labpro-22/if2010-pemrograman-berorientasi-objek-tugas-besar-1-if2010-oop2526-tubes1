@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "utils/Logger.hpp"
 #include "models/Board/Board.hpp"
 #include "models/Board/Dice.hpp"
 #include "models/Player/Player.hpp"
@@ -14,12 +15,13 @@ private:
     int maxTurn;
     int currentTurn;
     bool gameOver;
-    std::vector<std::string> logs;
+    Logger logger;
     Dice dice;
     std::shared_ptr<Board> board;
 
     void clampCurrentPlayerIndex();
     int countActivePlayers() const;
+    std::string getCurrentPlayerNameOrSystem() const;
 
 public:
     explicit GameState(int maxTurn = 100);
@@ -43,8 +45,12 @@ public:
     std::vector<Player> getActivePlayers() const;
     bool hasSingleActivePlayer() const;
 
-    void addLog(const std::string& entry);
-    const std::vector<std::string>& getLogs() const;
+    void addLog(const std::string& detail);
+    void addLog(const std::string& username, const std::string& actionType, const std::string& detail);
+    std::vector<LogEntry> getLogs() const;
+    std::vector<LogEntry> getRecentLogs(int n) const;
+    Logger& getLogger();
+    const Logger& getLogger() const;
     Dice& getDice();
     const Dice& getDice() const;
     Board& getBoard();
