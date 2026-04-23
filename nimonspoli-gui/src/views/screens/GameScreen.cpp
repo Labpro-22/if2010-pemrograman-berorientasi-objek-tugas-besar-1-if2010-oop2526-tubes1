@@ -147,11 +147,6 @@ void GameScreen::syncFromGameMaster() {
         mp.username      = p->getUsername();
         mp.money         = p->getBalance();
         mp.position = std::max(0, p->getPosition() - 1);
-        std::cout << "[DEBUG] " << p->getUsername() 
-                << " position raw=" << p->getPosition()
-                << " mapped=" << mp.position
-                << " tile=" << TILE_DEFS[mp.position].code 
-                << std::endl;
         mp.cardCount     = p->getHandSize();
         mp.isCurrentTurn = (i == gs.getCurrPlayerIdx());
  
