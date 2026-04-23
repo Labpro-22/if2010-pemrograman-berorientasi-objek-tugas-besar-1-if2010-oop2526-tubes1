@@ -2,6 +2,7 @@
 #include "../IScreen.hpp"
 #include "../Window.hpp"
 #include "../../../lib/raylib/include/raylib.h"
+#include "../../../src/core/ComputerPlayer/ComputerPlayer.hpp"
 #include <string>
 #include <vector>
 #include <array>
@@ -10,6 +11,8 @@
 struct GameSetup {
     int playerCount;                    // 2-4
     std::array<std::string, 4> names;   // username tiap slot
+    std::array<bool, 4>        isBot;   // true = COM
+    COMDifficulty              botDifficulty; // difficulty global untuk semua COM
     std::string saveFile;               // kosong = new game, isi = load game
     bool isLoadGame;
 };
@@ -30,7 +33,6 @@ public:
     void resetReady(){ readyToStart = false; }
 
 private:
-    // ── Konstanta layar ───────────────────────────────────────────────────
     static constexpr int SCREEN_W = 1920;
     static constexpr int SCREEN_H = 1080;
 
@@ -48,14 +50,18 @@ private:
 
     std::string nameBuffers[4];
 
+    // ── COM state ─────────────────────────────────────────────────────────
+    bool          isBot[4];             // toggle per slot
+    COMDifficulty selectedDifficulty;   // global untuk semua COM
+
     // ── Save file state ───────────────────────────────────────────────────
     bool                     saveFileExists;
-    std::vector<std::string> saveFiles;      // daftar semua *.txt di data/
-    int                      selectedSaveIdx; // index yang dipilih di load panel
+    std::vector<std::string> saveFiles;
+    int                      selectedSaveIdx;
 
     // ── Load panel state ──────────────────────────────────────────────────
-    bool  showLoadPanel;    // true = tampilkan overlay pilih save
-    double lastClickTime;   // untuk deteksi double-click
+    bool   showLoadPanel;
+    double lastClickTime;
 
     // ── Output state ──────────────────────────────────────────────────────
     bool      readyToStart;
@@ -70,11 +76,11 @@ private:
     void drawTitle();
     void drawLeftPanel();
     void drawRightPanel();
-    void drawLoadPanel();   // overlay modal: pilih dari daftar save
+    void drawLoadPanel();
     void drawError();
 
     bool validateInputs();
-    void scanSaveFiles();           // scan data/*.txt ke saveFiles[]
+    void scanSaveFiles();
     void triggerLoad(const std::string& path);
     void applySetup();
 };

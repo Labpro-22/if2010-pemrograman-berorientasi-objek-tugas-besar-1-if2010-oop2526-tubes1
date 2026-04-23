@@ -40,7 +40,7 @@ private:
 
 public:
     Player(const std::string &username, int startingBalance);
-    ~Player();
+    virtual ~Player();
 
     // GET
     void setUsername(const std::string& name) {username = name;}

@@ -2,7 +2,7 @@
 #include "../../../lib/raylib/include/raylib.h"
 #include <cmath>
 #include <algorithm>
-#include <filesystem>   // C++17 — untuk scan folder data/
+#include <filesystem>
 #include <vector>
 #include <string>
 
@@ -12,51 +12,44 @@ MainMenuScreen::MainMenuScreen()
     : selectedPlayerCount(2), focusedInput(0),
       glowTimer(0.f), saveFileExists(false),
       readyToStart(false), errorTimer(0.f),
-      showLoadPanel(false), selectedSaveIdx(-1)
+      showLoadPanel(false), selectedSaveIdx(-1),
+      selectedDifficulty(COMDifficulty::MEDIUM)
 {
-    nameBuffers[0] = "";
-    nameBuffers[1] = "";
-    nameBuffers[2] = "";
-    nameBuffers[3] = "";
+    for (int i = 0; i < 4; i++) {
+        nameBuffers[i] = "";
+        isBot[i]       = false;
+    }
 }
 
 MainMenuScreen::~MainMenuScreen() {}
 
 void MainMenuScreen::onEnter() {
-    readyToStart  = false;
-    errorMsg      = "";
-    showLoadPanel = false;
+    readyToStart    = false;
+    errorMsg        = "";
+    showLoadPanel   = false;
     selectedSaveIdx = -1;
+    for (int i = 0; i < 4; i++) isBot[i] = false;
+    selectedDifficulty = COMDifficulty::MEDIUM;
     scanSaveFiles();
 }
 
 void MainMenuScreen::onExit() {}
 
-// ─── scanSaveFiles ────────────────────────────────────────────────────────────
-// Scan folder data/ untuk semua file .txt, simpan ke saveFiles[]
 void MainMenuScreen::scanSaveFiles() {
     saveFiles.clear();
     saveFileExists = false;
-
-    // Coba folder data/ — buat kalau belum ada
     if (!DirectoryExists("data")) return;
-
     try {
         for (auto& entry : fs::directory_iterator("data")) {
             if (!entry.is_regular_file()) continue;
-            auto ext = entry.path().extension().string();
-            if (ext == ".txt") {
+            if (entry.path().extension().string() == ".txt")
                 saveFiles.push_back(entry.path().string());
-            }
         }
-        // Sort alphabetically biar konsisten
         std::sort(saveFiles.begin(), saveFiles.end());
     } catch (...) {
-        // Jika std::filesystem tidak tersedia / gagal, fallback ke satu file
         if (FileExists("data/save.txt"))
             saveFiles.push_back("data/save.txt");
     }
-
     saveFileExists = !saveFiles.empty();
     if (selectedSaveIdx >= (int)saveFiles.size())
         selectedSaveIdx = saveFiles.empty() ? -1 : 0;
@@ -69,27 +62,27 @@ void MainMenuScreen::update(float dt) {
 }
 
 void MainMenuScreen::handleInput() {
-    // Kalau load panel terbuka, ESC menutup panel
     if (showLoadPanel) {
         if (IsKeyPressed(KEY_ESCAPE)) showLoadPanel = false;
-
-        // Arrow key navigasi list save
         if (!saveFiles.empty()) {
             if (IsKeyPressed(KEY_DOWN))
                 selectedSaveIdx = (selectedSaveIdx + 1) % (int)saveFiles.size();
             if (IsKeyPressed(KEY_UP))
                 selectedSaveIdx = (selectedSaveIdx + (int)saveFiles.size() - 1) % (int)saveFiles.size();
-            if (IsKeyPressed(KEY_ENTER) && selectedSaveIdx >= 0) {
+            if (IsKeyPressed(KEY_ENTER) && selectedSaveIdx >= 0)
                 triggerLoad(saveFiles[selectedSaveIdx]);
-            }
         }
-        return;   // jangan proses input lain saat panel terbuka
+        return;
     }
 
-    if (IsKeyPressed(KEY_TAB))
-        focusedInput = (focusedInput + 1) % selectedPlayerCount;
+    if (IsKeyPressed(KEY_TAB)) {
+        // Skip slot bot saat TAB
+        do {
+            focusedInput = (focusedInput + 1) % selectedPlayerCount;
+        } while (isBot[focusedInput] && focusedInput < selectedPlayerCount);
+    }
 
-    if (focusedInput >= 0 && focusedInput < selectedPlayerCount) {
+    if (focusedInput >= 0 && focusedInput < selectedPlayerCount && !isBot[focusedInput]) {
         if (IsKeyPressed(KEY_BACKSPACE) && !nameBuffers[focusedInput].empty())
             nameBuffers[focusedInput].pop_back();
 
@@ -105,7 +98,6 @@ void MainMenuScreen::handleInput() {
     }
 }
 
-// ─── triggerLoad ──────────────────────────────────────────────────────────────
 void MainMenuScreen::triggerLoad(const std::string& path) {
     setup.isLoadGame = true;
     setup.saveFile   = path;
@@ -115,6 +107,10 @@ void MainMenuScreen::triggerLoad(const std::string& path) {
 
 bool MainMenuScreen::validateInputs() {
     for (int i = 0; i < selectedPlayerCount; i++) {
+        // Bot tidak perlu nama — auto-generate
+        if (isBot[i] && nameBuffers[i].empty())
+            nameBuffers[i] = "COM" + std::to_string(i + 1);
+
         if (nameBuffers[i].empty()) {
             errorMsg   = "Username player " + std::to_string(i+1) + " tidak boleh kosong!";
             errorTimer = 3.f;
@@ -134,9 +130,12 @@ bool MainMenuScreen::validateInputs() {
 }
 
 void MainMenuScreen::applySetup() {
-    setup.playerCount = selectedPlayerCount;
-    for (int i = 0; i < 4; i++)
+    setup.playerCount    = selectedPlayerCount;
+    setup.botDifficulty  = selectedDifficulty;
+    for (int i = 0; i < 4; i++) {
         setup.names[i] = (i < selectedPlayerCount) ? nameBuffers[i] : "";
+        setup.isBot[i] = (i < selectedPlayerCount) ? isBot[i] : false;
+    }
     setup.isLoadGame = false;
     setup.saveFile   = "";
 }
@@ -149,7 +148,7 @@ void MainMenuScreen::render(Window& window) {
     drawRightPanel();
     drawTitle();
     drawError();
-    if (showLoadPanel) drawLoadPanel();  // overlay di atas segalanya
+    if (showLoadPanel) drawLoadPanel();
 }
 
 // ─── drawTitle ────────────────────────────────────────────────────────────────
@@ -186,7 +185,6 @@ void MainMenuScreen::drawTitle() {
     const char* sub = "BOARD GAME";
     int sw = MeasureText(sub, 22);
     DrawText(sub, SCREEN_W/2-sw/2, ty+fontSize+8, 22, {124,111,255,200});
-
     DrawLine(0, ty+fontSize+46, SCREEN_W, ty+fontSize+46, {40,42,65,255});
 }
 
@@ -205,7 +203,7 @@ void MainMenuScreen::drawLeftPanel() {
     DrawText("JUMLAH PEMAIN", (int)px, (int)sy, 14, {85,85,150,255});
     sy += 26;
 
-    float btnW = 110, btnH = 66, btnGap = 24;
+    float btnW = 110, btnH = 54, btnGap = 24;
     for (int i = 0; i < 3; i++) {
         int   count = i + 2;
         float bx    = px + i*(btnW+btnGap);
@@ -219,69 +217,176 @@ void MainMenuScreen::drawLeftPanel() {
                 : Color{42,45,72,255});
 
         std::string lbl = std::to_string(count);
-        int lw = MeasureText(lbl.c_str(), 30);
-        DrawText(lbl.c_str(), (int)(bx+btnW/2-lw/2), (int)(sy+16), 30,
+        int lw = MeasureText(lbl.c_str(), 28);
+        DrawText(lbl.c_str(), (int)(bx+btnW/2-lw/2), (int)(sy+12), 28,
                  sel?WHITE:Color{85,85,120,255});
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
             CheckCollisionPointRec(GetMousePosition(), btn)) {
             selectedPlayerCount = count;
             focusedInput = 0;
+            // Reset bot flag untuk slot yang tidak aktif
+            for (int j = count; j < 4; j++) isBot[j] = false;
         }
     }
-    sy += btnH + 40;
+    sy += btnH + 16;
 
-    // ── Username inputs ───────────────────────────────────────────────────
-    DrawText("USERNAME PEMAIN", (int)px, (int)sy, 14, {85,85,150,255});
-    sy += 28;
+    // ── Difficulty COM ────────────────────────────────────────────────────
+    DrawText("DIFFICULTY COM", (int)px, (int)sy, 14, {85,85,150,255});
+    sy += 22;
 
-    float bottomPad = 40;
+    struct DiffBtn { const char* label; COMDifficulty diff; Color col; };
+    DiffBtn diffs[] = {
+        {"EASY",   COMDifficulty::EASY,   {60,180,80,255}},
+        {"MEDIUM", COMDifficulty::MEDIUM, {220,160,40,255}},
+        {"HARD",   COMDifficulty::HARD,   {220,60,60,255}},
+    };
+    float dbW = 110, dbH = 40;
+    for (int i = 0; i < 3; i++) {
+        float bx  = px + i*(dbW+btnGap);
+        bool  sel = (selectedDifficulty == diffs[i].diff);
+        Color col = diffs[i].col;
+
+        Rectangle btn = {bx, sy, dbW, dbH};
+        DrawRectangleRec(btn, sel
+            ? Color{(unsigned char)(col.r/4), (unsigned char)(col.g/4), (unsigned char)(col.b/4), 255}
+            : Color{20,21,40,255});
+        DrawRectangleLinesEx(btn, sel?2.f:1.f,
+            sel ? col : Color{42,45,72,255});
+
+        int lw = MeasureText(diffs[i].label, 13);
+        DrawText(diffs[i].label, (int)(bx+dbW/2-lw/2), (int)(sy+13), 13,
+                 sel ? col : Color{70,70,110,255});
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+            CheckCollisionPointRec(GetMousePosition(), btn))
+            selectedDifficulty = diffs[i].diff;
+    }
+    sy += dbH + 20;
+
+    // ── Username + HUMAN/COM toggle ───────────────────────────────────────
+    DrawText("PEMAIN", (int)px, (int)sy, 14, {85,85,150,255});
+    sy += 22;
+
+    float bottomPad = 30;
     float totalH    = SCREEN_H - sy - bottomPad;
     float slotH     = totalH / 4.f;
-    float inputH    = std::min(slotH * 0.72f, 80.f);
-    float inputW    = pw - 52;
+    float inputH    = std::min(slotH * 0.68f, 72.f);
+    float inputW    = pw - 52 - 90; // kurangi lebar untuk tombol toggle
 
     for (int i = 0; i < 4; i++) {
         float iy     = sy + i*slotH + (slotH - inputH)/2.f;
         bool  active  = (i < selectedPlayerCount);
-        bool  focused = (focusedInput == i);
+        bool  focused = (focusedInput == i && active && !isBot[i]);
+        bool  bot     = isBot[i];
 
+        // Dot warna player
         DrawCircle((int)(px+10), (int)(iy+inputH/2),
                    10, active?playerColors[i]:Color{28,30,48,255});
 
         float ix = px + 28;
-        Rectangle rect = {ix, iy, inputW, inputH};
 
-        Color bgC  = active ? Color{22,24,38,255} : Color{15,16,26,255};
+        // ── Input nama ────────────────────────────────────────────────
+        Rectangle rect = {ix, iy, inputW, inputH};
+        Color bgC  = !active ? Color{15,16,26,255}
+                   : bot     ? Color{18,28,18,255}
+                              : Color{22,24,38,255};
         Color brdC = !active  ? Color{22,24,38,255}
                    : focused  ? Color{124,111,255,255}
+                   : bot      ? Color{40,100,40,255}
                               : Color{48,51,80,255};
 
         DrawRectangleRec(rect, bgC);
         DrawRectangleLinesEx(rect, focused?2.f:1.f, brdC);
 
-        int fs = 22;
+        int fs = 20;
         if (active) {
-            std::string txt = nameBuffers[i];
-            if (txt.empty() && !focused)
-                DrawText(("Player "+std::to_string(i+1)+"...").c_str(),
-                         (int)(ix+16),(int)(iy+inputH/2-fs/2), fs,
-                         {45,48,76,255});
-            else
-                DrawText(txt.c_str(),(int)(ix+16),(int)(iy+inputH/2-fs/2),
-                         fs, WHITE);
+            if (bot) {
+                // Mode bot: tampilkan nama bot atau placeholder
+                std::string botName = nameBuffers[i].empty()
+                    ? ("COM" + std::to_string(i+1))
+                    : nameBuffers[i];
+                DrawText(botName.c_str(), (int)(ix+12), (int)(iy+inputH/2-fs/2),
+                         fs, {100,200,100,255});
+                // Tetap bisa edit nama bot
+                if (focused) {
+                    int cw = MeasureText(nameBuffers[i].c_str(), fs);
+                    if ((int)(glowTimer*2)%2==0)
+                        DrawText("|",(int)(ix+12+cw),(int)(iy+inputH/2-fs/2),
+                                 fs, {100,200,100,255});
+                }
+            } else {
+                std::string txt = nameBuffers[i];
+                if (txt.empty() && !focused)
+                    DrawText(("Player "+std::to_string(i+1)+"...").c_str(),
+                             (int)(ix+12),(int)(iy+inputH/2-fs/2), fs, {45,48,76,255});
+                else
+                    DrawText(txt.c_str(),(int)(ix+12),(int)(iy+inputH/2-fs/2), fs, WHITE);
 
-            if (focused && (int)(glowTimer*2)%2==0) {
-                int cw = MeasureText(nameBuffers[i].c_str(), fs);
-                DrawText("|",(int)(ix+16+cw),(int)(iy+inputH/2-fs/2),
-                         fs, {124,111,255,255});
+                if (focused && (int)(glowTimer*2)%2==0) {
+                    int cw = MeasureText(nameBuffers[i].c_str(), fs);
+                    DrawText("|",(int)(ix+12+cw),(int)(iy+inputH/2-fs/2),
+                             fs, {124,111,255,255});
+                }
             }
+
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-                CheckCollisionPointRec(GetMousePosition(), rect))
+                CheckCollisionPointRec(GetMousePosition(), rect) && !bot)
                 focusedInput = i;
+
         } else {
-            DrawText("—",(int)(ix+16),(int)(iy+inputH/2-11),
-                     fs, {28,30,50,255});
+            DrawText("—",(int)(ix+12),(int)(iy+inputH/2-11), fs, {28,30,50,255});
+        }
+
+        // ── Toggle HUMAN / COM ────────────────────────────────────────
+        float toggleX = ix + inputW + 8;
+        float toggleW = 76, toggleH = inputH;
+        Rectangle toggleBtn = {toggleX, iy, toggleW, toggleH};
+
+        if (active) {
+            Color togBg  = bot ? Color{20,50,20,255} : Color{20,20,45,255};
+            Color togBrd = bot ? Color{60,160,60,255} : Color{60,60,120,255};
+            DrawRectangleRec(toggleBtn, togBg);
+            DrawRectangleLinesEx(toggleBtn, 1.5f, togBrd);
+
+            // Icon + label
+            const char* icon  = bot ? "🤖" : "👤";
+            const char* label = bot ? "COM" : "HUMAN";
+            // Raylib tidak support emoji unicode, pakai teks saja
+            const char* typeLabel = bot ? "BOT" : "MAN";
+            Color typeCol = bot ? Color{80,200,80,255} : Color{150,150,220,255};
+
+            int tlw = MeasureText(typeLabel, 12);
+            DrawText(typeLabel, (int)(toggleX+toggleW/2-tlw/2),
+                     (int)(iy+toggleH/2-8), 12, typeCol);
+
+            // Garis kecil di bawah label
+            DrawLine((int)(toggleX+8), (int)(iy+toggleH/2+6),
+                     (int)(toggleX+toggleW-8), (int)(iy+toggleH/2+6), togBrd);
+
+            // Sub-label
+            const char* sub2 = bot ? "CPU" : "USR";
+            int sw2 = MeasureText(sub2, 10);
+            DrawText(sub2, (int)(toggleX+toggleW/2-sw2/2),
+                     (int)(iy+toggleH/2+10), 10, {togBrd.r,togBrd.g,togBrd.b,180});
+
+            if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+                CheckCollisionPointRec(GetMousePosition(), toggleBtn)) {
+                isBot[i] = !isBot[i];
+                // Kalau jadi bot dan nama kosong, beri nama default
+                if (isBot[i] && nameBuffers[i].empty())
+                    nameBuffers[i] = "COM" + std::to_string(i+1);
+                // Kalau jadi human, unfocus dari slot ini
+                if (!isBot[i] && focusedInput == i)
+                    focusedInput = i;
+            }
+        } else {
+            // Slot tidak aktif — greyed out
+            DrawRectangleRec(toggleBtn, {16,17,26,255});
+            DrawRectangleLinesEx(toggleBtn, 1, {28,30,48,255});
+            int dlw = MeasureText("—", 14);
+            DrawText("—", (int)(toggleX+toggleW/2-dlw/2),
+                     (int)(iy+toggleH/2-8), 14, {35,37,55,255});
         }
     }
 }
@@ -311,19 +416,15 @@ void MainMenuScreen::drawRightPanel() {
     DrawText("LOAD GAME",(int)(rx+20),(int)(ry+14), 14, {85,85,150,255});
 
     if (saveFileExists) {
-        // Tampilkan jumlah file yang ditemukan
         std::string countStr = std::to_string(saveFiles.size()) + " file ditemukan";
         DrawText(countStr.c_str(),(int)(rx+20),(int)(ry+36),13,{150,150,200,255});
 
-        // Preview nama file pertama / yang dipilih
         if (selectedSaveIdx >= 0 && selectedSaveIdx < (int)saveFiles.size()) {
             std::string preview = saveFiles[selectedSaveIdx];
-            // Potong path prefix "data/" biar lebih pendek
             if (preview.substr(0,5) == "data/") preview = preview.substr(5);
             DrawText(preview.c_str(),(int)(rx+20),(int)(ry+54),11,{100,120,200,255});
         }
 
-        // Tombol LOAD — membuka panel pilihan file
         Rectangle lb = {rx+20, ry+loadH-42, rw-40, 32};
         bool lh = CheckCollisionPointRec(GetMousePosition(), lb);
         float p = 0.7f + 0.3f*sinf(glowTimer*2.5f);
@@ -337,18 +438,17 @@ void MainMenuScreen::drawRightPanel() {
                  13, lh?WHITE:Color{130,150,210,255});
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && lh) {
-            scanSaveFiles();        // refresh list
+            scanSaveFiles();
             showLoadPanel = true;
             if (selectedSaveIdx < 0 && !saveFiles.empty()) selectedSaveIdx = 0;
         }
     } else {
-        DrawText("Tidak ada save file.",(int)(rx+20),(int)(ry+36),
-                 14,{48,51,80,255});
+        DrawText("Tidak ada save file.",(int)(rx+20),(int)(ry+36), 14,{48,51,80,255});
         DrawText("Mainkan game baru untuk membuat save.",(int)(rx+20),(int)(ry+56),
                  11,{38,40,65,255});
     }
 
-    // ── MULAI GAME (game baru) ────────────────────────────────────────────
+    // ── MULAI GAME ────────────────────────────────────────────────────────
     float startY    = ry + loadH + gap1;
     Rectangle startBtn = {rx, startY, rw, startH};
     bool startHover = CheckCollisionPointRec(GetMousePosition(), startBtn);
@@ -363,7 +463,6 @@ void MainMenuScreen::drawRightPanel() {
     DrawText(sl,(int)(rx+rw/2-slw/2),(int)(startY+startH/2-20),
              28, startHover?WHITE:Color{180,170,255,255});
 
-    // Sub-label kecil
     const char* subLbl = "game baru";
     int subW = MeasureText(subLbl, 12);
     DrawText(subLbl,(int)(rx+rw/2-subW/2),(int)(startY+startH/2+10),
@@ -390,9 +489,7 @@ void MainMenuScreen::drawRightPanel() {
 }
 
 // ─── drawLoadPanel ────────────────────────────────────────────────────────────
-// Overlay modal: tampilkan daftar semua save file, user pilih dan klik LOAD
 void MainMenuScreen::drawLoadPanel() {
-    // Dim background
     DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 180});
 
     constexpr float PW = 560.f;
@@ -400,16 +497,13 @@ void MainMenuScreen::drawLoadPanel() {
     float px = SCREEN_W / 2.f - PW / 2.f;
     float py = SCREEN_H / 2.f - PH / 2.f;
 
-    // Panel background
     DrawRectangle((int)px, (int)py, (int)PW, (int)PH, {20, 22, 36, 255});
     DrawRectangleLinesEx({px,py,PW,PH}, 1.5f, {70,80,150,255});
 
-    // Header
     DrawRectangle((int)px, (int)py, (int)PW, 48, {28, 30, 52, 255});
     DrawRectangleLinesEx({px,py,PW,48}, 1, {70,80,150,255});
     DrawText("PILIH SAVE FILE", (int)(px+16), (int)(py+16), 16, {180,180,240,255});
 
-    // Refresh button di header
     Rectangle refreshBtn = {px+PW-100, py+10, 60, 28};
     bool rHov = CheckCollisionPointRec(GetMousePosition(), refreshBtn);
     DrawRectangleRec(refreshBtn, rHov?Color{50,60,100,255}:Color{35,40,70,255});
@@ -418,7 +512,6 @@ void MainMenuScreen::drawLoadPanel() {
     DrawText("REFRESH", (int)(refreshBtn.x+30-rlw/2), (int)(refreshBtn.y+9), 10, {150,160,220,255});
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && rHov) scanSaveFiles();
 
-    // Tombol X (tutup)
     Rectangle xBtn = {px+PW-36, py+10, 28, 28};
     bool xHov = CheckCollisionPointRec(GetMousePosition(), xBtn);
     DrawRectangleRec(xBtn, xHov?Color{180,60,60,255}:Color{110,40,40,255});
@@ -426,93 +519,61 @@ void MainMenuScreen::drawLoadPanel() {
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && xHov) showLoadPanel = false;
 
     if (saveFiles.empty()) {
-        // Empty state
         DrawText("Tidak ada save file ditemukan.",
                  (int)(px+PW/2-MeasureText("Tidak ada save file ditemukan.",14)/2),
                  (int)(py+PH/2-10), 14, {80,80,130,255});
-        DrawText("(folder: data/*.txt)",
-                 (int)(px+PW/2-MeasureText("(folder: data/*.txt)",12)/2),
-                 (int)(py+PH/2+18), 12, {55,55,90,255});
     } else {
-        // ── List save files ───────────────────────────────────────────────
         float listY = py + 56;
         float rowH  = 48.f;
-        float listH = PH - 56 - 72;    // sisa setelah header & tombol bawah
+        float listH = PH - 56 - 72;
 
         BeginScissorMode((int)px, (int)listY, (int)PW, (int)listH);
-
         for (int i = 0; i < (int)saveFiles.size(); i++) {
             float ry = listY + i * rowH;
             if (ry > listY + listH) break;
 
             bool selected = (i == selectedSaveIdx);
-            bool hover    = CheckCollisionPointRec(GetMousePosition(),
-                                                   {px, ry, PW, rowH});
+            bool hover    = CheckCollisionPointRec(GetMousePosition(), {px, ry, PW, rowH});
 
-            // Row background
-            Color rowBg = selected ? Color{35, 50, 90, 255}
-                        : hover    ? Color{28, 35, 65, 255}
-                                   : (i%2==0 ? Color{22,24,38,255} : Color{25,27,42,255});
+            Color rowBg = selected ? Color{35,50,90,255}
+                        : hover    ? Color{28,35,65,255}
+                                   : (i%2==0?Color{22,24,38,255}:Color{25,27,42,255});
             DrawRectangle((int)px, (int)ry, (int)PW, (int)rowH-1, rowBg);
+            if (selected) DrawRectangle((int)px, (int)ry, 4, (int)rowH-1, {100,130,255,255});
 
-            // Border kiri warna biru jika dipilih
-            if (selected)
-                DrawRectangle((int)px, (int)ry, 4, (int)rowH-1, {100,130,255,255});
-
-            // Nomor
-            DrawText(std::to_string(i+1).c_str(),
-                     (int)(px+14), (int)(ry+14), 14,
+            DrawText(std::to_string(i+1).c_str(), (int)(px+14), (int)(ry+14), 14,
                      selected?WHITE:Color{80,80,130,255});
 
-            // Nama file (tanpa prefix data/)
             std::string name = saveFiles[i];
             if (name.substr(0,5)=="data/") name = name.substr(5);
-            DrawText(name.c_str(),
-                     (int)(px+40), (int)(ry+12), 15,
+            DrawText(name.c_str(), (int)(px+40), (int)(ry+12), 15,
                      selected?WHITE:Color{160,160,210,255});
+            DrawText(saveFiles[i].c_str(), (int)(px+40), (int)(ry+28), 10, {80,80,120,255});
 
-            // Full path kecil di bawah
-            DrawText(saveFiles[i].c_str(),
-                     (int)(px+40), (int)(ry+28), 10,
-                     {80,80,120,255});
-
-            // Klik untuk pilih
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hover)
                 selectedSaveIdx = i;
-            // Double-click langsung load
             if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && hover && selected &&
                 GetTime() - lastClickTime < 0.35)
                 triggerLoad(saveFiles[i]);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hover)
                 lastClickTime = GetTime();
         }
-
         EndScissorMode();
 
-        // Garis bawah list
-        DrawLine((int)px, (int)(listY+listH), (int)(px+PW), (int)(listY+listH),
-                 {50,55,90,255});
+        DrawLine((int)px, (int)(listY+listH), (int)(px+PW), (int)(listY+listH), {50,55,90,255});
 
-        // ── Tombol LOAD & BATAL ───────────────────────────────────────────
         float btnY = py + PH - 60;
-
         Rectangle loadBtn = {px+PW-240, btnY, 110, 44};
         bool loadHov = CheckCollisionPointRec(GetMousePosition(), loadBtn);
         bool canLoad = (selectedSaveIdx >= 0 && selectedSaveIdx < (int)saveFiles.size());
 
         float lp = 0.7f + 0.3f*sinf(glowTimer*3.f);
-        Color lbBrd = canLoad
-            ? Color{(unsigned char)(80*lp),(unsigned char)(120*lp),255,255}
-            : Color{50,55,80,255};
-        DrawRectangleRec(loadBtn,
-            canLoad ? (loadHov?Color{40,70,160,255}:Color{28,48,110,255})
-                    : Color{22,25,40,255});
-        DrawRectangleLinesEx(loadBtn, canLoad?2.f:1.f, lbBrd);
+        DrawRectangleRec(loadBtn, canLoad?(loadHov?Color{40,70,160,255}:Color{28,48,110,255}):Color{22,25,40,255});
+        DrawRectangleLinesEx(loadBtn, canLoad?2.f:1.f,
+            canLoad?Color{(unsigned char)(80*lp),(unsigned char)(120*lp),255,255}:Color{50,55,80,255});
         int lbw = MeasureText("LOAD SAVE", 14);
-        DrawText("LOAD SAVE",
-                 (int)(loadBtn.x+55-lbw/2), (int)(loadBtn.y+14), 14,
+        DrawText("LOAD SAVE", (int)(loadBtn.x+55-lbw/2), (int)(loadBtn.y+14), 14,
                  canLoad?(loadHov?WHITE:Color{160,180,255,255}):Color{60,65,100,255});
-
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && loadHov && canLoad)
             triggerLoad(saveFiles[selectedSaveIdx]);
 
@@ -521,12 +582,10 @@ void MainMenuScreen::drawLoadPanel() {
         DrawRectangleRec(cancelBtn, cancelHov?Color{50,20,20,255}:Color{30,15,15,255});
         DrawRectangleLinesEx(cancelBtn, 1, {100,40,40,255});
         int cbw = MeasureText("BATAL", 14);
-        DrawText("BATAL",
-                 (int)(cancelBtn.x+48-cbw/2), (int)(cancelBtn.y+14), 14,
+        DrawText("BATAL", (int)(cancelBtn.x+48-cbw/2), (int)(cancelBtn.y+14), 14,
                  cancelHov?Color{255,100,100,255}:Color{160,70,70,255});
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && cancelHov) showLoadPanel = false;
 
-        // Petunjuk
         DrawText("↑↓ navigasi  ·  Enter untuk load  ·  Esc tutup",
                  (int)(px+16), (int)(btnY+16), 11, {60,65,100,255});
     }
@@ -540,8 +599,7 @@ void MainMenuScreen::drawError() {
     int   ew    = MeasureText(errorMsg.c_str(), 18);
     float ex    = SCREEN_W/2.f - ew/2.f;
     float ey    = SCREEN_H - 52;
-    DrawRectangle((int)(ex-16),(int)(ey-10),ew+32,40,
-                  {40,10,10,(unsigned char)(200*alpha)});
+    DrawRectangle((int)(ex-16),(int)(ey-10),ew+32,40, {40,10,10,(unsigned char)(200*alpha)});
     DrawRectangleLinesEx({ex-16,ey-10,(float)(ew+32),40},1,errC);
     DrawText(errorMsg.c_str(),(int)ex,(int)ey,18,errC);
 }

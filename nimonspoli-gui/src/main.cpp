@@ -144,7 +144,11 @@ int main() {
                 std::string name = (i < (int)setup.names.size() && !setup.names[i].empty())
                                 ? setup.names[i]
                                 : ("Pemain" + std::to_string(i + 1));
-                players.push_back(new Player(name, miscCfg.initialBalance));
+
+                if (setup.isBot[i])
+                    players.push_back(new ComputerPlayer(name, miscCfg.initialBalance, setup.botDifficulty));
+                else
+                    players.push_back(new Player(name, miscCfg.initialBalance));
             }
 
             GameState gs(
@@ -188,6 +192,24 @@ int main() {
 
         // ── Game logic: flush command → sync dice ─────────────────────────
         gui.flushCommands();
+
+        if (gui.getCurrentScreen()) {
+            auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
+            if (gs) gs->syncDiceResult();
+        }
+
+        // ── COM auto-play ─────────────────────────────────────────────────
+        if (gameMaster) {
+            GameState& state = gameMaster->getState();
+            Player* curr = state.getCurrPlayer();
+            ComputerPlayer* com = dynamic_cast<ComputerPlayer*>(curr);
+            if (com && state.getPhase() == GamePhase::PLAYER_TURN 
+                    && !state.getHasRolled()) {
+                com->executeTurn(*gameMaster);
+                gameMaster->endTurn();
+                gameMaster->beginTurn();
+            }
+        }
 
         if (gui.getCurrentScreen()) {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
