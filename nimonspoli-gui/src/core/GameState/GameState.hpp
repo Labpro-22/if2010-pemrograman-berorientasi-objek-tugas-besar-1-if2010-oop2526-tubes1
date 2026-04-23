@@ -13,6 +13,7 @@ class AuctionManager;
 class Card;
 class TransactionLogger;
 class GameMaster;
+class SkillCard;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
@@ -62,7 +63,7 @@ private:
     AuctionManager *auctionManager;
     CardDeck<Card> *chanceCardDeck;
     CardDeck<Card> *communityCardDeck;
-    CardDeck<Card> *skillCardDeck;
+    CardDeck<SkillCard> *skillCardDeck;
     TransactionLogger *logger;
     GameMaster *gameMaster;
     TaxConfig taxcfg;
@@ -88,7 +89,7 @@ public:
         AuctionManager *auctionMgr,
         CardDeck<Card> *chanceDeck,
         CardDeck<Card> *communityDeck,
-        CardDeck<Card> *skillDeck,
+        CardDeck<SkillCard> *skillDeck,
         TransactionLogger *logger,
         TaxConfig taxcfg);
     ~GameState() = default;

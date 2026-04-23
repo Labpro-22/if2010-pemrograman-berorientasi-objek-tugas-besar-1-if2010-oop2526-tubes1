@@ -35,8 +35,12 @@ GameState::GameState(
       hasExtraTurn(false), hasRolled(false), hasUsedCard(false),
       gameBoard(board), gameBank(bank), gameDice(dice),
       auctionManager(auctionMgr),
-      chanceCardDeck(chanceDeck), communityCardDeck(communityDeck), skillCardDeck(skillDeck),
-      logger(log), taxcfg(taxcfg) {}
+      chanceCardDeck(chanceDeck),
+      communityCardDeck(communityDeck),
+      skillCardDeck(skillDeck),
+      logger(log),
+      gameMaster(nullptr),
+      taxcfg(taxcfg) {}
 
 // ─────────────────────────────────────────────
 //  Getter: turn & fase
