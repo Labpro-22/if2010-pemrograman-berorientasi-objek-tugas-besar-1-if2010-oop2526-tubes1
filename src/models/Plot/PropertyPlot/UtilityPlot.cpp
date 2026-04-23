@@ -25,3 +25,7 @@ int UtilityPlot::calculateRentPrice() const {
 std::string UtilityPlot::getType() const {
     return "Petak Utilitas";
 }
+
+void UtilityPlot::startEvent(PlotContext& ctx) {
+
+}

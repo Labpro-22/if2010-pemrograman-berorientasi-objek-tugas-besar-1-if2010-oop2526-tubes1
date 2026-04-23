@@ -80,3 +80,7 @@ int LandPlot::calculateRentPrice() const {
 std::string LandPlot::getType() const {
     return "Petak Lahan";
 }
+
+void LandPlot::startEvent(PlotContext& ctx) {
+
+}

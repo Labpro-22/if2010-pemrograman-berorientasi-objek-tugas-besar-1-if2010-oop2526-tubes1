@@ -1,8 +1,11 @@
-#include "core/EffectResolver.hpp"
+#include "core/services/EffectResolver.hpp"
+#include "core/PlotContext.hpp"
 
 #include <stdexcept>
 
-void EffectResolver::resolveLanding(Player& player, int tileIndex, GameState& state) const {
+void EffectResolver::resolveLanding(Player& player, int tileIndex, GameState& state) {
+    PlotContext ctx(player, state.getPlayers(), state.getBoard(), state.getLogger(), auctionService);
+    state.getBoard().getPlot(tileIndex)->startEvent(ctx);
     state.addLog(player.getUsername() + " mendarat di tile " + std::to_string(tileIndex) + ".");
 }
 

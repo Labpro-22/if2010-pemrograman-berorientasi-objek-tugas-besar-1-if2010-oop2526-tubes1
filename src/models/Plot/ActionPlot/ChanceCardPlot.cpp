@@ -8,7 +8,7 @@ std::string ChanceCardPlot::getType() const {
     return "Petak Kesempatan";
 }
 
-void ChanceCardPlot::startEvent() {
+void ChanceCardPlot::startEvent(PlotContext& ctx) {
     std::cout << "Kamu mendarat di Petak Kesempatan!" << std::endl;
     std::cout << "Mengambil kartu..." << std::endl;
 

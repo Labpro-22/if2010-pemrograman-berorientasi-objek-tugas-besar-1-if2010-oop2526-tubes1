@@ -11,6 +11,6 @@ public:
     ~CommunityChestCardPlot() = default;
 
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
     std::string getLastDrawnCard() const;
 };

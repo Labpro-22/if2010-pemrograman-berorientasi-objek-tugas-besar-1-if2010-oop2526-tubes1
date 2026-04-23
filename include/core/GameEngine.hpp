@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include "core/CommandHandler.hpp"
-#include "core/EffectResolver.hpp"
+#include "core/services/CommandHandler.hpp"
+#include "core/services/EffectResolver.hpp"
 #include "core/GameState.hpp"
 #include "core/TurnManager.hpp"
 

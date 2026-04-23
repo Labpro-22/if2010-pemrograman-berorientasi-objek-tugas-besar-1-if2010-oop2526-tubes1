@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include "models/Plot/Colors.hpp"
+#include "core/PlotContext.hpp"
 
 class Plot{
 protected:
@@ -19,6 +20,6 @@ public:
 
     virtual std::string getType() const = 0;
     virtual Color getColor() const;
-    virtual void startEvent() = 0;  //TODO: add parameter
+    virtual void startEvent(PlotContext& context) = 0;  //TODO: add parameter
     //TODO: updateState method??
 };

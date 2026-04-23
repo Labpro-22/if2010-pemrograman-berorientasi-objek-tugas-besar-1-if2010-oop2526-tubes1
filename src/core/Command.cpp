@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <utility>
+#include "core/SkillContext.hpp"
 
 RollDiceCommand::RollDiceCommand(int boardSize) : boardSize(boardSize) {
     if (boardSize <= 0) {
@@ -92,7 +93,8 @@ UseSkillCardCommand::UseSkillCardCommand(int cardIndex) : cardIndex(cardIndex) {
 
 bool UseSkillCardCommand::execute(GameState& state, EffectResolver&, TurnManager&) const {
     Player& player = state.getCurrentPlayer();
-    if (!player.useCards(static_cast<std::size_t>(cardIndex))) {
+    SkillContext ctx{player, state.getPlayers(), state.getBoard(), state.getLogger()};
+    if (!player.useCards(static_cast<std::size_t>(cardIndex), ctx)) {
         throw std::invalid_argument("Kartu skill pada index tersebut tidak dapat digunakan.");
     }
 
