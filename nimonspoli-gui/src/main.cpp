@@ -28,13 +28,18 @@
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     std::string title = "Nimonspoli";
+    std::cout << "Before GUIManager" << std::endl;
     GUIManager gui(1920, 1080, title, 60);
-
+    std::cout << "Before MenuScreen" << std::endl;
     MainMenuScreen* menuScreen = new MainMenuScreen();
-    GameScreen*     gameScreen = new GameScreen();
-    WinScreen*      winScreen  = new WinScreen();
+    std::cout << "Before GameScreen" << std::endl;
+    GameScreen* gameScreen = new GameScreen();
+    std::cout << "Before WinScreen" << std::endl;
+    WinScreen* winScreen = new WinScreen();
 
+    std::cout << "Before setScreen" << std::endl;
     gui.setScreen(menuScreen);
+    std::cout << "Entering loop" << std::endl;
 
     GameMaster*        gameMaster    = nullptr;
     Bank*              bank          = nullptr;

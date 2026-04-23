@@ -206,6 +206,19 @@ private:
         int  jailTurnsLeft = 0;
     } jailDialog;
 
+    // ── Auction Dialog ────────────────────────────────────────────────────
+    struct AuctionDialogState {
+        bool        visible       = false;
+        std::string propertyName;
+        std::string propertyGroup;
+        int         currentBid    = 0;        // bid tertinggi saat ini
+        std::string highestBidder;            // username pemenang sementara
+        std::string currParticipant;          // username yang sedang giliran
+        bool        isForcedBid   = false;    // true = PASS diblok
+        std::string bidInput;                 // input angka dari keyboard
+        bool        bidFocused    = false;    // apakah input field aktif
+    } auctionDialog;
+
     // ── Properti Popup ────────────────────────────────────────────────────
     struct PropertiPopupState {
         bool  visible  = false;
@@ -258,6 +271,10 @@ private:
     // ── GameScreenDialogJail.cpp ──────────────────────────────────────────
     void    triggerJailDialog();
     void    drawJailDialog();
+
+    // ── GameScreenDialogAuction.cpp ───────────────────────────────────────
+    void    triggerAuctionDialog();
+    void    drawAuctionDialog();
 
     // ── GameScreenDialogProperti.cpp ──────────────────────────────────────
     void    drawPropertiPopup();

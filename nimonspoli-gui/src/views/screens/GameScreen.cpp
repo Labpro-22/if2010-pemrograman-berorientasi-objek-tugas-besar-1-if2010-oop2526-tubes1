@@ -131,6 +131,7 @@ void GameScreen::render(Window& window)
     drawDiceArea();
     drawPopup();
     drawBuyDialog();
+    drawAuctionDialog();
     drawTaxDialog();
     drawFestivalDialog();
     drawCardDialog();
