@@ -313,6 +313,35 @@ void Player::resetTurnFlags() {
     shieldActive = false;
 }
 
+int Player::countOwnedStation() const {
+    int count;
+    for (auto property : ownedProperties){
+        if (property.get().getType() == PlotType::STATIONPLOT){
+            count++;
+        }
+    }
+    return count;
+}
+
+int Player::countOwnedUtility() const {
+    int count;
+    for (auto property : ownedProperties){
+        if (property.get().getType() == PlotType::UTILITYPLOT){
+            count++;
+        }
+    }
+    return count;
+}
+
+bool Player::isStreetColorOwned(Color color, const Board& board) const {
+    for (const auto& plot : board.getPlots()) {
+        if (plot->getColor() == color && plot->getOwner() != this){
+            return false;
+        }
+    }
+    return true;
+}
+
 bool Player::isBankrupt() const {
     return status == PlayerStatus::BANKRUPT;
 }

@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "models/Player/PlayerStatus.hpp"
+#include "models/Plot/PropertyPlot/PropertyPlot.hpp"
 
 class Plot;
 class SkillCard;
@@ -74,6 +75,10 @@ public:
     void addOwnedCard(const std::shared_ptr<SkillCard>& card);
     void setUsedSkillThisTurn(bool used);
     void resetTurnFlags();
+
+    int countOwnedStation() const;
+    int countOwnedUtility() const;
+    bool isStreetColorOwned(Color color, const Board& board) const;
 
     bool isBankrupt() const;
 };
