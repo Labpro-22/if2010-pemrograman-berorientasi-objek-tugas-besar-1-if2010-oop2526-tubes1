@@ -1,0 +1,22 @@
+#pragma once
+
+#include <map>
+#include <string>
+#include <vector>
+
+#include "core/Board.hpp"
+#include "core/TurnManager.hpp"
+#include "models/Enums.hpp"
+#include "models/Player.hpp"
+#include "models/tiles/Tile.hpp"
+
+class BoardRenderer {
+private:
+    std::map<TileCategory, std::string> colorMap;
+
+public:
+    void render(const Board& board, const std::vector<Player>& players, const TurnManager& turnManager);
+    std::string renderTileCell(const Tile* tile, const std::vector<Player>& players) const;
+    void renderLegend(const std::vector<Player>& players) const;
+    std::string colorize(const std::string& text, const std::string& ansiCode) const;
+};
