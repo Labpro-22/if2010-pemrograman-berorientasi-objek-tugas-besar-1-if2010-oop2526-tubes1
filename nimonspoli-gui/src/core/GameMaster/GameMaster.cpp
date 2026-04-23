@@ -657,31 +657,6 @@ void GameMaster::checkWinCondition()
     // Kondisi 3: maxTurn < 1 → mode BANKRUPTCY, game terus tanpa batas
 }
 
-void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
-{
-    if (!player || !card)
-        return;
-    if (gs.getHasUsedCard())
-        return;
-    if (card->isUsed())
-        return;
-
-    card->execute(*player, gs);
-    gs.getLogger()->addLog(gs.getCurrTurn(), player->getUsername(), "SKILL_CARD", card->getDescription());
-
-    card->markUsed();
-    const vector<SkillCard *> &hand = player->getHand();
-    for (int i = 0; i < (int)hand.size(); i++)
-    {
-        if (hand[i] == card)
-        {
-            player->discardSkillCard(i);
-            break;
-        }
-    }
-    gs.setHasUsedCard(true);
-}
-
 // ─────────────────────────────────────────────
 //  Proxy metode dialog GUI
 // ─────────────────────────────────────────────
