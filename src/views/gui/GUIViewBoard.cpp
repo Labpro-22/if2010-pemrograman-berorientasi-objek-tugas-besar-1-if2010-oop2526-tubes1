@@ -432,7 +432,6 @@ void GUIView::drawRightPanel(sf::RenderWindow& rw, const GameStateView& state) {
 
     const float rpX = W - SECTION_PAD - SQUARE_CARD_W;
     const float colW = SQUARE_CARD_W;
-    const float padX = colW * 0.03f;
     const float padY = colW * 0.03f;
 
     unsigned hSz  = static_cast<unsigned>(colW * 0.06f);
