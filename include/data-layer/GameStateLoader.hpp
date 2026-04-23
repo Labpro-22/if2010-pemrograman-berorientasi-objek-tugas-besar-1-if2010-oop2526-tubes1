@@ -7,7 +7,7 @@
 #include <vector>
 // #include "../models/LogEntry.hpp"
 #include "../core/CardManager.hpp"
-// #include "../models/PropertyTile.hpp"
+#include "../utils/PropertyTile.hpp"
 #include "../core/Account.hpp"
 #include "FileIOException.hpp"
 using namespace std;
@@ -19,7 +19,7 @@ private:
 public:
     GameStateLoader(string path);
     vector<Player> loadPlayers();
-    // vector<PropertyTile> loadProperties();
+    vector<PropertyTile> loadProperties();
     CardManager loadDecks();
     // vector<LogEntry> loadLogs();
 };
