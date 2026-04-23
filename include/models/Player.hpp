@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "Saveable.hpp"
 
 class PropertyTile;
 
@@ -12,7 +13,7 @@ enum PlayerState {
     INJAIL
 };
 
-class Player {
+class Player : public Saveable {
 private:
     std::string name;
     int balance;
@@ -56,6 +57,9 @@ public:
     void startTurn();
     void endTurn();
     int getPosition();
+
+    //Saveload impl
+    std::string toSaveFormat() const;
 };
 
 class Effect {

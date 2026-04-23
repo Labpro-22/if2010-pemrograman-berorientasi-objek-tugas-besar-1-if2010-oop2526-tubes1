@@ -7,7 +7,7 @@
 class Tile;
 class Player;
 
-class Board {
+class Board : public Saveable {
 private:
     std::vector<std::unique_ptr<Tile>> tiles;
     std::unordered_map<std::string, std::vector<Tile*>> colorTileMap;
@@ -20,4 +20,5 @@ public:
     std::vector<std::string> getAllGroups() const;
     bool checkMonopoly(const Player& player, const std::string& color) const;
     int getSize();
+
 };

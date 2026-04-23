@@ -1,4 +1,5 @@
 #include "GameManager.hpp"
+#include <sstream>
 #include <iostream>
 
 
@@ -61,4 +62,15 @@ void GameManager::visitUtilityTile(UtilityTile* tile, Player& player) {
     if(current_owner && current_owner.get() != &player){
         bool success = this->economy_manager->transferMoney(player, *current_owner, rent);
     }
+}
+
+
+std::string GameManager::toSaveFormat() const{
+    std::ostringstream out;
+    out << current_turn_count << " " << max_turns << "\n";
+    out << players.size();
+    for(std::shared_ptr<Player> p:players){
+        out << p->toSaveFormat();
+    }
+    return out.str();
 }

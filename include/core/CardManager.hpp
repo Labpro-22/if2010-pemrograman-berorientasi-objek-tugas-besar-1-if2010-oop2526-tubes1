@@ -4,8 +4,9 @@
 #include "Deck.hpp"
 #include "Card.hpp"
 #include "Player.hpp" 
+#include "Saveable.hpp"
 
-class CardManager {
+class CardManager : Saveable {
 private:
     Deck<Card*> chance_deck;
     Deck<Card*> community_chest_deck;
@@ -29,4 +30,5 @@ public:
 
     // Fungsi ini dipanggil oleh GameManager ketika pemain selesai menggunakan SkillCard.
     void discardSkillCard(SkillCard* usedCard);
+    std::string toSaveFormat();
 };

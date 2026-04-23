@@ -5,8 +5,9 @@
 #include "Card.hpp"
 #include "ActionCard.hpp"
 #include "SkillCard.hpp"
+#include "Saveable.hpp"
 template <class T>
-class Deck
+class Deck : public Saveable
 {
 private:
     std::stack<T> cards;
@@ -35,6 +36,7 @@ public:
     void AddToDiscard(T &card){ //belum ada di m1
         discard.push_back(card);
     }
+    std::string toSaveFormat();
 
 };
 template <class ActionCard>

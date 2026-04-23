@@ -4,5 +4,5 @@ class ActionCard: public Card
 private:
     /* data */
 public:
-
+    
 };

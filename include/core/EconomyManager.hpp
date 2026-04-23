@@ -4,11 +4,12 @@
 #include <vector>
 #include "Player.hpp"
 #include "PropertyTile.hpp"
+#include "Saveable.hpp"
 
 class PropertyManager;
 class TransactionLog; 
 
-class EconomyManager {
+class EconomyManager : Saveable {
 private:
     std::vector<std::shared_ptr<Player>> active_bidders;
     int current_highest_bid;

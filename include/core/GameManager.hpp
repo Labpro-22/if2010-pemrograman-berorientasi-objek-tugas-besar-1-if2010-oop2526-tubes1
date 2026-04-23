@@ -94,4 +94,8 @@ public:
     void visitStreetTile(StreetTile* tile, Player& player) override;
     void visitRailroadTile(RailroadTile* tile, Player& player) override;
     void visitUtilityTile(UtilityTile* tile, Player& player) override;
+
+
+    // Implementasi save
+    std::string toSaveFormat() const;
 };

@@ -1,4 +1,5 @@
 #pragma once
+#include "Saveable.hpp"
 
 class Player;
 class CardTile;
@@ -12,7 +13,7 @@ class StreetTile;
 class RailroadTile;
 class UtilityTile;
 
-class TileVisitor {
+class TileVisitor : public Saveable{ //sebenernya butuh di GameManager but ternyata parentnya GameManager tuh ini
 public:
     virtual ~TileVisitor() = default;
 
