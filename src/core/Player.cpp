@@ -1,37 +1,155 @@
 #include "core/Player.hpp"
 
+// #include "core/ActionCard.hpp"
+#include "core/Property.hpp"
+
+#include <algorithm>
+#include <stdexcept>
+#include <utility>
+
 namespace core {
 
-Player::Player(string name) : name_(name), balance_(0), position_(1), inJail_(false), isBankrupt_(false), jailTurns_(0) {}
+Player::Player(std::string name, std::string token)
+        :   name_(std::move(name)),
+            token_(std::move(token)),
+            balance_(0),
+            position_(0),
+            inJail_(false),
+            isBankrupt_(false),
+            jailTurns_(0),
+            ownedProperties_(),
+            heldCards_(),
+            shieldActive_(false),
+            usedSkillThisTurn_(false),
+            discountRate_(0.0F) {}
 
-void Player::addProperty(Property* p) {
-    ownedProperties_.push_back(p);
+int Player::getNetWorth() const noexcept {
+    int total = balance_;
+    for (Property* p : ownedProperties_) {
+        if (p != nullptr) {
+            total += p->getValue();
+        }
+    }
+    return total;
 }
 
-void Player::goToJail() {
-    inJail_ = true;
-    position_ = 11; // random index
+bool Player::canAfford(int amount) const noexcept {
+    return balance_ >= amount;
 }
 
-int Player::getBalance() const {
-    return balance_;
+void Player::goToJail() { inJail_ = true; }
+
+void Player::releaseFromJail() {
+    inJail_ = false;
+    jailTurns_ = 0;
 }
 
-bool Player::isHuman() { return true; }
-void Player::takeTurn(logic::Game& g) {}
-void Player::releaseFromJail() { inJail_ = false; }
-void Player::removeProperty(Property* p) {}
-int Player::getNetWorth() const { return balance_; }
-bool Player::canAfford(int amount) const { return balance_ >= amount; }
-string Player::getName() const { return name_; }
-int Player::getPosition() const { return position_; }
-bool Player::getInJail() const { return inJail_; }
-bool Player::getIsBankrupt() const { return isBankrupt_; }
-vector<Property*>& Player::getOwnedProperties() { return ownedProperties_; }
+void Player::addProperty(Property* property) {
+    if (property == nullptr) {
+        return;
+    }
+    ownedProperties_.push_back(property);
+}
 
-Player& Player::operator+(int amount) { balance_ += amount; return *this; }
-Player& Player::operator-=(int amount) { balance_ -= amount; return *this; }
-bool Player::operator<(const Player& other) const { return balance_ < other.balance_; }
-bool Player::operator>(const Player& other) const { return balance_ > other.balance_; }
-bool Player::operator==(const Player& other) const { return name_ == other.name_; }
-} // namespace core
+void Player::removeProperty(Property* property) {
+    const auto it = std::find(ownedProperties_.begin(), ownedProperties_.end(), property);
+    if (it != ownedProperties_.end()) {
+        ownedProperties_.erase(it);
+    }
+}
+
+Player& Player::operator+=(int money) {
+    balance_ += money;
+    return *this;
+}
+
+Player& Player::operator-=(int money) {
+    balance_ -= money;
+    return *this;
+}
+
+bool Player::operator<(const Player& other) const noexcept {
+    return getNetWorth() < other.getNetWorth();
+}
+
+bool Player::operator>(const Player& other) const noexcept {
+    return getNetWorth() > other.getNetWorth();
+}
+
+bool Player::operator==(const Player& other) const noexcept {
+    return getNetWorth() == other.getNetWorth();
+}
+
+const std::string& Player::getName() const noexcept { return name_; }
+
+const std::string& Player::getToken() const noexcept { return token_; }
+
+int Player::getBalance() const noexcept { return balance_; }
+
+int Player::getPosition() const noexcept { return position_; }
+
+void Player::setPosition(int index) noexcept { position_ = index; }
+
+bool Player::isInJail() const noexcept { return inJail_; }
+
+bool Player::isBankrupted() const noexcept { return isBankrupt_; }
+
+void Player::setBankrupted(bool value) noexcept { isBankrupt_ = value; }
+
+void Player::addCard(ActionCard* card) {
+    if (heldCards_.size() >= 3U) {
+        // TODO: use game errors instead of built-in errors.
+        throw std::runtime_error("Player hand already holds three action cards.");
+    }
+    if (card == nullptr) {
+        return;
+    }
+    heldCards_.push_back(card);
+}
+
+void Player::removeCard(ActionCard* card) {
+    const auto it = std::find(heldCards_.begin(), heldCards_.end(), card);
+    if (it != heldCards_.end()) {
+        heldCards_.erase(it);
+    }
+}
+
+void Player::useShield() { shieldActive_ = true; }
+
+bool Player::isShielded() const noexcept { return shieldActive_; }
+
+void Player::consumeSkillUse() {
+    if (usedSkillThisTurn_) {
+        // TODO: use game errors instead of built-in errors.
+        throw std::runtime_error("Skill card already used this turn.");
+    }
+    usedSkillThisTurn_ = true;
+}
+
+void Player::resetPerTurnFlags() noexcept {
+    shieldActive_ = false;
+    usedSkillThisTurn_ = false;
+    discountRate_ = 0.0F;
+}
+
+void Player::applyDiscount(float rate) noexcept { discountRate_ = rate; }
+
+int Player::promptChoice(const std::string& /*context*/, int defaultIndex, int /*optionCount*/) {
+    return defaultIndex;
+}
+
+const std::vector<Property*>& Player::getOwnedProperties() const noexcept {
+    return ownedProperties_;
+}
+
+const std::vector<ActionCard*>& Player::getHeldCards() const noexcept {
+    return heldCards_;
+}
+
+int Player::getJailTurns() const noexcept { return jailTurns_; }
+
+void Player::incrementJailTurns() noexcept { ++jailTurns_; }
+
+void Player::clearJailTurns() noexcept { jailTurns_ = 0; }
+
+}

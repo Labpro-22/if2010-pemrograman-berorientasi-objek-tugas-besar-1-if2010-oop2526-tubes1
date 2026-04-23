@@ -27,6 +27,9 @@ add_library(
 
 add_library(
   nimonspoli_logic STATIC
+  src/logic/Bank.cpp
+  src/logic/BankruptcyHandler.cpp
+  src/logic/Board.cpp
   src/logic/Game.cpp
   src/logic/TransactionLogger.cpp
   src/logic/Bank.cpp
