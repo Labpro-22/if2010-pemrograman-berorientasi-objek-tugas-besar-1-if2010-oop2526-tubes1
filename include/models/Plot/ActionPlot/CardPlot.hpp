@@ -5,7 +5,7 @@
 
 class CardPlot : public ActionPlot {
 public:
-    CardPlot(std::string name, std::string code);
+    CardPlot(std::string name, std::string code, Color color);
     virtual ~CardPlot() = default;
 
     std::string getType() const override;

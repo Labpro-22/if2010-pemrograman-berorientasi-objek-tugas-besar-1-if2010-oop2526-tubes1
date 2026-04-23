@@ -4,9 +4,9 @@
 
 class StartPlot : public SpecialPlot {
 public:
-    StartPlot(std::string name, std::string code);
+    StartPlot(std::string name, std::string code, Color color);
     ~StartPlot() = default;
 
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };

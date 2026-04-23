@@ -4,10 +4,10 @@
  
 class CommunityChestCardPlot : public CardPlot {
 public:
-    CommunityChestCardPlot(std::string name, std::string code);
+    CommunityChestCardPlot(std::string name, std::string code, Color color);
     ~CommunityChestCardPlot() = default;
  
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };
  

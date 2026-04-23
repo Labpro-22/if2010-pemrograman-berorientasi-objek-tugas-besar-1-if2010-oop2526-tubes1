@@ -1,8 +1,8 @@
 #include "models/Plot/PropertyPlot/StationPlot.hpp"
 
 StationPlot::StationPlot(std::string name, std::string code, Color color, int buyPrice, int mortgageValue,
-                         Player* owner, PropertyStatus propertyStatus = PropertyStatus::BANK,
-                         int festivalDuration = 0, int festivalMultiplier = 1):
+                         Player* owner, PropertyStatus propertyStatus,
+                         int festivalDuration, int festivalMultiplier):
     PropertyPlot(name, code, color, buyPrice, mortgageValue, owner, propertyStatus, festivalDuration, festivalMultiplier) {}
 
 std::map<int, int> StationPlot::getRentPriceTable() const {

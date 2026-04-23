@@ -4,9 +4,9 @@
 
 class PrisonPlot : public SpecialPlot {
 public:
-    PrisonPlot(std::string name, std::string code);
+    PrisonPlot(std::string name, std::string code, Color color);
     ~PrisonPlot() = default;
 
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };

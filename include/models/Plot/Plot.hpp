@@ -12,16 +12,17 @@ class Plot{
 protected:
     std::string name;
     std::string code;
+    Color color;
 
 public:
-    Plot(std::string name, std::string code);
+    Plot(std::string name, std::string code, Color color);
     virtual ~Plot() = default;
 
     std::string getName() const;
     std::string getCode() const;
+    Color getColor() const;
 
     virtual std::string getType() const = 0;
-    virtual Color getColor() const;
     virtual Player* getOwner() const;
     virtual void startEvent(PlotContext& ctx) = 0;
 };

@@ -1,12 +1,12 @@
 #include "models/Plot/ActionPlot/FestivalPlot.hpp"
 
-FestivalPlot::FestivalPlot(std::string name, std::string code)
-    : ActionPlot(name, code) {}
+FestivalPlot::FestivalPlot(std::string name, std::string code, Color color)
+    : ActionPlot(name, code, color) {}
 
 std::string FestivalPlot::getType() const {
     return "Petak Festival";
 }
 
-void FestivalPlot::startEvent() {
+void FestivalPlot::startEvent(PlotContext& ctx) {
     //TODO (PlotContext)
 }

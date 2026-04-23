@@ -8,9 +8,9 @@ protected:
     static int PPH, PBM;
 
 public:
-    TaxPlot(std::string name, std::string code, int flatAmount);
+    TaxPlot(std::string name, std::string code, Color color);
     virtual ~TaxPlot() = default;
 
     std::string getType() const override;
-    int getFlatAmount() const;
+    int getFlatAmount(PlotContext& ctx) const;
 };

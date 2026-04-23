@@ -5,7 +5,6 @@
 
 class PropertyPlot: public Plot{
 protected:
-    Color color;
     int buyPrice;
     int mortgageValue;
     PropertyStatus propertyStatus;
@@ -27,7 +26,6 @@ public:
     int getFestivalMultiplier() const;
     virtual std::map<int, int> getRentPriceTable() const = 0;
     virtual int getRentPrice(int level) const = 0;
-    Color getColor() const override;
     Player* getOwner() const override;
     void setOwner(Player* player);
 

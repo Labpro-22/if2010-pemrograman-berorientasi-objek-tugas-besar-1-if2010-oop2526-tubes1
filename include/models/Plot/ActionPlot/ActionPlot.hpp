@@ -4,9 +4,8 @@
 
 class ActionPlot : public Plot {
 public:
-    ActionPlot(std::string name, std::string code);
+    ActionPlot(std::string name, std::string code, Color color);
     virtual ~ActionPlot() = default;
     
-    Color getColor() const override;
     std::string getType() const override;
 };

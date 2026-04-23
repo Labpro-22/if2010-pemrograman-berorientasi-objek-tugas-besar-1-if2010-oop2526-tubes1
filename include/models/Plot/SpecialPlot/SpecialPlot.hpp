@@ -4,10 +4,9 @@
 
 class SpecialPlot : public Plot {
 public:
-    SpecialPlot(std::string name, std::string code);
+    SpecialPlot(std::string name, std::string code, Color color);
     virtual ~SpecialPlot() = default;
 
-    Color getColor() const override;
     std::string getType() const override;
-    virtual void startEvent() override = 0;
+    virtual void startEvent(PlotContext& ctx) override = 0;
 };

@@ -12,8 +12,9 @@ private:
 public:
     LandPlot(std::string name, std::string code, Color color,
             int buyPrice, int mortgageValue, int upgHousePrice, int upgHotelPrice,
-            std::map<int, int> rentPriceTable, Player* owner, PropertyStatus propertyStatus,
-            int festivalDuration, int festivalMultiplier);
+            std::map<int, int> rentPriceTable, Player* owner = NULL,
+            PropertyStatus propertyStatus = PropertyStatus::BANK,
+            int festivalDuration = 0, int festivalMultiplier = 1);
 
     ~LandPlot() = default;
 

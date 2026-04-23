@@ -4,9 +4,9 @@
 
 class LuxuryTaxPlot : public TaxPlot {
 public:
-    LuxuryTaxPlot(std::string name, std::string code, int flatAmount);
+    LuxuryTaxPlot(std::string name, std::string code, Color color);
     ~LuxuryTaxPlot() = default;
 
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };

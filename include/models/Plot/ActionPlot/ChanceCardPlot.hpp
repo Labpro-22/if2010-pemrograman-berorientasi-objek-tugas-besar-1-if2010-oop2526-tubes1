@@ -4,9 +4,9 @@
 
 class ChanceCardPlot : public CardPlot {
 public:
-    ChanceCardPlot(std::string name, std::string code);
+    ChanceCardPlot(std::string name, std::string code, Color color);
     ~ChanceCardPlot() = default;
 
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };
