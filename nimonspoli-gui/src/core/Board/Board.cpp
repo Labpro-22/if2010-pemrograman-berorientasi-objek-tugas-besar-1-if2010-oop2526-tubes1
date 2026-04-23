@@ -509,9 +509,12 @@ void FestivalTile::onLanded(Player &p, GameState &gs)
     checkCmd.execute(*gm);  // execute hanya log jika kosong, tidak block
 
     // Hanya masuk AWAITING_FESTIVAL jika ada properti eligible
-    if (!checkCmd.getEligibleStreets().empty())
+    auto eligible = checkCmd.getEligibleStreets();
+    std::cout << "[DEBUG] FestivalTile: " << p.getUsername() << " landed. Eligible: " << eligible.size() << std::endl;
+    if (!eligible.empty())
     {
         gs.setPhase(GamePhase::AWAITING_FESTIVAL);
+        std::cout << "[DEBUG] Phase set to AWAITING_FESTIVAL" << std::endl;
     }
     // Jika kosong: execute() sudah log, tidak perlu phase khusus
 }

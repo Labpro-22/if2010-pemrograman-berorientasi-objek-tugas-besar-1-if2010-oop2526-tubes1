@@ -730,3 +730,16 @@ void GameMaster::handleJualBangunan(StreetProperty* sp) {
         log(cur->getUsername(), "JUAL_BANGUNAN", "Menjual bangunan di " + sp->getName() + " seharga M" + std::to_string(sellVal));
     }
 }
+
+int GameMaster::calculateWealth(Player *player) const
+{
+    if (!player) return 0;
+    
+    int total = player->getBalance();
+    for (auto* prop : player->getProperties()) {
+        if (prop) {
+            total += prop->calculateSellPrice();
+        }
+    }
+    return total;
+}
