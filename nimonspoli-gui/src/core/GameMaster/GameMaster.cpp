@@ -113,47 +113,42 @@ void GameMaster::endTurn()
 // ─────────────────────────────────────────────
 //  Pergerakan pemain
 // ─────────────────────────────────────────────
+void GameMaster::movePlayer(Player* player, int steps) {
+    if (!player || !state.getBoard()) return;
 
-void GameMaster::movePlayer(Player *player, int steps)
-{
-    if (!player || !state.getBoard())
-        return;
+    Board* board = state.getBoard();
+    int boardSize = board->getSize();  // = 41 (index 0 nullptr, 1-40 tile)
 
-    Board *board = state.getBoard();
-    int boardSize = board->getSize();
-    Tile *curTile = board->getTile(0); // placeholder; idealnya Player simpan idx
+    int curIdx    = player->getPosition();
+    int goIdx     = 1;  // GO selalu di id=1
 
-    // Cari posisi saat ini via kode petak
-    // (Player menyimpan Tile*, kita perlu indeksnya)
-    // Loop board untuk temukan indeks player sekarang
-    int curIdx = player->getPosition();
+    // Hitung target — wrap dalam range 1..40
+    int targetIdx = curIdx + steps;
+    bool passedGo = false;
 
-    int targetIdx = (curIdx + steps) % boardSize;
+    if (targetIdx > 40) {
+        targetIdx = ((targetIdx - 1) % 40) + 1;  // wrap 1-40
+        passedGo  = true;
+    }
 
-    // Cek apakah melewati GO (indeks 0)
-    if (targetIdx < curIdx || steps >= boardSize)
-    {
-        // Melewati GO → bayar gaji
-        Tile *goTile = board->getTile(0);
-        GoTile *go = dynamic_cast<GoTile *>(goTile);
-        if (go)
-        {
+    // Bayar gaji GO
+    if (passedGo) {
+        Tile* goTile = board->getTile(goIdx);
+        GoTile* go   = dynamic_cast<GoTile*>(goTile);
+        if (go) {
             state.getBank()->payPlayer(player, go->getSalary());
             log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
     }
 
-    // Pindahkan player & update currPetak
     player->setPosition(targetIdx);
 
-    // Trigger petak yang diinjak
-    Tile *landedTile = board->getTile(targetIdx);
-    if (landedTile)
-    {
+    Tile* landedTile = board->getTile(targetIdx);
+    if (landedTile) {
         log(player->getUsername(), "MOVE",
             "Mendarat di " + landedTile->getCode() +
-                " (" + landedTile->getTileName() + ")");
+            " (" + landedTile->getTileName() + ")");
         landedTile->onLanded(*player, state);
     }
 }
