@@ -7,7 +7,7 @@ GameState::GameState()
       maxTurn(0),
       currentTurn(1),
       gameOver(false),
-      board(std::make_shared<Board>()) {
+      board(Board()) {
     if (maxTurn <= 0) {
         throw InvalidInputException("maxTurn harus lebih dari 0.");
     }
@@ -175,24 +175,7 @@ const Dice& GameState::getDice() const {
 }
 
 Board& GameState::getBoard() {
-    if (!board) {
-        throw InvalidStateException("Board belum diinisialisasi.");
-    }
-    return *board;
-}
-
-const Board& GameState::getBoard() const {
-    if (!board) {
-        throw InvalidStateException("Board belum diinisialisasi.");
-    }
-    return *board;
-}
-
-void GameState::setBoard(const std::shared_ptr<Board>& newBoard) {
-    if (!newBoard) {
-        throw InvalidInputException("Board tidak boleh null.");
-    }
-    board = newBoard;
+    return board;
 }
 
 int GameState::getBoardSizeOrDefault(int defaultSize) const {
@@ -200,10 +183,10 @@ int GameState::getBoardSizeOrDefault(int defaultSize) const {
         throw InvalidInputException("defaultSize harus lebih dari 0.");
     }
 
-    if (!board || board->getSize() <= 0) {
+    if (board.getSize() <= 0) {
         return defaultSize;
     }
-    return board->getSize();
+    return board.getSize();
 }
 
 bool GameState::isGameOver() const {

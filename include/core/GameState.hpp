@@ -20,7 +20,7 @@ private:
     bool gameOver;
     Logger logger;
     Dice dice;
-    std::shared_ptr<Board> board;
+    Board board;
 
     void clampCurrentPlayerIndex();
     int countActivePlayers() const;
