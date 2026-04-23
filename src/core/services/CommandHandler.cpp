@@ -107,7 +107,9 @@ std::unique_ptr<Command> CommandHandler::parse(const std::string& rawCommand) co
     if (cmd == "END") {
         return std::make_unique<EndTurnCommand>();
     }
-
+    if (cmd == "PAY_JAIL_FINE" || cmd == "PAY_FINE" || cmd == "PAYJAIL") {
+        return std::make_unique<PayJailFineCommand>();
+    }
     throw std::invalid_argument("Perintah tidak dikenali: " + tokens[0]);
 }
 

@@ -21,7 +21,8 @@ Player::Player()
       usedSkillThisTurn(false),
       shieldTurnLeft(0),
       discountTurnLeft(0),
-      discountValue(0) {}
+      discountValue(0),
+      consecutiveDoubles(0) {}
 
 Player::Player(std::string username, int startingCash, int startPosition)
     : username(std::move(username)),
@@ -34,7 +35,8 @@ Player::Player(std::string username, int startingCash, int startPosition)
       usedSkillThisTurn(false),
       shieldTurnLeft(0),
       discountTurnLeft(0),
-      discountValue(0) {
+      discountValue(0),
+      consecutiveDoubles(0) {
     if (startingCash < 0) {
         throw std::invalid_argument("startingCash tidak boleh negatif.");
     }
@@ -90,6 +92,10 @@ int Player::getDiscountTurnLeft() const {
 
 int Player::getDiscountValue() const {
     return discountValue;
+}
+
+int Player::getConsecutiveDoubles() const {
+    return consecutiveDoubles;
 }
 
 int Player::getTotalWealth() const {
@@ -247,6 +253,7 @@ void Player::setStatus(PlayerStatus newStatus) {
         shieldTurnLeft = 0;
         discountTurnLeft = 0;
         discountValue = 0;
+        consecutiveDoubles = 0;
         ownedCards.clear();
         ownedProperties.clear();
     }
@@ -307,6 +314,14 @@ void Player::decrementDiscountTurn() {
             discountValue = 0;
         }
     }
+}
+
+void Player::incrementConsecutiveDoubles() {
+    ++consecutiveDoubles;
+}
+
+void Player::resetConsecutiveDoubles() {
+    consecutiveDoubles = 0;
 }
 
 void Player::addOwnedCard(const std::shared_ptr<SkillCard>& card) {

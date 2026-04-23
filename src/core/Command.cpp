@@ -25,13 +25,40 @@ bool RollDiceCommand::execute(GameState& state, EffectResolver& effectResolver, 
     const std::pair<int, int> dicePair = state.getDice().roll();
     const int steps = dicePair.first + dicePair.second;
     const int effectiveBoardSize = state.getBoardSizeOrDefault(boardSize);
+    const bool isDouble = state.getDice().isDouble();
 
-    state.addLog(player.getUsername() + " melempar dadu: " + std::to_string(dicePair.first) + " dan " + std::to_string(dicePair.second) + ".");
-    player.move(steps, effectiveBoardSize);
+    state.addLog(player.getUsername() + " melempar dadu: " +
+        std::to_string(dicePair.first) + " dan " + std::to_string(dicePair.second) + ".");
     player.setHasRolled(true);
+
+    if (player.getStatus() == PlayerStatus::JAILED) {
+        const bool released = turnManager.handleJailedRoll(player, isDouble, state);
+        if (!released) {
+            return true;
+        }
+        player.move(steps, effectiveBoardSize);
+        effectResolver.resolveLanding(player, player.getPosition(), state);
+        return true;
+    }
+
+    if (isDouble) {
+        if (player.getConsecutiveDoubles() + 1 >= TurnManager::MAX_CONSECUTIVE_DOUBLES) {
+            state.addLog(player.getUsername() +
+                " melempar double tiga kali berturut-turut dan langsung masuk penjara.");
+            turnManager.sendToJail(player, state);
+            return true;
+        }
+        player.incrementConsecutiveDoubles();
+    } else {
+        player.resetConsecutiveDoubles();
+    }
+
+    player.move(steps, effectiveBoardSize);
     effectResolver.resolveLanding(player, player.getPosition(), state);
 
-    turnManager.handleExtraTurn(player, state.getDice().isDouble(), state);
+    if (player.getStatus() != PlayerStatus::JAILED) {
+        turnManager.handleExtraTurn(player, isDouble, state);
+    }
     return true;
 }
 
@@ -154,4 +181,17 @@ bool EndTurnCommand::execute(GameState& state, EffectResolver&, TurnManager& tur
         turnManager.startTurn(state.getCurrentPlayer(), state);
     }
     return true;
+}
+
+bool PayJailFineCommand::execute(GameState& state, EffectResolver&, TurnManager& turnManager) const {
+    Player& player = state.getCurrentPlayer();
+    if (player.getStatus() != PlayerStatus::JAILED) {
+        state.addLog(player.getUsername() + " tidak sedang berada di penjara.");
+        return false;
+    }
+    if (player.getHasRolled()) {
+        state.addLog(player.getUsername() + " harus membayar denda sebelum melempar dadu.");
+        return false;
+    }
+    return turnManager.payJailFine(player, state);
 }

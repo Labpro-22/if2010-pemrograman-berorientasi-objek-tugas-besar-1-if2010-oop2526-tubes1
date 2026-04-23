@@ -25,6 +25,7 @@ private:
     int shieldTurnLeft;
     int discountTurnLeft;
     int discountValue;
+    int consecutiveDoubles;
 
 public:
     Player();
@@ -43,6 +44,7 @@ public:
     int getShieldTurnLeft() const;
     int getDiscountTurnLeft() const;
     int getDiscountValue() const;
+    int getConsecutiveDoubles() const;
     int getTotalWealth() const;
 
     void move();
@@ -71,6 +73,8 @@ public:
     void decrementJailTurns();
     void decrementShieldTurn();
     void decrementDiscountTurn();
+    void incrementConsecutiveDoubles();
+    void resetConsecutiveDoubles();
     void addOwnedCard(const std::shared_ptr<SkillCard>& card);
     void setUsedSkillThisTurn(bool used);
     void resetTurnFlags();

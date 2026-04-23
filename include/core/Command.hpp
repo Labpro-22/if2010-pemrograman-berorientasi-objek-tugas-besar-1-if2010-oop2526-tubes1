@@ -125,3 +125,9 @@ class EndTurnCommand : public Command {
 public:
     bool execute(GameState& state, EffectResolver& effectResolver, TurnManager& turnManager) const override;
 };
+
+class PayJailFineCommand : public Command {
+public:
+    bool execute(GameState& state, EffectResolver& effectResolver, TurnManager& turnManager) const override;
+};
+
