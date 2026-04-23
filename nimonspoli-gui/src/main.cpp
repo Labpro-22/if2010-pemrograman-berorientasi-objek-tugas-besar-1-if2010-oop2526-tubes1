@@ -147,7 +147,7 @@ int main() {
                         p = new ComputerPlayer(info.name, miscCfg.initialBalance, info.diff);
                     else
                         p = new Player(info.name, miscCfg.initialBalance);
-                    p->setPosition(1);
+                    p->setPosition(0);
                     players.push_back(p);
                 }
 
@@ -184,7 +184,7 @@ int main() {
                         p = new ComputerPlayer(name, miscCfg.initialBalance, setup.botDifficulty);
                     else
                         p = new Player(name, miscCfg.initialBalance);
-                    p->setPosition(1);
+                    p->setPosition(0);
                     players.push_back(p);
                 }
 

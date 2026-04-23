@@ -16,6 +16,33 @@ static void DrawRoundedBorder(Rectangle rec, float roundness, int segments,
     }
 }
 
+// Helper: gambar border rectangle yang ikut rotasi tile
+// DrawRectangleLinesEx tidak ikut rotasi, sehingga tile LEFT/RIGHT
+// akan tampil border dengan dimensi terbalik. Solusi: transform 4 sudut manual.
+static void DrawRotatedBorder(float cx, float cy, float tw, float th,
+                               float rotation, float thick, Color color)
+{
+    float rad  = rotation * DEG2RAD;
+    float cosR = cosf(rad), sinR = sinf(rad);
+
+    float hw = tw / 2.f, hh = th / 2.f;
+    Vector2 corners[4] = {
+        {-hw, -hh}, { hw, -hh},
+        { hw,  hh}, {-hw,  hh}
+    };
+
+    Vector2 world[4];
+    for (int i = 0; i < 4; i++) {
+        world[i] = {
+            cx + corners[i].x * cosR - corners[i].y * sinR,
+            cy + corners[i].x * sinR + corners[i].y * cosR
+        };
+    }
+
+    for (int i = 0; i < 4; i++)
+        DrawLineEx(world[i], world[(i + 1) % 4], thick, color);
+}
+
 // ─── Tile geometry ────────────────────────────────────────────────────────────
 Vector2 GameScreen::getTileCenter(int idx)
 {
@@ -107,22 +134,24 @@ void GameScreen::drawTile(int idx, float cx, float cy, float rotation)
         if      (prop.festivalMult == 2) rc = {239, 159,  39, (unsigned char)(200 * pulse)};
         else if (prop.festivalMult == 4) rc = {186, 117,  23, (unsigned char)(220 * pulse)};
         else                             rc = {133,  79,  11, (unsigned char)(240 * pulse)};
-        DrawRectangleLinesEx({cx-tw/2.f-thick, cy-th/2.f-thick,
-                              tw+2*thick, th+2*thick}, thick, rc);
+        // Gambar di luar tile dengan offset thick, ikut rotasi
+        DrawRotatedBorder(cx, cy, tw + thick*2, th + thick*2, rotation, thick, rc);
         std::string lbl = "x" + std::to_string(prop.festivalMult);
         DrawText(lbl.c_str(), (int)(cx-tw/2.f+2), (int)(cy-th/2.f+2), 10, rc);
     }
 
     if (prop.owner >= 0 && prop.type == "STREET") {
         drawBuildingStrip(cx, cy, rotation, prop.buildings, playerColors[prop.owner]);
-        DrawRectangleLinesEx({cx-tw/2.f, cy-th/2.f, tw, th}, 5, playerColors[prop.owner]);
+        // Border ikut rotasi tile — fix bug marker terbalik di LEFT/RIGHT
+        DrawRotatedBorder(cx, cy, tw, th, rotation, 5.f, playerColors[prop.owner]);
         if (prop.mortgaged) {
-            DrawRectangleRec({cx-tw/2.f, cy-th/2.f, tw, th}, {0, 0, 0, 140});
+            DrawRectanglePro({cx, cy, tw, th}, {tw/2.f, th/2.f}, rotation, {0, 0, 0, 140});
             int fw = MeasureText("GADAI", 10);
             DrawText("GADAI", (int)(cx - fw/2), (int)(cy - 5), 10, RED);
         }
     } else if (prop.owner >= 0) {
-        DrawRectangleLinesEx({cx-tw/2.f, cy-th/2.f, tw, th}, 3, playerColors[prop.owner]);
+        // Railroad / Utility
+        DrawRotatedBorder(cx, cy, tw, th, rotation, 3.f, playerColors[prop.owner]);
     }
 }
 
