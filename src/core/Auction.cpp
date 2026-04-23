@@ -17,11 +17,6 @@ Auction::Auction(PropertyTile *property, const vector<Player *> &initialBidders)
       currentHighestBidder(nullptr),
       currentBidderIndex(0) {}
 
-// ── Logika Bidding ────────────────────────────────────────────────────────
-
-// placeBid mengembalikan true hanya jika:
-// 1. amount LEBIH TINGGI dari bid tertinggi saat ini (sekedar sama tidak cukup)
-// 2. pemain PUNYA uang yang cukup (tidak boleh janji bayar nanti)
 bool Auction::placeBid(Player *bidder, int amount) {
     if (amount <= currentHighestBid) return false;
     if (bidder->getMoney() < amount) return false;
@@ -31,11 +26,6 @@ bool Auction::placeBid(Player *bidder, int amount) {
     return true;
 }
 
-// passTurn menghapus pemain dari daftar aktif dan mengkoreksi currentBidderIndex.
-// Koreksi index penting: jika elemen yang dihapus ADA DI DEPAN index saat ini,
-// semua elemen bergeser ke kiri satu posisi → index harus dikurangi 1.
-// Jika elemen yang dihapus ADALAH posisi saat ini (atau di belakangnya),
-// elemen berikutnya secara otomatis "masuk" ke posisi ini → tidak perlu koreksi.
 void Auction::passTurn(Player *bidder) {
     auto it = find(activeBidders.begin(), activeBidders.end(), bidder);
     if (it == activeBidders.end()) return;
@@ -51,26 +41,18 @@ void Auction::passTurn(Player *bidder) {
         currentBidderIndex = currentBidderIndex % (int)activeBidders.size();
 }
 
-// delegateProperty mentransfer kepemilikan properti ke pemenang lelang.
-// Uang dipotong lewat operator-= Player (yang melempar NotEnoughMoneyException
-// jika kurang — tapi ini tidak seharusnya terjadi karena sudah dicek di placeBid).
 void Auction::delegateProperty() {
     if (!currentHighestBidder || !targetProperty) return;
 
     *currentHighestBidder -= currentHighestBid;
 
-    // TODO: Panggil targetProperty->setOwner(currentHighestBidder) dan
-    //       targetProperty->setPropertyStatus(PropertyStatus::OWNED) setelah
-    //       method-method tersebut ditambahkan ke PropertyTile oleh Orang 3.
+    // Set kepemilikan properti ke pemenang lelang
+    targetProperty->setOwnerId(currentHighestBidder->getId());
+    targetProperty->setStatus(1); // 1 = OWNED
+
     currentHighestBidder->addProperty(targetProperty);
 }
 
-// ── Loop Utama Lelang ─────────────────────────────────────────────────────
-
-// Alur: pemain bidding bergantian. Yang pass keluar dari daftar.
-// Siklus berakhir saat hanya 1 penawar tersisa. Pemenang = yang bid tertinggi.
-// Jika tidak ada yang pernah bid (semua pass sebelum ada bid masuk),
-// properti tetap di Bank.
 void Auction::run() {
     if (activeBidders.empty() || !targetProperty) return;
 

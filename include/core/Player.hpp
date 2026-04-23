@@ -12,6 +12,7 @@ class SkillCard;
 
 class Player {
 private:
+    int playerId;
     string username;
     int money;
     int position;
@@ -32,7 +33,10 @@ public:
     void declareBankruptcy();
     void resetTurnFlags();
 
-    int getWealth() const; 
+    int getId() const;
+    void setId(int id);
+
+    int getWealth() const;
     string getUsername() const;
     int getMoney() const;
     int getPosition() const;

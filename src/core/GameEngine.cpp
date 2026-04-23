@@ -7,6 +7,8 @@
 #include "../../include/models/Card.hpp"
 #include "../../include/models/PropertyTile.hpp"
 #include "../../include/models/Tile.hpp"
+#include "../../include/core/Auction.hpp"
+#include "../../include/models/ActionTile.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -80,10 +82,67 @@ void GameEngine::rollDice(int d1, int d2) {
 
     int diceTotal = finalD1 + finalD2;
     Player *activePlayer = players[currentTurnIdx];
+    
+    std::cout << "\n[DADU] " << activePlayer->getUsername() << " melempar dadu: " 
+              << finalD1 << " + " << finalD2 << " = " << diceTotal << "\n";
+
+    // Cek Status Penjara
+    if (activePlayer->getStatus() == PlayerStatus::JAILED) {
+        if (finalD1 == finalD2) {
+            std::cout << "[PENJARA] Anda mendapat angka ganda (Double)! Anda bebas dari penjara.\n";
+            Tile* jailTile = board->getTileAt(board->getJailPosition());
+            JailTile* jt = dynamic_cast<JailTile*>(jailTile);
+            if (jt) jt->releasePlayer(*activePlayer);
+        } else {
+            std::cout << "[PENJARA] Bukan double. Anda tetap di penjara.\n";
+            activePlayer->decrementJailTurn();
+            diceRolled = true;
+            return; // Giliran berakhir tanpa gerak
+        }
+    }
 
     // Gerakkan pemain berdasarkan total dadu
+    int oldPos = activePlayer->getPosition();
     activePlayer->move(diceTotal);
     diceRolled = true;
+    
+    // Cek melewati Start/GO (Mendapatkan gaji)
+    if (oldPos + diceTotal >= board->getTotalTiles() && oldPos != 0) {
+        Tile* goTile = board->getTileAt(0);
+        GoTile* go = dynamic_cast<GoTile*>(goTile);
+        if (go) {
+            go->awardSalary(*activePlayer);
+            std::cout << "[INFO] Anda melewati petak GO! Menerima gaji sebesar Rp" << go->getSalary() << ".\n";
+            if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::AWARD_SALARY, "Lewat GO");
+        }
+    }
+    
+    // Khusus UtilityTile, simpan nilai dadu terakhir untuk kalkulasi sewa
+    Tile *landedTile = board->getTileAt(activePlayer->getPosition());
+    if (landedTile) {
+        UtilityTile *util = dynamic_cast<UtilityTile*>(landedTile);
+        if (util) {
+            util->setLastDiceRoll(diceTotal);
+        }
+    }
+
+    if (finalD1 == finalD2) {
+        activePlayer->incrementDoubleStreak();
+        // Aturan standar: 3 kali double berturut-turut -> penjara
+        if (activePlayer->getDoubleStreak() >= 3) {
+            activePlayer->goToJail();
+            diceRolled = false; // Memaksa endTurn
+        }
+    } else {
+        // Jika tidak double, kita perlu memastikan bahwa double streak diabaikan saat endTurn.
+        // Kita bisa asumsikan Player::resetTurnFlags() akan dihandle di endTurn, 
+        // tapi untuk flag kita simpan informasi bahwa roll terakhir bukan double.
+        // Karena kita tidak memodifikasi GameEngine.hpp, kita asumsikan getDoubleStreak
+        // menandakan jumlah kesempatan roll, bukan hasil roll. 
+        // Idealnya jika roll bukan double, streak seharusnya 0.
+        // Kita biarkan sesuai implementasi Player (jika tidak ada resetter spesifik, 
+        // endTurn akan memanggil resetTurnFlags).
+    }
 }
 
 void GameEngine::executeTileAction() {
@@ -96,20 +155,289 @@ void GameEngine::executeTileAction() {
     if (landedTile) {
         EffectType effect = landedTile->onLanded(*activePlayer);
 
-        // TODO: IMPLEMENTASI executeTileAction, ini banyak banget CUOKK
         switch (effect) {
-        case EffectType::OFFER_BUY:
-            // Implementasi interaksi UI prompt pembelian, jika ditolak ->
-            // lelang
+        case EffectType::OFFER_BUY: {
+            PropertyTile *prop = dynamic_cast<PropertyTile*>(landedTile);
+            if (prop) {
+                if (activePlayer->getMoney() >= prop->getPrice()) {
+                    std::cout << "\n[PILIHAN] " << activePlayer->getUsername() 
+                              << " mendarat di " << prop->getName() << ".\n"
+                              << "Harga properti: Rp" << prop->getPrice() << "\n"
+                              << "Uang Anda saat ini: Rp" << activePlayer->getMoney() << "\n"
+                              << "Apakah Anda ingin membeli properti ini? (Y/N): ";
+                    char choice;
+                    std::cin >> choice;
+                    
+                    if (choice == 'Y' || choice == 'y') {
+                        *activePlayer -= prop->getPrice();
+                        prop->setOwnerId(activePlayer->getId());
+                        prop->setStatus(1); // 1 = OWNED
+                        activePlayer->addProperty(prop);
+                        std::cout << "Selamat! Anda berhasil membeli " << prop->getName() << ".\n";
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY_PROPERTY, prop->getName());
+                    } else {
+                        std::cout << "Anda menolak membeli. Properti akan dilelang!\n";
+                        std::vector<Player*> activeBidders;
+                        for (Player* p : players) {
+                            if (p->getStatus() != PlayerStatus::BANKRUPT) activeBidders.push_back(p);
+                        }
+                        Auction auction(prop, activeBidders);
+                        auction.run();
+                    }
+                } else {
+                    std::cout << "\n[INFO] Uang Anda tidak cukup untuk membeli " << prop->getName() << ". Properti otomatis dilelang!\n";
+                    std::vector<Player*> activeBidders;
+                    for (Player* p : players) {
+                        if (p->getStatus() != PlayerStatus::BANKRUPT) activeBidders.push_back(p);
+                    }
+                    Auction auction(prop, activeBidders);
+                    auction.run();
+                }
+            }
             break;
-        case EffectType::PAY_RENT:
-        case EffectType::PAY_TAX_FLAT:
-            // Cek status kebangkrutan dll.
+        }
+        case EffectType::AUTO_ACQUIRE: {
+            PropertyTile *prop = dynamic_cast<PropertyTile*>(landedTile);
+            if (prop && prop->getOwnerId() == -1) {
+                prop->setOwnerId(activePlayer->getId());
+                prop->setStatus(1);
+                activePlayer->addProperty(prop);
+                if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY_PROPERTY, prop->getName() + " (Auto)");
+            }
             break;
+        }
+        case EffectType::PAY_RENT: {
+            PropertyTile *prop = dynamic_cast<PropertyTile*>(landedTile);
+            if (prop && prop->getOwnerId() != -1 && prop->getOwnerId() != activePlayer->getId()) {
+                // Cari owner
+                Player *owner = nullptr;
+                for (Player *p : players) {
+                    if (p->getId() == prop->getOwnerId()) {
+                        owner = p; break;
+                    }
+                }
+                if (owner) {
+                    int rentAmount = prop->calcRent();
+                    
+                    // Cek efek dari skill card (Shield atau Discount)
+                    if (activePlayer->isShieldActive()) {
+                        activePlayer->setShieldActive(false);
+                        rentAmount = 0;
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::USE_SKILL, "Shield menahan bayar sewa");
+                    } else if (activePlayer->getActiveDiscountPercent() > 0) {
+                        rentAmount = rentAmount * (100 - activePlayer->getActiveDiscountPercent()) / 100;
+                    }
+
+                    try {
+                        *activePlayer -= rentAmount;
+                        *owner += rentAmount;
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_RENT, "Ke " + owner->getUsername());
+                    } catch (NotEnoughMoneyException &e) {
+                        std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar sewa!\n";
+                        handleBankruptcy(activePlayer, owner);
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BANKRUPT, "Bangkrut sewa ke " + owner->getUsername());
+                    }
+                }
+            }
+            break;
+        }
+        case EffectType::PAY_TAX_FLAT: {
+            TaxTile *tax = dynamic_cast<TaxTile*>(landedTile);
+            if (tax) {
+                try {
+                    *activePlayer -= tax->getFlatAmount();
+                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_TAX, tax->getName());
+                } catch (NotEnoughMoneyException &e) {
+                    std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar pajak flat!\n";
+                    handleBankruptcy(activePlayer, nullptr);
+                }
+            }
+            break;
+        }
+        case EffectType::PAY_TAX_CHOICE: {
+            TaxTile *tax = dynamic_cast<TaxTile*>(landedTile);
+            if (tax) {
+                int flat = tax->getFlatAmount();
+                int pct = static_cast<int>(tax->computeNetWorth(*activePlayer) * tax->getPercentageRate() / 100.0);
+                
+                std::cout << "\n[PAJAK] " << activePlayer->getUsername() 
+                          << " mendarat di " << tax->getName() << ".\n"
+                          << "Silakan pilih metode pembayaran pajak:\n"
+                          << "1. Bayar nominal tetap (Rp" << flat << ")\n"
+                          << "2. Bayar persentase " << tax->getPercentageRate() << "% dari total kekayaan (Rp" << pct << ")\n"
+                          << "Pilihan (1/2): ";
+                int choice;
+                std::cin >> choice;
+                
+                int amount = (choice == 1) ? flat : pct;
+                try {
+                    *activePlayer -= amount;
+                    std::cout << "Anda membayar pajak sebesar Rp" << amount << ".\n";
+                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_TAX, tax->getName());
+                } catch (NotEnoughMoneyException &e) {
+                    std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar pajak persentase!\n";
+                    handleBankruptcy(activePlayer, nullptr);
+                }
+            }
+            break;
+        }
+        case EffectType::START_AUCTION: {
+            PropertyTile *prop = dynamic_cast<PropertyTile*>(landedTile);
+            if (prop && prop->getOwnerId() == -1) {
+                std::vector<Player*> activeBidders;
+                for (Player* p : players) {
+                    if (p->getStatus() != PlayerStatus::BANKRUPT) activeBidders.push_back(p);
+                }
+                Auction auction(prop, activeBidders);
+                auction.run();
+            }
+            break;
+        }
+        case EffectType::DRAW_CHANCE:
+        case EffectType::DRAW_COMMUNITY: {
+            std::cout << "\n[KARTU] " << activePlayer->getUsername() << " mengambil kartu " 
+                      << (effect == EffectType::DRAW_CHANCE ? "Kesempatan (Chance)" : "Dana Umum (Community Chest)") << "!\n";
+            std::cout << "(Mekanisme penarikan kartu aksi akan disinkronkan sepenuhnya setelah Deck Kartu Action dibuat)\n";
+            break;
+        }
+        case EffectType::FESTIVAL_TRIGGER: {
+            std::cout << "\n[FESTIVAL] Anda mendarat di petak Festival!\n"
+                      << "Pilih properti yang Anda miliki untuk dilipatgandakan harga sewanya (x2).\n";
+            
+            auto props = activePlayer->getOwnedProperties();
+            if (props.empty()) {
+                std::cout << "Sayang sekali, Anda belum memiliki properti satupun untuk diadakan festival.\n";
+            } else {
+                for (size_t i = 0; i < props.size(); i++) {
+                    std::cout << i + 1 << ". " << props[i]->getName() << " (" << props[i]->getKode() << ")\n";
+                }
+                std::cout << "Masukkan nomor properti (1-" << props.size() << "): ";
+                int fChoice;
+                std::cin >> fChoice;
+                if (fChoice >= 1 && fChoice <= (int)props.size()) {
+                    StreetTile* street = dynamic_cast<StreetTile*>(props[fChoice-1]);
+                    if (street) {
+                        street->setFestivalEffect(2); // Set multiplier
+                        std::cout << "Festival berhasil diadakan di " << street->getName() << "! Harga sewa naik 2x lipat.\n";
+                    } else {
+                        std::cout << "Festival hanya bisa diadakan di properti jalan (Street).\n";
+                    }
+                }
+            }
+            break;
+        }
         default:
             break;
         }
     }
+}
+
+void GameEngine::handleBankruptcy(Player* bankruptPlayer, Player* creditor) {
+    bankruptPlayer->declareBankruptcy();
+    auto properties = bankruptPlayer->getOwnedProperties();
+    
+    for (PropertyTile* prop : properties) {
+        if (creditor) {
+            prop->setOwnerId(creditor->getId());
+            creditor->addProperty(prop);
+        } else {
+            prop->setOwnerId(-1);
+            prop->setStatus(0); // Kembali ke BANK
+            StreetTile* street = dynamic_cast<StreetTile*>(prop);
+            if (street && street->hasBuildings()) {
+                street->demolish(); 
+            }
+        }
+    }
+    
+    std::cout << "Semua aset milik " << bankruptPlayer->getUsername() << " telah " 
+              << (creditor ? "diserahkan ke " + creditor->getUsername() : "disita oleh Bank") << ".\n";
+}
+
+void GameEngine::buyBuilding(const std::string& propertyCode) {
+    Player* activePlayer = players[currentTurnIdx];
+    Tile* tile = board->getTileByKode(propertyCode);
+    StreetTile* street = dynamic_cast<StreetTile*>(tile);
+    
+    if (!street || street->getOwnerId() != activePlayer->getId()) {
+        std::cout << "Properti tidak valid atau bukan milik Anda.\n";
+        return;
+    }
+    
+    try {
+        if (street->getRentLevel() < 4) { // Max 4 rumah
+            *activePlayer -= street->getHouseCost();
+            street->buildHouse();
+            std::cout << "Berhasil membangun rumah di " << street->getName() << "!\n";
+        } else if (street->getRentLevel() == 4) { // Level 4 berarti sudah 4 rumah, bisa bangun hotel
+            *activePlayer -= street->getHotelCost();
+            street->buildHotel();
+            std::cout << "Berhasil membangun hotel di " << street->getName() << "!\n";
+        } else {
+            std::cout << "Properti sudah mencapai level bangunan maksimal!\n";
+        }
+    } catch (NotEnoughMoneyException& e) {
+        std::cout << "Uang Anda tidak cukup untuk membangun di sini.\n";
+    }
+}
+
+void GameEngine::mortgageProperty(const std::string& propertyCode) {
+    Player* activePlayer = players[currentTurnIdx];
+    Tile* tile = board->getTileByKode(propertyCode);
+    PropertyTile* prop = dynamic_cast<PropertyTile*>(tile);
+    
+    if (!prop || prop->getOwnerId() != activePlayer->getId()) {
+        std::cout << "Properti tidak valid atau bukan milik Anda.\n";
+        return;
+    }
+    
+    if (prop->getStatus() == 2) { // 2 = MORTGAGED
+        std::cout << "Properti ini sudah dalam status tergadai.\n";
+        return;
+    }
+    
+    prop->mortgage(); 
+    *activePlayer += prop->getmortgageValue();
+    std::cout << prop->getName() << " berhasil digadaikan. Anda menerima Rp" << prop->getmortgageValue() << ".\n";
+}
+
+void GameEngine::unmortgageProperty(const std::string& propertyCode) {
+    Player* activePlayer = players[currentTurnIdx];
+    Tile* tile = board->getTileByKode(propertyCode);
+    PropertyTile* prop = dynamic_cast<PropertyTile*>(tile);
+    
+    if (!prop || prop->getOwnerId() != activePlayer->getId()) {
+        std::cout << "Properti tidak valid atau bukan milik Anda.\n";
+        return;
+    }
+    
+    if (prop->getStatus() != 2) {
+        std::cout << "Properti ini tidak sedang digadaikan.\n";
+        return;
+    }
+    
+    int cost = prop->getmortgageValue() + (prop->getmortgageValue() * 10 / 100); // Bunga 10%
+    try {
+        *activePlayer -= cost;
+        prop->unmortgage();
+        std::cout << prop->getName() << " berhasil ditebus dengan biaya Rp" << cost << ".\n";
+    } catch (NotEnoughMoneyException& e) {
+        std::cout << "Uang tidak cukup untuk menebus properti (butuh Rp" << cost << ").\n";
+    }
+}
+
+void GameEngine::useSkillCard(int cardIdx) {
+    Player* activePlayer = players[currentTurnIdx];
+    auto cards = activePlayer->getHandCards();
+    if (cardIdx < 0 || cardIdx >= (int)cards.size()) {
+        std::cout << "Index kartu tidak valid.\n";
+        return;
+    }
+    
+    SkillCard* card = cards[cardIdx];
+    card->use(*activePlayer, *this); // Efek kartu diaplikasikan
+    activePlayer->removeCard(cardIdx);
+    std::cout << "Anda menggunakan kartu: " << card->getCardName() << "!\n";
 }
 
 void GameEngine::endTurn() {

@@ -62,6 +62,8 @@ public:
     int getPrice() const { return price; }
     int getOwnerId() const { return ownerId; }
     int getStatus() const { return status; }
+    void setOwnerId(int id) { ownerId = id; }
+    void setStatus(int s) { status = s; }
     virtual void sellTobank(Player& owner);
 };
 

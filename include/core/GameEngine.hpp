@@ -31,29 +31,31 @@ private:
     // Utilitas Internal
     void checkWinCondition();
     void nextTurn();
+    void handleBankruptcy(Player* bankruptPlayer, Player* creditor = nullptr);
 
 public:
     GameEngine(Board *board, TransactionLogger *logger);
     ~GameEngine();
 
-    // Kontrol Alur Permainan
     void startNewGame(const std::vector<std::string>& playerNames);
     void loadGame(const std::string& filePath);
     void saveGame(const std::string& filePath);
     
-    // Logika Turn
-    void rollDice(int d1 = 0, int d2 = 0); // Support ATUR_DADU (overload)
+    void rollDice(int d1 = 0, int d2 = 0);
     void executeTileAction();
     void endTurn();
 
-    // Getters untuk Integrasi (Dibutuhkan SaveLoadManager & Auction)
+    void buyBuilding(const std::string& propertyCode);
+    void mortgageProperty(const std::string& propertyCode);
+    void unmortgageProperty(const std::string& propertyCode);
+    void useSkillCard(int cardIdx);
+
     Player* getCurrentPlayer() const;
     std::vector<Player*> getAllPlayers() const { return players; }
     Board* getBoard() const { return board; }
     int getCurrentRound() const { return roundCount; }
     int getCurrentTurnIdx() const { return currentTurnIdx; }
     
-    // Flags
     bool hasDiceRolled() const { return diceRolled; }
     bool isTurnEnded() const { return turnEnded; }
 };
