@@ -1,4 +1,4 @@
-#include "data-layer/Config.hpp"
+#include "../../include/data-layer/Config.hpp"
 
 tuple<int, string, string, string, string, int, int, vector<int>> Config::getPropertyConfig(string code)
 {
