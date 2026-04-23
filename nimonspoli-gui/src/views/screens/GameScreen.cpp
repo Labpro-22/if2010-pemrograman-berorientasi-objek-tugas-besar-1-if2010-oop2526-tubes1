@@ -30,16 +30,16 @@ static const TileDef TILE_DEFS[40] = {
     {"BKS", "BOTTOM", false},   // 9
     {"PEN", "BOTTOM", true },   // 10 bottom-left corner
 
-    // LEFT COLUMN top→bottom (spec 20..12)
-    {"SBY", "LEFT",   false},   // 11
-    {"SMG", "LEFT",   false},   // 12
-    {"DNU", "LEFT",   false},   // 13
-    {"MAL", "LEFT",   false},   // 14
-    {"STB", "LEFT",   false},   // 15
-    {"YOG", "LEFT",   false},   // 16
-    {"SOL", "LEFT",   false},   // 17
-    {"PLN", "LEFT",   false},   // 18
-    {"MGL", "LEFT",   false},   // 19
+    // LEFT COLUMN bottom->top (spec 20..12)
+    {"MGL", "LEFT",   false},   // 11  ← paling bawah setelah PEN
+    {"PLN", "LEFT",   false},   // 12
+    {"SOL", "LEFT",   false},   // 13  (DNU di aksi = index 13, tapi code DNU)
+    {"YOG", "LEFT",   false},   // 14
+    {"STB", "LEFT",   false},   // 15  (railroad)
+    {"MAL", "LEFT",   false},   // 16
+    {"SMG", "LEFT",   false},   // 17
+    {"DNU", "LEFT",   false},   // 18  ← DNU dari aksi.txt
+    {"SBY", "LEFT",   false},   // 19  ← paling atas sebelum BBP
 
     // TOP ROW left→right (spec 21..31)
     {"BBP", "TOP",    true },   // 20 top-left corner
@@ -146,7 +146,7 @@ void GameScreen::syncFromGameMaster() {
  
         mp.username      = p->getUsername();
         mp.money         = p->getBalance();
-        mp.position      = p->getPosition();
+        mp.position = std::max(0, p->getPosition() - 1);
         mp.cardCount     = p->getHandSize();
         mp.isCurrentTurn = (i == gs.getCurrPlayerIdx());
  
@@ -495,11 +495,11 @@ Vector2 GameScreen::getTileCenter(int idx) {
             y = boardY + boardSz - TILE_H/2.f;
         }
     }
-    else if (td.side == "LEFT") {
-        int slot = idx - 11; // SBY(11)=0, MGL(19)=8
-        x = boardX + TILE_H/2.f;
-        y = boardY + CORNER_SZ + slot*TILE_W + TILE_W/2.f;
-    }
+        else if (td.side == "LEFT") {
+            int slot = 8 - (idx - 11); // MGL(11)→slot8(bawah), SBY(19)→slot0(atas)
+            x = boardX + TILE_H/2.f;
+            y = boardY + CORNER_SZ + slot*TILE_W + TILE_W/2.f;
+        }
     else if (td.side == "TOP") {
         if (td.corner) {
             x = (idx == 20) ? boardX + CORNER_SZ/2.f
