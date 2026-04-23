@@ -16,4 +16,8 @@ FreeFromJailCard::~FreeFromJailCard()
 
 void FreeFromJailCard::execute(Player &p, GameState &gs)
 {
+    if (p.isInJail())
+    {
+        p.releaseFromJail();
+    }
 }

@@ -5,11 +5,7 @@
 
 class Property;
 
-DemolitionCard::DemolitionCard()
-{
-}
-
-DemolitionCard::DemolitionCard(const string &type, const string &description, bool used)
+DemolitionCard::DemolitionCard() : SkillCard("Hancurkan properti milik lawan", "DemolitionCard")
 {
 }
 

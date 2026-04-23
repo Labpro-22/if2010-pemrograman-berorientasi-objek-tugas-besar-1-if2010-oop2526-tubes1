@@ -5,11 +5,7 @@
 
 #define JAIL_INDEX 13
 
-GoToJailCard::GoToJailCard()
-{
-}
-
-GoToJailCard::GoToJailCard(const string &type, const string &description) : ChanceCard(type, description)
+GoToJailCard::GoToJailCard() : ChanceCard("Masuk Penjara")
 {
 }
 

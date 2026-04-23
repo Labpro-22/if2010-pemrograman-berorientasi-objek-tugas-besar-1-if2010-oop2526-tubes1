@@ -6,15 +6,9 @@ using namespace std;
 
 class ShieldCard : public SkillCard
 {
-private:
-    int duration;
-
 public:
     ShieldCard();
-    ShieldCard(const string &type, const string &description, bool used, int duration);
     ~ShieldCard();
-    int getDuration();
-    void decreaseDuration();
     void execute(Player &p, GameState &gs) override;
 };
 

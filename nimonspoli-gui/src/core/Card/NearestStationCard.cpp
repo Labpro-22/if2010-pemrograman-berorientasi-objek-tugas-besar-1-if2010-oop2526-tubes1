@@ -3,11 +3,7 @@
 #include "../GameState/GameState.hpp"
 #include "../Board/Board.hpp"
 
-NearestStationCard::NearestStationCard()
-{
-}
-
-NearestStationCard::NearestStationCard(const string &type, const string &description) : ChanceCard(type, description)
+NearestStationCard::NearestStationCard() : ChanceCard("Pergi ke stasiun terdekat.")
 {
 }
 

@@ -5,11 +5,7 @@
 
 class Board;
 
-LassoCard::LassoCard()
-{
-}
-
-LassoCard::LassoCard(const string &type, const string &description, bool used) : SkillCard(type, description, used)
+LassoCard::LassoCard() : SkillCard("Tarik lawan ke petakmu", "LassoCard")
 {
 }
 

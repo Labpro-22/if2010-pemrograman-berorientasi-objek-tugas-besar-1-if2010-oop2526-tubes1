@@ -2,16 +2,17 @@
 #include "../Player/Player.hpp"
 #include "../GameState/GameState.hpp"
 
-ElectionCard::ElectionCard()
-{
-}
-
-ElectionCard::ElectionCard(const string &type, const string &description, int amountPerPlayer) : GeneralFundCard(type, description), amountPerPlayer(amountPerPlayer)
+ElectionCard::ElectionCard() : GeneralFundCard("Anda mau nyaleg. Bayar M200 kepada setiap pemain."), amountPerPlayer(200)
 {
 }
 
 ElectionCard::~ElectionCard()
 {
+}
+
+int ElectionCard::getAmountPerPlayer() const
+{
+    return amountPerPlayer;
 }
 
 void ElectionCard::execute(Player &p, GameState &gs)

@@ -5,13 +5,8 @@
 
 class Board;
 
-MoveCard::MoveCard()
-{
-}
-
-MoveCard::MoveCard(const string &type, const string &description, bool used, int steps) : SkillCard(type, description, used), steps(steps)
-{
-}
+MoveCard::MoveCard() : SkillCard("Maju " + to_string(rand() % 6 + 1) + " Petak", "MoveCard"), steps(rand() % 6 + 1) {}
+MoveCard::MoveCard(int steps) : SkillCard("Maju " + to_string(steps) + " Petak", "MoveCard"), steps(steps) {}
 
 MoveCard::~MoveCard()
 {
@@ -20,6 +15,6 @@ MoveCard::~MoveCard()
 void MoveCard::execute(Player &p, GameState &gs)
 {
     int boardSize = gs.getBoard()->getSize();
-    int randomNum = (p.getPosition() + rand()) % boardSize;
-    p.setPosition(randomNum);
+    int newPos = (p.getPosition() + steps) % boardSize;
+    p.setPosition(newPos);
 }

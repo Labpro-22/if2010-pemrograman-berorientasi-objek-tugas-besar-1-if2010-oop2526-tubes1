@@ -3,11 +3,7 @@
 #include "../GameState/GameState.hpp"
 #include "../Board/Board.hpp"
 
-MoveToBackThreeCard::MoveToBackThreeCard()
-{
-}
-
-MoveToBackThreeCard::MoveToBackThreeCard(const string &type, const string &description) : ChanceCard(type, description)
+MoveToBackThreeCard::MoveToBackThreeCard() : ChanceCard("Mundur 3 petak.")
 {
 }
 
