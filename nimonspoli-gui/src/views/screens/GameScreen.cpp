@@ -86,20 +86,7 @@ bool GameScreen::isRealMode() const
     return guiManager != nullptr && guiManager->getGameMaster() != nullptr;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  syncFromGameMaster()
-//
-//  Dipanggil setiap frame di update() jika isRealMode() == true.
-//  Fungsi ini mengisi ulang MockGameState dari data real sehingga semua
-//  fungsi render (drawBoard, drawLeftPanel, dll.) tidak perlu diubah.
-//
-//  Apa yang disync:
-//    - currentTurn, maxTurn
-//    - players (username, balance, position, status, cardCount, isCurrentTurn)
-//    - properties (owner, mortgaged, status — dari Board + Property*)
-//
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ─── Update ──────────────────────────────────────────────────────────────────
 void GameScreen::update(float dt)
 {
     syncFromGameMaster();
@@ -167,6 +154,13 @@ void GameScreen::render(Window& window)
     drawAktaDialog();
     drawCetakPropertiDialog();
     drawAturDaduDialog();
+
+    drawGadaiDialog();
+    drawTebusDialog();
+    drawBangunDialog();
+    drawJualBangunanDialog();
+    drawSkillCardDialog();
+
     DrawFPS(LEFT_PANEL + 4, 4);
 }
 
@@ -270,8 +264,6 @@ void GameScreen::handleInput()
     if (IsKeyPressed(KEY_T) && isRealMode()) {
         GameMaster* gm = guiManager->getGameMaster();
         Player* cur = gm->getState().getCurrPlayer();
-        if (cur && selectedTile >= 0)
-            cur->setPosition(selectedTile + 1);
         if (cur && selectedTile >= 0) {
             cur->setPosition(selectedTile);  // 0-based internal
             std::cout << "[DEBUG] Teleport ke tile " << selectedTile

@@ -9,7 +9,7 @@
 #include "../../core/Card/DiscountCard.hpp"
 #include "../../core/Card/ShieldCard.hpp"
 #include "../../core/Card/TeleportCard.hpp"
-#include "../../core/Card/LassoCard.hpp"
+#include "../../core/Card/LassoCard.hpp"    
 #include "../../core/Card/DemolitionCard.hpp"
 
 #include <string>

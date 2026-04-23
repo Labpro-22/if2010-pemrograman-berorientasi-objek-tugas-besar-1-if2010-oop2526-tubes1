@@ -155,8 +155,14 @@ void GameScreen::drawRightPanel()
             switch (i) {
             case 0: handleLemparDadu(); break;
             case 1: triggerAturDaduDialog(); break;
+            case 2: triggerSkillCardDialog(); break;
+            case 3: triggerBangunDialog(); break;
+            case 4: triggerGadaiDialog(); break;
+            case 5: triggerTebusDialog(); break;
+            case 6: triggerJualBangunanDialog(); break;
             case 7: handleSimpan();     break;
             case 8:
+
                 if (guiManager && guiManager->getGameMaster()) {
                     GameMaster* gm = guiManager->getGameMaster();
                     gm->endTurn();

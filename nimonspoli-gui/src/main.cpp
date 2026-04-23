@@ -19,6 +19,7 @@
 #include "core/Property/PropertyFactory.hpp"
 #include "core/Board/BoardFactory.hpp"
 #include "core/utils/SaveLoadManager.hpp"
+#include "core/Commands/BankruptCommand.hpp"
 #include <fstream>
 #include <sstream>   // ← TAMBAHAN untuk std::istringstream
 #include <memory>
@@ -236,6 +237,9 @@ int main() {
         if (gui.getCurrentScreen()) {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
+            if (gs && gameMaster && gameMaster->getState().getPhase() == GamePhase::GAME_OVER) {
+                gs->gameOver = true;
+            }
         }
 
         // Di dalam loop, ganti bagian COM auto-play:
@@ -249,12 +253,29 @@ int main() {
                     && !comHasActed) {          // ← guard tambahan
                 comHasActed = true;             // ← set dulu sebelum execute
                 com->executeTurn(*gameMaster);
-                if (state.getPhase() != GamePhase::GAME_OVER) {
+                if (state.getPhase() != GamePhase::GAME_OVER && state.getPhase() != GamePhase::BANKRUPTCY)
                     gameMaster->endTurn();
+                if (state.getPhase() != GamePhase::GAME_OVER && state.getPhase() != GamePhase::BANKRUPTCY) 
                     gameMaster->beginTurn();
 
-                    gui.clearCommands();
-                }
+                gui.clearCommands();
+            }
+
+            // ini depend ke bayar sewa, bayar pajak, dan efek kartu
+
+            if (com && state.getPhase() == GamePhase::BANKRUPTCY) {
+                Player* creditor = nullptr; // ini dicek abis merge yaa
+                int debt = 0; // ini juga
+
+                int propIdxToSell = com->getPropertyCount() - 1; 
+                bool sellOverMortgage = false;
+
+                BankruptCommand botBankrupt(
+                    *gameMaster, state, com, creditor, 
+                    debt, sellOverMortgage, propIdxToSell
+                );
+                
+                botBankrupt.execute(*gameMaster);
             }
 
             // Reset guard kalau giliran berganti ke pemain baru
