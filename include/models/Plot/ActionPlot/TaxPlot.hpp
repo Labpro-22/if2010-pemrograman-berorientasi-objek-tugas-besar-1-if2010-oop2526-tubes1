@@ -24,5 +24,5 @@ public:
     TaxType getTaxType() const;
     int getFlatAmount() const;
     int getPercentage() const;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };

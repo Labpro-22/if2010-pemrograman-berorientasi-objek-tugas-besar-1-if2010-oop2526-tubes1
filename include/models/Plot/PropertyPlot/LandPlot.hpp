@@ -29,5 +29,5 @@ public:
     bool canBuild() const;
     int calculateRentPrice() const override;
     std::string getType() const override;
-    void startEvent() override;
+    void startEvent(PlotContext& ctx) override;
 };

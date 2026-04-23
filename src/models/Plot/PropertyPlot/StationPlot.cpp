@@ -24,3 +24,7 @@ int StationPlot::calculateRentPrice() const {
 std::string StationPlot::getType() const {
     return "Petak Stasiun";
 }
+
+void StationPlot::startEvent(PlotContext& ctx) {
+
+}

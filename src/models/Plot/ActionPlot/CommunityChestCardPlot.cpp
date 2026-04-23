@@ -8,7 +8,7 @@ std::string CommunityChestCardPlot::getType() const {
     return "Petak Dana Umum";
 }
 
-void CommunityChestCardPlot::startEvent() {
+void CommunityChestCardPlot::startEvent(PlotContext& ctx) {
     std::cout << "Kamu mendarat di Petak Dana Umum!" << std::endl;
     std::cout << "Mengambil kartu..." << std::endl;
 

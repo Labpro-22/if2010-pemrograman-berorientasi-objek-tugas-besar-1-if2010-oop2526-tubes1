@@ -5,6 +5,7 @@
 #include <map>
 #include "models/Plot/Colors.hpp"
 #include "models/Player/Player.hpp"
+#include "core/PlotContext.hpp"
 
 class Plot{
 protected:
@@ -20,6 +21,6 @@ public:
 
     virtual std::string getType() const = 0;
     virtual Color getColor() const;
-    virtual Player* getOwner() const;
+    virtual Player* getOwner(PlotContext& context) const;
     virtual void startEvent() = 0;
 };

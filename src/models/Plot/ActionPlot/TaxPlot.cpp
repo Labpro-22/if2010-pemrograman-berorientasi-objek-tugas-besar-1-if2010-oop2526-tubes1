@@ -23,7 +23,7 @@ int TaxPlot::getPercentage() const {
     return percentage;
 }
 
-void TaxPlot::startEvent() {
+void TaxPlot::startEvent(PlotContext& ctx) {
     if (taxType == TaxType::PPH) {
         std::cout << "Kamu mendarat di Pajak Penghasilan (PPH)!" << std::endl;
         std::cout << "Pilih opsi pembayaran pajak:" << std::endl;

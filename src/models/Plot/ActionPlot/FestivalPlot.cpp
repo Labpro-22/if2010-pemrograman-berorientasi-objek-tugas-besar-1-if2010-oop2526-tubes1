@@ -8,6 +8,6 @@ std::string FestivalPlot::getType() const {
     return "Petak Festival";
 }
 
-void FestivalPlot::startEvent() {
+void FestivalPlot::startEvent(PlotContext& ctx) {
     std::cout << "Kamu mendarat di petak Festival!" << std::endl;
 }
