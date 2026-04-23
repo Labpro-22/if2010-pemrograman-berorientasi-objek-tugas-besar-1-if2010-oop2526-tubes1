@@ -23,6 +23,10 @@ public:
     bool getIsMortgaged() const;
     void setMortgaged(bool status);
 
+    virtual void gadai();
+    virtual void tebus();
+    virtual void lelang();
+
     virtual int getSewa(int diceRoll = 0) const = 0;
     
     void injak(Player& p, int diceRoll = 0) override;

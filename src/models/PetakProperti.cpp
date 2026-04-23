@@ -27,6 +27,19 @@ int PetakProperti::getHargaBeli() const { return hargaBeli; }
 bool PetakProperti::getIsMortgaged() const { return isMortgaged; }
 void PetakProperti::setMortgaged(bool status) { isMortgaged = status; }
 
+void PetakProperti::gadai() {
+    isMortgaged = true;
+}
+
+void PetakProperti::tebus() {
+    isMortgaged = false;
+}
+
+void PetakProperti::lelang() {
+    owner = nullptr;
+    isMortgaged = false;
+}
+
 void PetakProperti::injak(Player& p, int diceRoll) {
     if (owner != nullptr && owner != &p) {
         std::cout << "Kamu mendarat di " << getName() << " (" << getShortName() << "), milik " << owner->getName() << "!\n\n";
