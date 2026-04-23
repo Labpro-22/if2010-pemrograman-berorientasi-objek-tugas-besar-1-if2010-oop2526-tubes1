@@ -15,11 +15,6 @@ int DiscountCard::getDuration() const
     return duration;
 }
 
-int DiscountCard::getDiscountPercent() const
-{
-    return discountPercent;
-}
-
 void DiscountCard::decreaseDuration()
 {
     duration--;
