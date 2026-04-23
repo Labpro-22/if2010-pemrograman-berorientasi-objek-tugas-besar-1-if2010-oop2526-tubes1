@@ -1,4 +1,8 @@
 #include "Player.hpp"
+#include "../Property/Property.hpp"
+#include "../Card/SkillCard.hpp"
+#include <sstream>
+#include <map>
 
 Player::Player(const std::string &username, int startingBalance) : username(username),
                                                                    balance(startingBalance),
@@ -113,7 +117,7 @@ int Player::getPropertyCount() const
     return properties.size();
 }
 
-// KARTU
+// SKILL CARD
 bool Player::addSkillCard(SkillCard *card)
 {
     if (skillCards.size() >= 3)
@@ -147,6 +151,33 @@ void Player::setCardUsedThisTurn(bool used)
 bool Player::hasUsedCardThisTurn() const
 {
     return cardUsedThisTurn;
+}
+
+void Player::forceAddSkillCard(SkillCard *card)
+{
+    if (card == nullptr)
+        return;
+
+    skillCards.push_back(card);
+}
+
+string Player::printSkillCards() const
+{
+    ostringstream out;
+
+    out << "Daftar Kartu Kemampuan Anda: \n";
+    for (size_t i = 0; i < skillCards.size(); ++i)
+    {
+        if (skillCards[i] == nullptr)
+            continue;
+
+        out << (i + 1) << ". "
+            << skillCards[i]->getType()
+            << " - "
+            << skillCards[i]->getDescription() << "\n";
+    }
+
+    return out.str();
 }
 
 // JAIL
@@ -216,4 +247,42 @@ int Player::getWealth() const
         total += p->getPurchasePrice();
     }
     return total;
+}
+
+string Player::cetakProperti() const
+{
+    ostringstream out;
+
+    if (properties.empty())
+    {
+        out << "Kamu belum memiliki properti apapun.\n";
+        return out.str();
+    }
+
+    out << "=== Properti Milik: " << getUsername() << " ===\n\n";
+
+    map<string, vector<Property *>> grouped;
+    int totalWealth = 0;
+
+    for (Property *prop : properties)
+    {
+        if (!prop)
+            continue;
+
+        grouped[prop->getColorGroup()].push_back(prop);
+        totalWealth += prop->calculateSellPrice();
+    }
+
+    for (const auto &[group, props] : grouped)
+    {
+        out << "[" << group << "]\n";
+        for (Property *prop : props)
+        {
+            out << "  - " << prop->printList() << "\n";
+        }
+        out << "\n";
+    }
+
+    out << "Total kekayaan properti: M" << totalWealth << "\n";
+    return out.str();
 }

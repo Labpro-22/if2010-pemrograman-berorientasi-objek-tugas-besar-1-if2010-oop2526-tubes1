@@ -170,14 +170,34 @@ void GameScreen::drawRightPanel()
     Color modeCol = isRealMode() ? Color{100,220,100,255} : Color{220,100,100,255};
     DrawText(modeStr, (int)rx+10, SCREEN_H-20, 11, modeCol);
 
-    DrawLine((int)rx+8, SCREEN_H-80, SCREEN_W-8, SCREEN_H-80, {60,60,80,255});
-    Rectangle logBtn = {rx+10, (float)SCREEN_H-70, RIGHT_PANEL-20, 32};
+    // ─── FOOTER BUTTONS ──────────────────────────────────────────────────────
+    float footerY = SCREEN_H - 140;
+    DrawLine((int)rx+8, (int)footerY, (int)SCREEN_W-8, (int)footerY, {60,60,80,255});
+
+    // 1. CETAK AKTA
+    Rectangle aktaBtn = {rx+10, footerY + 10, RIGHT_PANEL-20, 28};
+    DrawRectangleRec(aktaBtn, {40,42,54,255});
+    DrawRectangleLinesEx(aktaBtn, 1, {220,190,90,255});
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), aktaBtn))
+        triggerAktaDialog();
+    int aw = MeasureText("CETAK AKTA", 10);
+    DrawText("CETAK AKTA", (int)(rx+RIGHT_PANEL/2-aw/2), (int)footerY + 19, 10, {220,190,90,255});
+
+    // 2. CETAK PROPERTI
+    Rectangle propBtn = {rx+10, footerY + 44, RIGHT_PANEL-20, 28};
+    DrawRectangleRec(propBtn, {40,42,54,255});
+    DrawRectangleLinesEx(propBtn, 1, {80,130,200,255});
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), propBtn))
+        triggerCetakPropertiDialog(gameState.activePlayerIdx);
+    int pw = MeasureText("CETAK PROPERTI", 10);
+    DrawText("CETAK PROPERTI", (int)(rx+RIGHT_PANEL/2-pw/2), (int)footerY + 53, 10, {100,160,220,255});
+
+    // 3. LOG TRANSAKSI
+    Rectangle logBtn = {rx+10, footerY + 78, RIGHT_PANEL-20, 32};
     DrawRectangleRec(logBtn, {40,42,54,255});
     DrawRectangleLinesEx(logBtn, 1, {100,100,160,255});
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        CheckCollisionPointRec(GetMousePosition(), logBtn))
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), logBtn))
         showLogPopup = !showLogPopup;
     int lw = MeasureText("LOG TRANSAKSI", 11);
-    DrawText("LOG TRANSAKSI",
-             (int)(rx+RIGHT_PANEL/2-lw/2), SCREEN_H-58, 11, {150,150,200,255});
+    DrawText("LOG TRANSAKSI", (int)(rx+RIGHT_PANEL/2-lw/2), (int)footerY + 88, 11, {150,150,200,255});
 }

@@ -62,7 +62,8 @@ int main() {
         players.clear();
         properties.clear();
     };
-
+    
+    bool comHasActed = false;
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
 
@@ -231,10 +232,6 @@ int main() {
             auto* gs = dynamic_cast<GameScreen*>(gui.getCurrentScreen());
             if (gs) gs->syncDiceResult();
         }
-
-        // ── COM auto-play ─────────────────────────────────────────────────
-        // Di main.cpp, tambah variable di luar loop:
-        bool comHasActed = false;
 
         // Di dalam loop, ganti bagian COM auto-play:
         if (gameMaster) {
