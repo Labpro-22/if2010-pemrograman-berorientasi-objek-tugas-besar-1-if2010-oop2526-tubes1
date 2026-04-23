@@ -3,6 +3,7 @@
 #include "../Player/Player.hpp"
 #include "../Property/StreetProperty.hpp"
 #include "../utils/TransactionLogger.hpp"
+#include <vector>
 
 class FestivalCommand : public Command
 {
@@ -15,7 +16,11 @@ public:
     FestivalCommand(Player *p, TransactionLogger *logger, int turnNumber);
     void execute(GameMaster& gm) override;
 
+    // GUI API: digunakan oleh FestivalDialog di GameScreen
+    std::vector<StreetProperty*> getEligibleStreets() const;
+    void executeWithProperty(StreetProperty* selected);
+    Player* getPlayer() const { return p; }
+
 private:
-    StreetProperty *promptSelectProperty();
     void applyFestival(StreetProperty *prop);
 };

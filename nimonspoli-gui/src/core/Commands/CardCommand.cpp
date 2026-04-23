@@ -15,9 +15,7 @@ void CardCommand::execute(GameMaster& )
     if (!kartu)
         return;
 
-    std::cout << "\nKamu mendarat di Petak " << deckLabel << "!\n";
-    std::cout << "Mengambil kartu...\n";
-    std::cout << "Kartu: \"" << kartu->getDescription() << "\"\n";
+    lastDescription = kartu->getDescription();
 
     try
     {
@@ -25,9 +23,8 @@ void CardCommand::execute(GameMaster& )
     }
     catch (const InsufficientFundsException &e)
     {
-        
         deck->discard(kartu);
-        throw; 
+        throw;
     }
 
     if (logger)

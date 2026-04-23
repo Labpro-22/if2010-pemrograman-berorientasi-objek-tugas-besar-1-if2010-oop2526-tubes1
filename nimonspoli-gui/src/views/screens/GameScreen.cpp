@@ -4,6 +4,9 @@
 #include "../../core/Commands/LemparDaduCommand.hpp"
 #include "../../core/Board/Board.hpp"
 #include "../../core/Commands/BeliCommand.hpp"
+#include "../../core/Commands/BayarPajakCommand.hpp"
+#include "../../core/Commands/FestivalCommand.hpp"
+#include "../../core/Commands/CardCommand.hpp"
 
 #include "../../core/utils/SaveLoadManager.hpp"
 #include "../../core/Board/Board.hpp"
@@ -304,6 +307,24 @@ void GameScreen::syncDiceResult() {
     if (buyDialog.visible && gs.getPhase() != GamePhase::AWAITING_BUY) {
         buyDialog.visible = false;
     }
+
+    // ── Trigger dialog pajak (PPH) ─────────────────────────
+    if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
+        triggerTaxDialog();
+    if (taxDialog.visible && gs.getPhase() != GamePhase::AWAITING_TAX)
+        taxDialog.visible = false;
+
+    // ── Trigger dialog festival ────────────────────────────
+    if (gs.getPhase() == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
+        triggerFestivalDialog();
+    if (festivalDialog.visible && gs.getPhase() != GamePhase::AWAITING_FESTIVAL)
+        festivalDialog.visible = false;
+
+    // ── Trigger dialog kartu ──────────────────────────────
+    if (gs.getPhase() == GamePhase::SHOW_CARD && !cardDialog.visible)
+        triggerCardDialog();
+    if (cardDialog.visible && gs.getPhase() != GamePhase::SHOW_CARD)
+        cardDialog.visible = false;
 }
  
  
@@ -348,7 +369,10 @@ void GameScreen::render(Window& window) {
     drawBoard();
     drawDiceArea();   // overlay dadu di tengah board
     drawPopup();
-    drawBuyDialog(); 
+    drawBuyDialog();
+    drawTaxDialog();
+    drawFestivalDialog();
+    drawCardDialog();
     drawLogPopup();
     drawSavePopup();
     DrawFPS(LEFT_PANEL + 4, 4);
@@ -1761,5 +1785,363 @@ void GameScreen::drawLogPopup() {
         DrawText("Belum ada log.",
                  (int)(px+pw/2-tw/2), (int)(listY1+listH/2-10),
                  14, {100,100,140,255});
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  TaxDialog  ─ Pilih cara bayar PPH (flat vs persen)
+// ─────────────────────────────────────────────────────────────────────────────
+
+void GameScreen::triggerTaxDialog() {
+    if (!isRealMode()) return;
+    const GameState& gs = guiManager->getGameMaster()->getState();
+    Player* curP = gs.getCurrPlayer();
+    if (!curP) return;
+
+    taxDialog.flatAmount   = gs.getPendingPphFlat();
+    taxDialog.pctAmount    = gs.getPendingPphPct();
+    taxDialog.wealth       = curP->getWealth();
+    taxDialog.taxAmtPct    = (taxDialog.wealth * taxDialog.pctAmount) / 100;
+    taxDialog.canAffordFlat = curP->canAfford(taxDialog.flatAmount);
+    taxDialog.canAffordPct  = curP->canAfford(taxDialog.taxAmtPct);
+    taxDialog.visible      = true;
+}
+
+void GameScreen::drawTaxDialog() {
+    if (!taxDialog.visible) return;
+
+    // ── Overlay ──────────────────────────────────────────────────────────
+    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 160});
+
+    constexpr float PW = 460.f, PH = 340.f;
+    float px = SCREEN_W / 2.f - PW / 2.f;
+    float py = SCREEN_H / 2.f - PH / 2.f;
+
+    // Panel
+    DrawRectangle((int)px, (int)py, (int)PW, (int)PH, {22, 24, 38, 255});
+    DrawRectangleLinesEx({px, py, PW, PH}, 2.f, {180, 80, 60, 255});
+
+    // Header
+    DrawRectangle((int)px, (int)py, (int)PW, 52, {200, 60, 40, 255});
+    const char* title = "PAJAK PENGHASILAN (PPH)";
+    int tw = MeasureText(title, 16);
+    DrawText(title, (int)(px + PW/2 - tw/2), (int)(py + 18), 16, WHITE);
+
+    // Info kekayaan
+    float ry = py + 66;
+    auto& curP = gameState.players[gameState.activePlayerIdx];
+
+    DrawText("Total kekayaan kamu:", (int)(px + 20), (int)ry, 12, {150, 150, 190, 255});
+    std::string wStr = "M" + std::to_string(taxDialog.wealth);
+    int ww = MeasureText(wStr.c_str(), 14);
+    DrawText(wStr.c_str(), (int)(px + PW - 20 - ww), (int)(ry - 2), 14, {220, 200, 100, 255});
+
+    DrawLine((int)(px+16), (int)(ry+20), (int)(px+PW-16), (int)(ry+20), {60, 60, 90, 255});
+    ry += 30;
+
+    DrawText("Pilih cara pembayaran pajak:", (int)(px + 20), (int)ry, 12, {180, 180, 210, 255});
+    DrawText("(Pilih SEBELUM menghitung kekayaan!)", (int)(px + 20), (int)(ry + 16), 10, {120, 120, 160, 255});
+    ry += 40;
+
+    Vector2 mouse = GetMousePosition();
+    float btnW = (PW - 48) / 2.f;
+    float btnY = py + PH - 70;
+
+    // ── Tombol BAYAR FLAT ────────────────────────────────────────────────
+    Rectangle flatBtn = {px + 16, btnY, btnW, 52};
+    bool flatHov  = CheckCollisionPointRec(mouse, flatBtn) && taxDialog.canAffordFlat;
+    bool flatDis  = !taxDialog.canAffordFlat;
+    Color flatBg  = flatDis  ? Color{40, 42, 54, 255}
+                  : flatHov  ? Color{60, 170, 90, 255}
+                             : Color{40, 130, 70, 255};
+    DrawRectangleRec(flatBtn, flatBg);
+    DrawRectangleLinesEx(flatBtn, 1.5f, flatDis ? Color{60,60,80,255} : Color{80,210,110,255});
+
+    std::string flatLbl1 = "BAYAR FLAT";
+    std::string flatLbl2 = "M" + std::to_string(taxDialog.flatAmount);
+    int fl1 = MeasureText(flatLbl1.c_str(), 11);
+    int fl2 = MeasureText(flatLbl2.c_str(), 16);
+    DrawText(flatLbl1.c_str(), (int)(flatBtn.x + btnW/2 - fl1/2), (int)(btnY + 8), 11,
+             flatDis ? Color{80,80,100,255} : WHITE);
+    DrawText(flatLbl2.c_str(), (int)(flatBtn.x + btnW/2 - fl2/2), (int)(btnY + 24), 16,
+             flatDis ? Color{80,80,100,255} : Color{220,255,220,255});
+    if (flatDis) {
+        const char* nd = "Tidak mampu";
+        int ndw = MeasureText(nd, 9);
+        DrawText(nd, (int)(flatBtn.x+btnW/2-ndw/2), (int)(btnY+42), 9, {220,80,80,255});
+    }
+
+    // ── Tombol BAYAR PERSEN ──────────────────────────────────────────────
+    Rectangle pctBtn = {px + 16 + btnW + 16, btnY, btnW, 52};
+    bool pctHov  = CheckCollisionPointRec(mouse, pctBtn) && taxDialog.canAffordPct;
+    bool pctDis  = !taxDialog.canAffordPct;
+    Color pctBg  = pctDis  ? Color{40, 42, 54, 255}
+                 : pctHov  ? Color{60, 110, 200, 255}
+                            : Color{40, 80, 160, 255};
+    DrawRectangleRec(pctBtn, pctBg);
+    DrawRectangleLinesEx(pctBtn, 1.5f, pctDis ? Color{60,60,80,255} : Color{100,150,240,255});
+
+    std::string pctLbl1 = std::to_string(taxDialog.pctAmount) + "% dari kekayaan";
+    std::string pctLbl2 = "M" + std::to_string(taxDialog.taxAmtPct);
+    int pl1 = MeasureText(pctLbl1.c_str(), 11);
+    int pl2 = MeasureText(pctLbl2.c_str(), 16);
+    DrawText(pctLbl1.c_str(), (int)(pctBtn.x + btnW/2 - pl1/2), (int)(btnY + 8), 11,
+             pctDis ? Color{80,80,100,255} : WHITE);
+    DrawText(pctLbl2.c_str(), (int)(pctBtn.x + btnW/2 - pl2/2), (int)(btnY + 24), 16,
+             pctDis ? Color{80,80,100,255} : Color{200,220,255,255});
+    if (pctDis) {
+        const char* nd = "Tidak mampu";
+        int ndw = MeasureText(nd, 9);
+        DrawText(nd, (int)(pctBtn.x+btnW/2-ndw/2), (int)(btnY+42), 9, {220,80,80,255});
+    }
+
+    // ── Handle klik ──────────────────────────────────────────────────────
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && isRealMode()) {
+        GameMaster* gm = guiManager->getGameMaster();
+        GameState&  gs = gm->getState();
+        Player*  player = gs.getCurrPlayer();
+        Bank*    bank   = gs.getBank();
+        Board*   board  = gs.getBoard();
+        int      pos    = player ? player->getPosition() : -1;
+        Tile*    tile   = (board && pos >= 0) ? board->getTile(pos) : nullptr;
+        TaxTile* taxTile = dynamic_cast<TaxTile*>(tile);
+
+        if (flatHov && !flatDis && player && bank && taxTile) {
+            BayarPajakCommand* cmd = new BayarPajakCommand(
+                player, taxTile, bank, gs.getLogger(), gs.getTaxConfig(), gs.getCurrTurn());
+            // Langsung eksekusi pilihan flat (tidak di-push ke queue karena perlu choice)
+            try { cmd->handlePPHChoice(1); }
+            catch (...) { delete cmd; gs.setPhase(GamePhase::BANKRUPTCY); taxDialog.visible = false; return; }
+            delete cmd;
+            gs.setPhase(GamePhase::PLAYER_TURN);
+            taxDialog.visible = false;
+        } else if (pctHov && !pctDis && player && bank && taxTile) {
+            BayarPajakCommand* cmd = new BayarPajakCommand(
+                player, taxTile, bank, gs.getLogger(), gs.getTaxConfig(), gs.getCurrTurn());
+            try { cmd->handlePPHChoice(2); }
+            catch (...) { delete cmd; gs.setPhase(GamePhase::BANKRUPTCY); taxDialog.visible = false; return; }
+            delete cmd;
+            gs.setPhase(GamePhase::PLAYER_TURN);
+            taxDialog.visible = false;
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FestivalDialog  ─ Pilih properti untuk festival (scrollable list)
+// ─────────────────────────────────────────────────────────────────────────────
+
+void GameScreen::triggerFestivalDialog() {
+    if (!isRealMode()) return;
+    const GameState& gs = guiManager->getGameMaster()->getState();
+    Player* curP = gs.getCurrPlayer();
+    if (!curP) return;
+
+    // Ambil list streets dari player real
+    festivalDialog.streets.clear();
+    for (Property* prop : curP->getProperties()) {
+        StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
+        if (sp && sp->getStatus() != PropertyStatus::MORTGAGED)
+            festivalDialog.streets.push_back(sp);
+    }
+
+    festivalDialog.scrollY   = 0.f;
+    festivalDialog.hoveredIdx = -1;
+    festivalDialog.visible   = true;
+}
+
+void GameScreen::drawFestivalDialog() {
+    if (!festivalDialog.visible) return;
+
+    // ── Overlay ──────────────────────────────────────────────────────────
+    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 160});
+
+    constexpr float PW = 500.f, PH = 480.f;
+    float px = SCREEN_W / 2.f - PW / 2.f;
+    float py = SCREEN_H / 2.f - PH / 2.f;
+
+    // Panel
+    DrawRectangle((int)px, (int)py, (int)PW, (int)PH, {22, 24, 38, 255});
+    DrawRectangleLinesEx({px, py, PW, PH}, 2.f, {239, 159, 39, 255});
+
+    // Header
+    DrawRectangle((int)px, (int)py, (int)PW, 52, {180, 110, 20, 255});
+    const char* title = "FESTIVAL — Pilih Properti";
+    int tw = MeasureText(title, 16);
+    DrawText(title, (int)(px + PW/2 - tw/2), (int)(py + 18), 16, WHITE);
+
+    // Tombol X (batal)
+    Rectangle xBtn = {px + PW - 36, py + 12, 28, 28};
+    bool xHov = CheckCollisionPointRec(GetMousePosition(), xBtn);
+    DrawRectangleRec(xBtn, xHov ? Color{180,60,60,255} : Color{110,40,40,255});
+    DrawText("X", (int)(xBtn.x+9), (int)(xBtn.y+8), 12, WHITE);
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && xHov && isRealMode()) {
+        guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
+        festivalDialog.visible = false;
+        return;
+    }
+
+    DrawText("Klik properti untuk mengaktifkan festival:",
+             (int)(px + 16), (int)(py + 58), 11, {180, 180, 210, 255});
+
+    // ── Scrollable list ───────────────────────────────────────────────────
+    float listX  = px + 16;
+    float listY  = py + 76;
+    float listW  = PW - 32;
+    float listH  = PH - 80 - 56; // sisakan ruang footer
+    float rowH   = 62.f;
+    auto& streets = festivalDialog.streets;
+
+    float totalH = streets.size() * rowH;
+
+    // Scroll
+    Rectangle listArea = {listX, listY, listW, listH};
+    if (CheckCollisionPointRec(GetMousePosition(), listArea)) {
+        float wheel = GetMouseWheelMove();
+        festivalDialog.scrollY -= wheel * 40.f;
+        festivalDialog.scrollY  = std::max(0.f, std::min(festivalDialog.scrollY,
+                                            std::max(0.f, totalH - listH)));
+    }
+
+    Vector2 mouse = GetMousePosition();
+    BeginScissorMode((int)listX, (int)listY, (int)listW, (int)listH);
+    for (int i = 0; i < (int)streets.size(); i++) {
+        StreetProperty* sp = streets[i];
+        float ry = listY + i * rowH - festivalDialog.scrollY;
+        if (ry + rowH < listY || ry > listY + listH) continue;
+
+        bool hov = CheckCollisionPointRec(mouse, {listX, ry, listW, rowH - 4});
+        Color rowBg = hov ? Color{45, 50, 72, 255} : Color{30, 32, 48, 255};
+        DrawRectangle((int)listX, (int)ry, (int)listW, (int)(rowH - 4), rowBg);
+        DrawRectangleLinesEx({listX, ry, listW, rowH - 4}, 1.f,
+                             hov ? Color{239,159,39,255} : Color{60,60,90,255});
+
+        // Festival mult badge
+        int mult = sp->getFestivalMultiplier();
+        std::string multStr = "x" + std::to_string(mult);
+        Color multCol = (mult == 1) ? Color{100,100,140,255}
+                      : (mult == 2) ? Color{239,159,39,255}
+                      : (mult == 4) ? Color{186,117,23,255}
+                                    : Color{133,79,11,255};
+        DrawText(multStr.c_str(), (int)(listX + 10), (int)(ry + 10), 16, multCol);
+
+        // Nama & kode
+        DrawText(sp->getCode().c_str(), (int)(listX + 50), (int)(ry + 8), 13, WHITE);
+        DrawText(sp->getName().c_str(), (int)(listX + 50), (int)(ry + 26), 11, {180,180,200,255});
+
+        // Sewa saat ini
+        int rent = sp->calculateRentPrice(0, 1, false);
+        std::string rentStr = "Sewa: M" + std::to_string(rent);
+        int rw = MeasureText(rentStr.c_str(), 11);
+        DrawText(rentStr.c_str(), (int)(listX + listW - rw - 12), (int)(ry + 8), 11, {100,220,100,255});
+
+        // Durasi festival jika aktif
+        if (mult > 1) {
+            std::string durStr = "Durasi: " + std::to_string(sp->getFestivalDuration()) + " giliran";
+            int dw = MeasureText(durStr.c_str(), 10);
+            DrawText(durStr.c_str(), (int)(listX + listW - dw - 12), (int)(ry + 26), 10, multCol);
+        }
+
+        // Klik → apply festival
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hov && isRealMode()) {
+            GameMaster* gm = guiManager->getGameMaster();
+            GameState&  gs = gm->getState();
+            Player* curP   = gs.getCurrPlayer();
+            if (curP) {
+                FestivalCommand* cmd = new FestivalCommand(curP, gs.getLogger(), gs.getCurrTurn());
+                cmd->executeWithProperty(sp);
+                delete cmd;
+            }
+            gs.setPhase(GamePhase::PLAYER_TURN);
+            festivalDialog.visible = false;
+            EndScissorMode();
+            return;
+        }
+    }
+    EndScissorMode();
+
+    // Empty state
+    if (streets.empty()) {
+        const char* msg = "Kamu tidak punya properti lahan yang memenuhi syarat.";
+        int mw = MeasureText(msg, 11);
+        DrawText(msg, (int)(listX + listW/2 - mw/2), (int)(listY + listH/2 - 8), 11, {150,150,180,255});
+    }
+
+    // Scrollbar
+    if (totalH > listH) {
+        float sbH = listH * (listH / totalH);
+        float sbY = listY + (festivalDialog.scrollY / totalH) * listH;
+        DrawRectangle((int)(listX + listW - 5), (int)listY, 4, (int)listH, {40,42,58,255});
+        DrawRectangle((int)(listX + listW - 5), (int)sbY,   4, (int)sbH,   {200,140,40,255});
+    }
+
+    // Footer hint
+    DrawText("Klik properti untuk mengaktifkan | X untuk batal",
+             (int)(px + 16), (int)(py + PH - 34), 10, {100, 100, 140, 255});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CardDialog  ─ Tampilkan hasil kartu Kesempatan / Dana Umum
+// ─────────────────────────────────────────────────────────────────────────────
+
+void GameScreen::triggerCardDialog() {
+    if (!isRealMode()) return;
+    const GameState& gs = guiManager->getGameMaster()->getState();
+
+    cardDialog.deckLabel   = gs.getPendingCardDeck();
+    cardDialog.description = gs.getPendingCardDesc();
+    cardDialog.visible     = true;
+}
+
+void GameScreen::drawCardDialog() {
+    if (!cardDialog.visible) return;
+
+    // ── Overlay ──────────────────────────────────────────────────────────
+    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 160});
+
+    constexpr float PW = 440.f, PH = 260.f;
+    float px = SCREEN_W / 2.f - PW / 2.f;
+    float py = SCREEN_H / 2.f - PH / 2.f;
+
+    // Pilih warna berdasarkan deck
+    bool isKSP = (cardDialog.deckLabel == "Kesempatan");
+    Color hdrCol  = isKSP ? Color{180, 120, 0, 255}   : Color{60, 60, 200, 255};
+    Color bordCol = isKSP ? Color{240, 180, 40, 255}   : Color{100, 120, 240, 255};
+    Color iconCol = isKSP ? Color{255, 200, 60, 255}   : Color{140, 160, 255, 255};
+
+    // Panel
+    DrawRectangle((int)px, (int)py, (int)PW, (int)PH, {22, 24, 38, 255});
+    DrawRectangleLinesEx({px, py, PW, PH}, 2.f, bordCol);
+
+    // Header
+    DrawRectangle((int)px, (int)py, (int)PW, 52, hdrCol);
+    // Icon
+    const char* icon = isKSP ? "?" : "$";
+    DrawText(icon, (int)(px + 20), (int)(py + 14), 22, iconCol);
+    std::string deckLabel = cardDialog.deckLabel;
+    int dlw = MeasureText(deckLabel.c_str(), 17);
+    DrawText(deckLabel.c_str(), (int)(px + PW/2 - dlw/2), (int)(py + 17), 17, WHITE);
+
+    // Deskripsi kartu (word-wrap sederhana — satu blok)
+    float textX = px + 24;
+    float textY = py + 70;
+    DrawText(cardDialog.description.c_str(), (int)textX, (int)textY, 13, {220, 220, 240, 255});
+
+    // Garis pemisah
+    DrawLine((int)(px+16), (int)(py+PH-64), (int)(px+PW-16), (int)(py+PH-64), {60,60,90,255});
+
+    // Tombol OK
+    float btnW = 120.f;
+    Rectangle okBtn = {px + PW/2 - btnW/2, py + PH - 52, btnW, 38};
+    bool okHov = CheckCollisionPointRec(GetMousePosition(), okBtn);
+    DrawRectangleRec(okBtn, okHov ? Color{80, 160, 100, 255} : Color{50, 110, 70, 255});
+    DrawRectangleLinesEx(okBtn, 1.5f, Color{100, 200, 130, 255});
+    int okw = MeasureText("OK", 14);
+    DrawText("OK", (int)(okBtn.x + btnW/2 - okw/2), (int)(okBtn.y + 11), 14, WHITE);
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && okHov) {
+        if (isRealMode())
+            guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
+        cardDialog.visible = false;
     }
 }

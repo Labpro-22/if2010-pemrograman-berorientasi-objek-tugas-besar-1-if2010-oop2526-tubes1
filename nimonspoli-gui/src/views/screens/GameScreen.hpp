@@ -3,6 +3,7 @@
 #include "../IScreen.hpp"
 #include "../../core/utils/TransactionLogger.hpp"
 #include "../GUIManager.hpp"
+#include "../../core/Property/StreetProperty.hpp"
 
 #include <string>
 #include <vector>
@@ -183,7 +184,42 @@ private:
     void drawBuyDialog();    // render dialog beli/skip
     void triggerBuyDialog(int tileIdx); // dipanggil setelah dadu mendarat di properti BANK
 
-    
+
+    // ── Dialog Pajak (TaxDialog) ───────────────────────────────
+    struct TaxDialogState {
+        bool visible    = false;
+        int  flatAmount = 0;    // PPH flat M
+        int  pctAmount  = 0;    // PPH persen %
+        int  wealth     = 0;    // total kekayaan pemain
+        bool canAffordFlat = true;
+        bool canAffordPct  = true;
+        int  taxAmtPct  = 0;    // M yang harus dibayar jika pilih persen
+    } taxDialog;
+
+    void triggerTaxDialog();    // dipanggil saat phase == AWAITING_TAX
+    void drawTaxDialog();       // render panel + 2 tombol
+
+    // ── Dialog Festival (FestivalDialog) ──────────────────────
+    struct FestivalDialogState {
+        bool visible   = false;
+        float scrollY  = 0.f;
+        std::vector<StreetProperty*> streets; // list properti eligible
+        int hoveredIdx = -1;
+    } festivalDialog;
+
+    void triggerFestivalDialog();  // dipanggil saat phase == AWAITING_FESTIVAL
+    void drawFestivalDialog();     // render scrollable list
+
+    // ── Dialog Kartu (CardDialog) ─────────────────────────────
+    struct CardDialogState {
+        bool visible     = false;
+        std::string deckLabel;    // "Kesempatan" atau "Dana Umum"
+        std::string description;  // teks kartu
+    } cardDialog;
+
+    void triggerCardDialog();   // dipanggil saat phase == SHOW_CARD
+    void drawCardDialog();      // render popup panel + tombol OK
+
 
     // ── Private methods ──────────────────────────────────────────────────
     Color   getGroupColor(const std::string& group);

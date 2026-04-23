@@ -67,9 +67,11 @@ Board* BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, c
         if(t) tileMap[a.id] = t;
     }
 
-    vector<Tile *> allTiles;
-    for(auto& [id, tile]: tileMap){
-        allTiles.push_back(tile);
+    int maxId = tileMap.rbegin()->first;        
+    vector<Tile *> allTiles(maxId + 1, nullptr); 
+    for (auto &[id, tile] : tileMap)
+    {
+        allTiles[id] = tile;
     }
     return new Board(allTiles, allTiles.size());
 }
