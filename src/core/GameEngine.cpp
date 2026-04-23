@@ -2,23 +2,164 @@
 
 #include <stdexcept>
 
-GameEngine::GameEngine() : state(100) {}
+GameEngine::GameEngine() : state() {
+    loadGameConfig();
+}
 
-void GameEngine::startNewGame(const std::vector<std::string>& playerNames, int startingCash, int maxTurn) {
+void GameEngine::startNewGame(const std::vector<std::string>& playerNames) {
     if (playerNames.empty()) {
         throw std::invalid_argument("Minimal harus ada satu pemain.");
     }
-    if (startingCash < 0) {
-        throw std::invalid_argument("startingCash tidak boleh negatif.");
-    }
 
-    state = GameState(maxTurn);
     for (const std::string& name : playerNames) {
-        state.addPlayer(Player(name, startingCash));
+        state.addPlayer(Player(name, state.getStartingCash()));
     }
 
     turnManager.startTurn(state.getCurrentPlayer(), state);
 }
+
+void GameEngine::loadGameConfig() {
+    //Berikan opsi untuk menggunakan config default
+    bool useDefault = CommandHandler::promptYesNo("Apakah anda ingin menggunakan konfigurasi default?");
+
+    //Load property
+    std::string propertyPath;
+    if (useDefault){
+        propertyPath = ConfigLoader::configPath + ConfigLoader::defaultPropertyFileName;
+    }
+    else{
+        bool isValid = false;
+        while (true){
+            propertyPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi property");
+            try{
+                auto property = ConfigLoader::loadProperty(propertyPath);
+                //TODO do something
+            }
+            catch (GameException e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load station
+    std::string stationPath;
+    if (useDefault){
+        stationPath = ConfigLoader::configPath + ConfigLoader::defaultStationFileName;
+    }
+    else{
+        while (true){
+            stationPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi station");
+            try{
+                auto station = ConfigLoader::loadRailroad(stationPath);
+                StationPlot::setRentPriceTable(station);
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load utility
+    std::string utilityPath;
+    if (useDefault){
+        utilityPath = ConfigLoader::configPath + ConfigLoader::defaultUtilityFileName;
+    }
+    else{
+        while (true){
+            utilityPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi utility");
+            try{
+                auto utility = ConfigLoader::loadUtility(utilityPath);
+                UtilityPlot::setRentPriceTable(utility);
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load action
+    std::string actionPath;
+    if (useDefault){
+        actionPath = ConfigLoader::configPath + ConfigLoader::defaultActionFileName;
+    }
+    else{
+        while (true){
+            actionPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi action");
+            try{
+                auto action = ConfigLoader::loadAction(actionPath);
+                // TODO do something
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load tax
+    std::string taxPath;
+    if (useDefault){
+        taxPath = ConfigLoader::configPath + ConfigLoader::defaultTaxFileName;
+    }
+    else{
+        while (true){
+            taxPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi tax");
+            try{
+                auto tax = ConfigLoader::loadTax(taxPath);
+                TaxPlot::setFlatAmount(std::get<0>(tax));
+                TaxPlot::setPPH(std::get<1>(tax));
+                TaxPlot::setPBM(std::get<2>(tax));
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load special
+    std::string specialPath;
+    if (useDefault){
+        specialPath = ConfigLoader::configPath + ConfigLoader::defaultSpecialFileName;
+    }
+    else{
+        while (true){
+            specialPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi special");
+            try{
+                auto special = ConfigLoader::loadSpecial(specialPath);
+                state.setSalary(std::get<0>(special));
+                state.setJailFine(std::get<1>(special));
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+
+    // Load misc
+    std::string miscPath;
+    if (useDefault){
+        miscPath = ConfigLoader::configPath + ConfigLoader::defaultMiscFileName;
+    }
+    else{
+        while (true){
+            miscPath = CommandHandler::promptInput("Masukkan lokasi path untuk konfigurasi misc");
+            try{
+                auto misc = ConfigLoader::loadMisc(miscPath);
+                state.setMaxTurn(std::get<0>(misc));
+                state.setSalary(std::get<0>(misc));
+                break;
+            }
+            catch (const GameException& e){
+                std::cout << e.what(); //TODO: tampilkan dengan renderer
+            }
+        }
+    }
+}
+
 
 void GameEngine::loadGame(const GameState& loadedState) {
     state = loadedState;

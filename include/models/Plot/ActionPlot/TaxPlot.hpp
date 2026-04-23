@@ -4,8 +4,7 @@
 
 class TaxPlot : public ActionPlot {
 protected:
-    int flatAmount;
-    static int PPH, PBM;
+    static int FLAT, PPH, PBM;
 
 public:
     TaxPlot(std::string name, std::string code, Color color);
@@ -13,4 +12,7 @@ public:
 
     std::string getType() const override;
     int getFlatAmount(PlotContext& ctx) const;
+    static void setFlatAmount(int amount);
+    static void setPPH(int amount);
+    static void setPBM(int amount);
 };

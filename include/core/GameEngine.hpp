@@ -6,6 +6,7 @@
 #include "core/services/EffectResolver.hpp"
 #include "core/GameState.hpp"
 #include "core/TurnManager.hpp"
+#include "utils/ConfigLoader.hpp"
 
 class GameEngine {
 private:
@@ -17,7 +18,8 @@ private:
 public:
     GameEngine();
 
-    void startNewGame(const std::vector<std::string>& playerNames, int startingCash = 1500, int maxTurn = 100);
+    void startNewGame(const std::vector<std::string>& playerNames); //TODO: handle player names di dalamnya
+    void loadGameConfig();
     void loadGame(const GameState& loadedState);
     void run(const std::vector<std::string>& scriptedCommands);
 

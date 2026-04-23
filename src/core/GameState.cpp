@@ -2,9 +2,9 @@
 
 #include <stdexcept>
 
-GameState::GameState(int maxTurn)
+GameState::GameState()
     : currentPlayerIdx(0),
-      maxTurn(maxTurn),
+      maxTurn(0),
       currentTurn(1),
       gameOver(false),
       board(std::make_shared<Board>()) {
@@ -58,9 +58,25 @@ int GameState::getCurrentTurn() const {
     return currentTurn;
 }
 
+int GameState::getSalary() const{
+    return salary;
+}
+
+int GameState::getJailFine() const{
+    return jailFine;
+}
+
+int GameState::getStartingCash() const{
+    return startingCash;
+}
+
 void GameState::setCurrentPlayerIdx(int idx) {
     currentPlayerIdx = idx;
     clampCurrentPlayerIndex();
+}
+
+void GameState::setMaxTurn(int maxTurn){
+    this->maxTurn = maxTurn;
 }
 
 void GameState::setCurrentTurn(int turn) {
@@ -71,6 +87,18 @@ void GameState::setCurrentTurn(int turn) {
     if (currentTurn > maxTurn) {
         gameOver = true;
     }
+}
+
+void GameState::setSalary(int amount){
+    salary = amount;
+}
+
+void GameState::setJailFine(int amount){
+    jailFine = amount;
+}
+
+void GameState::setStartingCash(int amount){
+    startingCash = amount;
 }
 
 void GameState::nextPlayer() {

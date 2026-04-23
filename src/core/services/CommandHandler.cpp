@@ -116,3 +116,37 @@ std::unique_ptr<Command> CommandHandler::parse(const std::string& rawCommand) co
 bool CommandHandler::execute(const Command& command, GameState& state, EffectResolver& effectResolver, TurnManager& turnManager) const {
     return command.execute(state, effectResolver, turnManager);
 }
+
+std::string CommandHandler::promptInput(std::string prompt){
+    //TODO: gunakan renderer untuk menampilkan messagenya dan sesuaikan dengan formatter
+    std::cout << prompt << ": ";
+
+    std::string answer;
+    std::cin >> answer;
+    return answer;
+}
+
+bool CommandHandler::promptYesNo(std::string prompt){
+    //TODO: gunakan renderer untuk menampilkan messagenya dan sesuaikan dengan formatter
+    while(true){
+        try{
+            std::cout << prompt << " (y/n): ";
+
+            std::string answer;
+            std::cin >> answer;
+            if (answer.compare("y") || answer.compare("Y") || answer.compare("Yes") || answer.compare("yes") || answer.compare("YES")){
+                return true;
+            }
+            else if (answer.compare("n") || answer.compare("N") || answer.compare("No") || answer.compare("no") || answer.compare("NO")){
+                return false;
+            }
+            else{
+                throw InvalidInputException();
+            }
+        } catch (GameException e){
+            //TODO: gunakan renderer untuk menampilkan messagenya
+            cout << e.what();
+        }
+    }
+    return true;
+}

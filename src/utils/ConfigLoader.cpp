@@ -1,5 +1,14 @@
 #include "utils/ConfigLoader.hpp"
 
+const std::string ConfigLoader::configPath = "config/ ";
+const std::string ConfigLoader::defaultPropertyFileName = "property.txt";
+const std::string ConfigLoader::defaultStationFileName = "railroad.txt";
+const std::string ConfigLoader::defaultUtilityFileName = "utility.txt";
+const std::string ConfigLoader::defaultTaxFileName = "tax.txt";
+const std::string ConfigLoader::defaultActionFileName = "aksi.txt";
+const std::string ConfigLoader::defaultSpecialFileName = "special.txt";
+const std::string ConfigLoader::defaultMiscFileName = "misc.txt";
+
 std::ifstream ConfigLoader::open(std::string path){
     std::ifstream file(path);
     if (!file){
