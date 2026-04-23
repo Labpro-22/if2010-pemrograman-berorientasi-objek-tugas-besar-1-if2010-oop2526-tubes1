@@ -1,7 +1,7 @@
 #include "BoardFactory.hpp"
 
 BoardFactory::BoardFactory(){}
-Board BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, const vector<ActionData> &actionDataList, SpecialConfig &config, CardDeck<Card> *chanceCard, CardDeck<Card> *genFundCard)
+Board* BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, const vector<ActionData> &actionDataList, SpecialConfig &config, CardDeck<Card> *chanceCard, CardDeck<Card> *genFundCard, const std::vector<std::unique_ptr<Property>> &properties)
 {
     std::map<int, Tile *> tileMap;
     for (const auto &a : actionDataList)
@@ -36,16 +36,32 @@ Board BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, co
     }
 
     for(const auto& a:propertyDataList ){
+
+        Property *linkedProp = nullptr;
+        for (auto &p : properties)
+        {
+            if (p->getCode() == a.code)
+            {
+                linkedProp = p.get(); 
+                break;
+            }
+        }
         Tile *t = nullptr;
         if(a.type == "STREET"){
-            t = new StreetTile(a.id, a.color, TileType::STREET, a.name, a.code);
+            auto *st = new StreetTile(a.id, a.color, TileType::STREET, a.name, a.code);
+            st->setProperty(linkedProp); 
+            t = st;
         }
         else if(a.type =="RAILROAD"){
-            t = new RailRoadTile(a.id, a.color, TileType::RAILROAD, a.name, a.code);
+            auto *rt = new RailRoadTile(a.id, a.color, TileType::RAILROAD, a.name, a.code);
+            rt->setProperty(linkedProp);
+            t = rt;
         }
         else if (a.type == "UTILITY")
         {
-            t = new UtilityTile(a.id, a.color, TileType::UTILITY, a.name, a.code);
+            auto *ut = new UtilityTile(a.id, a.color, TileType::UTILITY, a.name, a.code);
+            ut->setProperty(linkedProp);
+            t = ut;
         }
 
         if(t) tileMap[a.id] = t;
@@ -55,5 +71,5 @@ Board BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, co
     for(auto& [id, tile]: tileMap){
         allTiles.push_back(tile);
     }
-    return Board(allTiles, allTiles.size());
+    return new Board(allTiles, allTiles.size());
 }

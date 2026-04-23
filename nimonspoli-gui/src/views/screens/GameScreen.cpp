@@ -219,7 +219,7 @@ void GameScreen::syncFromGameMaster() {
                     break;
             }
             if (dynamic_cast<StreetTile*>(pt))    mp.type = "STREET";
-            else if (dynamic_cast<RailroadTile*>(pt)) mp.type = "RAILROAD";
+            else if (dynamic_cast<RailRoadTile*>(pt)) mp.type = "RAILROAD";
             else if (dynamic_cast<UtilityTile*>(pt))  mp.type = "UTILITY";
  
             // Harga beli (untuk buy dialog)

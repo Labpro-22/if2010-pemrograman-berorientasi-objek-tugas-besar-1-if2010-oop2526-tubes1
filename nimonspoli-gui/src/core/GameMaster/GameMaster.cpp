@@ -545,7 +545,7 @@ int GameMaster::countPlayerRailroads(Player *player) const
     int count = 0;
     for (int i = 0; i < board->getSize(); i++)
     {
-        RailroadTile *rt = dynamic_cast<RailroadTile *>(board->getTile(i));
+        RailRoadTile *rt = dynamic_cast<RailRoadTile *>(board->getTile(i));
         if (!rt)
             continue;
         Property *prop = rt->getProperty();
@@ -583,7 +583,7 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     for (int step = 1; step < size; step++)
     {
         int idx = (currentPosition + step) % size;
-        if (dynamic_cast<RailroadTile *>(board->getTile(idx)))
+        if (dynamic_cast<RailRoadTile *>(board->getTile(idx)))
             return idx;
     }
     return -1;

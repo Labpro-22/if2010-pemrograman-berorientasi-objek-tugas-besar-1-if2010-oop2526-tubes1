@@ -16,104 +16,12 @@
 #include "core/utils/TransactionLogger.hpp"
 #include "core/utils/ConfigLoader.hpp"
 #include "core/Property/PropertyFactory.hpp"
+#include "core/Board/BoardFactory.hpp"
 #include "core/utils/SaveLoadManager.hpp"
 #include <fstream>
 #include <memory>
 #include <vector>
 #include <string>
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  buildBoard()
-//
-//  Membuat Board 40 petak. Property* di-assign ke tile via setProperty()
-//  berdasarkan code matching. Ownership Property tetap di `properties`
-//  (vector<unique_ptr<Property>> yang hidup di main()).
-// ─────────────────────────────────────────────────────────────────────────────
-static Board* buildBoard(
-    const std::vector<std::unique_ptr<Property>>& properties,
-    int goSalary,
-    int jailFine,
-    CardDeck<Card>* chanceDeck,
-    CardDeck<Card>* communityDeck)
-{
-    // Helper: cari Property* berdasarkan code
-    auto findProp = [&](const std::string& code) -> Property* {
-        for (auto& p : properties)
-            if (p->getCode() == code) return p.get();
-        return nullptr;
-    };
-
-    // Helper: buat PropertyTile dan langsung pasang Property*
-    auto makeStreet = [&](int id, const std::string& code, TileName name) -> StreetTile* {
-        auto* tile = new StreetTile(id, code, TileType::STREET, name, code);
-        tile->setProperty(findProp(code));
-        return tile;
-    };
-    auto makeRailroad = [&](int id, const std::string& code, TileName name) -> RailroadTile* {
-        auto* tile = new RailroadTile(id, code, TileType::RAILROAD, name, code);
-        tile->setProperty(findProp(code));
-        return tile;
-    };
-    auto makeUtility = [&](int id, const std::string& code, TileName name) -> UtilityTile* {
-        auto* tile = new UtilityTile(id, code, TileType::UTILITY, name, code);
-        tile->setProperty(findProp(code));
-        return tile;
-    };
-
-    std::vector<Tile*> tiles;
-    tiles.reserve(40);
-
-    // ── BOTTOM ROW (idx 0–10) ─────────────────────────────────────────────
-    tiles.push_back(new GoTile        ( 0, "GO",  TileType::SPECIAL,   TileName::GO,         "GO",  goSalary));
-    tiles.push_back(makeStreet        ( 1, "GRT", TileName::GARUT));
-    tiles.push_back(new CardTile      ( 2, "DNU", TileType::CARD,      TileName::COMMON_FUND,"DNU", communityDeck));
-    tiles.push_back(makeStreet        ( 3, "TSK", TileName::TASIKMALAYA));
-    tiles.push_back(new TaxTile       ( 4, "PPH", TileType::TAX,       TileName::INCOME_TAX, "PPH"));
-    tiles.push_back(makeRailroad      ( 5, "GBR", TileName::ST_GAMBIR));
-    tiles.push_back(makeStreet        ( 6, "BGR", TileName::BOGOR));
-    tiles.push_back(new FestivalTile  ( 7, "FES", TileType::FESTIVAL,  TileName::FESTIVAL,   "FES"));
-    tiles.push_back(makeStreet        ( 8, "DPK", TileName::DEPOK));
-    tiles.push_back(makeStreet        ( 9, "BKS", TileName::BEKASI));
-    tiles.push_back(new JailTile      (10, "PEN", TileType::SPECIAL,   TileName::JAIL,       "PEN", {}, {}, jailFine));
-
-    // ── LEFT COLUMN (idx 11–19) ───────────────────────────────────────────
-    tiles.push_back(makeStreet        (11, "SBY", TileName::SURABAYA));
-    tiles.push_back(makeStreet        (12, "SMG", TileName::SEMARANG));
-    tiles.push_back(new CardTile      (13, "DNU", TileType::CARD,      TileName::COMMON_FUND,"DNU", communityDeck));
-    tiles.push_back(makeStreet        (14, "MAL", TileName::MALANG));
-    tiles.push_back(makeRailroad      (15, "STB", TileName::ST_BANDUNG));
-    tiles.push_back(makeStreet        (16, "YOG", TileName::YOGYAKARTA));
-    tiles.push_back(makeStreet        (17, "SOL", TileName::SOLO));
-    tiles.push_back(makeUtility       (18, "PLN", TileName::PLN));
-    tiles.push_back(makeStreet        (19, "MGL", TileName::MAGELANG));
-
-    // ── TOP ROW (idx 20–30) ───────────────────────────────────────────────
-    tiles.push_back(new FreeParkingTile(20,"BBP", TileType::SPECIAL,   TileName::FREE_PARK,  "BBP"));
-    tiles.push_back(makeStreet         (21,"MKS", TileName::MAKASSAR));
-    tiles.push_back(new CardTile       (22,"KSP", TileType::CARD,      TileName::CHANCE,     "KSP", chanceDeck));
-    tiles.push_back(makeStreet         (23,"BLP", TileName::BALIKPAPAN));
-    tiles.push_back(makeStreet         (24,"MND", TileName::MANADO));
-    tiles.push_back(makeRailroad       (25,"TUG", TileName::ST_TUGU));
-    tiles.push_back(makeStreet         (26,"PLB", TileName::PALEMBANG));
-    tiles.push_back(makeStreet         (27,"PKB", TileName::PEKANBARU));
-    tiles.push_back(makeUtility        (28,"PAM", TileName::PAM));
-    tiles.push_back(makeStreet         (29,"MED", TileName::MEDAN));
-    tiles.push_back(new GoToJail       (30,"PPJ", TileType::SPECIAL,   TileName::GO_TO_JAIL, "PPJ"));
-
-    // ── RIGHT COLUMN (idx 31–39) ──────────────────────────────────────────
-    tiles.push_back(makeStreet         (31,"BDG", TileName::BANDUNG));
-    tiles.push_back(makeStreet         (32,"DEN", TileName::DENPASAR));
-    tiles.push_back(new FestivalTile   (33,"FES", TileType::FESTIVAL,  TileName::FESTIVAL,   "FES"));
-    tiles.push_back(makeStreet         (34,"MTR", TileName::MATARAM));
-    tiles.push_back(makeRailroad       (35,"GUB", TileName::ST_GUBENG));
-    tiles.push_back(new CardTile       (36,"KSP", TileType::CARD,      TileName::CHANCE,     "KSP", chanceDeck));
-    tiles.push_back(makeStreet         (37,"JKT", TileName::JAKARTA));
-    tiles.push_back(new TaxTile        (38,"PBM", TileType::TAX,       TileName::LUX_GOODS,  "PBM"));
-    tiles.push_back(makeStreet         (39,"IKN", TileName::IKN));
-
-    return new Board(tiles, (int)tiles.size());
-}
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  main()
@@ -174,6 +82,7 @@ int main() {
         auto utilityFactor = cfg.loadUtility();
         auto specialCfg    = cfg.loadSpecial();
         auto miscCfg       = cfg.loadMisc();
+        auto actData = cfg.loadActions();
 
         properties = PropertyFactory::createProperties(
             propData, railroadRent, utilityFactor);
@@ -186,8 +95,7 @@ int main() {
         communityDeck = new CardDeck<Card>();
         skillDeck     = new CardDeck<Card>();
 
-        board = buildBoard(properties, specialCfg.goSalary, specialCfg.jailFine,
-                        chanceDeck, communityDeck);
+        board = BoardFactory::createBoard(propData, actData, specialCfg, chanceDeck, communityDeck, properties);
 
         if (setup.isLoadGame) {
             // ── LOAD GAME ─────────────────────────────────────────────

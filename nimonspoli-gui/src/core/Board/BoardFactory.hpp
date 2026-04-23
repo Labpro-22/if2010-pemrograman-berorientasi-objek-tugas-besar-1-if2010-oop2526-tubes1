@@ -11,8 +11,14 @@
 #include <vector>
 using namespace std;
 
-class BoardFactory{
-    public:
-        BoardFactory();
-        Board createBoard(const vector<PropertyData> &propertyDataList, const vector<ActionData> &actionDataList, SpecialConfig &config, CardDeck<Card> *chanceCard, CardDeck<Card> *genFundCard);
+class BoardFactory
+{
+public:
+    BoardFactory();
+    static Board *createBoard(const vector<PropertyData> &propertyDataList,
+                              const vector<ActionData> &actionDataList,
+                              SpecialConfig &config,
+                              CardDeck<Card> *chanceCard,
+                              CardDeck<Card> *genFundCard,
+                              const std::vector<std::unique_ptr<Property>> &properties);
 };
