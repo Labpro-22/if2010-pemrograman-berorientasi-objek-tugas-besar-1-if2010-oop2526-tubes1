@@ -101,6 +101,9 @@ public:
 
     int getWealth() const;
     string cetakProperti() const;
+
+    string printSkillCards() const;
+    void forceAddSkillCard(SkillCard *card);
 };
 
 #endif

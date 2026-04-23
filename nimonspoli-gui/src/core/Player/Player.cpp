@@ -291,3 +291,30 @@ string Player::cetakProperti() const
     out << "Total kekayaan properti: M" << totalWealth << "\n";
     return out.str();
 }
+
+void Player::forceAddSkillCard(SkillCard *card)
+{
+    if (card == nullptr)
+        return;
+
+    skillCards.push_back(card);
+}
+
+string Player::printSkillCards() const
+{
+    ostringstream out;
+
+    out << "Daftar Kartu Kemampuan Anda: \n";
+    for (size_t i = 0; i < skillCards.size(); ++i)
+    {
+        if (skillCards[i] == nullptr)
+            continue;
+
+        out << (i + 1) << ". "
+            << skillCards[i]->getType()
+            << " - "
+            << skillCards[i]->getDescription() << "\n";
+    }
+
+    return out.str();
+}

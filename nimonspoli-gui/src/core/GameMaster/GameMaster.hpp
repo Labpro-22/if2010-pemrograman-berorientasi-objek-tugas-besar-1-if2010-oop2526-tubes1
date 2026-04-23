@@ -116,10 +116,13 @@ public:
     void useSkillCard(Player *player, SkillCard *card, GameState &gs);
 
     // Proxy metode dialog
-    void handleGadai(Property* prop);
-    void handleTebus(Property* prop);
-    void handleBangun(StreetProperty* sp);
-    void handleJualBangunan(StreetProperty* sp);
+    void handleGadai(Property *prop);
+    void handleTebus(Property *prop);
+    void handleBangun(StreetProperty *sp);
+    void handleJualBangunan(StreetProperty *sp);
+
+    void handleSkillCardOverflow(Player *player);
+    void giveSkillCardToPlayer(Player *player, SkillCard *card);
 };
 
 #endif

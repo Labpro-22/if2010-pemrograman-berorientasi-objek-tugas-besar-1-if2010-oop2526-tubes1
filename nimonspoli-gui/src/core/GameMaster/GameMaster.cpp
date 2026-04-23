@@ -11,6 +11,7 @@
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
+#include <limits>
 
 // ─────────────────────────────────────────────
 //  Konstruktor
@@ -138,7 +139,7 @@ void GameMaster::movePlayer(Player *player, int steps)
             log(player->getUsername(), "GO_SALARY",
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
-}
+    }
 
     player->setPosition(targetIdx);
 
@@ -214,7 +215,7 @@ JailTile *GameMaster::findJailTile() const
 
 int GameMaster::findJailIndex() const
 {
-    
+
     Board *board = state.getBoard();
     if (!board)
         return -1;
@@ -226,21 +227,22 @@ int GameMaster::findJailIndex() const
     return -1;
 }
 
-void GameMaster::sendPlayerToJail(Player* player)
+void GameMaster::sendPlayerToJail(Player *player)
 {
-    if (!player) return;
+    if (!player)
+        return;
 
     int jailIdx = findJailIndex();
     if (jailIdx >= 0)
         player->setPosition(jailIdx);
 
-    Dice* dice = state.getDice();
+    Dice *dice = state.getDice();
     if (dice)
         dice->resetConsecutiveDoubles(); // FIX
 
     state.setHasRolled(true); // FIX: stop movement
 
-    JailTile* jail = findJailTile();
+    JailTile *jail = findJailTile();
     if (jail)
     {
         jail->sendToJail(*player);
@@ -275,7 +277,7 @@ void GameMaster::setExtraTurn(bool val)
 void GameMaster::endCurrentTurn()
 {
     state.setHasExtraTurn(false);
-    state.setHasRolled(true);  // block: pemain tidak bisa lempar dadu lagi
+    state.setHasRolled(true); // block: pemain tidak bisa lempar dadu lagi
     state.setPhase(GamePhase::PLAYER_TURN);
     // nextPlayer() dan advanceTurn() tetap dilakukan oleh endTurn()
 }
@@ -329,7 +331,7 @@ void GameMaster::startAuction(Property *prop, Player *triggerPlayer)
     Player *initiator = triggerPlayer ? triggerPlayer : all.front();
 
     // Logika urutan peserta sepenuhnya diserahkan ke AuctionManager::setupAuction()
-    am->setupAuction(prop, initiator, all); 
+    am->setupAuction(prop, initiator, all);
     state.setPhase(GamePhase::AUCTION);
 
     // Proses lelang akan berjalan di GUI
@@ -582,8 +584,6 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     return -1;
 }
 
-
-
 void GameMaster::log(const std::string &username,
                      const std::string &action,
                      const std::string &detail)
@@ -621,14 +621,15 @@ void GameMaster::distributeSkillCards()
 
 void GameMaster::tickFestivalDurations()
 {
-    for (Player* p : state.getActivePlayers())
+    for (Player *p : state.getActivePlayers())
     {
         for (int i = 0; i < p->getPropertyCount(); i++)
         {
-            Property* prop = p->getProperties()[i];
-            if (!prop) continue;
+            Property *prop = p->getProperties()[i];
+            if (!prop)
+                continue;
 
-            auto* sp = dynamic_cast<StreetProperty*>(prop);
+            auto *sp = dynamic_cast<StreetProperty *>(prop);
             if (sp)
             {
                 sp->decrementFestivalDuration();
@@ -685,23 +686,30 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
 //  Proxy metode dialog GUI
 // ─────────────────────────────────────────────
 
-void GameMaster::handleGadai(Property* prop) {
-    if (!prop) return;
-    if (prop->getStatus() == PropertyStatus::OWNED) {
+void GameMaster::handleGadai(Property *prop)
+{
+    if (!prop)
+        return;
+    if (prop->getStatus() == PropertyStatus::OWNED)
+    {
         prop->setStatus(PropertyStatus::MORTGAGED);
         int gadaiVal = prop->getPurchasePrice() / 2; // Asumsi gadai setengah harga
-        Player* cur = state.getCurrPlayer();
+        Player *cur = state.getCurrPlayer();
         *cur += gadaiVal;
         log(cur->getUsername(), "GADAI", "Menggadaikan " + prop->getName() + " seharga M" + std::to_string(gadaiVal));
     }
 }
 
-void GameMaster::handleTebus(Property* prop) {
-    if (!prop) return;
-    if (prop->getStatus() == PropertyStatus::MORTGAGED) {
+void GameMaster::handleTebus(Property *prop)
+{
+    if (!prop)
+        return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED)
+    {
         int tebusVal = prop->getPurchasePrice(); // Asumsi harga tebus sama dengan harga beli penuh
-        Player* cur = state.getCurrPlayer();
-        if (cur->getBalance() >= tebusVal) {
+        Player *cur = state.getCurrPlayer();
+        if (cur->getBalance() >= tebusVal)
+        {
             *cur -= tebusVal;
             prop->setStatus(PropertyStatus::OWNED);
             log(cur->getUsername(), "TEBUS", "Menebus " + prop->getName() + " seharga M" + std::to_string(tebusVal));
@@ -709,24 +717,121 @@ void GameMaster::handleTebus(Property* prop) {
     }
 }
 
-void GameMaster::handleBangun(StreetProperty* sp) {
-    if (!sp) return;
-    Player* cur = state.getCurrPlayer();
+void GameMaster::handleBangun(StreetProperty *sp)
+{
+    if (!sp)
+        return;
+    Player *cur = state.getCurrPlayer();
     int cost = sp->getHouseUpgCost();
-    if (cur->getBalance() >= cost && !sp->gethasHotel()) {
+    if (cur->getBalance() >= cost && !sp->gethasHotel())
+    {
         *cur -= cost;
         // Asumsikan build function, ini placeholder. Bisa diimplementasikan spesifik nanti oleh anggota lain.
         log(cur->getUsername(), "BANGUN", "Membangun di " + sp->getName() + " seharga M" + std::to_string(cost));
     }
 }
 
-void GameMaster::handleJualBangunan(StreetProperty* sp) {
-    if (!sp) return;
-    Player* cur = state.getCurrPlayer();
-    if (sp->getBuildingCount() > 0 || sp->gethasHotel()) {
-        int sellVal = sp->getHouseUpgCost()/ 2;
+void GameMaster::handleJualBangunan(StreetProperty *sp)
+{
+    if (!sp)
+        return;
+    Player *cur = state.getCurrPlayer();
+    if (sp->getBuildingCount() > 0 || sp->gethasHotel())
+    {
+        int sellVal = sp->getHouseUpgCost() / 2;
         // Asumsikan sell function placeholder.
         *cur += sellVal;
         log(cur->getUsername(), "JUAL_BANGUNAN", "Menjual bangunan di " + sp->getName() + " seharga M" + std::to_string(sellVal));
     }
+}
+
+void GameMaster::handleSkillCardOverflow(Player *player)
+{
+    if (player == nullptr)
+        return;
+
+    while (player->getHandSize() > 3)
+    {
+        cout << "PERINGATAN: Kamu sudah memiliki "
+             << player->getHandSize()
+             << " kartu di tangan (Maksimal 3)! "
+             << "Kamu diwajibkan membuang 1 kartu.\n\n";
+
+        cout << player->printSkillCards() << "\n";
+
+        int pilihan;
+        while (true)
+        {
+            cout << "Pilih nomor kartu yang ingin dibuang (1-"
+                 << player->getHandSize() << "): ";
+
+            if (!(cin >> pilihan))
+            {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Input tidak valid. Masukkan angka.\n";
+                continue;
+            }
+
+            if (pilihan < 1 || pilihan > player->getHandSize())
+            {
+                cout << "Pilihan di luar rentang.\n";
+                continue;
+            }
+
+            break;
+        }
+
+        SkillCard *kartuDibuang = player->getHand()[pilihan - 1];
+        string namaKartu = kartuDibuang ? kartuDibuang->getType() : "Kartu";
+
+        player->discardSkillCard(pilihan - 1);
+
+        cout << "\n"
+             << namaKartu << " telah dibuang. "
+             << "Sekarang kamu memiliki "
+             << player->getHandSize()
+             << " kartu di tangan.\n";
+    }
+}
+
+void GameMaster::giveSkillCardToPlayer(Player *player, SkillCard *card)
+{
+    if (player == nullptr || card == nullptr)
+        return;
+
+    cout << "Kamu mendapatkan 1 kartu acak baru!\n";
+    cout << "Kartu yang didapat: " << card->getType() << ".\n";
+
+    player->forceAddSkillCard(card);
+
+    if (player->getHandSize() > 3)
+    {
+        handleSkillCardOverflow(player);
+    }
+}
+
+void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
+{
+    if (!player || !card)
+        return;
+    if (gs.getHasUsedCard())
+        return;
+    if (card->isUsed())
+        return;
+
+    card->execute(*player, gs);
+    gs.getLogger()->addLog(gs.getCurrTurn(), player->getUsername(), "SKILL_CARD", card->getDescription());
+
+    card->markUsed();
+    const vector<SkillCard *> &hand = player->getHand();
+    for (int i = 0; i < (int)hand.size(); i++)
+    {
+        if (hand[i] == card)
+        {
+            player->discardSkillCard(i);
+            break;
+        }
+    }
+    gs.setHasUsedCard(true);
 }
