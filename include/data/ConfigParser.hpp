@@ -5,6 +5,7 @@
 
 #include <map>
 #include <string>
+using namespace std;
 
 class GameBoard;
 class Tile;
@@ -43,6 +44,14 @@ public:
     ~ConfigParser();
 
     void loadConfig(GameBoard* board);
+
+    int getMaxTurn() const;
+    int getStartBalance() const;
+    int getGoSalary() const;
+    int getJailFine() const;
+    int getPphFlat() const;
+    int getPphPercentage() const;
+    int getPbmFlat() const;
 };
 
 #endif

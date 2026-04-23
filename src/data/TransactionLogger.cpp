@@ -2,27 +2,23 @@
 
 #include <sstream>
 
-std::string TransactionLogger::formatEntry(int turn, const std::string& username,
-                                           const std::string& actionType,
-                                           const std::string& detail) const {
-    std::ostringstream oss;
+string TransactionLogger::formatEntry(int turn, const string& username,const string& actionType,const string& detail) const {
+    ostringstream oss;
     oss << "[Turn " << turn << "] " << username
         << " | " << actionType << " | " << detail;
     return oss.str();
 }
 
-void TransactionLogger::log(int turn, const std::string& username,
-                            const std::string& actionType,
-                            const std::string& detail) {
+void TransactionLogger::log(int turn, const string& username, const string& actionType, const string& detail) {
     logs.push_back(formatEntry(turn, username, actionType, detail));
 }
 
-std::vector<std::string> TransactionLogger::getAll() const {
+vector<string> TransactionLogger::getAll() const {
     return logs;
 }
 
-std::vector<std::string> TransactionLogger::getRecent(int count) const {
-    std::vector<std::string> out;
+vector<string> TransactionLogger::getRecent(int count) const {
+    vector<string> out;
     if (count <= 0) return out;
     int total = static_cast<int>(logs.size());
     if (count >= total) return logs;

@@ -1,526 +1,354 @@
-// main.cpp
 #include <iostream>
+#include <fstream>
+#include <string>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 
-#include "../include/models/Player.hpp"
 #include "../include/models/GameBoard.hpp"
 #include "../include/models/Tile.hpp"
-#include "../include/models/GoTile.hpp"
-#include "../include/models/GoToJailTile.hpp"
-#include "../include/models/JailTile.hpp"
-#include "../include/models/FreeParkingTile.hpp"
-#include "../include/models/ChanceTile.hpp"
-#include "../include/models/CommunityChestTile.hpp"
-#include "../include/models/TaxTile.hpp"
-#include "../include/models/FestivalTile.hpp"
+#include "../include/models/Property.hpp"
 #include "../include/models/Street.hpp"
 #include "../include/models/Railroad.hpp"
 #include "../include/models/Utility.hpp"
-#include "../include/utils/Dice.hpp"
-#include "../include/utils/CardDeck.hpp"
-#include "../include/utils/ActionCard.hpp"
+#include "../include/models/Player.hpp"
 #include "../include/utils/SkillCard.hpp"
-#include "../include/models/JailTile.hpp"
-#include "../include/core/GameContext.hpp"
-#include "../include/core/MovementHandler.hpp"
-#include "../include/core/TurnManager.hpp"
+#include "../include/utils/CardDeck.hpp"
 #include "../include/core/SkillCardManager.hpp"
+
+#include "../include/data/ConfigParser.hpp"
+#include "../include/data/TransactionLogger.hpp"
+#include "../include/data/GameSaver.hpp"
+#include "../include/data/GameLoader.hpp"
+#include "../include/utils/FileFormatException.hpp"
+#include "../include/utils/FileWriteException.hpp"
 
 using namespace std;
 
-// ── helper print ──────────────────────────────────────────
-void printSeparator(const string& title) {
-    cout << "\n========================================\n";
-    cout << "  " << title << "\n";
-    cout << "========================================\n";
+static void banner(const string& title) {
+    cout << "\n==================== " << title
+         << " ====================\n";
 }
 
-void printPlayerStatus(Player* p) {
-    cout << "[" << p->getUsername() << "] "
-         << "Uang: M" << p->getMoney()
-         << " | Pos: " << p->getPosition()
-         << " | Status: ";
-    switch (p->getStatus()) {
-        case ACTIVE:   cout << "ACTIVE";   break;
-        case JAILED:   cout << "JAILED";   break;
-        case BANKRUPT: cout << "BANKRUPT"; break;
+static string playerStatusStr(PlayerStatus s) {
+    switch (s) {
+        case ACTIVE:   return "ACTIVE";
+        case BANKRUPT: return "BANKRUPT";
+        case JAILED:   return "JAILED";
     }
-    cout << " | Kartu: " << p->getHand().size() << "\n";
+    return "?";
 }
 
-// ── setup board minimal 40 petak ─────────────────────────
-GameBoard* setupBoard(CardDeck<ActionCard>* chanceDeck,
-                      CardDeck<ActionCard>* communityDeck,
-                      int goSalary, int jailFine) {
-    GameBoard* board = new GameBoard();
+static string propertyStatusStr(StatusType s) {
+    switch (s) {
+        case BANK:      return "BANK";
+        case OWNED:     return "OWNED";
+        case MORTGAGED: return "MORTGAGED";
+    }
+    return "?";
+}
 
-    for (int i = 0; i < 40; i++) {
-        Tile* tile = nullptr;
+static Property* findProperty(GameBoard* board, const string& code) {
+    const vector<Tile*>& tiles = board->getTiles();
+    for (size_t i = 0; i < tiles.size(); ++i) {
+        Property* p = dynamic_cast<Property*>(tiles[i]);
+        if (p != nullptr && p->getCode() == code) return p;
+    }
+    return nullptr;
+}
 
-        switch (i) {
-            case 0:
-                tile = new GoTile(i, "GO", "DEFAULT", goSalary);
-                break;
-            case 3:
-                tile = new CommunityChestTile(i, "Dana Umum", "DEFAULT", communityDeck);
-                break;
-            case 5:
-                tile = new TaxTile(i, "PPH", "DEFAULT", PPH, 150, 0.10);
-                break;
-            case 7:
-                tile = new ChanceTile(i, "Kesempatan", "DEFAULT", chanceDeck);
-                break;
-            case 10:
-                tile = new JailTile(i, "Penjara", "DEFAULT", jailFine);
-                break;
-            case 17:
-                tile = new CommunityChestTile(i, "Dana Umum", "DEFAULT", communityDeck);
-                break;
-            case 20:
-                tile = new FreeParkingTile(i, "Bebas Parkir", "DEFAULT");
-                break;
-            case 22:
-                tile = new ChanceTile(i, "Kesempatan", "DEFAULT", chanceDeck);
-                break;
-            case 30:
-                tile = new GoToJailTile(i, "Pergi ke Penjara", "DEFAULT");
-                break;
-            case 33:
-                tile = new FestivalTile(i, "Festival", "DEFAULT");
-                break;
-            case 38:
-                tile = new TaxTile(i, "PBM", "DEFAULT", PBM, 200, 0.0);
-                break;
-
-            // Street sampel
-            case 1: {
-                Street* s = new Street(i, "Garut", "COKLAT",
-                                       COKELAT, 60, 40, 20, 50);
-                map<int,int> rt = {{0,2},{1,10},{2,30},{3,90},{4,160},{5,250}};
-                s->setRentTable(rt);
-                tile = s;
-                break;
-            }
-            case 2: {
-                Street* s = new Street(i, "Tasikmalaya", "COKLAT",
-                                       COKELAT, 60, 40, 20, 50);
-                map<int,int> rt = {{0,4},{1,20},{2,60},{3,180},{4,320},{5,450}};
-                s->setRentTable(rt);
-                tile = s;
-                break;
-            }
-
-            // Railroad sampel
-            case 6: {
-                Railroad* r = new Railroad(i, "Stasiun Gambir", "DEFAULT", 200, 100);
-                map<int,int> rt = {{1,25},{2,50},{3,100},{4,200}};
-                r->setRentTable(rt);
-                tile = r;
-                break;
-            }
-
-            // Utility sampel
-            case 12: {
-                Utility* u = new Utility(i, "PLN", "ABU_ABU", 150, 75);
-                map<int,int> mt = {{1,4},{2,10}};
-                u->setMultiplierTable(mt);
-                tile = u;
-                break;
-            }
-
-            default:
-                // Tile kosong — pakai FreeParkingTile sebagai placeholder
-                tile = new FreeParkingTile(i, "Petak " + to_string(i), "DEFAULT");
-                break;
+static void dumpBoard(GameBoard* board) {
+    cout << "Current turn: " << board->getCurrentTurnNumber()
+         << " / " << board->getMaxTurn() << "\n";
+    Player* cur = board->getCurrentPlayer();
+    cout << "Current player: " << (cur ? cur->getUsername() : "(none)") << "\n";
+    cout << "Players (in turn order):\n";
+    const vector<Player*>& players = board->getPlayers();
+    for (size_t i = 0; i < players.size(); ++i) {
+        Player* p = players[i];
+        cout << "  - " << p->getUsername()
+             << " | M" << p->getMoney()
+             << " | pos=" << p->getPosition()
+             << " | " << playerStatusStr(p->getStatus())
+             << " | hand=" << p->getHand().size();
+        const vector<SkillCard*>& hand = p->getHand();
+        for (size_t h = 0; h < hand.size(); ++h) {
+            if (hand[h] == nullptr) continue;
+            cout << " [" << hand[h]->getCardType()
+                 << ":" << hand[h]->getValue()
+                 << "/d" << hand[h]->getRemainingDuration() << "]";
         }
-
-        board->addTile(tile);
+        cout << "\n";
     }
-
-    return board;
 }
 
-// ── setup deck kartu aksi ────────────────────────────────
-void setupActionDecks(CardDeck<ActionCard>* chanceDeck,
-                      CardDeck<ActionCard>* communityDeck) {
-    // Chance: mundur 3, masuk penjara, pergi stasiun terdekat
-    chanceDeck->addCard(new ChanceCard(ActionCardType::MOVE, -3, "Mundur 3 petak."));
-    chanceDeck->addCard(new ChanceCard(ActionCardType::GO_TO_JAIL, 0, "Masuk Penjara."));
-    chanceDeck->addCard(new ChanceCard(ActionCardType::TELEPORT, 6, "Pergi ke stasiun terdekat."));
-
-    // Community: ulang tahun, biaya dokter, nyaleg
-    communityDeck->addCard(new CommunityCard(ActionCardType::COLLECT_FROM_ALL, 100,
-                                              "Hari ulang tahun. Dapat M100 dari setiap pemain."));
-    communityDeck->addCard(new CommunityCard(ActionCardType::PAY_MONEY, 700,
-                                              "Biaya dokter. Bayar M700."));
-    communityDeck->addCard(new CommunityCard(ActionCardType::PAY_TO_ALL, 200,
-                                              "Mau nyaleg. Bayar M200 ke setiap pemain."));
+static void dumpOwnedProperties(GameBoard* board) {
+    const vector<Tile*>& tiles = board->getTiles();
+    cout << "Owned/festivaled/mortgaged properties:\n";
+    for (size_t i = 0; i < tiles.size(); ++i) {
+        Property* p = dynamic_cast<Property*>(tiles[i]);
+        if (p == nullptr) continue;
+        if (p->getStatus() == BANK && p->getFestivalMultiplier() == 1
+            && p->getFestivalDuration() == 0) continue;
+        cout << "  - " << p->getCode() << " | " << p->getName()
+             << " | owner=" << (p->getOwner().empty() ? string("BANK") : p->getOwner())
+             << " | " << propertyStatusStr(p->getStatus())
+             << " | fmult=" << p->getFestivalMultiplier()
+             << " fdur=" << p->getFestivalDuration();
+        Street* s = dynamic_cast<Street*>(p);
+        if (s != nullptr) cout << " bldg=" << s->getBuildingCount();
+        cout << "\n";
+    }
 }
 
-// ══════════════════════════════════════════════════════════
+static void dumpSkillDeck(GameBoard* board) {
+    CardDeck<SkillCard>* d = board->getSkillDeck();
+    if (d == nullptr) {
+        cout << "Skill deck: (none attached)\n";
+        return;
+    }
+    const vector<SkillCard*>& cards = d->getDeck();
+    cout << "Skill deck (" << cards.size() << " cards):";
+    for (size_t i = 0; i < cards.size(); ++i) {
+        if (cards[i] == nullptr) continue;
+        cout << " " << cards[i]->getCardType();
+    }
+    cout << "\n";
+}
+
+static void dumpLog(TransactionLogger* logger) {
+    vector<string> all = logger->getAll();
+    cout << "TransactionLogger (" << all.size() << " entries):\n";
+    for (size_t i = 0; i < all.size(); ++i) {
+        cout << "  " << all[i] << "\n";
+    }
+}
+
+static void printSaveFile(const string& path) {
+    ifstream in(path.c_str());
+    if (!in.is_open()) {
+        cout << "(cannot open " << path << ")\n";
+        return;
+    }
+    string line;
+    int n = 0;
+    while (getline(in, line)) {
+        cout << line << "\n";
+        ++n;
+    }
+    cout << "(" << n << " lines)\n";
+}
+
 int main() {
     srand(static_cast<unsigned>(time(nullptr)));
 
-    cout << "=== NIMONSPOLI TEST SUITE ===\n";
+    banner("TEST 1: ConfigParser loads ../config/*");
 
-    // ── konstanta dari config (placeholder) ───────────────
-    const int GO_SALARY     = 200;
-    const int JAIL_FINE     = 50;
-    const int START_BALANCE = 1500;
-    const int MAX_TURN      = 10;
-    const int MAX_HAND      = 3;
-
-    // ── setup deck ────────────────────────────────────────
-    CardDeck<ActionCard>* chanceDeck    = new CardDeck<ActionCard>();
-    CardDeck<ActionCard>* communityDeck = new CardDeck<ActionCard>();
-    setupActionDecks(chanceDeck, communityDeck);
-
-    // ── setup board ───────────────────────────────────────
-    GameBoard* board = setupBoard(chanceDeck, communityDeck, GO_SALARY, JAIL_FINE);
-
-    // ── buat pemain ───────────────────────────────────────
-    Player* p1 = new Player("Kebin",   START_BALANCE);
-    Player* p2 = new Player("Stewart", START_BALANCE);
-    Player* p3 = new Player("Gro",     START_BALANCE);
-
-    board->addPlayer(p1);
-    board->addPlayer(p2);
-    board->addPlayer(p3);
-
-    vector<Player*> allPlayers = {p1, p2, p3};
-
-    // ── setup komponen core ───────────────────────────────
-    Dice dice;
-    SkillCardManager skillMgr(MAX_HAND);
-    skillMgr.initDeck();
-
-    // GameContext — isi dulu yang bisa, movementHandler menyusul
-    GameContext* ctx = new GameContext();
-    ctx->board           = board;
-    ctx->turnManager     = nullptr; // isi setelah TurnManager dibuat
-    ctx->skillCardManager = &skillMgr;
-    ctx->lastDice        = &dice;
-    ctx->allPlayers      = allPlayers;
-
-    MovementHandler movHandler(board, ctx, 40, GO_SALARY, JAIL_FINE);
-    ctx->movementHandler = &movHandler;
-
-    TurnManager turnMgr(allPlayers, MAX_TURN);
-    ctx->turnManager = &turnMgr;
-
-    // ══════════════════════════════════════════════════════
-    // TEST 1 — Player dasar
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 1: Player Dasar");
-
-    cout << "Status awal:\n";
-    for (Player* p : allPlayers) printPlayerStatus(p);
-
-    // operator+=
-    *p1 += 300;
-    cout << "\nKebin terima M300 (gaji GO):\n";
-    printPlayerStatus(p1);
-
-    // operator-= normal
-    *p2 -= 100;
-    cout << "\nStewart bayar sewa M100:\n";
-    printPlayerStatus(p2);
-
-    // operator-= dengan shield
-    p3->activateShield();
-    *p3 -= 500;
-    cout << "\nGro kena tagihan M500 tapi shield aktif:\n";
-    printPlayerStatus(p3);
-    cout << "Shield masih aktif: " << (p3->isShieldActive() ? "YA" : "TIDAK") << "\n";
-
-    // payVoluntary — tidak kena shield
-    p3->activateShield();
-    p3->payVoluntary(200);
-    cout << "\nGro beli properti M200 (voluntary, shield tidak block):\n";
-    printPlayerStatus(p3);
-    cout << "Shield masih aktif: " << (p3->isShieldActive() ? "YA" : "TIDAK") << "\n";
-
-    // ══════════════════════════════════════════════════════
-    // TEST 2 — Dice
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 2: Dice");
-
-    dice.rollRandom();
-    cout << "Roll random: " << dice.getDie1() << " + " << dice.getDie2()
-         << " = " << dice.getTotal()
-         << (dice.isDouble() ? " (DOUBLE!)" : "") << "\n";
-
-    dice.setManual(6, 6);
-    cout << "Manual 6+6: total=" << dice.getTotal()
-         << ", double=" << (dice.isDouble() ? "YA" : "TIDAK") << "\n";
-
-    dice.setManual(3, 4);
-    cout << "Manual 3+4: total=" << dice.getTotal() << "\n";
-
-    // ══════════════════════════════════════════════════════
-    // TEST 3 — MovementHandler
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 3: MovementHandler");
-
-    // Gerak normal
-    p1->setPosition(0);
-    dice.setManual(3, 4);
-    cout << "Kebin di pos 0, gerak " << dice.getTotal() << " langkah:\n";
-    movHandler.movePlayer(p1, dice.getTotal());
-    printPlayerStatus(p1);
-
-    // Pass GO
-    p2->setPosition(36);
-    dice.setManual(4, 4);
-    int moneyBefore = p2->getMoney();
-    cout << "\nStewart di pos 36, gerak " << dice.getTotal() << " (harusnya pass GO):\n";
-    movHandler.movePlayer(p2, dice.getTotal());
-    cout << "Uang sebelum: M" << moneyBefore << " | Setelah: M" << p2->getMoney()
-         << " | Dapat gaji GO: " << (p2->getMoney() > moneyBefore ? "YA" : "TIDAK") << "\n";
-    printPlayerStatus(p2);
-
-    // sendToJail
-    cout << "\nGro dikirim ke penjara:\n";
-    movHandler.sendToJail(p3);
-    printPlayerStatus(p3);
-
-    // ══════════════════════════════════════════════════════
-    // TEST 4 — JailTile
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 4: Jail Mechanism");
-
-    // Coba escape dengan double
-    p3->setStatus(JAILED);
-    p3->resetJailTurns();
-
-    cout << "Gro di penjara, coba escape:\n";
-    for (int attempt = 1; attempt <= 4; attempt++) {
-        if (p3->getStatus() != JAILED) break;
-
-        dice.rollRandom();
-        cout << "  Percobaan " << attempt << ": "
-             << dice.getDie1() << "+" << dice.getDie2() << "=" << dice.getTotal();
-
-        JailResult result = movHandler.handleJailTurn(p3, dice);
-        switch (result) {
-            case ESCAPED_DOUBLE:
-                cout << " → BEBAS (double)!\n";
-                break;
-            case STILL_JAILED:
-                cout << " → Masih di penjara (giliran ke-"
-                     << p3->getJailTurnsRemaining() << ")\n";
-                break;
-            case FORCED_OUT:
-                cout << " → Wajib bayar denda M" << JAIL_FINE << " dan keluar\n";
-                break;
-        }
-    }
-    printPlayerStatus(p3);
-
-    // payFine
-    p3->setStatus(JAILED);
-    p3->resetJailTurns();
-    JailTile* jailTile = dynamic_cast<JailTile*>(board->getTileAt(10));
-    if (jailTile != nullptr) {
-        cout << "\nGro bayar denda langsung:\n";
-        jailTile->payFine(p3);
-        printPlayerStatus(p3);
+    GameBoard board;
+    ConfigParser cp("../config");
+    try {
+        cp.loadConfig(&board);
+    } catch (FileFormatException& e) {
+        cout << "FileFormatException: " << e.what() << "\n";
+        return 1;
     }
 
-    // ══════════════════════════════════════════════════════
-    // TEST 5 — TurnManager
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 5: TurnManager");
-
-    cout << "Urutan giliran: ";
-    for (const string& u : turnMgr.getTurnOrder()) cout << u << " ";
+    const vector<Tile*>& tiles = board.getTiles();
+    cout << "Tiles loaded: " << tiles.size() << " (expected 40)\n";
+    cout << "Sample codes:";
+    int checked = 0;
+    for (size_t i = 0; i < tiles.size() && checked < 10; ++i) {
+        if (tiles[i] == nullptr) continue;
+        cout << " [" << tiles[i]->getPosition() + 1 << ":"
+             << tiles[i]->getCode() << "]";
+        ++checked;
+    }
     cout << "\n";
 
-    for (int i = 0; i < 5; i++) {
-        Player* cur = turnMgr.getCurrentPlayer();
-        if (cur == nullptr) break;
-        cout << "Turn " << turnMgr.getCurrentTurnNumber()
-             << " — Giliran: " << cur->getUsername() << "\n";
-        turnMgr.resetTurnFlags(cur);
-        turnMgr.advanceToNextPlayer();
+    Property* jkt = findProperty(&board, "JKT");
+    cout << "Lookup JKT: "
+         << (jkt ? jkt->getName() + " @ pos " + to_string(jkt->getPosition())
+                 : string("NOT FOUND")) << "\n";
+    Property* pln = findProperty(&board, "PLN");
+    cout << "Lookup PLN: "
+         << (pln ? pln->getName() + " @ pos " + to_string(pln->getPosition())
+                 : string("NOT FOUND")) << "\n";
+
+    cout << "MAX_TURN     = " << cp.getMaxTurn() << "\n";
+    cout << "SALDO_AWAL   = " << cp.getStartBalance() << "\n";
+    cout << "GO_SALARY    = " << cp.getGoSalary() << "\n";
+    cout << "JAIL_FINE    = " << cp.getJailFine() << "\n";
+
+    banner("TEST 2: TransactionLogger basic ops");
+
+    TransactionLogger logger;
+    logger.log(1, "Kebin",   "DADU", "Lempar: 3+4=7 mendarat di Bogor (BGR)");
+    logger.log(1, "Kebin",   "BELI", "Beli Bogor (BGR) seharga M100");
+    logger.log(2, "Stewart", "DADU", "Lempar: 4+4=8 mendarat di BGR");
+    logger.log(2, "Stewart", "SEWA", "Bayar M6 ke Kebin (BGR, L0)");
+    logger.log(2, "Gro",     "DADU", "Lempar: 6+6=12 mendarat di Jakarta (JKT)");
+    logger.log(2, "Gro",     "BELI", "Beli Jakarta (JKT) seharga M350");
+
+    cout << "getCount()  = " << logger.getCount() << "\n";
+    cout << "getRecent(3):\n";
+    vector<string> recent = logger.getRecent(3);
+    for (size_t i = 0; i < recent.size(); ++i) cout << "  " << recent[i] << "\n";
+    dumpLog(&logger);
+
+    banner("TEST 3: Set up game state before save");
+
+    Player* p1 = new Player("Kebin",   cp.getStartBalance() - 100);
+    Player* p2 = new Player("Stewart", cp.getStartBalance() + 300);
+    Player* p3 = new Player("Gro",     cp.getStartBalance());
+    board.addPlayer(p1);
+    board.addPlayer(p2);
+    board.addPlayer(p3);
+
+    p1->setPosition(6);
+    p2->setPosition(3);
+    p3->setPosition(37);
+    p3->setStatus(JAILED);
+
+    SkillCardManager skillMgr(3);
+    skillMgr.initDeck();
+    board.setSkillDeck(&skillMgr.getDeck());
+
+    vector<Player*> order;
+    order.push_back(p1);
+    order.push_back(p2);
+    order.push_back(p3);
+    skillMgr.distributeCardToAll(order);
+    skillMgr.distributeCardToAll(order);
+
+    board.setMaxTurn(cp.getMaxTurn());
+    board.setCurrentTurnNumber(4);
+
+    Property* bgr = findProperty(&board, "BGR");
+    if (bgr != nullptr) { bgr->setOwner("Kebin"); bgr->setStatus(OWNED); }
+    Property* jktp = findProperty(&board, "JKT");
+    if (jktp != nullptr) {
+        jktp->setOwner("Gro");
+        jktp->setStatus(OWNED);
+        jktp->setFestivalMultiplier(2);
+        jktp->setFestivalDuration(3);
+        Street* js = dynamic_cast<Street*>(jktp);
+        if (js != nullptr) js->setBuildingCount("2");
+    }
+    Property* grt = findProperty(&board, "GRT");
+    if (grt != nullptr) { grt->setOwner("Stewart"); grt->setStatus(MORTGAGED); }
+    Property* gbr = findProperty(&board, "GBR");
+    if (gbr != nullptr) { gbr->setOwner("Kebin"); gbr->setStatus(OWNED); }
+
+    board.setCurrentPlayerByUsername("Stewart");
+
+    cout << "BEFORE SAVE:\n";
+    dumpBoard(&board);
+    dumpOwnedProperties(&board);
+    dumpSkillDeck(&board);
+
+    banner("TEST 4: GameSaver::save");
+
+    GameSaver saver;
+    const string savePath = "../data/test_save.txt";
+    try {
+        bool ok = saver.save(&board, &logger, savePath);
+        cout << "save() returned " << (ok ? "true" : "false") << "\n";
+    } catch (FileWriteException& e) {
+        cout << "FileWriteException: " << e.what() << "\n";
+        return 1;
+    }
+    cout << "\n--- " << savePath << " ---\n";
+    printSaveFile(savePath);
+
+    banner("TEST 5: GameLoader::validate");
+
+    GameLoader gl;
+    cout << "validate('" << savePath << "') = "
+         << (gl.validate(savePath) ? "true" : "false") << "\n";
+    cout << "validate('../config/misc.txt')   = "
+         << (gl.validate("../config/misc.txt") ? "true" : "false") << "\n";
+    cout << "validate('../config/nope.txt')   = "
+         << (gl.validate("../config/nope.txt") ? "true" : "false") << "\n";
+
+    banner("TEST 6: GameLoader::loadSave roundtrip");
+
+    GameBoard board2;
+    ConfigParser cp2("../config");
+    try {
+        cp2.loadConfig(&board2);
+    } catch (FileFormatException& e) {
+        cout << "FileFormatException in fresh load: " << e.what() << "\n";
+        return 1;
     }
 
-    // Skip bankrupt
-    cout << "\nStewart bangkrut — harusnya diskip:\n";
-    p2->setStatus(BANKRUPT);
-    for (int i = 0; i < 4; i++) {
-        Player* cur = turnMgr.getCurrentPlayer();
-        if (cur == nullptr) { cout << "Semua bangkrut!\n"; break; }
-        cout << "Giliran: " << cur->getUsername() << "\n";
-        turnMgr.advanceToNextPlayer();
-    }
-    p2->setStatus(ACTIVE); // reset untuk test berikutnya
+    SkillCardManager skillMgr2(3);
+    skillMgr2.initDeck();
+    board2.setSkillDeck(&skillMgr2.getDeck());
 
-    // ══════════════════════════════════════════════════════
-    // TEST 6 — SkillCardManager
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 6: SkillCardManager");
+    TransactionLogger logger2;
 
-    // Distribute ke semua
-    cout << "Distribusi kartu ke semua pemain:\n";
-    skillMgr.distributeCardToAll(allPlayers);
-    for (Player* p : allPlayers) {
-        cout << p->getUsername() << " punya " << p->getHand().size() << " kartu: ";
-        for (SkillCard* c : p->getHand()) cout << c->getDescription() << " | ";
-        cout << "\n";
+    try {
+        bool ok = gl.loadSave(savePath, &board2, &logger2);
+        cout << "loadSave() returned " << (ok ? "true" : "false") << "\n";
+    } catch (FileFormatException& e) {
+        cout << "FileFormatException: " << e.what() << "\n";
+        return 1;
     }
 
-    // Use card
-    if (!p1->getHand().empty()) {
-        cout << "\nKebin pakai kartu index 0 (" 
-             << p1->getHand()[0]->getDescription() << "):\n";
-        skillMgr.useCard(p1, 0, ctx);
-        cout << "Sisa kartu Kebin: " << p1->getHand().size() << "\n";
-        printPlayerStatus(p1);
+    cout << "\nAFTER LOAD:\n";
+    dumpBoard(&board2);
+    dumpOwnedProperties(&board2);
+    dumpSkillDeck(&board2);
+    cout << "\n";
+    dumpLog(&logger2);
+
+    banner("TEST 7: Roundtrip save ");
+
+    const string savePath2 = "../data/test_save2.txt";
+    try {
+        saver.save(&board2, &logger2, savePath2);
+    } catch (FileWriteException& e) {
+        cout << "FileWriteException: " << e.what() << "\n";
+        return 1;
     }
 
-    // Drop card
-    if (!p2->getHand().empty()) {
-        cout << "\nStewart drop kartu index 0 ("
-             << p2->getHand()[0]->getDescription() << "):\n";
-        skillMgr.dropCard(p2, 0);
-        cout << "Sisa kartu Stewart: " << p2->getHand().size() << "\n";
+    ifstream a(savePath.c_str()), b(savePath2.c_str());
+    string la, lb;
+    int lineNum = 0;
+    bool identical = true;
+    while (true) {
+        bool gotA = static_cast<bool>(getline(a, la));
+        bool gotB = static_cast<bool>(getline(b, lb));
+        if (!gotA && !gotB) break;
+        ++lineNum;
+        if (gotA != gotB || la != lb) {
+            identical = false;
+            cout << "  diff at line " << lineNum << ":\n";
+            cout << "    A: " << (gotA ? la : string("<eof>")) << "\n";
+            cout << "    B: " << (gotB ? lb : string("<eof>")) << "\n";
+        }
+    }
+    cout << "Round-trip save identical: " << (identical ? "YES" : "NO") << "\n";
+
+    banner("TEST 8: bad save file");
+
+    const string badPath = "../data/bad_save.txt";
+    {
+        ofstream bad(badPath.c_str());
+        bad << "not_a_number alsonot\n";
+    }
+    try {
+        GameBoard board3;
+        ConfigParser cp3("../config");
+        cp3.loadConfig(&board3);
+        TransactionLogger logger3;
+        gl.loadSave(badPath, &board3, &logger3);
+        cout << "lawll \n";
+    } catch (FileFormatException& e) {
+        cout << "caught as expected: " << e.what() << "\n";
     }
 
-    // Overflow — dapat kartu ke-4
-    cout << "\nTest overflow kartu (isi tangan sampai penuh dulu):\n";
-    while (p3->getHand().size() < 3) skillMgr.distributeCardTo(p3);
-    cout << "Gro punya " << p3->getHand().size() << " kartu\n";
-    SkillCard* overflow = skillMgr.distributeCardTo(p3);
-    if (overflow != nullptr) {
-        cout << "OVERFLOW — Gro dapat kartu ke-4: "
-             << overflow->getDescription() << "\n";
-        cout << "Gro harus drop 1 kartu (simulasi drop index 0)\n";
-        skillMgr.dropCard(p3, 0);
-        cout << "Sisa kartu Gro: " << p3->getHand().size() << "\n";
-    }
-
-    // ══════════════════════════════════════════════════════
-    // TEST 7 — Tile Landing
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 7: Tile Landing");
-
-        // Validasi apakah onLand memengaruhi posisi pemain
-        cout << "Validasi dampak onLand ke posisi pemain:\n";
-        FreeParkingTile* fpPos = dynamic_cast<FreeParkingTile*>(board->getTileAt(20));
-        GoToJailTile* gtjPos = dynamic_cast<GoToJailTile*>(board->getTileAt(30));
-
-        // Case A: landing di tile tanpa perpindahan posisi
-        p1->setStatus(ACTIVE);
-        p1->setPosition(20);
-        int posBefore = p1->getPosition();
-        if (fpPos != nullptr) fpPos->onLand(p1, ctx);
-        cout << "- FreeParking: pos sebelum=" << posBefore
-            << ", sesudah=" << p1->getPosition()
-            << " | Posisi berubah: " << (p1->getPosition() != posBefore ? "YA" : "TIDAK")
-            << " (harusnya TIDAK)\n";
-
-        // Case B: landing di tile yang memaksa perpindahan posisi
-        p2->setStatus(ACTIVE);
-        p2->setPosition(30);
-        posBefore = p2->getPosition();
-        if (gtjPos != nullptr) gtjPos->onLand(p2, ctx);
-        cout << "- GoToJail: pos sebelum=" << posBefore
-            << ", sesudah=" << p2->getPosition()
-            << " | Posisi berubah: " << (p2->getPosition() != posBefore ? "YA" : "TIDAK")
-            << " (harusnya YA), status="
-            << (p2->getStatus() == JAILED ? "JAILED" : "BUKAN JAILED") << "\n";
-
-    // GO Tile
-    cout << "Kebin mendarat di GO:\n";
-    int before = p1->getMoney();
-    GoTile* goTile = dynamic_cast<GoTile*>(board->getTileAt(0));
-    if (goTile) goTile->onLand(p1, ctx);
-    cout << "Dapat gaji: M" << (p1->getMoney() - before) << "\n";
-    printPlayerStatus(p1);
-
-    // Street — beli manual untuk test sewa
-    cout << "\nTest sewa Street:\n";
-    Street* garut = dynamic_cast<Street*>(board->getTileAt(1));
-    if (garut != nullptr) {
-        garut->setOwner(p1->getUsername());
-        garut->setStatus(OWNED);
-        int rent = garut->calculateRent(p2);
-        cout << "Stewart mendarat di Garut (milik Kebin), sewa: M" << rent << "\n";
-        *p2 -= rent;
-        *p1 += rent;
-        printPlayerStatus(p1);
-        printPlayerStatus(p2);
-    }
-
-    // Tax Tile PPH
-    cout << "\nStewart mendarat di PPH (flat M150):\n";
-    TaxTile* pph = dynamic_cast<TaxTile*>(board->getTileAt(5));
-    if (pph != nullptr) {
-        before = p2->getMoney();
-        pph->collectTax(p2);
-        cout << "Bayar pajak: M" << (before - p2->getMoney()) << "\n";
-        printPlayerStatus(p2);
-    }
-
-    // FreeParkingTile
-    cout << "\nGro mendarat di Bebas Parkir:\n";
-    before = p3->getMoney();
-    FreeParkingTile* fp = dynamic_cast<FreeParkingTile*>(board->getTileAt(20));
-    if (fp) fp->onLand(p3, ctx);
-    cout << "Perubahan uang: M" << (p3->getMoney() - before) << " (harusnya 0)\n";
-
-    // GoToJail
-    cout << "\nKebin mendarat di Pergi ke Penjara:\n";
-    GoToJailTile* gtj = dynamic_cast<GoToJailTile*>(board->getTileAt(30));
-    if (gtj) gtj->onLand(p1, ctx);
-    printPlayerStatus(p1);
-
-    // ChanceTile
-    cout << "\nStewart mendarat di Kesempatan:\n";
-    printPlayerStatus(p2);
-    ChanceTile* chance = dynamic_cast<ChanceTile*>(board->getTileAt(7));
-    if (chance) chance->onLand(p2, ctx);
-    cout << "Setelah kartu kesempatan:\n";
-    printPlayerStatus(p2);
-
-    // CommunityChestTile
-    cout << "\nGro mendarat di Dana Umum:\n";
-    printPlayerStatus(p3);
-    CommunityChestTile* comm = dynamic_cast<CommunityChestTile*>(board->getTileAt(3));
-    if (comm) comm->onLand(p3, ctx);
-    cout << "Setelah kartu dana umum:\n";
-    for (Player* p : allPlayers) printPlayerStatus(p);
-
-    // ══════════════════════════════════════════════════════
-    // TEST 8 — Operator Perbandingan Player
-    // ══════════════════════════════════════════════════════
-    printSeparator("TEST 8: Operator Perbandingan (WinConditionChecker)");
-
-    cout << "Uang saat ini:\n";
-    for (Player* p : allPlayers) printPlayerStatus(p);
-
-    cout << "\nKebin > Stewart: " << (*p1 > *p2 ? "YA" : "TIDAK") << "\n";
-    cout << "Kebin < Gro: "     << (*p1 < *p3 ? "YA" : "TIDAK") << "\n";
-
-    // ══════════════════════════════════════════════════════
-    // Cleanup
-    // ══════════════════════════════════════════════════════
-    printSeparator("SELESAI");
-    cout << "Status akhir semua pemain:\n";
-    for (Player* p : allPlayers) printPlayerStatus(p);
-
-    // Cleanup tiles di board
-    for (int i = 0; i < 40; i++) {
-        delete board->getTileAt(i);
-    }
-    delete board;
-    delete chanceDeck;
-    delete communityDeck;
-    delete ctx;
-    delete p1; delete p2; delete p3;
+    banner("DONE");
 
     return 0;
 }

@@ -2,17 +2,17 @@
 
 #include <sstream>
 
-std::vector<std::string> FileParser::tokenizeLine(const std::string& line) const {
-    std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    std::string tok;
+vector<string> FileParser::tokenizeLine(const string& line) const {
+    vector<string> tokens;
+    istringstream iss(line);
+    string tok;
     while (iss >> tok) {
         tokens.push_back(tok);
     }
     return tokens;
 }
 
-std::string FileParser::trim(const std::string& s) const {
+string FileParser::trim(const string& s) const {
     size_t begin = 0;
     while (begin < s.size() &&
            (s[begin] == ' ' || s[begin] == '\t' ||

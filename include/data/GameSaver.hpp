@@ -11,6 +11,9 @@ class Tile;
 class SkillCard;
 class TransactionLogger;
 
+using namespace std;
+
+
 class GameSaver {
 private:
     void writePlayerStates(std::ofstream& out,

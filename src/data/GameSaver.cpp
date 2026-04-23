@@ -13,21 +13,21 @@
 #include "../../include/models/Railroad.hpp"
 #include "../../include/models/Utility.hpp"
 
-void GameSaver::writePlayerStates(std::ofstream& out,
-                                  const std::vector<Player*>& players) const {
+void GameSaver::writePlayerStates(ofstream& out,
+                                  const vector<Player*>& players) const {
     out << players.size() << "\n";
     for (size_t i = 0; i < players.size(); ++i) {
         Player* p = players[i];
         if (p == nullptr) continue;
 
-        std::string statusStr;
+        string statusStr;
         switch (p->getStatus()) {
             case ACTIVE:   statusStr = "ACTIVE";   break;
             case BANKRUPT: statusStr = "BANKRUPT"; break;
             case JAILED:   statusStr = "JAILED";   break;
         }
 
-        const std::vector<SkillCard*>& hand = p->getHand();
+        const vector<SkillCard*>& hand = p->getHand();
         out << p->getUsername() << " "
             << p->getMoney() << " "
             << p->getPosition() << " "
@@ -40,7 +40,7 @@ void GameSaver::writePlayerStates(std::ofstream& out,
                 out << " - - -";
                 continue;
             }
-            std::string type = c->getCardType();
+            string type = c->getCardType();
             out << " " << type;
 
             bool hasValue = (type == "MoveCard" || type == "DiscountCard" || type == "TeleportCard");
@@ -55,12 +55,12 @@ void GameSaver::writePlayerStates(std::ofstream& out,
     }
 }
 
-void GameSaver::writeTurnOrder(std::ofstream& out, GameBoard* board) const {
+void GameSaver::writeTurnOrder(ofstream& out, GameBoard* board) const {
     if (board == nullptr) {
         out << "\n\n";
         return;
     }
-    const std::vector<Player*>& players = board->getPlayers();
+    const vector<Player*>& players = board->getPlayers();
     for (size_t i = 0; i < players.size(); ++i) {
         if (i > 0) out << " ";
         if (players[i] != nullptr) out << players[i]->getUsername();
@@ -70,9 +70,9 @@ void GameSaver::writeTurnOrder(std::ofstream& out, GameBoard* board) const {
     out << (cur ? cur->getUsername() : "") << "\n";
 }
 
-void GameSaver::writePropertyStates(std::ofstream& out,
-                                    const std::vector<Tile*>& tiles) const {
-    std::vector<Property*> props;
+void GameSaver::writePropertyStates(ofstream& out,
+                                    const vector<Tile*>& tiles) const {
+    vector<Property*> props;
     for (size_t i = 0; i < tiles.size(); ++i) {
         Property* p = dynamic_cast<Property*>(tiles[i]);
         if (p != nullptr) props.push_back(p);
@@ -81,29 +81,29 @@ void GameSaver::writePropertyStates(std::ofstream& out,
     for (size_t i = 0; i < props.size(); ++i) {
         Property* p = props[i];
 
-        std::string kind = "street";
+        string kind = "street";
         if (dynamic_cast<Railroad*>(p)) kind = "railroad";
         else if (dynamic_cast<Utility*>(p)) kind = "utility";
 
-        std::string statusStr;
+        string statusStr;
         switch (p->getStatus()) {
             case BANK:      statusStr = "BANK";      break;
             case OWNED:     statusStr = "OWNED";     break;
             case MORTGAGED: statusStr = "MORTGAGED"; break;
         }
 
-        std::string owner = p->getOwner();
+        string owner = p->getOwner();
         if (owner.empty()) owner = "BANK";
 
-        std::string building = "0";
+        string building = "0";
         Street* s = dynamic_cast<Street*>(p);
         if (s != nullptr) {
             building = s->getBuildingCount();
             if (building.empty()) building = "0";
         }
 
-        std::string code = p->getCode();
-        if (code.empty()) code = std::to_string(p->getPosition());
+        string code = p->getCode();
+        if (code.empty()) code = to_string(p->getPosition());
 
         out << code << " " << kind << " " << owner << " "
             << statusStr << " "
@@ -113,8 +113,8 @@ void GameSaver::writePropertyStates(std::ofstream& out,
     }
 }
 
-void GameSaver::writeDeckState(std::ofstream& out,
-                               const std::vector<SkillCard*>& deck) const {
+void GameSaver::writeDeckState(ofstream& out,
+                               const vector<SkillCard*>& deck) const {
     out << deck.size();
     for (size_t i = 0; i < deck.size(); ++i) {
         SkillCard* c = deck[i];
@@ -124,25 +124,23 @@ void GameSaver::writeDeckState(std::ofstream& out,
     out << "\n";
 }
 
-void GameSaver::writeLogState(std::ofstream& out,
-                              TransactionLogger* logger) const {
+void GameSaver::writeLogState(ofstream& out, TransactionLogger* logger) const {
     if (logger == nullptr) {
         out << 0 << "\n";
         return;
     }
-    std::vector<std::string> entries = logger->getAll();
+    vector<string> entries = logger->getAll();
     out << entries.size() << "\n";
     for (size_t i = 0; i < entries.size(); ++i) {
         out << entries[i] << "\n";
     }
 }
 
-bool GameSaver::save(GameBoard* board, TransactionLogger* logger,
-                     const std::string& filename) const {
+bool GameSaver::save(GameBoard* board, TransactionLogger* logger, const string& filename) const {
     if (board == nullptr) {
         throw FileWriteException("GameSaver::save: board is null");
     }
-    std::ofstream out(filename.c_str());
+    ofstream out(filename.c_str());
     if (!out.is_open()) {
         throw FileWriteException("Cannot open " + filename + " for writing");
     }
@@ -153,7 +151,7 @@ bool GameSaver::save(GameBoard* board, TransactionLogger* logger,
     writeTurnOrder(out, board);
     writePropertyStates(out, board->getTiles());
 
-    std::vector<SkillCard*> deck;
+    vector<SkillCard*> deck;
     if (board->getSkillDeck() != nullptr) {
         deck = board->getSkillDeck()->getDeck();
     }

@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
+
 class FileParser {
 protected:
     std::vector<std::string> tokenizeLine(const std::string& line) const;

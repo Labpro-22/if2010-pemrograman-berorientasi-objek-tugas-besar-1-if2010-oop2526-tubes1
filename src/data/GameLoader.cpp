@@ -16,7 +16,7 @@
 
 namespace {
 
-int parseInt(const std::string& s, const std::string& context) {
+int parseInt(const string& s, const string& context) {
     if (s.empty()) {
         throw FileFormatException("Empty integer in " + context);
     }
@@ -27,12 +27,12 @@ int parseInt(const std::string& s, const std::string& context) {
             throw FileFormatException("Non-integer token '" + s + "' in " + context);
         }
     }
-    return std::atoi(s.c_str());
+    return atoi(s.c_str());
 }
 
-bool readNonBlankLine(std::ifstream& in, std::string& out) {
-    std::string line;
-    while (std::getline(in, line)) {
+bool readNonBlankLine(ifstream& in, string& out) {
+    string line;
+    while (getline(in, line)) {
         if (!line.empty() && line[line.size() - 1] == '\r') {
             line.erase(line.size() - 1);
         }
@@ -47,9 +47,7 @@ bool readNonBlankLine(std::ifstream& in, std::string& out) {
     return false;
 }
 
-SkillCard* buildSkillCard(const std::string& type,
-                          const std::string& valTok,
-                          const std::string& durTok) {
+SkillCard* buildSkillCard(const string& type, const string& valTok, const string& durTok) {
     int value = (valTok == "-" || valTok.empty()) ? 0
                 : parseInt(valTok, "skill card value");
     int duration = (durTok == "-" || durTok.empty()) ? -1
@@ -77,12 +75,12 @@ SkillCard* buildSkillCard(const std::string& type,
 
 }
 
-void GameLoader::readPlayerStates(std::ifstream& in, GameBoard* board) {
-    std::string line;
+void GameLoader::readPlayerStates(ifstream& in, GameBoard* board) {
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing player count");
     }
-    std::vector<std::string> hdr = tokenizeLine(trim(line));
+    vector<string> hdr = tokenizeLine(trim(line));
     if (hdr.empty()) {
         throw FileFormatException("Save file: empty player count line");
     }
@@ -91,14 +89,14 @@ void GameLoader::readPlayerStates(std::ifstream& in, GameBoard* board) {
         if (!readNonBlankLine(in, line)) {
             throw FileFormatException("Save file: missing player line");
         }
-        std::vector<std::string> t = tokenizeLine(trim(line));
+        vector<string> t = tokenizeLine(trim(line));
         if (t.size() < 5) {
             throw FileFormatException("Player line too short: " + line);
         }
-        std::string username = t[0];
+        string username = t[0];
         int money = parseInt(t[1], "player UANG");
         int position = parseInt(t[2], "player POSISI");
-        std::string statusStr = t[3];
+        string statusStr = t[3];
         int handCount = parseInt(t[4], "player JUMLAH_KARTU");
 
         PlayerStatus status;
@@ -116,9 +114,9 @@ void GameLoader::readPlayerStates(std::ifstream& in, GameBoard* board) {
             if (idx + 2 >= t.size()) {
                 throw FileFormatException("Player hand truncated for " + username);
             }
-            std::string type = t[idx];
-            std::string valTok = t[idx + 1];
-            std::string durTok = t[idx + 2];
+            string type = t[idx];
+            string valTok = t[idx + 1];
+            string durTok = t[idx + 2];
             idx += 3;
             SkillCard* c = buildSkillCard(type, valTok, durTok);
             p->receiveCard(c);
@@ -128,12 +126,12 @@ void GameLoader::readPlayerStates(std::ifstream& in, GameBoard* board) {
     }
 }
 
-void GameLoader::readTurnOrder(std::ifstream& in, GameBoard* board) {
-    std::string line;
+void GameLoader::readTurnOrder(ifstream& in, GameBoard* board) {
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing turn order");
     }
-    std::vector<std::string> order = tokenizeLine(trim(line));
+    vector<string> order = tokenizeLine(trim(line));
     if (board != nullptr && !order.empty()) {
         board->setTurnOrder(order);
     }
@@ -141,18 +139,18 @@ void GameLoader::readTurnOrder(std::ifstream& in, GameBoard* board) {
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing current player");
     }
-    std::string currentUser = trim(line);
+    string currentUser = trim(line);
     if (board != nullptr && !currentUser.empty()) {
         board->setCurrentPlayerByUsername(currentUser);
     }
 }
 
-void GameLoader::readPropertyStates(std::ifstream& in, GameBoard* board) {
-    std::string line;
+void GameLoader::readPropertyStates(ifstream& in, GameBoard* board) {
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing property count");
     }
-    std::vector<std::string> hdr = tokenizeLine(trim(line));
+    vector<string> hdr = tokenizeLine(trim(line));
     if (hdr.empty()) {
         throw FileFormatException("Save file: empty property count");
     }
@@ -161,19 +159,19 @@ void GameLoader::readPropertyStates(std::ifstream& in, GameBoard* board) {
         if (!readNonBlankLine(in, line)) {
             throw FileFormatException("Save file: missing property line");
         }
-        std::vector<std::string> t = tokenizeLine(trim(line));
+        vector<string> t = tokenizeLine(trim(line));
         if (t.size() < 7) {
             throw FileFormatException("Property line too short: " + line);
         }
-        std::string code = t[0];
-        std::string owner = t[2];
-        std::string statusStr = t[3];
+        string code = t[0];
+        string owner = t[2];
+        string statusStr = t[3];
         int fmult = parseInt(t[4], "FMULT");
         int fdur = parseInt(t[5], "FDUR");
-        std::string building = t[6];
+        string building = t[6];
 
         Property* prop = nullptr;
-        const std::vector<Tile*>& tiles = board->getTiles();
+        const vector<Tile*>& tiles = board->getTiles();
         for (size_t k = 0; k < tiles.size(); ++k) {
             Property* cand = dynamic_cast<Property*>(tiles[k]);
             if (cand != nullptr && cand->getCode() == code) {
@@ -203,13 +201,13 @@ void GameLoader::readPropertyStates(std::ifstream& in, GameBoard* board) {
     }
 }
 
-std::vector<SkillCard*> GameLoader::readDeckState(std::ifstream& in) {
-    std::vector<SkillCard*> out;
-    std::string line;
+vector<SkillCard*> GameLoader::readDeckState(ifstream& in) {
+    vector<SkillCard*> out;
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing deck line");
     }
-    std::vector<std::string> t = tokenizeLine(trim(line));
+    vector<string> t = tokenizeLine(trim(line));
     if (t.empty()) {
         throw FileFormatException("Save file: empty deck line");
     }
@@ -224,12 +222,12 @@ std::vector<SkillCard*> GameLoader::readDeckState(std::ifstream& in) {
     return out;
 }
 
-void GameLoader::readLogState(std::ifstream& in, TransactionLogger* logger) {
-    std::string line;
+void GameLoader::readLogState(ifstream& in, TransactionLogger* logger) {
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file: missing log count");
     }
-    std::vector<std::string> hdr = tokenizeLine(trim(line));
+    vector<string> hdr = tokenizeLine(trim(line));
     if (hdr.empty()) {
         throw FileFormatException("Save file: empty log count");
     }
@@ -241,56 +239,56 @@ void GameLoader::readLogState(std::ifstream& in, TransactionLogger* logger) {
         }
         if (logger == nullptr) continue;
 
-        std::string::size_type lb = line.find('[');
-        std::string::size_type rb = line.find(']');
-        if (lb == std::string::npos || rb == std::string::npos || rb <= lb) {
+        string::size_type lb = line.find('[');
+        string::size_type rb = line.find(']');
+        if (lb == string::npos || rb == string::npos || rb <= lb) {
             throw FileFormatException("Log entry missing [Turn N] prefix: " + line);
         }
-        std::string inside = line.substr(lb + 1, rb - lb - 1);
-        std::string::size_type sp = inside.find(' ');
-        if (sp == std::string::npos) {
+        string inside = line.substr(lb + 1, rb - lb - 1);
+        string::size_type sp = inside.find(' ');
+        if (sp == string::npos) {
             throw FileFormatException("Log entry malformed turn: " + line);
         }
         int turn = parseInt(inside.substr(sp + 1), "log TURN");
 
-        std::string rest = line.substr(rb + 1);
+        string rest = line.substr(rb + 1);
         size_t k = 0;
         while (k < rest.size() && rest[k] == ' ') ++k;
         rest = rest.substr(k);
 
-        std::string::size_type p1 = rest.find(" | ");
-        if (p1 == std::string::npos) {
+        string::size_type p1 = rest.find(" | ");
+        if (p1 == string::npos) {
             throw FileFormatException("Log entry missing separator: " + line);
         }
-        std::string user = rest.substr(0, p1);
-        std::string after1 = rest.substr(p1 + 3);
-        std::string::size_type p2 = after1.find(" | ");
-        if (p2 == std::string::npos) {
+        string user = rest.substr(0, p1);
+        string after1 = rest.substr(p1 + 3);
+        string::size_type p2 = after1.find(" | ");
+        if (p2 == string::npos) {
             throw FileFormatException("Log entry missing second separator: " + line);
         }
-        std::string action = after1.substr(0, p2);
-        std::string detail = after1.substr(p2 + 3);
+        string action = after1.substr(0, p2);
+        string detail = after1.substr(p2 + 3);
 
         logger->log(turn, user, action, detail);
     }
 }
 
-bool GameLoader::loadSave(const std::string& filename,
+bool GameLoader::loadSave(const string& filename,
                           GameBoard* board,
                           TransactionLogger* logger) {
     if (board == nullptr) {
         throw FileFormatException("GameLoader::loadSave: board is null");
     }
-    std::ifstream in(filename.c_str());
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
 
-    std::string line;
+    string line;
     if (!readNonBlankLine(in, line)) {
         throw FileFormatException("Save file empty");
     }
-    std::vector<std::string> hdr = tokenizeLine(trim(line));
+    vector<string> hdr = tokenizeLine(trim(line));
     if (hdr.size() < 2) {
         throw FileFormatException("Save file: first line needs <TURN> <MAX_TURN>");
     }
@@ -303,7 +301,7 @@ bool GameLoader::loadSave(const std::string& filename,
     readTurnOrder(in, board);
     readPropertyStates(in, board);
 
-    std::vector<SkillCard*> loadedDeck = readDeckState(in);
+    vector<SkillCard*> loadedDeck = readDeckState(in);
     CardDeck<SkillCard>* targetDeck = board->getSkillDeck();
     if (targetDeck != nullptr) {
         while (!targetDeck->isEmpty()) {
@@ -324,26 +322,26 @@ bool GameLoader::loadSave(const std::string& filename,
     return true;
 }
 
-bool GameLoader::validate(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+bool GameLoader::validate(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) return false;
 
-    std::string line;
+    string line;
     if (!readNonBlankLine(in, line)) return false;
-    std::vector<std::string> header = tokenizeLine(trim(line));
+    vector<string> header = tokenizeLine(trim(line));
     if (header.size() < 2) return false;
     for (size_t i = 0; i < 2; ++i) {
-        const std::string& t = header[i];
+        const string& t = header[i];
         if (t.empty()) return false;
         for (size_t j = 0; j < t.size(); ++j) {
-            if (!std::isdigit(static_cast<unsigned char>(t[j]))) return false;
+            if (!isdigit(static_cast<unsigned char>(t[j]))) return false;
         }
     }
     if (!readNonBlankLine(in, line)) return false;
-    std::vector<std::string> second = tokenizeLine(trim(line));
+    vector<string> second = tokenizeLine(trim(line));
     if (second.empty()) return false;
     for (size_t j = 0; j < second[0].size(); ++j) {
-        if (!std::isdigit(static_cast<unsigned char>(second[0][j]))) return false;
+        if (!isdigit(static_cast<unsigned char>(second[0][j]))) return false;
     }
     return true;
 }

@@ -24,7 +24,7 @@
 
 namespace {
 
-int parseInt(const std::string& s, const std::string& context) {
+int parseInt(const string& s, const string& context) {
     if (s.empty()) {
         throw FileFormatException("Empty integer in " + context);
     }
@@ -35,24 +35,24 @@ int parseInt(const std::string& s, const std::string& context) {
             throw FileFormatException("Non-integer token '" + s + "' in " + context);
         }
     }
-    return std::atoi(s.c_str());
+    return atoi(s.c_str());
 }
 
-std::string toUpper(const std::string& s) {
-    std::string out = s;
+string toUpper(const string& s) {
+    string out = s;
     for (size_t i = 0; i < out.size(); ++i) {
-        out[i] = static_cast<char>(std::toupper(static_cast<unsigned char>(out[i])));
+        out[i] = static_cast<char>(toupper(static_cast<unsigned char>(out[i])));
     }
     return out;
 }
 
-bool startsWithDigit(const std::string& s) {
+bool startsWithDigit(const string& s) {
     return !s.empty() && s[0] >= '0' && s[0] <= '9';
 }
 
 }
 
-ConfigParser::ConfigParser(const std::string& basePath)
+ConfigParser::ConfigParser(const string& basePath)
     : basePath(basePath),
       pphFlat(0), pphPercentage(0), pbmFlat(0),
       goSalary(0), jailFine(0),
@@ -67,17 +67,17 @@ ConfigParser::~ConfigParser() {
     delete communityDeck;
 }
 
-void ConfigParser::parsePropertyConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parsePropertyConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.empty()) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -89,10 +89,10 @@ void ConfigParser::parsePropertyConfig(const std::string& filename) {
 
         int id = parseInt(tokens[0], "property.txt ID");
         int position = id - 1;
-        std::string code = tokens[1];
-        std::string name = tokens[2];
-        std::string type = toUpper(tokens[3]);
-        std::string colorRaw = tokens[4];
+        string code = tokens[1];
+        string name = tokens[2];
+        string type = toUpper(tokens[3]);
+        string colorRaw = tokens[4];
 
         Tile* tile = nullptr;
         if (type == "STREET") {
@@ -104,7 +104,7 @@ void ConfigParser::parsePropertyConfig(const std::string& filename) {
             int upgRumah = parseInt(tokens[7], "property.txt UPG_RUMAH");
             int upgHotel = parseInt(tokens[8], "property.txt UPG_HT");
 
-            std::string up = toUpper(colorRaw);
+            string up = toUpper(colorRaw);
             ColorGroup colorGroup;
             if (up == "COKLAT" || up == "COKELAT") colorGroup = COKELAT;
             else if (up == "BIRU_MUDA") colorGroup = BIRU_MUDA;
@@ -118,7 +118,7 @@ void ConfigParser::parsePropertyConfig(const std::string& filename) {
 
             Street* s = new Street(position, name, colorRaw, colorGroup,
                                    harga, gadai, upgRumah, upgHotel);
-            std::map<int, int> rentTable;
+            map<int, int> rentTable;
             int levels = static_cast<int>(tokens.size()) - 9;
             if (levels < 1) {
                 throw FileFormatException("property.txt: street missing rent levels");
@@ -150,18 +150,18 @@ void ConfigParser::parsePropertyConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseRailroadConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseRailroadConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
     railroadRentTable.clear();
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.size() < 2) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -173,18 +173,18 @@ void ConfigParser::parseRailroadConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseUtilityConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseUtilityConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
     utilityMultiplierTable.clear();
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.size() < 2) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -196,17 +196,17 @@ void ConfigParser::parseUtilityConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseTaxConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseTaxConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.size() < 3) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -219,17 +219,17 @@ void ConfigParser::parseTaxConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseSpecialConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseSpecialConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.size() < 2) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -241,17 +241,17 @@ void ConfigParser::parseSpecialConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseMiscConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseMiscConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.size() < 2) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -263,17 +263,17 @@ void ConfigParser::parseMiscConfig(const std::string& filename) {
     }
 }
 
-void ConfigParser::parseActionConfig(const std::string& filename) {
-    std::ifstream in(filename.c_str());
+void ConfigParser::parseActionConfig(const string& filename) {
+    ifstream in(filename.c_str());
     if (!in.is_open()) {
         throw FileFormatException("Cannot open " + filename);
     }
-    std::string line;
+    string line;
     bool headerConsumed = false;
-    while (std::getline(in, line)) {
-        std::string trimmed = trim(line);
+    while (getline(in, line)) {
+        string trimmed = trim(line);
         if (trimmed.empty()) continue;
-        std::vector<std::string> tokens = tokenizeLine(trimmed);
+        vector<string> tokens = tokenizeLine(trimmed);
         if (tokens.empty()) continue;
         if (!headerConsumed) {
             headerConsumed = true;
@@ -285,11 +285,11 @@ void ConfigParser::parseActionConfig(const std::string& filename) {
 
         int id = parseInt(tokens[0], "aksi.txt ID");
         int position = id - 1;
-        std::string code = tokens[1];
-        std::string name = tokens[2];
-        std::string jenis = toUpper(tokens[3]);
-        std::string color = tokens[4];
-        std::string upCode = toUpper(code);
+        string code = tokens[1];
+        string name = tokens[2];
+        string jenis = toUpper(tokens[3]);
+        string color = tokens[4];
+        string upCode = toUpper(code);
 
         Tile* tile = nullptr;
         if (jenis == "SPESIAL" || jenis == "SPECIAL") {
@@ -327,11 +327,19 @@ void ConfigParser::parseActionConfig(const std::string& filename) {
     }
 }
 
+int ConfigParser::getMaxTurn() const        { return maxTurn; }
+int ConfigParser::getStartBalance() const   { return startBalance; }
+int ConfigParser::getGoSalary() const       { return goSalary; }
+int ConfigParser::getJailFine() const       { return jailFine; }
+int ConfigParser::getPphFlat() const        { return pphFlat; }
+int ConfigParser::getPphPercentage() const  { return pphPercentage; }
+int ConfigParser::getPbmFlat() const        { return pbmFlat; }
+
 void ConfigParser::loadConfig(GameBoard* board) {
     if (board == nullptr) {
         throw FileFormatException("ConfigParser::loadConfig: board is null");
     }
-    const std::string sep = "/";
+    const string sep = "/";
     parseTaxConfig(basePath + sep + "tax.txt");
     parseSpecialConfig(basePath + sep + "special.txt");
     parseMiscConfig(basePath + sep + "misc.txt");
@@ -345,15 +353,15 @@ void ConfigParser::loadConfig(GameBoard* board) {
     }
     int maxPos = stagedTiles.rbegin()->first;
     for (int i = 0; i <= maxPos; ++i) {
-        std::map<int, Tile*>::iterator it = stagedTiles.find(i);
+        map<int, Tile*>::iterator it = stagedTiles.find(i);
         if (it == stagedTiles.end()) {
-            throw FileFormatException("Missing tile at position " + std::to_string(i));
+            throw FileFormatException("Missing tile at position " + to_string(i));
         }
         board->addTile(it->second);
     }
     stagedTiles.clear();
 
-    const std::vector<Tile*>& tiles = board->getTiles();
+    const vector<Tile*>& tiles = board->getTiles();
     for (size_t i = 0; i < tiles.size(); ++i) {
         Railroad* r = dynamic_cast<Railroad*>(tiles[i]);
         if (r != nullptr) {

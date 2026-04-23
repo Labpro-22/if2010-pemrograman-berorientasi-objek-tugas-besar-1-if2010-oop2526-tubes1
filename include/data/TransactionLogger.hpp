@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
+
 class TransactionLogger {
 private:
     std::vector<std::string> logs;

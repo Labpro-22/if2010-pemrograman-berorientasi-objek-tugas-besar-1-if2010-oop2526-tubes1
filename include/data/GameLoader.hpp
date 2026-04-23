@@ -7,6 +7,9 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
+
 class GameBoard;
 class SkillCard;
 class TransactionLogger;
