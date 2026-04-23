@@ -255,8 +255,7 @@ int main() {
                 if (state.getPhase() != GamePhase::GAME_OVER) 
                     gameMaster->beginTurn();
 
-                    gui.clearCommands();
-                }
+                gui.clearCommands();
             }
 
             // Reset guard kalau giliran berganti ke pemain baru
