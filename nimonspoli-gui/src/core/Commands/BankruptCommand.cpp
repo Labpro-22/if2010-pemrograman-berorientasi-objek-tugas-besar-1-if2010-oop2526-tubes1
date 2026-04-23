@@ -1,6 +1,6 @@
 #include "../Commands/BankruptCommand.hpp"
 
-BankruptCommand::BankruptCommand(GameMaster& gm, GameState& gs, Player* from, Player* to, int debt, bool sellOverMortgage, int propToSell) 
+BankruptCommand::BankruptCommand(GameMaster& gm, GameState& gs, Player* from, Player* to, int debt, bool sellOverMortgage, int propToSell = -1) 
     : gm(gm), state(gs), from(from), to(to), debt(debt), sellOverMortgage(sellOverMortgage), propToSell(propToSell) {}
 
 // While debt is unpaid (and can be paid with liquidation), try this
@@ -29,21 +29,27 @@ void BankruptCommand::execute(GameMaster& gm)
     }
     else if (liquidation == 1) 
     {
-        if (propToSell < 0 || propToSell >= from->getPropertyCount()) {
-            // err idx out of bounds
-            return;
-        }
-        
-        Property* prop = from->getProperties()[propToSell];
-        if (sellOverMortgage)
-        {
-            std::cout << "Menjual properti " << prop->getName() << std::endl;
-            gm.sellPropertyToBank(from, prop);
-        }
-        else
-        {
-            std::cout << "Menggadaikan properti " << prop->getName() << std::endl;
-            gm.mortgageProperty(from, prop);
+        while (from->getBalance() < debt) {
+            // Belum ada guardnyaaaaaaaaa
+            std::cout << "Prop idx: ";
+            std::cin >> propToSell;
+            std::cout << "State: ";
+            std::cin >> sellOverMortgage;
+            if (propToSell < 0 || propToSell >= from->getPropertyCount()) {
+                // err idx out of bounds
+                continue;
+            }
+            Property* prop = from->getProperties()[propToSell];
+            if (sellOverMortgage)
+            {
+                std::cout << "Menjual properti " << prop->getName() << std::endl;
+                gm.sellPropertyToBank(from, prop);
+            }
+            else
+            {
+                std::cout << "Menggadaikan properti " << prop->getName() << std::endl;
+                gm.mortgageProperty(from, prop);
+            }
         }
          
     }
