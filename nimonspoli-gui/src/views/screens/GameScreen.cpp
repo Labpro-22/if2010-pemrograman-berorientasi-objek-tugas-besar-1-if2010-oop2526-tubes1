@@ -86,211 +86,6 @@ bool GameScreen::isRealMode() const
     return guiManager != nullptr && guiManager->getGameMaster() != nullptr;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  syncFromGameMaster()
-//
-//  Dipanggil setiap frame di update() jika isRealMode() == true.
-//  Fungsi ini mengisi ulang MockGameState dari data real sehingga semua
-//  fungsi render (drawBoard, drawLeftPanel, dll.) tidak perlu diubah.
-//
-//  Apa yang disync:
-//    - currentTurn, maxTurn
-//    - players (username, balance, position, status, cardCount, isCurrentTurn)
-//    - properties (owner, mortgaged, status — dari Board + Property*)
-//
-// ─────────────────────────────────────────────────────────────────────────────
-void GameScreen::syncFromGameMaster()
-{
-    if (!isRealMode())
-        return;
-
-    GameMaster *gm = guiManager->getGameMaster();
-    const GameState &gs = gm->getState();
-    Board *board = gs.getBoard();
-
-    gameState.currentTurn = gs.getCurrTurn();
-    gameState.maxTurn = gs.getMaxTurn();
-    gameState.activePlayerIdx = gs.getCurrPlayerIdx();
-
-    // -- Sync Players --
-    const auto &realPlayers = gs.getPlayers();
-    if (playerVisuals.size() != realPlayers.size())
-    {
-        playerVisuals.resize(realPlayers.size());
-        for (int i = 0; i < (int)realPlayers.size(); i++)
-        {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
-            playerVisuals[i].targetTileIdx = playerVisuals[i].currentTileIdx;
-        }
-    }
-    gameState.players.resize(realPlayers.size());
-
-    for (int i = 0; i < (int)realPlayers.size(); ++i)
-    {
-        Player *p = realPlayers[i];
-        MockPlayer &mp = gameState.players[i];
-
-        mp.username = p->getUsername();
-        mp.money = p->getBalance();
-        int realPos = p->getPosition();
-        mp.position = realPos;
-        mp.cardCount = p->getHandSize();
-        mp.status = (p->getStatus() == PlayerStatus::JAILED) ? "JAILED" : (p->getStatus() == PlayerStatus::BANKRUPT) ? "BANKRUPT"
-                                                                                                                     : "ACTIVE";
-
-        // LOGIKA ANIMASI: Jika posisi real berubah, set target baru
-        if (realPos != (int)playerVisuals[i].targetTileIdx)
-        {
-            playerVisuals[i].targetTileIdx = (float)realPos;
-        }                                                                  
-    }
-
-    // -- Sync Properties --
-    if (board)
-    {
-        int boardSz = board->getSize();
-        // Ensure gameState.properties has enough slots (indexed 0..boardSz-1)
-        if ((int)gameState.properties.size() != boardSz)
-        {
-            gameState.properties.resize(boardSz);
-            for (int i = 0; i < boardSz; i++)
-            {
-                gameState.properties[i].code = (i < 40) ? TILE_DEFS[i].code : "";
-                gameState.properties[i].owner = -1;
-                gameState.properties[i].buildings = 0;
-                gameState.properties[i].mortgaged = false;
-                gameState.properties[i].festivalMult = 1;
-                gameState.properties[i].festivalDur = 0;
-                gameState.properties[i].type = "ACTION";
-                gameState.properties[i].colorGroup = "";
-            }
-        }
-
-        for (int i = 0; i < boardSz; ++i)
-        {
-            Tile *tile = board->getTile(i); // 0-based
-            if (!tile)
-                continue;
-
-            MockProperty &mp = gameState.properties[i];
-            mp.code = tile->getCode();
-
-            PropertyTile *pt = dynamic_cast<PropertyTile *>(tile);
-            if (!pt)
-            {
-                mp.type = "ACTION";
-                mp.owner = -1;
-                continue;
-            }
-
-            Property *prop = pt->getProperty();
-            if (!prop)
-                continue;
-
-            // Base fields
-            mp.name        = prop->getName();
-            mp.colorGroup  = prop->getColorGroup();
-            mp.price       = prop->getPurchasePrice();
-            mp.mortgageVal = prop->getMortageValue();
-            mp.mortgaged   = (prop->getStatus() == PropertyStatus::MORTGAGED);
-
-            // Owner index
-            const std::string &ownerId = prop->getOwnerId();
-            mp.owner = -1;
-            if (prop->getStatus() != PropertyStatus::BANK)
-            {
-                for (int pi = 0; pi < (int)realPlayers.size(); ++pi)
-                {
-                    if (realPlayers[pi]->getUsername() == ownerId)
-                    {
-                        mp.owner = pi;
-                        break;
-                    }
-                }
-            }
-
-            // Type-specific fields
-            if (auto *sp = dynamic_cast<StreetProperty *>(prop))
-            {
-                mp.type        = "STREET";
-                mp.buildings   = sp->gethasHotel() ? 5 : sp->getBuildingCount();
-                mp.festivalMult = sp->getFestivalMultiplier();
-                mp.festivalDur  = sp->getFestivalDuration();
-                mp.houseUpg    = sp->getHouseUpgCost();
-                mp.hotelUpg    = sp->getHotelUpgCost();
-                // Rent tiers (calculateRentPrice uses monopoly flag for level 0)
-                mp.rentL0 = sp->calculateRentPrice(0, 1, false); // no monopoly
-                mp.rentL1 = sp->calculateRentPrice(0, 1, false); // placeholder — buildings sync'd separately
-                mp.rentL2 = sp->calculateRentPrice(0, 1, false);
-                mp.rentL3 = sp->calculateRentPrice(0, 1, false);
-                mp.rentL4 = sp->calculateRentPrice(0, 1, false);
-                mp.rentL5 = sp->calculateRentPrice(0, 1, false);
-                // Better: read from rent map directly via calculateRentPrice with building counts
-                // We store actual values per level using StreetProperty's internal map
-            }
-            else if (dynamic_cast<RailRoadTile *>(tile))
-            {
-                mp.type = "RAILROAD";
-                mp.buildings = 0;
-                mp.festivalMult = 1;
-                mp.festivalDur  = 0;
-            }
-            else
-            {
-                mp.type = "UTILITY";
-                mp.buildings = 0;
-                mp.festivalMult = 1;
-                mp.festivalDur  = 0;
-            }
-        }
-    }
-}
-// ─────────────────────────────────────────────────────────────────────────────
-//  syncDiceResult()
-//
-//  Dipanggil dari GUIManager::run() SETELAH flushCommands(), karena
-//  LemparDaduCommand baru mengubah nilai Dice di dalam execute().
-//
-//  Mengisi diceState dari Dice* real sehingga drawDiceArea() langsung
-//  menampilkan hasil yang benar tanpa perlu ubah render code.
-// ─────────────────────────────────────────────────────────────────────────────
-void GameScreen::syncDiceResult()
-{
-    if (!isRealMode())
-        return;
-
-    GameMaster *gm = guiManager->getGameMaster();
-    Dice *dice = gm->getState().getDice();
-    if (!dice)
-        return;
-
-    int v1 = dice->getDaduVal1();
-    int v2 = dice->getDaduVal2();
-
-    // Trigger animasi jika nilai valid DAN (nilai berubah ATAU hasRolled baru saja aktif)
-    bool justRolled = gm->getState().getHasRolled() && !diceState.hasRolled;
-    bool valChanged = (v1 != diceState.val1 || v2 != diceState.val2);
-
-    if ((valChanged || justRolled) && v1 > 0)
-    {
-        diceState.val1 = v1;
-        diceState.val2 = v2;
-        diceState.animating = true;
-        diceState.animTimer = 0.f;
-    }
-    diceState.hasRolled = gm->getState().getHasRolled();
-
-    // -- Trigger Dialogs (Tetap sama, pastikan tidak duplikat) --
-    const GameState &gs = gm->getState();
-    if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
-        triggerBuyDialog(gs.getCurrPlayer()->getPosition());
-    if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
-        triggerTaxDialog();
-    if (gs.getPhase() == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
-        triggerFestivalDialog();
-    if (gs.getPhase() == GamePhase::SHOW_CARD && !cardDialog.visible)
-        triggerCardDialog();
-}
 // ─── Update ──────────────────────────────────────────────────────────────────
 void GameScreen::update(float dt)
 {
@@ -343,6 +138,14 @@ void GameScreen::render(Window& window)
     drawSavePopup();
     drawJailDialog();
     drawPropertiPopup();
+    
+    // Dialogs baru
+    drawGadaiDialog();
+    drawTebusDialog();
+    drawBangunDialog();
+    drawJualBangunanDialog();
+    drawSkillCardDialog();
+
     DrawFPS(LEFT_PANEL + 4, 4);
 }
 
@@ -446,8 +249,6 @@ void GameScreen::handleInput()
     if (IsKeyPressed(KEY_T) && isRealMode()) {
         GameMaster* gm = guiManager->getGameMaster();
         Player* cur = gm->getState().getCurrPlayer();
-        if (cur && selectedTile >= 0)
-            cur->setPosition(selectedTile + 1);
         if (cur && selectedTile >= 0) {
             cur->setPosition(selectedTile);  // 0-based internal
             std::cout << "[DEBUG] Teleport ke tile " << selectedTile

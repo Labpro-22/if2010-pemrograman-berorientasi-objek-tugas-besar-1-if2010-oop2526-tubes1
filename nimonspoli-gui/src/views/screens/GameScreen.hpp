@@ -9,7 +9,7 @@
 #include "../../core/Card/DiscountCard.hpp"
 #include "../../core/Card/ShieldCard.hpp"
 #include "../../core/Card/TeleportCard.hpp"
-#include "../../core/Card/LassoCard.hpp"
+#include "../../core/Card/LassoCard.hpp"    
 #include "../../core/Card/DemolitionCard.hpp"
 
 #include <string>
@@ -206,8 +206,21 @@ private:
         std::string description;
     } cardDialog;
 
-    void triggerCardDialog();   // dipanggil saat phase == SHOW_CARD
-    void drawCardDialog();      // render popup panel + tombol OK
+    // ── Jail Dialog ───────────────────────────────────────────────────────
+    struct JailDialogState
+    {
+        bool visible = false;
+        int jailFine = 50;
+        bool canAffordFine = true;
+        int jailTurnsLeft = 0;
+    } jailDialog;
+
+    // ── Properti Popup ────────────────────────────────────────────────────
+    struct PropertiPopupState
+    {
+        bool visible = false;
+        float scrollY = 0.f;
+    } propertiPopup;
 
     // ── Dialog Gadai ──────────────────────────────────────────────────────
     struct GadaiDialogState {

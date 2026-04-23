@@ -680,3 +680,53 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
     }
     gs.setHasUsedCard(true);
 }
+
+// ─────────────────────────────────────────────
+//  Proxy metode dialog GUI
+// ─────────────────────────────────────────────
+
+void GameMaster::handleGadai(Property* prop) {
+    if (!prop) return;
+    if (prop->getStatus() == PropertyStatus::OWNED) {
+        prop->setStatus(PropertyStatus::MORTGAGED);
+        int gadaiVal = prop->getPurchasePrice() / 2; // Asumsi gadai setengah harga
+        Player* cur = state.getCurrPlayer();
+        *cur += gadaiVal;
+        log(cur->getUsername(), "GADAI", "Menggadaikan " + prop->getName() + " seharga M" + std::to_string(gadaiVal));
+    }
+}
+
+void GameMaster::handleTebus(Property* prop) {
+    if (!prop) return;
+    if (prop->getStatus() == PropertyStatus::MORTGAGED) {
+        int tebusVal = prop->getPurchasePrice(); // Asumsi harga tebus sama dengan harga beli penuh
+        Player* cur = state.getCurrPlayer();
+        if (cur->getBalance() >= tebusVal) {
+            *cur -= tebusVal;
+            prop->setStatus(PropertyStatus::OWNED);
+            log(cur->getUsername(), "TEBUS", "Menebus " + prop->getName() + " seharga M" + std::to_string(tebusVal));
+        }
+    }
+}
+
+void GameMaster::handleBangun(StreetProperty* sp) {
+    if (!sp) return;
+    Player* cur = state.getCurrPlayer();
+    int cost = sp->getHouseUpgCost();
+    if (cur->getBalance() >= cost && !sp->gethasHotel()) {
+        *cur -= cost;
+        // Asumsikan build function, ini placeholder. Bisa diimplementasikan spesifik nanti oleh anggota lain.
+        log(cur->getUsername(), "BANGUN", "Membangun di " + sp->getName() + " seharga M" + std::to_string(cost));
+    }
+}
+
+void GameMaster::handleJualBangunan(StreetProperty* sp) {
+    if (!sp) return;
+    Player* cur = state.getCurrPlayer();
+    if (sp->getBuildingCount() > 0 || sp->gethasHotel()) {
+        int sellVal = sp->getHouseUpgCost()/ 2;
+        // Asumsikan sell function placeholder.
+        *cur += sellVal;
+        log(cur->getUsername(), "JUAL_BANGUNAN", "Menjual bangunan di " + sp->getName() + " seharga M" + std::to_string(sellVal));
+    }
+}

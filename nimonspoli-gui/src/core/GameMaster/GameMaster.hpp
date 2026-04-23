@@ -14,6 +14,7 @@ class JailTile;
 class Property;
 class TransactionLogger;
 class SkillCard;
+class StreetProperty;
 
 // ─────────────────────────────────────────────
 //  GameMaster: controller utama permainan
@@ -113,6 +114,12 @@ public:
     void log(const std::string &username, const std::string &action, const std::string &detail);
 
     void useSkillCard(Player *player, SkillCard *card, GameState &gs);
+
+    // Proxy metode dialog
+    void handleGadai(Property* prop);
+    void handleTebus(Property* prop);
+    void handleBangun(StreetProperty* sp);
+    void handleJualBangunan(StreetProperty* sp);
 };
 
 #endif

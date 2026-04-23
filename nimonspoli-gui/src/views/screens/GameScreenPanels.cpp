@@ -153,6 +153,11 @@ void GameScreen::drawRightPanel()
         if (!disabled && hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             switch (i) {
             case 0: handleLemparDadu(); break;
+            case 1: triggerSkillCardDialog(); break;
+            case 2: triggerBangunDialog(); break;
+            case 3: triggerGadaiDialog(); break;
+            case 4: triggerTebusDialog(); break;
+            case 5: triggerJualBangunanDialog(); break;
             case 6: handleSimpan();     break;
             case 7:
                 if (guiManager && guiManager->getGameMaster()) {
