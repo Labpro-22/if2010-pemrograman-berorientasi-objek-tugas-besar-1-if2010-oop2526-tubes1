@@ -100,6 +100,11 @@ void Player::addProperty(Property *prop)
     properties.push_back(prop);
 }
 
+void Player::clearProperties()
+{
+    properties.clear();
+}
+
 void Player::removeProperty(Property *prop)
 {
     auto it = find(properties.begin(), properties.end(), prop);

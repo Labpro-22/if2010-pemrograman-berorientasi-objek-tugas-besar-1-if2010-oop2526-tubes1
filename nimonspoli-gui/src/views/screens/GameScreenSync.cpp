@@ -80,6 +80,19 @@ void GameScreen::syncFromGameMaster()
                 }
             }
             mp.price = prop->getPurchasePrice();
+
+            // ── Sync StreetProperty specific (buildings, festival) ──
+            if (auto* sp = dynamic_cast<StreetProperty*>(prop)) {
+                if (sp->gethasHotel()) mp.buildings = 5;
+                else mp.buildings = sp->getBuildingCount();
+
+                mp.festivalMult = sp->getFestivalMultiplier();
+                mp.festivalDur  = sp->getFestivalDuration();
+            } else {
+                mp.buildings    = 0;
+                mp.festivalMult = 1;
+                mp.festivalDur  = 0;
+            }
         }
     }
 }

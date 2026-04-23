@@ -66,6 +66,7 @@ public:
     // PROPERTI
     void addProperty(Property *prop);
     void removeProperty(Property *prop);
+    void clearProperties();
     const vector<Property *> &getProperties() const;
     int getPropertyCount() const;
 

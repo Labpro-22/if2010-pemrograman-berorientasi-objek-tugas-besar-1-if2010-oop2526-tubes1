@@ -8,6 +8,7 @@
 // ─── Trigger ─────────────────────────────────────────────────────────────────
 void GameScreen::triggerCetakPropertiDialog(int playerIdx)
 {
+    
     cetakPropertiDialog.scrollY   = 0.f;
     cetakPropertiDialog.playerIdx = playerIdx;
     cetakPropertiDialog.visible   = true;
