@@ -270,9 +270,9 @@ void GameMaster::setExtraTurn(bool val)
 void GameMaster::endCurrentTurn()
 {
     state.setHasExtraTurn(false);
+    state.setHasRolled(true);  // block: pemain tidak bisa lempar dadu lagi
     state.setPhase(GamePhase::PLAYER_TURN);
-    // Paksa pindah ke pemain berikutnya
-    state.nextPlayer();
+    // nextPlayer() dan advanceTurn() tetap dilakukan oleh endTurn()
 }
 
 bool GameMaster::hasExtraTurn() const
@@ -311,41 +311,26 @@ void GameMaster::startAuction(Property *prop, Player *triggerPlayer)
         return;
 
     AuctionManager *am = state.getAuctionManager();
+    if (!am)
+        return;
+
     std::vector<Player *> all = state.getActivePlayers();
+    if (all.empty())
+        return;
 
-    // Susun urutan lelang: mulai dari pemain setelah trigger
-    std::vector<Player *> participants;
-    if (triggerPlayer)
-    {
-        auto it = std::find(all.begin(), all.end(), triggerPlayer);
-        if (it != all.end())
-        {
-            ++it;
-            while (it != all.end())
-            {
-                participants.push_back(*it++);
-            }
-            it = all.begin();
-            while (*it != triggerPlayer)
-            {
-                participants.push_back(*it++);
-            }
-        }
-    }
-    else
-    {
-        participants = all;
-    }
+    // Kasus bangkrut ke Bank: triggerPlayer == nullptr
+    // Gunakan pemain aktif pertama sebagai initiator agar urutan tetap valid;
+    // AuctionManager::setupAuction() akan menyusun urutan mulai dari setelahnya.
+    Player *initiator = triggerPlayer ? triggerPlayer : all.front();
 
-    am->setupAuction(prop, participants);
+    // Logika urutan peserta sepenuhnya diserahkan ke AuctionManager::setupAuction()
+    am->setupAuction(prop, initiator, all); 
     state.setPhase(GamePhase::AUCTION);
+
+    // Proses lelang akan berjalan di GUI
 
     log("SYSTEM", "AUCTION_START",
         "Lelang dimulai untuk " + prop->getName());
-
-    // Loop lelang — setiap giliran pemain: BID atau PASS
-    // (Detail interaksi I/O dilakukan oleh LelangCommand)
-    // GameMaster hanya menyediakan am->placeBid() dan am->closeAuction()
 }
 
 // ─────────────────────────────────────────────
@@ -376,7 +361,7 @@ void GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
     }
 
     // Tidak cukup cash → cek potensi likuidasi
-    int potential = calculateWealth(debtor);
+    int potential = debtor->getWealth();
     if (potential >= debt)
     {
         // Wajib likuidasi — BangkrutCommand yang handle panel likuidasi
@@ -592,21 +577,7 @@ int GameMaster::findNearestRailroad(int currentPosition) const
     return -1;
 }
 
-int GameMaster::calculateWealth(Player *player) const
-{
-    if (!player)
-        return 0;
-    int wealth = player->getBalance();
-    for (int i = 0; i < player->getPropertyCount(); i++)
-    {
-        Property *p = player->getProperties()[i];
-        if (p)
-            wealth += static_cast<int>(p->getPurchasePrice());
-        // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
-        // jika ada override — di sini gunakan purchasePrice sebagai baseline
-    }
-    return wealth;
-}
+
 
 void GameMaster::log(const std::string &username,
                      const std::string &action,

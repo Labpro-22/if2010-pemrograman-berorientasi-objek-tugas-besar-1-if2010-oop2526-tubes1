@@ -111,13 +111,12 @@ void GameScreen::drawBuyDialog()
             if (guiManager && guiManager->getGameMaster()) {
                 GameMaster* gm  = guiManager->getGameMaster();
                 Player* player  = gm->getState().getCurrPlayer();
-                Bank*   bank    = gm->getState().getBank();
                 Board*  board   = gm->getState().getBoard();
-                Tile*   tile    = board->getTile(buyDialog.tileIdx+1);
+                Tile*   tile    = board->getTile(buyDialog.tileIdx); // 0-based
                 auto*   pt      = dynamic_cast<PropertyTile*>(tile);
-                if (player && bank && pt)
+                if (player && pt && pt->getProperty())
                     guiManager->pushCommand(
-                        new BeliCommand(player, pt->getProperty(), bank, true));
+                        new BeliCommand(player, pt->getProperty(), true));
             } else {
                 auto& p = gameState.players[gameState.activePlayerIdx];
                 auto& pr = gameState.properties[buyDialog.tileIdx];
@@ -131,13 +130,12 @@ void GameScreen::drawBuyDialog()
             if (guiManager && guiManager->getGameMaster()) {
                 GameMaster* gm  = guiManager->getGameMaster();
                 Player* player  = gm->getState().getCurrPlayer();
-                Bank*   bank    = gm->getState().getBank();
                 Board*  board   = gm->getState().getBoard();
-                Tile*   tile    = board->getTile(buyDialog.tileIdx+1);
+                Tile*   tile    = board->getTile(buyDialog.tileIdx); // 0-based
                 auto*   pt      = dynamic_cast<PropertyTile*>(tile);
-                if (player && bank && pt)
+                if (player && pt && pt->getProperty())
                     guiManager->pushCommand(
-                        new BeliCommand(player, pt->getProperty(), bank, false));
+                        new BeliCommand(player, pt->getProperty(), false));
             } else {
                 auto& p  = gameState.players[gameState.activePlayerIdx];
                 auto& pr = gameState.properties[buyDialog.tileIdx];

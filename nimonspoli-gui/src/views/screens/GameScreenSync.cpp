@@ -29,7 +29,7 @@ void GameScreen::syncFromGameMaster()
     if (playerVisuals.size() != realPlayers.size()) {
         playerVisuals.resize(realPlayers.size());
         for (int i = 0; i < (int)realPlayers.size(); i++) {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition() - 1);
+            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
             playerVisuals[i].targetTileIdx  = playerVisuals[i].currentTileIdx;
         }
     }
@@ -43,7 +43,7 @@ void GameScreen::syncFromGameMaster()
 
         mp.username  = p->getUsername();
         mp.money     = p->getBalance();
-        int realPos  = p->getPosition() - 1;
+        int realPos = p->getPosition();
         mp.position  = realPos;
         mp.cardCount = p->getHandSize();
         mp.status    = (p->getStatus() == PlayerStatus::JAILED)   ? "JAILED"
@@ -58,7 +58,7 @@ void GameScreen::syncFromGameMaster()
     // ── Sync Properties ───────────────────────────────────────────────────
     if (board) {
         for (int i = 0; i < (int)gameState.properties.size(); ++i) {
-            Tile* tile = board->getTile(i + 1);  // indeks core 1-based
+            Tile* tile = board->getTile(i);  // indeks core 1-based
             if (!tile) continue;
 
             PropertyTile* pt = dynamic_cast<PropertyTile*>(tile);
@@ -116,7 +116,7 @@ void GameScreen::syncDiceResult()
     // ── Trigger Dialogs ────────────────────────────────────────────────────
     const GameState& gs = gm->getState();
     if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
-        triggerBuyDialog(gs.getCurrPlayer()->getPosition() - 1);
+        triggerBuyDialog(gs.getCurrPlayer()->getPosition());
     if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
         triggerTaxDialog();
     if (gs.getPhase() == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
