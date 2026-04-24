@@ -9,51 +9,65 @@
 //  Konstruktor
 // ─────────────────────────────────────────────
 
-BeliCommand::BeliCommand(Player* p, Property* prop, bool playerChoseToBuy)
+BeliCommand::BeliCommand(Player *p, Property *prop, bool playerChoseToBuy)
     : currentPlayer(p), property(prop), playerChoseToBuy(playerChoseToBuy) {}
 
 // ─────────────────────────────────────────────
 //  execute()
 // ─────────────────────────────────────────────
 
-void BeliCommand::execute(GameMaster& gm) {
-    if (!currentPlayer || !property) {
+void BeliCommand::execute(GameMaster &gm)
+{
+    if (!currentPlayer || !property)
+    {
         std::cerr << "[BeliCommand] Error: player atau property null." << std::endl;
         return;
     }
 
-    GameState& gs = gm.getState();
+    GameState &gs = gm.getState();
 
     // Hanya berlaku untuk properti berstatus BANK
-    if (property->getStatus() != PropertyStatus::BANK) {
+    if (property->getStatus() != PropertyStatus::BANK)
+    {
         std::cerr << "[BeliCommand] Property " << property->getCode()
                   << " bukan milik Bank, skip." << std::endl;
         return;
     }
 
-        // ── Railroad & Utility: akuisisi gratis, langsung tanpa prompt ────────────
+    // ── Railroad & Utility: akuisisi gratis, langsung tanpa prompt ────────────
 
     // ── Street: bergantung pada pilihan pemain (ditentukan GUI) ───────────────
-    int price = property->getPurchasePrice();
+    int originalPrice = property->getPurchasePrice();
+    int finalPrice = currentPlayer->applyDiscount(originalPrice);
 
-    if (playerChoseToBuy && currentPlayer->canAfford(price)) {
-        *currentPlayer -= price;
+    if (playerChoseToBuy && currentPlayer->canAfford(finalPrice))
+    {
+        *currentPlayer -= finalPrice;
+
         property->setOwner(currentPlayer->getUsername());
         property->setStatus(PropertyStatus::OWNED);
         currentPlayer->addProperty(property);
 
         std::cout << "[DEBUG] " << currentPlayer->getUsername()
-                << " membeli " << property->getName()
-                << " seharga M" << price
-                << ". Saldo: M" << currentPlayer->getBalance() << std::endl;
+                  << " membeli " << property->getName()
+                  << " seharga M" << finalPrice;
 
-        gs.setPhase(GamePhase::PLAYER_TURN); // ← beli sukses, lanjut giliran
+        if (finalPrice < originalPrice)
+        {
+            std::cout << " (harga awal M" << originalPrice
+                      << ", diskon " << currentPlayer->getDiscount()
+                      << "%)";
+        }
 
-    } else {
-        // Tidak mau beli atau uang tidak cukup → lelang
+        std::cout << ". Saldo: M" << currentPlayer->getBalance() << std::endl;
+
+        gs.setPhase(GamePhase::PLAYER_TURN);
+    }
+    else
+    {
         std::cout << "[DEBUG] " << property->getName()
-                << " masuk ke lelang." << std::endl;
+                  << " masuk ke lelang." << std::endl;
 
-        gm.startAuction(property, currentPlayer); // ← pindahkan ke sini
+        gm.startAuction(property, currentPlayer);
     }
 }

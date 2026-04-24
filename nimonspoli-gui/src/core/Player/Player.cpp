@@ -227,6 +227,28 @@ void Player::clearDiscount()
     activeDiscount = 0.0;
 }
 
+bool Player::hasActiveDiscount() const
+{
+    return activeDiscount > 0.0;
+}
+
+int Player::applyDiscount(int originalPrice) const
+{
+    if (originalPrice <= 0)
+        return 0;
+
+    if (!hasActiveDiscount())
+        return originalPrice;
+
+    int finalPrice = static_cast<int>(
+        originalPrice * (100.0 - activeDiscount) / 100.0);
+
+    if (finalPrice < 0)
+        return 0;
+
+    return finalPrice;
+}
+
 // SHIELD
 void Player::activateShield()
 {

@@ -91,6 +91,8 @@ public:
     void setDiscount(double percent);
     double getDiscount() const;
     void clearDiscount();
+    bool hasActiveDiscount() const;
+    int applyDiscount(int originalPrice) const;
 
     // SHIELD CARD
     void activateShield();   // aktifkan efek kebal dari ShieldCard
