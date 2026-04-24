@@ -198,13 +198,14 @@ bool SaveManager::load(Game& game, const string& path) {
         game.skillDeck_ = CardDeck<SkillCard>();
 
         // Save nggak nyimpen Chance/Community deck, jadi harus bangun ulang deck default agar draw kartu gk crash
-        game.chanceDeck_.addCard(make_unique<ChanceCard>(ChanceEffect::GO_NEAREST_STATION));
-        game.chanceDeck_.addCard(make_unique<ChanceCard>(ChanceEffect::MOVE_BACK_3));
-        game.chanceDeck_.addCard(make_unique<ChanceCard>(ChanceEffect::GO_TO_JAIL));
+        game.chanceDeck_.addCard(make_unique<ChanceGoNearestStation>());
+        game.chanceDeck_.addCard(make_unique<ChanceMoveBack3>());
+        game.chanceDeck_.addCard(make_unique<ChanceGoToJail>());
         game.chanceDeck_.shuffle();
-        game.communityDeck_.addCard(make_unique<CommunityCard>(CommunityEffect::BIRTHDAY));
-        game.communityDeck_.addCard(make_unique<CommunityCard>(CommunityEffect::DOCTOR));
-        game.communityDeck_.addCard(make_unique<CommunityCard>(CommunityEffect::ELECTION));
+        
+        game.communityDeck_.addCard(make_unique<CommunityBirthday>());
+        game.communityDeck_.addCard(make_unique<CommunityDoctor>());
+        game.communityDeck_.addCard(make_unique<CommunityElection>());
         game.communityDeck_.shuffle();
 
         for (auto& [_, prop] : game.board_->properties()) {
