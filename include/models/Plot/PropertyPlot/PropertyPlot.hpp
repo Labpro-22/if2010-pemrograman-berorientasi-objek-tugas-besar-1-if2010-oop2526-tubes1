@@ -33,5 +33,5 @@ public:
     bool isMortgaged() const;
     void applyFestival();
     void endFestival();
-    virtual int calculateRentPrice() const = 0;
+    virtual int calculateRentPrice(PlotContext& ctx) const = 0;
 };

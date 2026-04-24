@@ -347,15 +347,6 @@ int Player::countOwnedUtility() const {
     return count;
 }
 
-bool Player::isStreetColorOwned(Color color, const Board& board) const {
-    for (const auto& plot : board.getPlots()) {
-        if (plot->getColor() == color && plot->getOwner() != this){
-            return false;
-        }
-    }
-    return true;
-}
-
 bool Player::isBankrupt() const {
     return status == PlayerStatus::BANKRUPT;
 }

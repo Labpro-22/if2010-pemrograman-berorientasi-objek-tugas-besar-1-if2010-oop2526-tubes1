@@ -44,6 +44,7 @@ public:
     const vector<unique_ptr<Plot>>& getPlots() const;
     
     int findPlotIndex(const string& code) const;
+    bool isPlayerOwnAllColor(Color color, const Player* player) const;
 
     void initializeChanceDeck(std::vector<ChanceCard*> cards);
     void initializeCommunityChestDeck(std::vector<CommunityChestCard*> cards);

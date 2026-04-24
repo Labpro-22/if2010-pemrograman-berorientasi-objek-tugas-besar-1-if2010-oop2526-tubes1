@@ -16,7 +16,7 @@ public:
     static void setRentPriceTable(std::map<int, int> rentPriceTable);
     int getRentPrice(int level) const override;
 
-    int calculateRentPrice() const override;
+    int calculateRentPrice(PlotContext& ctx) const override;
     PlotType getType() const override;
     void startEvent(PlotContext& ctx) override;
 };

@@ -14,10 +14,10 @@ int UtilityPlot::getRentPrice(int level) const {
 }
 
 void UtilityPlot::setRentPriceTable(std::map<int, int> rentPriceTable){
-    this->rentPriceTable = rentPriceTable;
+    rentPriceTable = rentPriceTable;
 }
 
-int UtilityPlot::calculateRentPrice() const {
+int UtilityPlot::calculateRentPrice(PlotContext& ctx) const {
     int ownedUtility = 0; //TODO: need helper function
     int diceTotal = 6; //TODO: need helper function
     return rentPriceTable.at(ownedUtility)*diceTotal*festivalMultiplier;

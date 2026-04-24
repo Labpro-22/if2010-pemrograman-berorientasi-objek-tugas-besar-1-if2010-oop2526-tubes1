@@ -14,10 +14,10 @@ int StationPlot::getRentPrice(int level) const {
 }
 
 void StationPlot::setRentPriceTable(std::map<int, int> rentPriceTable){
-    this->rentPriceTable = rentPriceTable;
+    rentPriceTable = rentPriceTable;
 }
 
-int StationPlot::calculateRentPrice() const {
+int StationPlot::calculateRentPrice(PlotContext& ctx) const {
     int ownedStation = 0; //TODO: need helper function 
     return rentPriceTable.at(ownedStation)*festivalMultiplier;
 }

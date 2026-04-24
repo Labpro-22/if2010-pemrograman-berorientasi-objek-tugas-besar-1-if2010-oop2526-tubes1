@@ -56,6 +56,15 @@ int Board::findPlotIndex(const string& code) const {
     return -1;
 }
 
+bool Board::isPlayerOwnAllColor(Color color, const Player* player) const {
+    for (const auto& plot : tiles) {
+        if (plot->getColor() == color && plot->getOwner() != player){
+            return false;   
+        }
+    }
+    return true;
+}
+
 void Board::initializeChanceDeck(std::vector<ChanceCard*> cards) {
     ownedChanceCards = cards;  
     chanceDeckPile.initialize(cards);
