@@ -1,7 +1,7 @@
 #include "utils/Logger.hpp"
 
 #include <algorithm>
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 void Logger::log(const LogEntry& entry) {
     entries.push_back(entry);
@@ -9,7 +9,7 @@ void Logger::log(const LogEntry& entry) {
 
 std::vector<LogEntry> Logger::getRecent(int n) const {
     if (n < 0) {
-        throw std::invalid_argument("n tidak boleh negatif.");
+        throw InvalidInputException("n tidak boleh negatif.");
     }
     if (n == 0 || entries.empty()) {
         return {};

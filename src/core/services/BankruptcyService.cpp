@@ -1,17 +1,17 @@
 #include "core/services/BankruptcyService.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 bool BankruptcyService::canRecover(const Player& player, int amountNeeded) const {
     if (amountNeeded < 0) {
-        throw std::invalid_argument("amountNeeded tidak boleh negatif.");
+        throw InvalidInputException("amountNeeded tidak boleh negatif.");
     }
     return player.getCash() >= amountNeeded;
 }
 
 int BankruptcyService::liquidateAssets(Player& player, int amountNeeded, GameState& state) const {
     if (amountNeeded < 0) {
-        throw std::invalid_argument("amountNeeded tidak boleh negatif.");
+        throw InvalidInputException("amountNeeded tidak boleh negatif.");
     }
     if (amountNeeded == 0) {
         return 0;

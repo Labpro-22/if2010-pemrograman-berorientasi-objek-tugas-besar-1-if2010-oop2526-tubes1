@@ -1,6 +1,6 @@
 #include "models/Card/SkillCard/DemolitionCard.hpp"
 
-void DemolitionCard::activate(GameState& state) {
+void DemolitionCard::activate(SkillContext& ctx) {
     // TODO: 
 }
 

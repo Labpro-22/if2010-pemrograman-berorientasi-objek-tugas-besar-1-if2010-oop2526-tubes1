@@ -1,5 +1,6 @@
 #pragma once
 #include "models/Card/ChanceCard/ChanceCard.hpp"
+#include "models/Board/Board.hpp"
 
 class PrisonCard : public ChanceCard{
     public:
@@ -7,5 +8,5 @@ class PrisonCard : public ChanceCard{
         ~PrisonCard() = default;
         const string getName() const;
         const string getDescription() const;
-        void activate(GameState&);
+        void activate(SkillContext& ctx);
 };

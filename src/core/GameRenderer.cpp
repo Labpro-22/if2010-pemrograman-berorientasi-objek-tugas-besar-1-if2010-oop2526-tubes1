@@ -38,7 +38,7 @@ void GameRenderer::showLogger(const LogEntry& entry){
 }
 
 void GameRenderer::showBoard(const GameState& state) {
-    cout << Formatter::boardFormat(
+    cout << BoardFormatter::boardFormat(
         state.getBoard(),
         state.getPlayers(),
         state.getCurrentTurn(),

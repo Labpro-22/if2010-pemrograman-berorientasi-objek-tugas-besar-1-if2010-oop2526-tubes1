@@ -1,4 +1,5 @@
 #include "models/Card/ChanceCard/StationCard.hpp"
+#include "core/GameException.hpp"
 
 const string StationCard::getName() const{
     return "StationCard";
@@ -8,12 +9,11 @@ const string StationCard::getDescription() const{
     return "Pergi ke stasiun terdekat";
 }
 
-void StationCard::activate(GameState& state) {
-    int playerPosition = state.getCurrentPlayerIdx();
-    Player& currPlayer = state.getCurrentPlayer();
-    Board& board = state.getBoard();
+void StationCard::activate(SkillContext& ctx) {
+    Player& currPlayer = ctx.getCurrentPlayer();
+    Board& board = ctx.getBoard();
     int boardSize = board.getSize();
-    const vector<unique_ptr<Plot>>& plots = board.getPlots();
+    int playerPosition = currPlayer.getPosition();
 
     try {
         // TODO: Index masih sama seperti spesifikasi, sesuaikan sama implementasi
@@ -24,9 +24,7 @@ void StationCard::activate(GameState& state) {
         } else if (playerPosition >= board.findPlotIndex("GBR")) {
             currPlayer.moveTo(board.findPlotIndex("STB"), boardSize);
         }
-    } catch(const std::invalid_argument& e){
-        std::cerr << e.what() << '\n';
-    } catch(const std::out_of_range& e) {
+    } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }
 }

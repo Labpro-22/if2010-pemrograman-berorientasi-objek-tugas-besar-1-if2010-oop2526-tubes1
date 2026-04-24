@@ -1,9 +1,9 @@
 #include "models/Card/SkillCard/ShieldCard.hpp"
 
-void ShieldCard::activate(GameState& state) {
-    state.getCurrentPlayer().setShieldActive(true);
-    state.getCurrentPlayer().setUsedSkillThisTurn(true);
-    state.getCurrentPlayer().setShieldTurnLeft(1);
+void ShieldCard::activate(SkillContext& ctx) {
+    ctx.getCurrentPlayer().setShieldActive(true);
+    ctx.getCurrentPlayer().setUsedSkillThisTurn(true);
+    ctx.getCurrentPlayer().setShieldTurnLeft(1);
 }
 
 const string ShieldCard::getName() const {

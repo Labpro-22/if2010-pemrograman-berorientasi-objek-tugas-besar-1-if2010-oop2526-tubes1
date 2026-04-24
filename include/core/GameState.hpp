@@ -14,17 +14,20 @@ private:
     int currentPlayerIdx;
     int maxTurn;
     int currentTurn;
+    int salary;
+    int jailFine;
+    int startingCash;
     bool gameOver;
     Logger logger;
     Dice dice;
-    std::shared_ptr<Board> board;
+    Board board;
 
     void clampCurrentPlayerIndex();
     int countActivePlayers() const;
     std::string getCurrentPlayerNameOrSystem() const;
 
 public:
-    explicit GameState(int maxTurn = 100);
+    GameState();
 
     void addPlayer(const Player& player);
 
@@ -37,13 +40,21 @@ public:
     int getCurrentPlayerIdx() const;
     int getMaxTurn() const;
     int getCurrentTurn() const;
+    int getSalary() const;
+    int getJailFine() const;
+    int getStartingCash() const;
 
     void setCurrentPlayerIdx(int idx);
+    void setMaxTurn(int maxTurn);
     void setCurrentTurn(int turn);
+    void setSalary(int amount);
+    void setJailFine(int amount);
+    void setStartingCash(int amount);
     void nextPlayer();
 
     std::vector<Player> getActivePlayers() const;
     bool hasSingleActivePlayer() const;
+
 
     void addLog(const std::string& detail);
     void addLog(const std::string& username, const std::string& actionType, const std::string& detail);

@@ -1,7 +1,7 @@
 #include "core/services/EffectResolver.hpp"
 #include "core/PlotContext.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
 void EffectResolver::resolveLanding(Player& player, int tileIndex, GameState& state) {
     PlotContext ctx(player, state.getPlayers(), state.getBoard(), state.getLogger(), auctionService);
@@ -15,7 +15,7 @@ void EffectResolver::resolveBankruptcy(Player& player, Player* creditor, GameSta
 
 void EffectResolver::resolveTax(Player& player, int taxAmount, GameState& state) const {
     if (taxAmount < 0) {
-        throw std::invalid_argument("Pajak tidak boleh bernilai negatif.");
+        throw InvalidInputException("Pajak tidak boleh bernilai negatif.");
     }
 
     if (bankruptcyService.canRecover(player, taxAmount)) {

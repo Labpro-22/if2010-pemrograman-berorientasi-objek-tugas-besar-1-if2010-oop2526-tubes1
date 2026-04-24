@@ -8,7 +8,7 @@
 #include <algorithm>
 using namespace std;
 
-string Formatter::colorToAnsi(Color color) {
+string BoardFormatter::colorToAnsi(Color color) {
     switch (color) {
         case Color::BROWN:     return "\033[33m";
         case Color::LIGHTBLUE: return "\033[96m";
@@ -23,11 +23,11 @@ string Formatter::colorToAnsi(Color color) {
     }
 }
 
-string Formatter::ansiReset() {
+string BoardFormatter::ansiReset() {
     return "\033[0m";
 }
 
-string Formatter::getPlayerLabels(int plotIndex, const Board& board, const vector<Player>& players) {
+string BoardFormatter::getPlayerLabels(int plotIndex, const Board& board, const vector<Player>& players) {
     string label = "";
     int prisonIndex = board.findPlotIndex("PEN");
 
@@ -45,7 +45,7 @@ string Formatter::getPlayerLabels(int plotIndex, const Board& board, const vecto
     return label;
 }
 
-string Formatter::makeCellContent(int plotIndex, const Board& board, const vector<Player>& players) {
+string BoardFormatter::makeCellContent(int plotIndex, const Board& board, const vector<Player>& players) {
     const auto& plots = board.getPlots();
     if (plotIndex < 0 || plotIndex >= static_cast<int>(plots.size())) {
         return string(CELL_WIDTH, ' ') + "\n" + string(CELL_WIDTH, ' ');
@@ -98,7 +98,7 @@ string Formatter::makeCellContent(int plotIndex, const Board& board, const vecto
     return pad(code, CELL_WIDTH) + "\n" + pad(line2, CELL_WIDTH);
 }
 
-string Formatter::renderCell(int plotIndex, const Board& board, const vector<Player>& players) {
+string BoardFormatter::renderCell(int plotIndex, const Board& board, const vector<Player>& players) {
     const auto& plots = board.getPlots();
     if (plotIndex < 0 || plotIndex >= static_cast<int>(plots.size())) {
         return "│" + string(CELL_WIDTH, ' ') + "│\n│" + string(CELL_WIDTH, ' ') + "│";
@@ -117,13 +117,13 @@ string Formatter::renderCell(int plotIndex, const Board& board, const vector<Pla
     return "│" + ansi + line1 + reset + "│\n│" + ansi + line2 + reset + "│";
 }
 
-string Formatter::makeSeparator(int numCells) {
+string BoardFormatter::makeSeparator(int numCells) {
     string sep = "+";
     for (int i = 0; i < numCells; ++i) sep += string(CELL_WIDTH, '-') + "+";
     return sep;
 }
 
-void Formatter::calculateSides(int totalPlots, int& topCount, int& rightCount, int& bottomCount, int& leftCount) {
+void BoardFormatter::calculateSides(int totalPlots, int& topCount, int& rightCount, int& bottomCount, int& leftCount) {
     int base = totalPlots / 4;
     int rem  = totalPlots % 4;
     topCount    = base + (rem > 0 ? 1 : 0);
@@ -132,7 +132,7 @@ void Formatter::calculateSides(int totalPlots, int& topCount, int& rightCount, i
     leftCount   = totalPlots - topCount - rightCount - bottomCount;
 }
 
-string Formatter::formatLegend(const vector<Player>& players, int currentTurn, int maxTurn) {
+string BoardFormatter::formatLegend(const vector<Player>& players, int currentTurn, int maxTurn) {
     ostringstream oss;
     oss << string(38, '-') << "\n";
     oss << "LEGENDA KEPEMILIKAN & STATUS\n";
@@ -162,7 +162,7 @@ string Formatter::formatLegend(const vector<Player>& players, int currentTurn, i
     return oss.str();
 }
 
-string Formatter::boardFormat(const Board& board, const vector<Player>& players, int currentTurn, int maxTurn) {
+string BoardFormatter::boardFormat(const Board& board, const vector<Player>& players, int currentTurn, int maxTurn) {
     const int totalPlots = board.getSize();
     if (totalPlots == 0) return "[Board] Papan belum diinisialisasi.\n";
 

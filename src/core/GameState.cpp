@@ -1,15 +1,15 @@
 #include "core/GameState.hpp"
 
-#include <stdexcept>
+#include "core/GameException.hpp"
 
-GameState::GameState(int maxTurn)
+GameState::GameState()
     : currentPlayerIdx(0),
-      maxTurn(maxTurn),
+      maxTurn(0),
       currentTurn(1),
       gameOver(false),
-      board(std::make_shared<Board>()) {
+      board(Board()) {
     if (maxTurn <= 0) {
-        throw std::invalid_argument("maxTurn harus lebih dari 0.");
+        throw InvalidInputException("maxTurn harus lebih dari 0.");
     }
 }
 
@@ -28,7 +28,7 @@ const std::vector<Player>& GameState::getPlayers() const {
 
 Player& GameState::getCurrentPlayer() {
     if (players.empty()) {
-        throw std::runtime_error("Tidak ada pemain dalam game state.");
+        throw InvalidStateException("Tidak ada pemain dalam game state.");
     }
     clampCurrentPlayerIndex();
     return players[static_cast<std::size_t>(currentPlayerIdx)];
@@ -36,7 +36,7 @@ Player& GameState::getCurrentPlayer() {
 
 const Player& GameState::getCurrentPlayer() const {
     if (players.empty()) {
-        throw std::runtime_error("Tidak ada pemain dalam game state.");
+        throw InvalidStateException("Tidak ada pemain dalam game state.");
     }
 
     int safeIdx = currentPlayerIdx;
@@ -58,19 +58,47 @@ int GameState::getCurrentTurn() const {
     return currentTurn;
 }
 
+int GameState::getSalary() const{
+    return salary;
+}
+
+int GameState::getJailFine() const{
+    return jailFine;
+}
+
+int GameState::getStartingCash() const{
+    return startingCash;
+}
+
 void GameState::setCurrentPlayerIdx(int idx) {
     currentPlayerIdx = idx;
     clampCurrentPlayerIndex();
 }
 
+void GameState::setMaxTurn(int maxTurn){
+    this->maxTurn = maxTurn;
+}
+
 void GameState::setCurrentTurn(int turn) {
     if (turn <= 0) {
-        throw std::invalid_argument("currentTurn harus lebih dari 0.");
+        throw InvalidInputException("currentTurn harus lebih dari 0.");
     }
     currentTurn = turn;
     if (currentTurn > maxTurn) {
         gameOver = true;
     }
+}
+
+void GameState::setSalary(int amount){
+    salary = amount;
+}
+
+void GameState::setJailFine(int amount){
+    jailFine = amount;
+}
+
+void GameState::setStartingCash(int amount){
+    startingCash = amount;
 }
 
 void GameState::nextPlayer() {
@@ -147,35 +175,18 @@ const Dice& GameState::getDice() const {
 }
 
 Board& GameState::getBoard() {
-    if (!board) {
-        throw std::runtime_error("Board belum diinisialisasi.");
-    }
-    return *board;
-}
-
-const Board& GameState::getBoard() const {
-    if (!board) {
-        throw std::runtime_error("Board belum diinisialisasi.");
-    }
-    return *board;
-}
-
-void GameState::setBoard(const std::shared_ptr<Board>& newBoard) {
-    if (!newBoard) {
-        throw std::invalid_argument("Board tidak boleh null.");
-    }
-    board = newBoard;
+    return board;
 }
 
 int GameState::getBoardSizeOrDefault(int defaultSize) const {
     if (defaultSize <= 0) {
-        throw std::invalid_argument("defaultSize harus lebih dari 0.");
+        throw InvalidInputException("defaultSize harus lebih dari 0.");
     }
 
-    if (!board || board->getSize() <= 0) {
+    if (board.getSize() <= 0) {
         return defaultSize;
     }
-    return board->getSize();
+    return board.getSize();
 }
 
 bool GameState::isGameOver() const {

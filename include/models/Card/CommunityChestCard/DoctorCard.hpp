@@ -7,6 +7,6 @@ class DoctorCard : public CommunityChestCard {
         ~DoctorCard();
         string getName();
         string getDescription();
-        void activate(GameEngine& ge);
+        void activate(SkillContext& ctx);
 };
  

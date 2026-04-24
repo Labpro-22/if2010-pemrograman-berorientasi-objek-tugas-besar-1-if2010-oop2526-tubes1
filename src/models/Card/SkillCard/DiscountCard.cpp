@@ -1,13 +1,13 @@
 #include "models/Card/SkillCard/DiscountCard.hpp"
 
-void DiscountCard::activate(GameState& state) {
+void DiscountCard::activate(SkillContext& ctx) {
     random_device random;
     mt19937 g(random());
     uniform_int_distribution<> number(1,100);
 
     int discountPercent = number(g);
-    state.getCurrentPlayer().setDiscountValue(discountPercent);
-    state.getCurrentPlayer().setDiscountTurnLeft(1);
+    ctx.getCurrentPlayer().setDiscountValue(discountPercent);
+    ctx.getCurrentPlayer().setDiscountTurnLeft(1);
 }
 
 const string DiscountCard::getName() const {

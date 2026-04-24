@@ -1,5 +1,14 @@
 #include "utils/ConfigLoader.hpp"
 
+const std::string ConfigLoader::configPath = "config/ ";
+const std::string ConfigLoader::defaultPropertyFileName = "property.txt";
+const std::string ConfigLoader::defaultStationFileName = "railroad.txt";
+const std::string ConfigLoader::defaultUtilityFileName = "utility.txt";
+const std::string ConfigLoader::defaultTaxFileName = "tax.txt";
+const std::string ConfigLoader::defaultActionFileName = "aksi.txt";
+const std::string ConfigLoader::defaultSpecialFileName = "special.txt";
+const std::string ConfigLoader::defaultMiscFileName = "misc.txt";
+
 std::ifstream ConfigLoader::open(std::string path){
     std::ifstream file(path);
     if (!file){
@@ -19,7 +28,7 @@ std::map<int, int> ConfigLoader::loadIntMap(std::string path){
             map[key] = value;
         }
     }
-    catch (std::exception e){
+    catch (const std::exception&){
         throw InvalidFileDataException();
     } 
     return map;
@@ -32,7 +41,7 @@ std::tuple<int, int> ConfigLoader::loadTuple2(std::string path){
     try{
         file >> num1 >> num2;
     }
-    catch (std::exception e){
+    catch (const std::exception&){
         throw InvalidFileDataException();
     } 
     return std::make_tuple(num1, num2);
@@ -45,7 +54,7 @@ std::tuple<int, int, int> ConfigLoader::loadTuple3(std::string path){
     try{
         file >> num1 >> num2 >> num3;
     }
-    catch (std::exception e){
+    catch (const std::exception&){
         throw InvalidFileDataException();
     } 
     return std::make_tuple(num1, num2, num3);
@@ -137,10 +146,10 @@ std::vector<std::pair<int, std::unique_ptr<Plot>>> ConfigLoader::loadProperty(st
             tiles.push_back(std::make_pair(id, plot));
         }
     }
-    catch (GameException e){
-        throw e;
+    catch (const GameException&){
+        throw;
     }
-    catch (std::exception e){
+    catch (const std::exception&){
         throw InvalidFileDataException();
     } 
 
@@ -224,10 +233,10 @@ std::vector<std::pair<int, std::unique_ptr<Plot>>> ConfigLoader::loadAction(std:
             tiles.push_back(std::make_pair(id, plot));
         }
     }
-    catch (GameException e){
-        throw e;
+    catch (const GameException&){
+        throw;
     }
-    catch (std::exception e){
+    catch (const std::exception&){
         throw InvalidFileDataException();
     } 
 

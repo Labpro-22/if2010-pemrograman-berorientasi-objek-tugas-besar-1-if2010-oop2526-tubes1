@@ -8,8 +8,8 @@ const string BackwardMoveCard::getDescription() const {
     return "Mundur 3 petak";
 }
 
-void BackwardMoveCard::activate(GameState& state) {
-    Player currPlayer = state.getCurrentPlayer();
-    int boardSize = state.getBoard().getSize();
+void BackwardMoveCard::activate(SkillContext& ctx) {
+    Player& currPlayer = ctx.getCurrentPlayer();
+    int boardSize = ctx.getBoard().getSize();
     currPlayer.move(-3, boardSize);
 }
