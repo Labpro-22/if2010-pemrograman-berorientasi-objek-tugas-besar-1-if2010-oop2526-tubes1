@@ -4,8 +4,8 @@
 #include "../../include/models/Card.hpp"
 #include <algorithm>
 
-Player::Player(string usn, int startingMoney) 
-    : username(usn), money(startingMoney), position(0), status(PlayerStatus::ACTIVE), jailTurnsLeft(0), doubleStreak(0), hasUsedCardThisTurn(false), shieldActive(false) {}
+Player::Player(string usn, int startingMoney)
+    : playerId(-1), username(usn), money(startingMoney), position(0), status(PlayerStatus::ACTIVE), activeDiscount(0), jailTurnsLeft(0), doubleStreak(0), hasUsedCardThisTurn(false), shieldActive(false) {}
 
 void Player::move(int steps) {
     position = (position + steps) % 40;
@@ -80,6 +80,14 @@ int Player::getActiveDiscountPercent() const { return activeDiscount; }
 
 void Player::setHasUsedCardThisTurn(bool used) { hasUsedCardThisTurn = used; }
 void Player::setActiveDiscountPercent(int percent) { activeDiscount = percent; }
+
+int Player::getId() const { return playerId; }
+void Player::setId(int id) { playerId = id; }
+
+Player& Player::operator+=(int amount) {
+    if (amount > 0) money += amount;
+    return *this;
+}
 
 int Player::getWealth() const {
     int totalWealth = money;

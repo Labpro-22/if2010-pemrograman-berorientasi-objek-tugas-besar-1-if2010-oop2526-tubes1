@@ -113,7 +113,7 @@ void GameEngine::rollDice(int d1, int d2) {
         if (go) {
             go->awardSalary(*activePlayer);
             std::cout << "[INFO] Anda melewati petak GO! Menerima gaji sebesar Rp" << go->getSalary() << ".\n";
-            if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::AWARD_SALARY, "Lewat GO");
+            if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::UNKNOWN, "Lewat GO");
         }
     }
     
@@ -174,7 +174,7 @@ void GameEngine::executeTileAction() {
                         prop->setStatus(1); // 1 = OWNED
                         activePlayer->addProperty(prop);
                         std::cout << "Selamat! Anda berhasil membeli " << prop->getName() << ".\n";
-                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY_PROPERTY, prop->getName());
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY, prop->getName());
                     } else {
                         std::cout << "Anda menolak membeli. Properti akan dilelang!\n";
                         std::vector<Player*> activeBidders;
@@ -202,7 +202,7 @@ void GameEngine::executeTileAction() {
                 prop->setOwnerId(activePlayer->getId());
                 prop->setStatus(1);
                 activePlayer->addProperty(prop);
-                if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY_PROPERTY, prop->getName() + " (Auto)");
+                if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::BUY, prop->getName() + " (Auto)");
             }
             break;
         }
@@ -223,7 +223,7 @@ void GameEngine::executeTileAction() {
                     if (activePlayer->isShieldActive()) {
                         activePlayer->setShieldActive(false);
                         rentAmount = 0;
-                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::USE_SKILL, "Shield menahan bayar sewa");
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::CARD, "Shield menahan bayar sewa");
                     } else if (activePlayer->getActiveDiscountPercent() > 0) {
                         rentAmount = rentAmount * (100 - activePlayer->getActiveDiscountPercent()) / 100;
                     }
@@ -231,7 +231,7 @@ void GameEngine::executeTileAction() {
                     try {
                         *activePlayer -= rentAmount;
                         *owner += rentAmount;
-                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_RENT, "Ke " + owner->getUsername());
+                        if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::RENT, "Ke " + owner->getUsername());
                     } catch (NotEnoughMoneyException &e) {
                         std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar sewa!\n";
                         handleBankruptcy(activePlayer, owner);
@@ -246,7 +246,7 @@ void GameEngine::executeTileAction() {
             if (tax) {
                 try {
                     *activePlayer -= tax->getFlatAmount();
-                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_TAX, tax->getName());
+                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::TAX, tax->getName());
                 } catch (NotEnoughMoneyException &e) {
                     std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar pajak flat!\n";
                     handleBankruptcy(activePlayer, nullptr);
@@ -273,7 +273,7 @@ void GameEngine::executeTileAction() {
                 try {
                     *activePlayer -= amount;
                     std::cout << "Anda membayar pajak sebesar Rp" << amount << ".\n";
-                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::PAY_TAX, tax->getName());
+                    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(), LogActionType::TAX, tax->getName());
                 } catch (NotEnoughMoneyException &e) {
                     std::cout << "[BANGKRUT] " << activePlayer->getUsername() << " bangkrut karena tidak bisa membayar pajak persentase!\n";
                     handleBankruptcy(activePlayer, nullptr);

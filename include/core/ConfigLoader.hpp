@@ -71,4 +71,6 @@ public:
     // Getter untuk GameEngine setelah loadAllConfigs() selesai
     int getMaxTurn() const;
     int getInitialMoney() const;
+    int getGoSalary() const { return goSalary; }
+    int getJailFine() const { return jailFine; }
 };
