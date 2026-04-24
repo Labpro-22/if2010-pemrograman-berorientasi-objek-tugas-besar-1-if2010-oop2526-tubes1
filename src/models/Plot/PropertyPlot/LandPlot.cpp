@@ -100,6 +100,21 @@ PlotType LandPlot::getType() const {
     return PlotType::LANDPLOT;
 }
 
-void startEvent(PlotContext& ctx){
-
+void LandPlot::startEvent(PlotContext& ctx){
+    if (!isOwned()){
+        if (ctx.getCurrentPlayer().getCash() >= getBuyPrice()
+            && CommandHandler::promptYesNo("Apakah anda ingin membeli petak ini (harga: M" + std::to_string(getBuyPrice()) + ")?")){
+            ctx.getCurrentPlayer().buyProperty(*this);
+        }
+        else{
+            // ctx.getAuctionService().startAuction(); //TODO: perbaiki auction service
+        }
+    }
+    else{
+        if (owner != &ctx.getCurrentPlayer()){
+            int rentPrice = calculateRentPrice(ctx);
+            ctx.getCurrentPlayer().pay(rentPrice); //TODO: handle bankrupt
+            owner->receive(rentPrice);
+        }
+    }
 }
