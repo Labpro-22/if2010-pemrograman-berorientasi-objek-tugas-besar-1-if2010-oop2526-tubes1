@@ -4,6 +4,7 @@
 #include "../models/Player.hpp"
 #include "../models/PropertyTile.hpp"
 #include "../models/SkillCard.hpp"
+#include "../models/Board.hpp"
 
 Player::Player(std::string name, int balance, int position, PlayerState player_state):name(name),balance(balance),position(position){}
 Player& Player::operator+=(int amount){
@@ -24,10 +25,16 @@ Player Player::operator-(int amount) const{
     result.balance -= amount;
     return result;
 }
-
 void Player::transferTo(Player& player, int amount){
-    player+=amount;
-} 
+    int paid_amount=amount;
+    for (const auto& effect : active_effects) {
+        if (effect->blocksPayment()) {
+            paid_amount= 0;
+        }
+    }
+    balance -= paid_amount;
+    player+=paid_amount;
+}
 void Player::movePlayer(int steps){
     position+=steps;
 }
@@ -41,10 +48,10 @@ void Player::removeProperty(PropertyTile* property){
     );
 }
 void Player::addSkillCard(std::unique_ptr<SkillCard> card){
-    this->saved_cards.push_back(card);
+    this->saved_cards.push_back(std::move(card));
 }
-void Player::useSkillCard(int index){
-    this->saved_cards[index]->useEffect();
+void Player::useSkillCard(int index,Board& b, std::vector<Player>& all, TileVisitor& visitor){
+    this->saved_cards[index]->useEffect(*this,  b, all, visitor);
 }
 void Player::addEffect(std::unique_ptr<Effect> effect){
     this->active_effects.push_back(std::move(effect));
@@ -57,14 +64,17 @@ int Player::getTotalAssetValue(){
     return sum;
 }
 bool Player::canPay(int amount){
-    return this->balance>=amount;
+    return this->balance >= amount;
 }
 void Player::buyProperty(PropertyTile &property){
-    float dihcount=0;
-    if(!this->canPay(property.getSellValue())){
+    float harga=property.getSellValue();
+    for (auto &ef:this->active_effects){
+        ef->modifyPayment(harga);
+    }
+    if(!this->canPay(harga)){
         throw "uang tak cukup";
     }
-    *this-=property.getSellValue();
+    *this-=harga;
     this->addProperty(&property);
     property.setPropertyOwner(std::make_shared<Player>(this));
 }
@@ -121,4 +131,57 @@ std::string Player::toSaveFormat() const {
 
 
     return out.str();
+}
+
+bool Player::inJail() {
+    return player_state == PlayerState::INJAIL;
+}
+
+void Player::setInJail() {
+    player_state = PlayerState::INJAIL;
+}
+
+void Player::setFree() {
+    player_state = PlayerState::FREE;
+}
+
+void Player::startTurn(Board &board) {
+    for (const auto& effect : active_effects) {
+        effect->onTurnStart(*this);
+    }
+    this->movePlayer();
+    board.getTile(this->position).onLand(*this);
+}
+
+void Player::endTurn() {
+    for (const auto& effect : active_effects) {
+        effect->onTurnEnd(*this);
+    }
+
+    active_effects.erase(
+        std::remove_if(
+            active_effects.begin(),
+            active_effects.end(),
+            [](const std::unique_ptr<Effect>& effect) {
+                return effect->isExpired();
+            }
+        ),
+        active_effects.end()
+    );
+}
+
+int Player::getPosition() {
+    return position;
+}
+int Player::countOwnedRailroad() const {
+    return std::count_if(owned_properties.begin(), owned_properties.end(),
+        [](PropertyTile* prop) {
+            return prop->getPropertyType() == PropertyType::RAILROAD;
+        });
+}
+int Player::countOwnedUtility() const {
+    return std::count_if(owned_properties.begin(), owned_properties.end(),
+        [](PropertyTile* prop) {
+            return prop->getPropertyType() == PropertyType::UTILITY;
+        });
 }
