@@ -218,7 +218,7 @@ void GameCLI::cmdLemparDadu() {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
         turnOver_ = true;  // keluar dari while loop, processTurn akan cek isDouble
     } else {
-        turnOver_ = true;
+        turnOver_ = false;  // ada command selesai untuk mengakhiri giliran
     }
 }
 
@@ -238,7 +238,7 @@ void GameCLI::cmdAturDadu(const string& args) {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
         turnOver_ = true;
     } else {
-        turnOver_ = true;
+        turnOver_ = false; // ada command selesai untuk mengakhiri giliran
     }
 }
 
