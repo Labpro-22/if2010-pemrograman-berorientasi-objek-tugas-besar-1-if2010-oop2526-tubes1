@@ -129,7 +129,12 @@ void Game::advanceTurn() {
 }
 
 void Game::distributeSkillCard(Player& player) {
-    SkillCard* card = skillDeck_.draw();
+    SkillCard* card = nullptr;
+    try {
+        card = skillDeck_.draw();
+    } catch (const runtime_error&) {
+        return;
+    }
     // Tambahkan kartu ke tangan dulu (sementara bisa melebihi MAX)
     player.addToHand(card);
     // Jika tangan melampaui batas, minta pemain drop 1 kartu via callback
@@ -167,12 +172,17 @@ void Game::awardGoSalary(Player& player) {
 
 void Game::cmdRollDice() {
     Player& player = currentPlayer();
+    lastJailByTripleDouble_ = false;
     if (player.hasRolled() && !dice_.isDouble()) throw logic_error("Kamu sudah melempar dadu pada giliran ini.");
     if (player.isJailed()) { handleJailTurn(player); return; }
     auto [d1, d2] = dice_.roll();
     if (cb_.onDiceRolled) cb_.onDiceRolled(d1, d2);
     logger_.log(currentTurn_, player.username(), "DADU", "Lempar: " + to_string(d1) + "+" + to_string(d2) + "=" + to_string(d1+d2));
-    if (dice_.doubleCount() == 3) { sendToJail(player); return; }
+    if (dice_.doubleCount() == 3) {
+        lastJailByTripleDouble_ = true;
+        sendToJail(player);
+        return;
+    }
     player.setHasRolled(true);
     movePlayer(player, d1 + d2);
     processLanding(player, player.position(), d1 + d2);
@@ -180,6 +190,7 @@ void Game::cmdRollDice() {
 
 void Game::cmdSetDice(int d1, int d2) {
     Player& player = currentPlayer();
+    lastJailByTripleDouble_ = false;
     if (player.hasRolled() && !dice_.isDouble()) throw logic_error("Kamu sudah melempar dadu pada giliran ini.");
     if (player.isJailed()) {
         if (player.jailTurns() >= 3) {
@@ -209,7 +220,11 @@ void Game::cmdSetDice(int d1, int d2) {
     dice_.setRoll(d1, d2);
     if (cb_.onDiceRolled) cb_.onDiceRolled(d1, d2);
     logger_.log(currentTurn_, player.username(), "DADU", "Atur manual: " + to_string(d1) + "+" + to_string(d2) + "=" + to_string(d1+d2));
-    if (dice_.doubleCount() == 3) { sendToJail(player); return; }
+    if (dice_.doubleCount() == 3) {
+        lastJailByTripleDouble_ = true;
+        sendToJail(player);
+        return;
+    }
     player.setHasRolled(true);
     movePlayer(player, d1 + d2);
     processLanding(player, player.position(), d1 + d2);
