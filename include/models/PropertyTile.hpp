@@ -52,8 +52,8 @@ public:
     virtual ~PropertyTile();
     EffectType onLanded(Player& player) override;
 
-    virtual int calcRent(int diceRoll = 0) const = 0;
-    virtual int calcValue() const = 0;
+    // int calcRent(int diceRoll = 0) const = 0;
+    // int calcValue() const = 0;
     void buy(); 
     void payRent(); 
     virtual void mortgage(); 
@@ -88,14 +88,15 @@ public:
 
     void buildHouse();
     void buildHotel();
-    void demolish();
+    void demolish() override;
     bool hasBuildings();
     int getHouseCost() const;
     int getHotelCost() const;
-    int getRentLevel() const;
- 
+    int getRentLevel() const override;
+
+    bool isStreet() const override {return true;}
     // Color group
-    string getColorGroup() const;
+    string getColorGroup() const override;
  
     /** Hitung nilai jual bangunan saat ini (50% dari total harga beli bangunan) */
     int calcBuildingResaleValue() const;
