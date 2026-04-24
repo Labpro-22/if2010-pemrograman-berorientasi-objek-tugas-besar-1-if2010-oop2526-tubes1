@@ -1,261 +1,255 @@
 #include "GUIViewDraw.hpp"
 
-#if NIMONSPOLY_ENABLE_SFML
+#if NIMONSPOLY_ENABLE_RAYLIB
 #include <algorithm>
 #include <array>
 #include <sstream>
 
 namespace gui::draw {
+namespace {
+    constexpr float kTextSpacing = 0.f;
 
-sf::Color tileColor(Color c) {
-    switch (c) {
-        case Color::BROWN:      return sf::Color(0xda, 0xcc, 0xc1);
-        case Color::LIGHT_BLUE: return sf::Color(0x2e, 0xc7, 0xff);
-        case Color::PINK:       return sf::Color(0xee, 0x2a, 0x89);
-        case Color::ORANGE:     return sf::Color(0xff, 0x77, 0x00);
-        case Color::RED:        return sf::Color(0xbe, 0x17, 0x1a);
-        case Color::YELLOW:     return sf::Color(0xff, 0xf2, 0x00);
-        case Color::GREEN:      return sf::Color(0x00, 0x93, 0x64);
-        case Color::DARK_BLUE:  return sf::Color(0x12, 0x48, 0x72);
-        case Color::GRAY:       return sf::Color(0xa0, 0xa0, 0xa0);
-        default:                return sf::Color(0x37, 0x3c, 0x46);
+    RaylibColor makeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255) {
+        return RaylibColor{r, g, b, a};
+    }
+
+    Vector2 measureText(const Font& font, const std::string& text, float fontSize) {
+        return MeasureTextEx(font, text.c_str(), fontSize, kTextSpacing);
     }
 }
 
-sf::Color tokenColor(int playerIndex) {
-    constexpr std::array<sf::Color, 4> colors{
-        sf::Color(0x00, 0xc8, 0xff),
-        sf::Color(0xff, 0x2d, 0x8a),
-        sf::Color(0xff, 0xf2, 0x00),
-        sf::Color(0x00, 0xff, 0xb0),
-    };
-    return colors[static_cast<size_t>(playerIndex) % 4];
+RaylibColor tileColor(::Color c) {
+    switch (c) {
+        case ::Color::BROWN:      return makeColor(0xda, 0xcc, 0xc1);
+        case ::Color::LIGHT_BLUE: return makeColor(0x2e, 0xc7, 0xff);
+        case ::Color::PINK:       return makeColor(0xee, 0x2a, 0x89);
+        case ::Color::ORANGE:     return makeColor(0xff, 0x77, 0x00);
+        case ::Color::RED:        return makeColor(0xbe, 0x17, 0x1a);
+        case ::Color::YELLOW:     return makeColor(0xff, 0xf2, 0x00);
+        case ::Color::GREEN:      return makeColor(0x00, 0x93, 0x64);
+        case ::Color::DARK_BLUE:  return makeColor(0x12, 0x48, 0x72);
+        case ::Color::GRAY:       return makeColor(0xa0, 0xa0, 0xa0);
+        default:                  return makeColor(0x37, 0x3c, 0x46);
+    }
 }
 
-void drawTileCard(sf::RenderWindow& rw,
-                  sf::Vector2f pos, float tileSz,
-                  const TileView& tv,
-                  AssetManager& am) {
-    // NO ROTATION — draw flat to prevent sub-pixel gaps between tiles.
-    const sf::Color grpColor = tileColor(tv.color);
-    const bool hasGroup = (tv.color != Color::DEFAULT);
+RaylibColor tokenColor(int playerIndex) {
+    constexpr std::array<RaylibColor, 4> colors{
+        RaylibColor{0xe3, 0x4b, 0x4b, 255},
+        RaylibColor{0xf4, 0xd3, 0x1c, 255},
+        RaylibColor{0x41, 0x8d, 0xff, 255},
+        RaylibColor{0x32, 0xc4, 0x71, 255},
+    };
+    return colors[static_cast<size_t>(playerIndex) % colors.size()];
+}
 
-    // Fill the full tile area (slight overdraw to guarantee no seams).
-    sf::RectangleShape bg({tileSz + 0.5f, tileSz + 0.5f});
-    bg.setPosition(pos);
-    bg.setFillColor(hasGroup ? sf::Color(250, 250, 248) : sf::Color(50, 54, 66));
-    rw.draw(bg);
+Vector2 rectCenter(const Rectangle& rect) {
+    return Vector2{
+        rect.x + rect.width * 0.5f,
+        rect.y + rect.height * 0.5f,
+    };
+}
 
-    const sf::Texture* tex = am.tileTexture(tv.code);
-    if (tex) {
-        auto texSz = tex->getSize();
-        float scale = std::min(tileSz / static_cast<float>(texSz.x),
-                               tileSz / static_cast<float>(texSz.y));
-        sf::Sprite sprite(*tex);
-        sprite.setScale({scale, scale});
-        sprite.setPosition({pos.x + (tileSz - texSz.x * scale) * 0.5f,
-                            pos.y + (tileSz - texSz.y * scale) * 0.5f});
-        rw.draw(sprite);
+Rectangle centeredRect(float centerX, float centerY, float width, float height) {
+    return Rectangle{
+        centerX - width * 0.5f,
+        centerY - height * 0.5f,
+        width,
+        height,
+    };
+}
+
+void drawTileCard(Vector2 pos, float tileSz, const TileView& tv, AssetManager& am) {
+    const RaylibColor groupColor = tileColor(tv.color);
+    const bool hasGroup = (tv.color != ::Color::DEFAULT);
+    const Rectangle tileRect{pos.x, pos.y, tileSz + 0.5f, tileSz + 0.5f};
+
+    DrawRectangleRec(tileRect, hasGroup ? makeColor(250, 250, 248) : makeColor(50, 54, 66));
+
+    if (const Texture2D* tex = am.tileTexture(tv.code)) {
+        const float scale = std::min(tileSz / static_cast<float>(tex->width),
+                                     tileSz / static_cast<float>(tex->height));
+        const float drawW = static_cast<float>(tex->width) * scale;
+        const float drawH = static_cast<float>(tex->height) * scale;
+        Rectangle dest{
+            pos.x + (tileSz - drawW) * 0.5f,
+            pos.y + (tileSz - drawH) * 0.5f,
+            drawW,
+            drawH,
+        };
+        drawSprite(tex, dest);
     }
 
     const float photoFrac = 0.62f;
-    const float photoH    = tileSz * photoFrac;
+    const float photoH = tileSz * photoFrac;
     if (hasGroup) {
-        sf::RectangleShape fill({tileSz + 0.5f, photoH});
-        fill.setPosition(pos);
-        fill.setFillColor(sf::Color(grpColor.r, grpColor.g, grpColor.b, 100));
-        rw.draw(fill);
-    }
-
-    if (hasGroup) {
-        sf::RectangleShape strip({tileSz + 0.5f, tileSz * 0.08f});
-        strip.setPosition({pos.x, pos.y + photoH});
-        strip.setFillColor(grpColor);
-        rw.draw(strip);
+        DrawRectangleRec(Rectangle{pos.x, pos.y, tileSz + 0.5f, photoH},
+                         makeColor(groupColor.r, groupColor.g, groupColor.b, 100));
+        DrawRectangleRec(Rectangle{pos.x, pos.y + photoH, tileSz + 0.5f, tileSz * 0.08f}, groupColor);
     }
 
     const float badgeFrac = 0.22f;
-    const float badgeY    = pos.y + tileSz * (1.f - badgeFrac);
-    sf::RectangleShape badge({tileSz + 0.5f, tileSz * badgeFrac});
-    badge.setPosition({pos.x, badgeY});
-    badge.setFillColor(sf::Color(255, 255, 255, 210));
-    rw.draw(badge);
+    const float badgeY = pos.y + tileSz * (1.f - badgeFrac);
+    DrawRectangleRec(Rectangle{pos.x, badgeY, tileSz + 0.5f, tileSz * badgeFrac},
+                     makeColor(255, 255, 255, 210));
 
-    const sf::Font& font = am.font("bold");
-    unsigned charSz = static_cast<unsigned>(tileSz * 0.22f);
-    if (charSz < 8u) charSz = 8u;
-    sf::Text label(font, tv.code, charSz);
-    sf::Color textColor = hasGroup ? grpColor : sf::Color(200, 200, 200);
-    if (tv.color == Color::YELLOW)
-        textColor = sf::Color(0x90, 0x87, 0x00);
-    label.setFillColor(textColor);
-    auto lb = label.getLocalBounds();
-    label.setOrigin({lb.position.x + lb.size.x * 0.5f,
-                     lb.position.y + lb.size.y * 0.5f});
-    label.setPosition({pos.x + tileSz * 0.5f,
-                       badgeY + tileSz * badgeFrac * 0.5f});
-    rw.draw(label);
+    const Font& font = am.font("bold");
+    const float fontSize = std::max(tileSz * 0.22f, 8.f);
+    RaylibColor textColor = hasGroup ? groupColor : makeColor(200, 200, 200);
+    if (tv.color == ::Color::YELLOW) {
+        textColor = makeColor(0x90, 0x87, 0x00);
+    }
+    const Vector2 labelSize = measureText(font, tv.code, fontSize);
+    DrawTextEx(font,
+               tv.code.c_str(),
+               Vector2{
+                   pos.x + tileSz * 0.5f - labelSize.x * 0.5f,
+                   badgeY + tileSz * badgeFrac * 0.5f - labelSize.y * 0.5f,
+               },
+               fontSize,
+               kTextSpacing,
+               textColor);
 }
 
-void drawGlobeBackground(sf::RenderWindow& rw) {
-    const sf::Vector2u sz = rw.getSize();
-    const float cx = sz.x * 0.5f;
-    const float cy = sz.y * 0.5f;
-    const float r  = std::min(sz.x, sz.y) * 0.44f;
+void drawGlobeBackground(int screenW, int screenH) {
+    const float cx = static_cast<float>(screenW) * 0.5f;
+    const float cy = static_cast<float>(screenH) * 0.5f;
+    const float r = std::min(screenW, screenH) * 0.44f;
 
-    sf::CircleShape glow(r * 1.35f);
-    glow.setFillColor(sf::Color(100, 160, 255, 18));
-    glow.setOrigin({r * 1.35f, r * 1.35f});
-    glow.setPosition({cx, cy});
-    rw.draw(glow);
-
-    sf::CircleShape globe(r);
-    globe.setFillColor(sf::Color(0x0d, 0x18, 0x2e));
-    globe.setOutlineThickness(2.f);
-    globe.setOutlineColor(sf::Color(100, 160, 255, 80));
-    globe.setOrigin({r, r});
-    globe.setPosition({cx, cy});
-    rw.draw(globe);
-
-    sf::CircleShape atm(r * 0.92f);
-    atm.setFillColor(sf::Color(0, 0, 0, 0));
-    atm.setOutlineThickness(r * 0.06f);
-    atm.setOutlineColor(sf::Color(120, 180, 255, 40));
-    atm.setOrigin({r * 0.92f, r * 0.92f});
-    atm.setPosition({cx, cy});
-    rw.draw(atm);
+    DrawCircleGradient(static_cast<int>(cx), static_cast<int>(cy), r * 1.35f,
+                       makeColor(100, 160, 255, 18), RL_BLANK);
+    DrawCircleV(Vector2{cx, cy}, r, makeColor(0x0d, 0x18, 0x2e));
+    DrawCircleLinesV(Vector2{cx, cy}, r, makeColor(100, 160, 255, 80));
+    DrawCircleLinesV(Vector2{cx, cy}, r * 0.92f, makeColor(120, 180, 255, 40));
 }
 
-void drawGameBackground(sf::RenderWindow& rw) {
-    const float W = static_cast<float>(rw.getSize().x);
-    const float H = static_cast<float>(rw.getSize().y);
-
-    sf::VertexArray quad(sf::PrimitiveType::TriangleStrip, 4);
-    quad[0].position = {0.f, 0.f};
-    quad[1].position = {W, 0.f};
-    quad[2].position = {0.f, H};
-    quad[3].position = {W, H};
-    quad[0].color = sf::Color(0xd8, 0xde, 0xe6);
-    quad[1].color = sf::Color(0xd0, 0xd6, 0xe0);
-    quad[2].color = sf::Color(0xc7, 0xcf, 0xda);
-    quad[3].color = sf::Color(0xdf, 0xe4, 0xeb);
-    rw.draw(quad);
-
-    const float glowR = std::min(W, H) * 0.42f;
-    sf::CircleShape glow(glowR);
-    glow.setFillColor(sf::Color(255, 255, 255, 55));
-    glow.setOrigin({glowR, glowR});
-    glow.setPosition({W * 0.52f, H * 0.46f});
-    rw.draw(glow);
+void drawGameBackground(int screenW, int screenH) {
+    DrawRectangleGradientV(0, 0, screenW, screenH, makeColor(0xd8, 0xde, 0xe6), makeColor(0xc7, 0xcf, 0xda));
+    DrawCircleGradient(static_cast<int>(screenW * 0.52f), static_cast<int>(screenH * 0.46f),
+                       std::min(screenW, screenH) * 0.42f,
+                       makeColor(255, 255, 255, 55), RL_BLANK);
 }
 
-void drawCenteredText(sf::RenderWindow& rw, AssetManager& am,
-                      const std::string& fontKey, const std::string& str,
-                      unsigned charSz, sf::Color color, float y) {
-    sf::Text t(am.font(fontKey), str, charSz);
-    t.setFillColor(color);
-    auto b = t.getLocalBounds();
-    t.setOrigin({b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f});
-    t.setPosition({static_cast<float>(rw.getSize().x) * 0.5f, y});
-    rw.draw(t);
+void drawCenteredText(AssetManager& am,
+                      const std::string& fontKey,
+                      const std::string& str,
+                      float fontSize,
+                      RaylibColor color,
+                      float y) {
+    const Font& font = am.font(fontKey);
+    const Vector2 textSize = measureText(font, str, fontSize);
+    DrawTextEx(font,
+               str.c_str(),
+               Vector2{
+                   GetScreenWidth() * 0.5f - textSize.x * 0.5f,
+                   y - textSize.y * 0.5f,
+               },
+               fontSize,
+               kTextSpacing,
+               color);
 }
 
-void drawMenuButton(sf::RenderWindow& rw, AssetManager& am,
+void drawMenuButton(AssetManager& am,
                     const std::string& label,
-                    sf::Vector2f center, sf::Vector2f sz,
-                    bool hovered, bool selected) {
-    sf::RectangleShape btn(sz);
-    btn.setOrigin({sz.x * 0.5f, sz.y * 0.5f});
-    btn.setPosition(center);
-    sf::Color fill = selected  ? sf::Color(255, 255, 255, 210)
-                   : hovered   ? sf::Color(255, 255, 255,  60)
-                               : sf::Color(255, 255, 255,  20);
-    btn.setFillColor(fill);
-    btn.setOutlineThickness(1.f);
-    btn.setOutlineColor(sf::Color(255, 255, 255, selected ? 200 : 60));
-    rw.draw(btn);
+                    Rectangle rect,
+                    bool hovered,
+                    bool selected) {
+    const RaylibColor fill = selected ? makeColor(255, 255, 255, 210)
+                                      : hovered ? makeColor(255, 255, 255, 60)
+                                                : makeColor(255, 255, 255, 20);
+    const RaylibColor outline = makeColor(255, 255, 255, selected ? 200 : 60);
+    DrawRectangleRec(rect, fill);
+    DrawRectangleLinesEx(rect, 1.f, outline);
 
-    sf::Color tc = (selected || hovered) ? sf::Color(255, 255, 255)
-                                         : sf::Color(180, 200, 220);
-    unsigned csz = static_cast<unsigned>(sz.y * 0.52f);
-    sf::Text t(am.font("bold"), label, csz);
-    t.setFillColor(tc);
-    auto b = t.getLocalBounds();
-    t.setOrigin({b.position.x + b.size.x * 0.5f, b.position.y + b.size.y * 0.5f});
-    t.setPosition(center);
-    rw.draw(t);
+    const RaylibColor textColor = (selected || hovered) ? RL_WHITE : makeColor(180, 200, 220);
+    const float fontSize = rect.height * 0.52f;
+    const Font& font = am.font("bold");
+    const Vector2 textSize = measureText(font, label, fontSize);
+    DrawTextEx(font,
+               label.c_str(),
+               Vector2{
+                   rect.x + rect.width * 0.5f - textSize.x * 0.5f,
+                   rect.y + rect.height * 0.5f - textSize.y * 0.5f,
+               },
+               fontSize,
+               kTextSpacing,
+               textColor);
 }
 
-void drawSprite(sf::RenderWindow& rw, const sf::Texture* tex,
-                sf::FloatRect dest,
-                sf::RenderStates rs) {
-    if (!tex) return;
-    auto tsz = tex->getSize();
-    sf::Sprite sprite(*tex);
-    sprite.setScale({dest.size.x / static_cast<float>(tsz.x),
-                     dest.size.y / static_cast<float>(tsz.y)});
-    sprite.setPosition({dest.position.x, dest.position.y});
-    rw.draw(sprite, rs);
+void drawSprite(const Texture2D* tex, Rectangle dest, RaylibColor tint) {
+    if (!tex || tex->id <= 0) {
+        return;
+    }
+    const Rectangle src{0.f, 0.f, static_cast<float>(tex->width), static_cast<float>(tex->height)};
+    DrawTexturePro(*tex, src, dest, Vector2{0.f, 0.f}, 0.f, tint);
 }
 
-void drawSpriteCover(sf::RenderWindow& rw, const sf::Texture* tex) {
-    if (!tex) return;
-    const float W = static_cast<float>(rw.getSize().x);
-    const float H = static_cast<float>(rw.getSize().y);
-    auto tsz = tex->getSize();
-    float scale = std::max(W / static_cast<float>(tsz.x),
-                           H / static_cast<float>(tsz.y));
-    float drawW = static_cast<float>(tsz.x) * scale;
-    float drawH = static_cast<float>(tsz.y) * scale;
-    sf::Sprite sprite(*tex);
-    sprite.setScale({scale, scale});
-    sprite.setPosition({(W - drawW) * 0.5f, (H - drawH) * 0.5f});
-    rw.draw(sprite);
+void drawSpriteCover(const Texture2D* tex, Rectangle dest, RaylibColor tint) {
+    if (!tex || tex->id <= 0) {
+        return;
+    }
+
+    const float texW = static_cast<float>(tex->width);
+    const float texH = static_cast<float>(tex->height);
+    const float targetAspect = dest.width / dest.height;
+    const float textureAspect = texW / texH;
+
+    Rectangle src{};
+    if (textureAspect > targetAspect) {
+        const float desiredW = texH * targetAspect;
+        src = Rectangle{(texW - desiredW) * 0.5f, 0.f, desiredW, texH};
+    } else {
+        const float desiredH = texW / targetAspect;
+        src = Rectangle{0.f, (texH - desiredH) * 0.5f, texW, desiredH};
+    }
+
+    DrawTexturePro(*tex, src, dest, Vector2{0.f, 0.f}, 0.f, tint);
 }
 
-void drawLabel(sf::RenderWindow& rw, AssetManager& am,
-               const std::string& fontKey, const std::string& str,
-               unsigned sz, sf::Color col, sf::Vector2f pos) {
-    sf::Text t(am.font(fontKey), str, sz);
-    t.setFillColor(col);
-    auto b = t.getLocalBounds();
-    t.setOrigin({b.position.x, b.position.y});
-    t.setPosition(pos);
-    rw.draw(t);
+void drawSpriteCoverScreen(const Texture2D* tex, RaylibColor tint) {
+    drawSpriteCover(tex, Rectangle{0.f, 0.f, static_cast<float>(GetScreenWidth()), static_cast<float>(GetScreenHeight())}, tint);
+}
+
+void drawLabel(AssetManager& am,
+               const std::string& fontKey,
+               const std::string& str,
+               float fontSize,
+               RaylibColor color,
+               Vector2 pos) {
+    const Font& font = am.font(fontKey);
+    DrawTextEx(font, str.c_str(), pos, fontSize, kTextSpacing, color);
 }
 
 std::vector<std::string> wrapText(AssetManager& am,
                                   const std::string& fontKey,
                                   const std::string& text,
-                                  unsigned charSize,
+                                  float fontSize,
                                   float maxWidth) {
     std::vector<std::string> lines;
     std::string currentLine;
     std::istringstream iss(text);
     std::string word;
-    sf::Text measure(am.font(fontKey), "", charSize);
+    const Font& font = am.font(fontKey);
 
     while (iss >> word) {
-        std::string test = currentLine.empty() ? word : currentLine + " " + word;
-        measure.setString(test);
-        if (measure.getLocalBounds().size.x > maxWidth && !currentLine.empty()) {
+        const std::string candidate = currentLine.empty() ? word : currentLine + " " + word;
+        if (measureText(font, candidate, fontSize).x > maxWidth && !currentLine.empty()) {
             lines.push_back(currentLine);
             currentLine = word;
         } else {
-            currentLine = test;
+            currentLine = candidate;
         }
     }
-    if (!currentLine.empty()) lines.push_back(currentLine);
+
+    if (!currentLine.empty()) {
+        lines.push_back(currentLine);
+    }
     return lines;
 }
 
-void drawPanel(sf::RenderWindow& rw, sf::FloatRect rect, sf::Color fill) {
-    sf::RectangleShape s({rect.size.x, rect.size.y});
-    s.setPosition({rect.position.x, rect.position.y});
-    s.setFillColor(fill);
-    s.setOutlineThickness(1.f);
-    s.setOutlineColor(sf::Color(255, 255, 255, 18));
-    rw.draw(s);
+void drawPanel(Rectangle rect, RaylibColor fill, RaylibColor outline) {
+    DrawRectangleRec(rect, fill);
+    DrawRectangleLinesEx(rect, 1.f, outline);
 }
 
 }  // namespace gui::draw

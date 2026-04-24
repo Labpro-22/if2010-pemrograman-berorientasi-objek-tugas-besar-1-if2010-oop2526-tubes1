@@ -1,33 +1,30 @@
 #include "ui/GUIInput.hpp"
 
 #include <algorithm>
-#include <optional>
+#include <cctype>
 #include <sstream>
 #include <string>
 
-#if NIMONSPOLY_ENABLE_SFML
-#include <SFML/Graphics.hpp>
-#include <SFML/Window/Event.hpp>
+#if NIMONSPOLY_ENABLE_RAYLIB
+#include "ui/RaylibCompat.hpp"
 #endif
 
-GUIInput::GUIInput(sf::RenderWindow& window) : window_(&window) {}
-
-
-const GUIPromptState& GUIInput::currentPrompt() const { return prompt_; }
+const GUIPromptState& GUIInput::currentPrompt() const {
+    return prompt_;
+}
 
 void GUIInput::setRenderCallback(GUIRenderCallback cb) {
     renderCallback_ = std::move(cb);
 }
 
-
 void GUIInput::activatePrompt(GUIPromptType type, const string& label,
-                               int minVal, int maxVal,
-                               const vector<string>& options) {
+                              int minVal, int maxVal,
+                              const vector<string>& options) {
     prompt_ = GUIPromptState{};
-    prompt_.type    = type;
-    prompt_.label   = label;
-    prompt_.minVal  = minVal;
-    prompt_.maxVal  = maxVal;
+    prompt_.type = type;
+    prompt_.label = label;
+    prompt_.minVal = minVal;
+    prompt_.maxVal = maxVal;
     prompt_.options = options;
 }
 
@@ -37,9 +34,14 @@ void GUIInput::confirmPrompt() {
     switch (prompt_.type) {
         case GUIPromptType::YES_NO: {
             if (!buf.empty()) {
-                char c = static_cast<char>(tolower(static_cast<unsigned char>(buf[0])));
-                if (c == 'y') { prompt_.resBool = true;  prompt_.resolved = true; }
-                if (c == 'n') { prompt_.resBool = false; prompt_.resolved = true; }
+                const char c = static_cast<char>(std::tolower(static_cast<unsigned char>(buf[0])));
+                if (c == 'y') {
+                    prompt_.resBool = true;
+                    prompt_.resolved = true;
+                } else if (c == 'n') {
+                    prompt_.resBool = false;
+                    prompt_.resolved = true;
+                }
             }
             break;
         }
@@ -49,7 +51,7 @@ void GUIInput::confirmPrompt() {
         case GUIPromptType::PROPERTY_CODE: {
             if (!buf.empty()) {
                 prompt_.resString = buf;
-                prompt_.resolved  = true;
+                prompt_.resolved = true;
             }
             break;
         }
@@ -60,40 +62,41 @@ void GUIInput::confirmPrompt() {
         case GUIPromptType::PLAYER_COUNT:
         case GUIPromptType::NUMBER: {
             try {
-                int n = stoi(buf);
+                const int n = std::stoi(buf);
                 if (n >= prompt_.minVal && n <= prompt_.maxVal) {
-                    prompt_.resInt   = n;
+                    prompt_.resInt = n;
                     prompt_.resolved = true;
                 }
-            } catch (...) {}
+            } catch (...) {
+            }
             break;
         }
         case GUIPromptType::DICE_MANUAL: {
-            // Expected format: "D1 D2"
-            istringstream iss(buf);
-            int d1, d2;
+            std::istringstream iss(buf);
+            int d1 = 0;
+            int d2 = 0;
             if ((iss >> d1 >> d2) && d1 >= 1 && d1 <= 6 && d2 >= 1 && d2 <= 6) {
-                prompt_.resAuction = {};  // not used here
-                prompt_.resInt     = d1 * 10 + d2;  // pack: d1 in tens, d2 in units
-                prompt_.resolved   = true;
+                prompt_.resInt = d1 * 10 + d2;
+                prompt_.resolved = true;
             }
             break;
         }
         case GUIPromptType::AUCTION: {
-            // Parse "PASS" or "BID <amount>"
             string upper = buf;
-            transform(upper.begin(), upper.end(), upper.begin(), ::toupper);
+            std::transform(upper.begin(), upper.end(), upper.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
             if (upper == "PASS") {
                 prompt_.resAuction = {AuctionAction::PASS, 0};
-                prompt_.resolved   = true;
-            } else if (upper.size() > 3 && upper.substr(0, 3) == "BID") {
+                prompt_.resolved = true;
+            } else if (upper.rfind("BID", 0) == 0) {
                 try {
-                    int amount = stoi(buf.substr(3));
+                    int amount = std::stoi(buf.substr(3));
                     if (amount > prompt_.minVal && amount <= prompt_.maxVal) {
                         prompt_.resAuction = {AuctionAction::BID, amount};
-                        prompt_.resolved   = true;
+                        prompt_.resolved = true;
                     }
-                } catch (...) {}
+                } catch (...) {
+                }
             }
             break;
         }
@@ -102,76 +105,79 @@ void GUIInput::confirmPrompt() {
     }
 }
 
-void GUIInput::handleTextEvent([[maybe_unused]] const sf::Event& event) {
-#if NIMONSPOLY_ENABLE_SFML
-    if (const auto* te = event.getIf<sf::Event::TextEntered>()) {
-        uint32_t cp = te->unicode;
-        if (cp == '\r' || cp == '\n') {
-            confirmPrompt();
-        } else if (cp == 8 || cp == 127) {  // Backspace / DEL
-            if (!prompt_.textBuffer.empty()) prompt_.textBuffer.pop_back();
-        } else if (cp >= 32 && cp < 127) {
-            prompt_.textBuffer += static_cast<char>(cp);
+void GUIInput::appendTextInput() {
+#if NIMONSPOLY_ENABLE_RAYLIB
+    for (int codepoint = GetCharPressed(); codepoint > 0; codepoint = GetCharPressed()) {
+        if (codepoint >= 32 && codepoint < 127) {
+            prompt_.textBuffer += static_cast<char>(codepoint);
         }
     }
 
-    // Also handle KeyPressed for menu shortcuts (number keys)
-    if (const auto* kp = event.getIf<sf::Event::KeyPressed>()) {
-        using Key = sf::Keyboard::Key;
-        // Allow clicking numbered keys directly for MENU_CHOICE
-        if (prompt_.type == GUIPromptType::MENU_CHOICE ||
-            prompt_.type == GUIPromptType::SKILL_CARD  ||
-            prompt_.type == GUIPromptType::LIQUIDATION) {
-            int num = -1;
-            if (kp->code >= Key::Num0 && kp->code <= Key::Num9)
-                num = static_cast<int>(kp->code) - static_cast<int>(Key::Num0);
-            else if (kp->code >= Key::Numpad0 && kp->code <= Key::Numpad9)
-                num = static_cast<int>(kp->code) - static_cast<int>(Key::Numpad0);
-            if (num >= prompt_.minVal && num <= prompt_.maxVal) {
-                prompt_.textBuffer = to_string(num);
-                confirmPrompt();
-            }
-        }
-        // Y/N shortcuts for YES_NO
-        if (prompt_.type == GUIPromptType::YES_NO) {
-            if (kp->code == Key::Y) { prompt_.resBool = true;  prompt_.resolved = true; }
-            if (kp->code == Key::N) { prompt_.resBool = false; prompt_.resolved = true; }
-        }
-        // Enter confirms
-        if (kp->code == Key::Enter) {
-            confirmPrompt();
-        }
+    if (IsKeyPressed(KEY_BACKSPACE) && !prompt_.textBuffer.empty()) {
+        prompt_.textBuffer.pop_back();
     }
 #endif
 }
 
-bool GUIInput::handleEvent(const sf::Event& event) {
-    if (prompt_.type == GUIPromptType::NONE || prompt_.resolved) return false;
-    handleTextEvent(event);
+bool GUIInput::updatePrompt() {
+#if NIMONSPOLY_ENABLE_RAYLIB
+    if (prompt_.type == GUIPromptType::NONE || prompt_.resolved) {
+        return false;
+    }
+
+    appendTextInput();
+
+    if (prompt_.type == GUIPromptType::MENU_CHOICE ||
+        prompt_.type == GUIPromptType::SKILL_CARD ||
+        prompt_.type == GUIPromptType::LIQUIDATION ||
+        prompt_.type == GUIPromptType::PLAYER_COUNT ||
+        prompt_.type == GUIPromptType::NUMBER ||
+        prompt_.type == GUIPromptType::TAX_CHOICE) {
+        for (int digit = 0; digit <= 9; ++digit) {
+            const int key = KEY_ZERO + digit;
+            const int keypad = KEY_KP_0 + digit;
+            if (IsKeyPressed(key) || IsKeyPressed(keypad)) {
+                if (digit >= prompt_.minVal && digit <= prompt_.maxVal) {
+                    prompt_.textBuffer = std::to_string(digit);
+                    confirmPrompt();
+                }
+            }
+        }
+    }
+
+    if (prompt_.type == GUIPromptType::YES_NO) {
+        if (IsKeyPressed(KEY_Y)) {
+            prompt_.resBool = true;
+            prompt_.resolved = true;
+        } else if (IsKeyPressed(KEY_N)) {
+            prompt_.resBool = false;
+            prompt_.resolved = true;
+        }
+    }
+
+    if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) {
+        confirmPrompt();
+    }
+
     return prompt_.resolved;
+#else
+    return false;
+#endif
 }
 
-
 void GUIInput::waitForResolution() {
-#if NIMONSPOLY_ENABLE_SFML
-    if (!window_) { prompt_.resolved = true; return; }
-    while (!prompt_.resolved && window_->isOpen()) {
-        while (const auto event = window_->pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window_->close();
-                return;
-            }
-            handleEvent(*event);
+#if NIMONSPOLY_ENABLE_RAYLIB
+    while (!prompt_.resolved && !WindowShouldClose()) {
+        updatePrompt();
+        if (renderCallback_) {
+            renderCallback_();
         }
-        if (renderCallback_) renderCallback_();
-        // Yield CPU to avoid spinning at 100%
-        sf::sleep(sf::milliseconds(8));
+        WaitTime(1.0 / 120.0);
     }
 #else
     prompt_.resolved = true;
 #endif
 }
-
 
 int GUIInput::getPlayerCount() {
     activatePrompt(GUIPromptType::PLAYER_COUNT, "Jumlah pemain (2-4)", 2, 4);
@@ -180,8 +186,7 @@ int GUIInput::getPlayerCount() {
 }
 
 string GUIInput::getPlayerName(int playerIdx) {
-    activatePrompt(GUIPromptType::PLAYER_NAME,
-                   "Nama pemain " + to_string(playerIdx));
+    activatePrompt(GUIPromptType::PLAYER_NAME, "Nama pemain " + std::to_string(playerIdx));
     waitForResolution();
     return prompt_.resString;
 }
@@ -190,13 +195,13 @@ string GUIInput::getCommand() {
     activatePrompt(GUIPromptType::COMMAND, "Masukkan perintah");
     waitForResolution();
     string cmd = prompt_.resString;
-    transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return cmd;
 }
 
 int GUIInput::getMenuChoice(const vector<string>& options) {
-    activatePrompt(GUIPromptType::MENU_CHOICE, "Pilih opsi",
-                   0, static_cast<int>(options.size()), options);
+    activatePrompt(GUIPromptType::MENU_CHOICE, "Pilih opsi", 0, static_cast<int>(options.size()), options);
     waitForResolution();
     return prompt_.resInt;
 }
@@ -222,17 +227,14 @@ string GUIInput::getString(const string& promptText) {
 pair<int, int> GUIInput::getManualDice() {
     activatePrompt(GUIPromptType::DICE_MANUAL, "Dadu manual (D1 D2, misal: 3 5)");
     waitForResolution();
-    int packed = prompt_.resInt;
-    return {packed / 10, packed % 10};
+    return {prompt_.resInt / 10, prompt_.resInt % 10};
 }
 
-AuctionDecision GUIInput::getAuctionDecision(
-    const string& playerName, int currentBid, int playerMoney)
-{
+AuctionDecision GUIInput::getAuctionDecision(const string& playerName, int currentBid, int playerMoney) {
     activatePrompt(GUIPromptType::AUCTION,
-                   "Lelang — giliran " + playerName + " (PASS / BID <jumlah>)",
-                   currentBid,   // minVal reused as currentBid floor
-                   playerMoney); // maxVal reused as playerMoney ceiling
+                   "Lelang - giliran " + playerName + " (PASS / BID <jumlah>)",
+                   currentBid,
+                   playerMoney);
     waitForResolution();
     return prompt_.resAuction;
 }
@@ -245,8 +247,9 @@ TaxChoice GUIInput::getTaxChoice() {
 
 int GUIInput::getLiquidationChoice(int numOptions) {
     activatePrompt(GUIPromptType::LIQUIDATION,
-                   "Likuidasi — pilih aksi (0 = selesai)",
-                   0, numOptions);
+                   "Likuidasi - pilih aksi (0 = selesai)",
+                   0,
+                   numOptions);
     waitForResolution();
     return prompt_.resInt;
 }
@@ -254,7 +257,8 @@ int GUIInput::getLiquidationChoice(int numOptions) {
 int GUIInput::getSkillCardChoice(int numCards) {
     activatePrompt(GUIPromptType::SKILL_CARD,
                    "Pilih kartu (0 = batal)",
-                   0, numCards);
+                   0,
+                   numCards);
     waitForResolution();
     return prompt_.resInt;
 }
@@ -263,6 +267,7 @@ string GUIInput::getPropertyCodeInput(const string& promptText) {
     activatePrompt(GUIPromptType::PROPERTY_CODE, promptText);
     waitForResolution();
     string code = prompt_.resString;
-    transform(code.begin(), code.end(), code.begin(), ::toupper);
+    std::transform(code.begin(), code.end(), code.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     return code;
 }

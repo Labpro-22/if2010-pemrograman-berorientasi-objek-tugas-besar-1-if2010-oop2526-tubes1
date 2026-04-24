@@ -5,20 +5,15 @@
 #include "ui/IGameView.hpp"
 #include "utils/Types.hpp"
 
-namespace sf {
-class RenderWindow;
-class Event;
-}
-
 class GUIView final : public IGameView {
 public:
-    explicit GUIView(sf::RenderWindow& window);
+    GUIView() = default;
 
     AppScreen  screen() const { return screen_; }
     void       setScreen(AppScreen s) { screen_ = s; }
     SetupState& setup()       { return setup_; }
 
-    bool handleMenuEvent(const sf::Event& event);
+    bool handleMenuInput();
     void renderCurrentScreen();
 
     void handleInGameClick(float mx, float my, std::string& outCommand, const GameStateView& state);
@@ -79,39 +74,40 @@ public:
     bool isDiceAnimating() const { return diceAnimating_; }
 
 private:
-    [[maybe_unused]] sf::RenderWindow* window;
     AppScreen  screen_{AppScreen::LANDING};
     SetupState setup_;
-    [[maybe_unused]] int custPlayerTab_{0};
-    [[maybe_unused]] int hoveredItem_{-1};
+    int custPlayerTab_{0};
+    int hoveredItem_{-1};
 
     vector<LogEntry> log_;
     int  lastD1_{0}, lastD2_{0};
-    [[maybe_unused]] int logScrollOffset_{0};
+    int logScrollOffset_{0};
     const GUIPromptState* currentPrompt_{nullptr};
     WinnerInfo winnerInfo_;
 
-    // Dice animation state
     bool diceAnimating_{false};
     float diceAnimElapsed_{0.f};
     int diceAnimFace1_{1};
     int diceAnimFace2_{1};
     static constexpr float DICE_ANIM_DURATION = 1.2f;
 
-    // Property buy prompt state
     PropertyInfo buyPromptInfo_;
     Money buyPromptMoney_{0};
     bool buyPromptActive_{false};
 
-    // Save/load status toast
     std::string saveLoadStatus_;
     int saveLoadStatusFrames_{0};
 
-    void drawLeftPanel (sf::RenderWindow& rw, const GameStateView& state, float panelW, float H);
-    void drawRightPanel(sf::RenderWindow& rw, const GameStateView& state, float panelW, float H);
+    bool handleLandingInput();
+    bool handlePlayerCountInput();
+    bool handlePlayerCustomizeInput();
+    bool handleMapCustomizeInput();
+    bool handleLoadGameInput();
+
+    void drawLeftPanel (const GameStateView& state, float panelW, float H);
+    void drawRightPanel(const GameStateView& state, float panelW, float H);
     void drawGameOver();
-    void drawDiceAnimation(sf::RenderWindow& rw, float dt);
-    void drawDieFace(sf::RenderWindow& rw, float cx, float cy, float size, int face,
+    void drawDiceAnimation(float dt);
+    void drawDieFace(float cx, float cy, float size, int face,
                      unsigned fillRGB, unsigned dotRGB);
-    void drawPropertyCardOverlay(sf::RenderWindow& rw);
 };

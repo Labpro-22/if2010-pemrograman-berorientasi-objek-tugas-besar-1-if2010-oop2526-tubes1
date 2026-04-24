@@ -3,8 +3,8 @@
 #include <map>
 #include <string>
 
-#if NIMONSPOLY_ENABLE_SFML
-#include <SFML/Graphics.hpp>
+#if NIMONSPOLY_ENABLE_RAYLIB
+#include "ui/RaylibCompat.hpp"
 #endif
 
 class AssetManager {
@@ -14,26 +14,26 @@ public:
     AssetManager(const AssetManager&)            = delete;
     AssetManager& operator=(const AssetManager&) = delete;
 
-#if NIMONSPOLY_ENABLE_SFML
-    const sf::Font& font(const std::string& key);
-    const sf::Texture* tileTexture(const std::string& code);
-    const sf::Texture* texture(const std::string& path);
+#if NIMONSPOLY_ENABLE_RAYLIB
+    const Font& font(const std::string& key);
+    const Texture2D* tileTexture(const std::string& code);
+    const Texture2D* texture(const std::string& path);
 #endif
 
     void loadAll();
+    void unloadAll();
 
 private:
     AssetManager() = default;
+    ~AssetManager();
 
     bool loaded_{false};
 
-#if NIMONSPOLY_ENABLE_SFML
-    std::map<std::string, sf::Font>    fonts_;
-    std::map<std::string, sf::Texture> textures_;
+#if NIMONSPOLY_ENABLE_RAYLIB
+    std::map<std::string, Font>      fonts_;
+    std::map<std::string, Texture2D> textures_;
 
     void loadFonts();
     void loadTiles();
-
-    bool tryLoad(sf::Texture& tex, const std::initializer_list<std::string>& paths);
 #endif
 };

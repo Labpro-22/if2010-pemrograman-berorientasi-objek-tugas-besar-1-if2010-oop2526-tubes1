@@ -1,15 +1,16 @@
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <random>
 #include <string>
 #include <vector>
-#include <algorithm>
 
-#if NIMONSPOLY_ENABLE_SFML
-#include "core/state/header/GameStateView.hpp"
-#include "core/engine/header/GameEngine.hpp"
+#if NIMONSPOLY_ENABLE_RAYLIB
 #include "core/TextFileRepository.hpp"
+#include "core/engine/header/GameEngine.hpp"
+#include "core/state/header/GameStateView.hpp"
+#include "controllers/ComputerController.hpp"
 #include "controllers/HumanController.hpp"
 #include "models/Money.hpp"
 #include "models/Player.hpp"
@@ -17,10 +18,7 @@
 #include "ui/AssetManager.hpp"
 #include "ui/GUIInput.hpp"
 #include "ui/GUIView.hpp"
-
-#include <SFML/Graphics.hpp>
-
-#include <optional>
+#include "ui/RaylibCompat.hpp"
 #else
 #include "controllers/HumanController.hpp"
 #include "core/TextFileRepository.hpp"
@@ -31,9 +29,11 @@
 #endif
 
 int main() {
-#if NIMONSPOLY_ENABLE_SFML
-    sf::RenderWindow window(sf::VideoMode(sf::Vector2u{1440u, 1024u}), "NIMONSPOLY");
-    window.setFramerateLimit(60);
+#if NIMONSPOLY_ENABLE_RAYLIB
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
+    InitWindow(1440, 1024, "NIMONSPOLY");
+    SetTargetFPS(60);
+    SetExitKey(KEY_NULL);
 
     AssetManager::get().loadAll();
 
@@ -42,17 +42,18 @@ int main() {
     engine.setRepository(&repo);
     engine.loadConfiguration("config");
 
-    GUIView view(window);
-    GUIInput input(window);
+    GUIView view;
+    GUIInput input;
     GameStateView state(engine.getState());
 
     bool gameInitialized = false;
     std::vector<std::unique_ptr<Player>> ownedPlayers;
-    std::vector<std::unique_ptr<HumanController>> ownedControllers;
+    std::vector<std::unique_ptr<PlayerController>> ownedControllers;
     std::vector<Player*> players;
     std::string pendingCommand;
 
-    input.setRenderCallback([&]() {
+    auto renderFrame = [&]() {
+        BeginDrawing();
         if (view.screen() == AppScreen::IN_GAME && gameInitialized) {
             state.refresh(engine.getState(), &engine.getBoard());
             view.setCurrentPrompt(&input.currentPrompt());
@@ -60,22 +61,44 @@ int main() {
         } else {
             view.renderCurrentScreen();
         }
-    });
+        EndDrawing();
+    };
+
+    input.setRenderCallback(renderFrame);
 
     auto startNewGame = [&]() {
         ownedPlayers.clear();
         ownedControllers.clear();
         players.clear();
+        pendingCommand.clear();
+
         ownedPlayers.reserve(static_cast<size_t>(view.setup().numPlayers));
         ownedControllers.reserve(static_cast<size_t>(view.setup().numPlayers));
         players.reserve(static_cast<size_t>(view.setup().numPlayers));
 
         for (int i = 0; i < view.setup().numPlayers; ++i) {
-            std::string name = (i < static_cast<int>(view.setup().playerNames.size())
-                                && !view.setup().playerNames[static_cast<size_t>(i)].empty())
-                                   ? view.setup().playerNames[static_cast<size_t>(i)]
-                                   : "P" + std::to_string(i + 1);
-            auto controller = std::make_unique<HumanController>(&input, name);
+            std::string name =
+                (i < static_cast<int>(view.setup().playerNames.size()) &&
+                 !view.setup().playerNames[static_cast<size_t>(i)].empty())
+                    ? view.setup().playerNames[static_cast<size_t>(i)]
+                    : "P" + std::to_string(i + 1);
+
+            if (i >= static_cast<int>(view.setup().playerNames.size())) {
+                view.setup().playerNames.resize(static_cast<size_t>(i) + 1);
+            }
+            view.setup().playerNames[static_cast<size_t>(i)] = name;
+
+            const bool isComputer =
+                i < static_cast<int>(view.setup().isComputer.size()) &&
+                view.setup().isComputer[static_cast<size_t>(i)];
+
+            std::unique_ptr<PlayerController> controller;
+            if (isComputer) {
+                controller = std::make_unique<ComputerController>(name);
+            } else {
+                controller = std::make_unique<HumanController>(&input, name);
+            }
+
             ownedPlayers.push_back(std::make_unique<Player>(
                 name, Money(engine.getConfig().getStartingMoney()), controller.get()));
             ownedControllers.push_back(std::move(controller));
@@ -95,87 +118,90 @@ int main() {
         ownedPlayers.clear();
         ownedControllers.clear();
         players.clear();
+        pendingCommand.clear();
 
-        if (!repo.exists(path)) return false;
+        if (!repo.exists(path)) {
+            return false;
+        }
+
         const std::vector<std::string> names = repo.getPlayerNames(path);
-        if (names.empty()) return false;
+        if (names.empty()) {
+            return false;
+        }
 
         ownedPlayers.reserve(names.size());
         ownedControllers.reserve(names.size());
         players.reserve(names.size());
+        view.setup().numPlayers = static_cast<int>(names.size());
+        view.setup().playerNames.clear();
+        view.setup().playerNames.reserve(names.size());
+        view.setup().isComputer.assign(names.size(), false);
+        view.setup().playerColors.clear();
+        view.setup().playerCharacters.clear();
+
         for (const std::string& name : names) {
-            const std::string useName = name.empty() ? "P" + std::to_string(players.size() + 1) : name;
+            const std::string useName =
+                name.empty() ? "P" + std::to_string(players.size() + 1) : name;
             auto controller = std::make_unique<HumanController>(&input, useName);
             ownedPlayers.push_back(std::make_unique<Player>(
                 useName, Money(engine.getConfig().getStartingMoney()), controller.get()));
+            view.setup().playerNames.push_back(useName);
+            view.setup().playerColors.push_back(static_cast<int>(players.size()) % 4);
+            view.setup().playerCharacters.push_back(static_cast<int>(players.size()) % 4);
             ownedControllers.push_back(std::move(controller));
             players.push_back(ownedPlayers.back().get());
         }
 
         engine.initialize(players, engine.getConfig().getMaxTurns());
         engine.start();
-        if (!engine.loadGame(path)) return false;
+        if (!engine.loadGame(path)) {
+            return false;
+        }
 
         gameInitialized = true;
         return true;
     };
 
-    while (window.isOpen()) {
-        while (const std::optional<sf::Event> event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-                break;
-            }
-
-            if (view.screen() != AppScreen::IN_GAME) {
-                bool startSignal = view.handleMenuEvent(*event);
-                if (startSignal) {
-                    if (view.screen() == AppScreen::IN_GAME) {
-                        if (!view.setup().loadFilePath.empty()) {
-                            if (!loadGameFromFile(view.setup().loadFilePath)) {
-                                view.setup().loadFilePath.clear();
-                                view.setup() = SetupState{};
-                                view.setScreen(AppScreen::LANDING);
-                            }
-                        } else {
-                            startNewGame();
-                        }
+    while (!WindowShouldClose()) {
+        if (view.screen() != AppScreen::IN_GAME) {
+            const bool startSignal = view.handleMenuInput();
+            if (startSignal && view.screen() == AppScreen::IN_GAME) {
+                gameInitialized = false;
+                if (!view.setup().loadFilePath.empty()) {
+                    if (!loadGameFromFile(view.setup().loadFilePath)) {
+                        view.setup().loadFilePath.clear();
+                        view.setup() = SetupState{};
+                        view.setScreen(AppScreen::LANDING);
                     }
-                }
-            } else {
-                if (!gameInitialized) continue;
-
-                // When a prompt is active, route events to it
-                if (input.currentPrompt().type != GUIPromptType::NONE && !input.currentPrompt().resolved) {
-                    input.handleEvent(*event);
                 } else {
-                    // Handle in-game button clicks
-                    if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
-                        if (mb->button == sf::Mouse::Button::Left) {
-                            float mx = static_cast<float>(mb->position.x);
-                            float my = static_cast<float>(mb->position.y);
-                            view.handleInGameClick(mx, my, pendingCommand, state);
-                        }
-                    }
+                    startNewGame();
                 }
+            }
+        } else if (gameInitialized) {
+            if (input.currentPrompt().type != GUIPromptType::NONE &&
+                !input.currentPrompt().resolved) {
+                input.updatePrompt();
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                const Vector2 mouse = GetMousePosition();
+                view.handleInGameClick(mouse.x, mouse.y, pendingCommand, state);
             }
         }
 
-        if (!window.isOpen()) break;
-
-        // Game loop logic
         if (view.screen() == AppScreen::IN_GAME && gameInitialized && engine.isRunning()) {
             Player* active = engine.getState().getActivePlayer();
 
             int activeCount = 0;
             for (Player* p : players) {
-                if (p && !p->isBankrupt()) ++activeCount;
+                if (p && !p->isBankrupt()) {
+                    ++activeCount;
+                }
             }
             if (activeCount <= 1) {
                 engine.stop();
                 view.setScreen(AppScreen::GAME_OVER);
                 state.refresh(engine.getState(), &engine.getBoard());
                 view.showBoard(state);
+                renderFrame();
                 continue;
             }
 
@@ -184,15 +210,26 @@ int main() {
                 view.setScreen(AppScreen::GAME_OVER);
                 state.refresh(engine.getState(), &engine.getBoard());
                 view.showBoard(state);
+                renderFrame();
                 continue;
             }
 
-            if (!active || active->isBankrupt()) {
+            const bool promptActive =
+                input.currentPrompt().type != GUIPromptType::NONE &&
+                !input.currentPrompt().resolved;
+
+            if (promptActive) {
+                renderFrame();
+                continue;
+            }
+
+            if (!active) {
+                engine.stop();
+            } else if (active->isBankrupt()) {
                 engine.processCommand("SELESAI", *active);
             } else if (!pendingCommand.empty()) {
-                // Delay DADU command until dice animation finishes
                 if (pendingCommand == "DADU" && view.isDiceAnimating()) {
-                    // wait for animation
+                    // Wait until the overlay animation finishes.
                 } else if (pendingCommand == "SIMPAN") {
                     std::string path = input.getString("Nama berkas simpanan");
                     if (path.empty()) {
@@ -228,9 +265,9 @@ int main() {
                     }
                     pendingCommand.clear();
                 } else if (pendingCommand == "KARTU") {
-                    int numCards = static_cast<int>(active->getSkillCards().size());
+                    const int numCards = static_cast<int>(active->getSkillCards().size());
                     if (numCards > 0) {
-                        int choice = input.getSkillCardChoice(numCards);
+                        const int choice = input.getSkillCardChoice(numCards);
                         if (choice > 0) {
                             engine.processCommand("gunakan kemampuan " + std::to_string(choice), *active);
                         }
@@ -242,16 +279,19 @@ int main() {
                     engine.processCommand(pendingCommand, *active);
                     pendingCommand.clear();
                 }
+            } else if (dynamic_cast<ComputerController*>(active->getController()) != nullptr) {
+                const std::string command = active->getController()->chooseCommand(engine.getState().toView());
+                if (!command.empty()) {
+                    engine.processCommand(command, *active);
+                }
             }
-
-            state.refresh(engine.getState(), &engine.getBoard());
-            view.setCurrentPrompt(&input.currentPrompt());
-            view.showBoard(state);
-        } else {
-            view.renderCurrentScreen();
         }
+
+        renderFrame();
     }
 
+    AssetManager::get().unloadAll();
+    CloseWindow();
     return EXIT_SUCCESS;
 #else
     ConsoleInput input;
@@ -380,7 +420,7 @@ int main() {
         int r = 1;
         for (Player* p : survivors) {
             if (!p) continue;
-            std::cout << r++ << ". " << p->getUsername() << " — " << p->getTotalWealth().toString() << "\n";
+            std::cout << r++ << ". " << p->getUsername() << " - " << p->getTotalWealth().toString() << "\n";
         }
     }
 

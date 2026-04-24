@@ -17,7 +17,8 @@ struct SetupState {
     int  numTiles{40};
     std::vector<std::string> playerNames;
     std::vector<bool>        isComputer;
-    std::vector<int>         playerColors;  // 0-3 → cyan/pink/yellow/green
+    std::vector<int>         playerColors;      // 0-3 -> red/yellow/blue/green
+    std::vector<int>         playerCharacters;  // 0-3 -> cruiser/rocket/shuttle/ufo
     int  startingMoney{1500};
     std::string loadFilePath;
 };

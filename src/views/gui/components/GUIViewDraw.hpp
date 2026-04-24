@@ -1,49 +1,57 @@
 #pragma once
 
-#if NIMONSPOLY_ENABLE_SFML
-#include <SFML/Graphics.hpp>
+#if NIMONSPOLY_ENABLE_RAYLIB
 #include <string>
+#include <vector>
 
 #include "core/state/header/GameStateView.hpp"
 #include "ui/AssetManager.hpp"
+#include "ui/RaylibCompat.hpp"
 
 namespace gui::draw {
-    sf::Color tileColor(Color c);
-    sf::Color tokenColor(int playerIndex);
+    RaylibColor tileColor(::Color c);
+    RaylibColor tokenColor(int playerIndex);
 
-    void drawTileCard(sf::RenderWindow& rw,
-                      sf::Vector2f pos, float tileSz,
-                      const TileView& tv,
-                      AssetManager& am);
+    Vector2 rectCenter(const Rectangle& rect);
+    Rectangle centeredRect(float centerX, float centerY, float width, float height);
 
-    void drawGlobeBackground(sf::RenderWindow& rw);
-    void drawGameBackground(sf::RenderWindow& rw);
+    void drawTileCard(Vector2 pos, float tileSz, const TileView& tv, AssetManager& am);
 
-    void drawCenteredText(sf::RenderWindow& rw, AssetManager& am,
-                          const std::string& fontKey, const std::string& str,
-                          unsigned charSz, sf::Color color, float y);
+    void drawGlobeBackground(int screenW, int screenH);
+    void drawGameBackground(int screenW, int screenH);
 
-    void drawMenuButton(sf::RenderWindow& rw, AssetManager& am,
+    void drawCenteredText(AssetManager& am,
+                          const std::string& fontKey,
+                          const std::string& str,
+                          float fontSize,
+                          RaylibColor color,
+                          float y);
+
+    void drawMenuButton(AssetManager& am,
                         const std::string& label,
-                        sf::Vector2f center, sf::Vector2f sz,
-                        bool hovered, bool selected = false);
+                        Rectangle rect,
+                        bool hovered,
+                        bool selected = false);
 
-    void drawSprite(sf::RenderWindow& rw, const sf::Texture* tex,
-                    sf::FloatRect dest,
-                    sf::RenderStates rs = sf::RenderStates::Default);
+    void drawSprite(const Texture2D* tex, Rectangle dest, RaylibColor tint = RL_WHITE);
+    void drawSpriteCover(const Texture2D* tex, Rectangle dest, RaylibColor tint = RL_WHITE);
+    void drawSpriteCoverScreen(const Texture2D* tex, RaylibColor tint = RL_WHITE);
 
-    void drawSpriteCover(sf::RenderWindow& rw, const sf::Texture* tex);
-
-    void drawLabel(sf::RenderWindow& rw, AssetManager& am,
-                   const std::string& fontKey, const std::string& str,
-                   unsigned sz, sf::Color col, sf::Vector2f pos);
+    void drawLabel(AssetManager& am,
+                   const std::string& fontKey,
+                   const std::string& str,
+                   float fontSize,
+                   RaylibColor color,
+                   Vector2 pos);
 
     std::vector<std::string> wrapText(AssetManager& am,
                                       const std::string& fontKey,
                                       const std::string& text,
-                                      unsigned charSize,
+                                      float fontSize,
                                       float maxWidth);
 
-    void drawPanel(sf::RenderWindow& rw, sf::FloatRect rect, sf::Color fill);
+    void drawPanel(Rectangle rect,
+                   RaylibColor fill,
+                   RaylibColor outline = RaylibColor{255, 255, 255, 18});
 }
 #endif

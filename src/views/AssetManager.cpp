@@ -1,65 +1,115 @@
 #include "ui/AssetManager.hpp"
 
-#if NIMONSPOLY_ENABLE_SFML
-#include <SFML/Graphics.hpp>
-#include <initializer_list>
 #include <iostream>
 #include <string>
-#endif
+#include <utility>
+#include <vector>
 
 AssetManager& AssetManager::get() {
     static AssetManager instance;
     return instance;
 }
 
+AssetManager::~AssetManager() {
+    unloadAll();
+}
+
 void AssetManager::loadAll() {
-    if (loaded_) return;
+    if (loaded_) {
+        return;
+    }
     loaded_ = true;
-#if NIMONSPOLY_ENABLE_SFML
+
+#if NIMONSPOLY_ENABLE_RAYLIB
     loadFonts();
     loadTiles();
 #endif
 }
 
-#if NIMONSPOLY_ENABLE_SFML
+void AssetManager::unloadAll() {
+#if NIMONSPOLY_ENABLE_RAYLIB
+    for (auto& [key, tex] : textures_) {
+        if (tex.id > 0) {
+            UnloadTexture(tex);
+        }
+        (void)key;
+    }
+    textures_.clear();
 
+    for (auto& [key, font] : fonts_) {
+        if (font.texture.id > 0) {
+            UnloadFont(font);
+        }
+        (void)key;
+    }
+    fonts_.clear();
+#endif
+    loaded_ = false;
+}
+
+#if NIMONSPOLY_ENABLE_RAYLIB
+namespace {
+    bool textureLoaded(const Texture2D& tex) {
+        return tex.id > 0;
+    }
+
+    bool fontLoaded(const Font& font) {
+        return font.texture.id > 0;
+    }
+
+    bool loadTextureFromCandidates(Texture2D& tex, const std::vector<std::string>& paths) {
+        for (const std::string& path : paths) {
+            tex = LoadTexture(path.c_str());
+            if (textureLoaded(tex)) {
+                SetTextureFilter(tex, TEXTURE_FILTER_BILINEAR);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Font fallbackFont() {
+        return GetFontDefault();
+    }
+}
 
 void AssetManager::loadFonts() {
-    struct FontEntry { std::string key; std::string path; };
-    const FontEntry entries[] = {
-        { "bold",      "assets/fonts/GemunuLibre/GemunuLibre-Bold.ttf"      },
-        { "extrabold", "assets/fonts/GemunuLibre/GemunuLibre-ExtraBold.ttf" },
-        { "semibold",  "assets/fonts/GemunuLibre/GemunuLibre-SemiBold.ttf"  },
-        { "regular",   "assets/fonts/GemunuLibre/GemunuLibre-Regular.ttf"   },
-        { "title",     "assets/fonts/Hahmlet/hahmlet-bold.ttf"              },
+    struct FontEntry {
+        const char* key;
+        const char* path;
     };
-    for (const auto& e : entries) {
-        sf::Font f;
-        if (f.openFromFile(e.path)) {
-            fonts_.emplace(e.key, std::move(f));
+
+    const FontEntry entries[] = {
+        {"bold",      "assets/fonts/GemunuLibre/GemunuLibre-Bold.ttf"},
+        {"extrabold", "assets/fonts/GemunuLibre/GemunuLibre-ExtraBold.ttf"},
+        {"semibold",  "assets/fonts/GemunuLibre/GemunuLibre-SemiBold.ttf"},
+        {"regular",   "assets/fonts/GemunuLibre/GemunuLibre-Regular.ttf"},
+        {"title",     "assets/fonts/Hahmlet/hahmlet-bold.ttf"},
+    };
+
+    for (const auto& entry : entries) {
+        Font font = LoadFontEx(entry.path, 96, nullptr, 0);
+        if (fontLoaded(font)) {
+            SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+            fonts_.emplace(entry.key, font);
         } else {
-            std::cerr << "[AssetManager] Font not found: " << e.path << "\n";
+            std::cerr << "[AssetManager] Font not found: " << entry.path << "\n";
         }
     }
 }
 
-const sf::Font& AssetManager::font(const std::string& key) {
+const Font& AssetManager::font(const std::string& key) {
     auto it = fonts_.find(key);
-    if (it != fonts_.end()) return it->second;
-    // fallback: first available font
-    if (!fonts_.empty()) return fonts_.begin()->second;
-    // absolute last resort: static default (will look bad but won't crash)
-    static sf::Font defaultFont;
-    return defaultFont;
-}
-
-
-bool AssetManager::tryLoad(sf::Texture& tex,
-                            const std::initializer_list<std::string>& paths) {
-    for (const auto& p : paths) {
-        if (tex.loadFromFile(p)) return true;
+    if (it != fonts_.end()) {
+        return it->second;
     }
-    return false;
+
+    if (!fonts_.empty()) {
+        return fonts_.begin()->second;
+    }
+
+    static Font fallback = fallbackFont();
+    return fallback;
 }
 
 void AssetManager::loadTiles() {
@@ -72,40 +122,43 @@ void AssetManager::loadTiles() {
         "GO","PPJ","PEN","BBP","DNU","FES","KSP","PBM","PPH",
     };
 
-    for (const auto& code : codes) {
-        sf::Texture tex;
-        bool ok = tryLoad(tex, {
+    for (const std::string& code : codes) {
+        Texture2D tex{};
+        const bool ok = loadTextureFromCandidates(tex, {
             "assets/tiles/property/" + code + ".png",
-            "assets/tiles/railroad/"  + code + ".png",
-            "assets/tiles/utility/"   + code + ".png",
-            "assets/tiles/special/"   + code + ".png",
-            "assets/tiles/"           + code + ".png",
+            "assets/tiles/railroad/" + code + ".png",
+            "assets/tiles/utility/" + code + ".png",
+            "assets/tiles/special/" + code + ".png",
+            "assets/tiles/" + code + ".png",
         });
         if (ok) {
-            tex.setSmooth(true);
-            textures_.emplace(code, std::move(tex));
+            textures_.emplace(code, tex);
         }
-        // silently skip missing codes — fallback handled in tileTexture()
     }
 }
 
-const sf::Texture* AssetManager::tileTexture(const std::string& code) {
+const Texture2D* AssetManager::tileTexture(const std::string& code) {
     auto it = textures_.find(code);
-    if (it != textures_.end()) return &it->second;
-    return nullptr;
-}
-
-const sf::Texture* AssetManager::texture(const std::string& path) {
-    auto it = textures_.find(path);
-    if (it != textures_.end()) return &it->second;
-
-    sf::Texture tex;
-    if (tex.loadFromFile(path)) {
-        tex.setSmooth(true);
-        auto [ins, _] = textures_.emplace(path, std::move(tex));
-        return &ins->second;
+    if (it != textures_.end()) {
+        return &it->second;
     }
     return nullptr;
 }
 
+const Texture2D* AssetManager::texture(const std::string& path) {
+    auto it = textures_.find(path);
+    if (it != textures_.end()) {
+        return &it->second;
+    }
+
+    Texture2D tex = LoadTexture(path.c_str());
+    if (!textureLoaded(tex)) {
+        return nullptr;
+    }
+
+    SetTextureFilter(tex, TEXTURE_FILTER_BILINEAR);
+    auto [inserted, ok] = textures_.emplace(path, tex);
+    (void)ok;
+    return &inserted->second;
+}
 #endif
