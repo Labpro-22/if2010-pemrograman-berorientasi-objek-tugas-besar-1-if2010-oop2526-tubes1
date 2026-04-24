@@ -728,6 +728,15 @@ void GameEngine::prepareTurn(Player& player) {
 }
 
 void GameEngine::endTurn(Player& player) {
+	if (gameState.getActivePlayer() == &player && gameState.getExtraRollAvailable()) {
+		std::cout << "Masih mendapat bonus lempar karena double.\n";
+		transactionLogger.log(gameState.getCurrentTurn(),
+			player.getUsername(),
+			"DOUBLE",
+			"Masih harus lempar lagi karena double");
+		return;
+	}
+
 	eventBus.publish(TurnEndedEvent(gameState.getCurrentTurn(), player.getUsername(), "Turn ended"));
 	player.resetTurnFlags();
 	gameState.resetTurnFlags();
@@ -759,19 +768,35 @@ void GameEngine::rollDice(Player& player) {
 		std::string(manualRoll ? "Lempar manual " : "Lempar ") +
 		std::to_string(d1) + "+" + std::to_string(d2) + " = " + std::to_string(lastDiceTotal));
 
-	if (d1 == d2) {
+	const bool rolledDouble = d1 == d2;
+	if (rolledDouble) {
 		player.setConsecutiveDoubles(player.getConsecutiveDoubles() + 1);
 		if (player.getConsecutiveDoubles() >= 3) {
 			std::cout << "Double tiga kali. Masuk penjara.\n";
+			gameState.setExtraRollAvailable(false);
 			sendToJail(player);
 			return;
 		}
 	} else {
 		player.setConsecutiveDoubles(0);
+		gameState.setExtraRollAvailable(false);
 	}
 
 	movePlayer(player, lastDiceTotal, true);
 	resolveLanding(player, lastDiceTotal);
+
+	if (rolledDouble && !player.isJailed() && !player.isBankrupt()) {
+		player.setHasRolledDiceThisTurn(false);
+		gameState.setHasRolledDice(false);
+		gameState.setExtraRollAvailable(true);
+		transactionLogger.log(gameState.getCurrentTurn(),
+			player.getUsername(),
+			"DOUBLE",
+			"Double " + std::to_string(d1) + "+" + std::to_string(d2) + ", lempar lagi");
+		std::cout << "Double. " << player.getUsername() << " lempar lagi.\n";
+	} else {
+		gameState.setExtraRollAvailable(false);
+	}
 }
 
 void GameEngine::movePlayer(Player& player, int steps, bool awardSalary) {
@@ -800,6 +825,7 @@ void GameEngine::sendToJail(Player& player) {
 	player.setStatus(PlayerStatus::JAILED);
 	player.setConsecutiveDoubles(0);
 	player.resetJailTurns();
+	gameState.setExtraRollAvailable(false);
 	transactionLogger.log(gameState.getCurrentTurn(), player.getUsername(), "PENJARA", "Masuk penjara");
 }
 
@@ -906,6 +932,7 @@ void GameEngine::resolvePropertyLanding(Player& player, PropertyTile& property, 
 
 void GameEngine::resolveTaxLanding(Player& player, bool pph) {
 	Money tax(0);
+	std::string taxLabel = pph ? "pajak penghasilan" : "pajak barang mewah";
 	if (pph) {
 		TaxChoice choice = TaxChoice::FLAT;
 		const int percentAmount = player.getTotalWealth().getAmount() * gameConfig.getPphPercentage() / 100;
@@ -922,8 +949,9 @@ void GameEngine::resolveTaxLanding(Player& player, bool pph) {
 		return;
 	}
 	bank.collectFromPlayer(player, tax, "Pajak");
+	std::cout << player.getUsername() << " membayar " << taxLabel << " " << tax.toString() << ".\n";
 	transactionLogger.log(gameState.getCurrentTurn(), player.getUsername(), "PAJAK",
-		"Bayar pajak " + tax.toString());
+		"Bayar " + taxLabel + " " + tax.toString());
 }
 
 void GameEngine::resolveFestivalLanding(Player& player) {
@@ -955,6 +983,10 @@ void GameEngine::resolveFestivalLanding(Player& player) {
 void GameEngine::useSkillCard(Player& player, int cardIndex) {
 	if (player.getHasRolledDiceThisTurn()) {
 		std::cout << "Kartu kemampuan hanya bisa digunakan sebelum lempar dadu.\n";
+		return;
+	}
+	if (gameState.getExtraRollAvailable()) {
+		std::cout << "Bonus lempar harus diselesaikan dulu sebelum pakai kartu kemampuan.\n";
 		return;
 	}
 	if (player.getHasUsedSkillCardThisTurn()) {
@@ -1069,19 +1101,6 @@ void GameEngine::buildOnProperty(Player& player, const std::string& code) {
 	}
 
 	const int level = street->getBuildingLevel();
-	for (StreetTile* member : group->getStreets()) {
-		if (member == street) continue;
-		if (level >= 4) {
-			if (member->getBuildingLevel() < 4) {
-				std::cout << "Semua properti group harus punya 4 rumah sebelum hotel.\n";
-				return;
-			}
-		} else if (member->getBuildingLevel() < level) {
-			std::cout << "Bangunan harus merata dalam color group.\n";
-			return;
-		}
-	}
-
 	const Money cost = level < 4 ? street->getHouseCost() : street->getHotelCost();
 	if (!player.canAfford(cost)) {
 		std::cout << "Uang tidak cukup untuk bangun.\n";
@@ -1245,6 +1264,8 @@ void GameEngine::handleJailTurn(Player& player) {
 		return;
 	}
 
+	gameState.setExtraRollAvailable(false);
+
 	const Money fine(gameConfig.getJailFine());
 
 	if (player.getJailTurnsRemaining() >= 2) {
@@ -1285,6 +1306,7 @@ void GameEngine::handleJailTurn(Player& player) {
 		movePlayer(player, lastDiceTotal, true);
 		resolveLanding(player, lastDiceTotal);
 		checkBankruptcy(player);
+		gameState.setExtraRollAvailable(false);
 		return;
 	}
 
@@ -1296,6 +1318,7 @@ void GameEngine::handleJailTurn(Player& player) {
 		movePlayer(player, lastDiceTotal, false);
 		resolveLanding(player, lastDiceTotal);
 		checkBankruptcy(player);
+		gameState.setExtraRollAvailable(false);
 		return;
 	}
 

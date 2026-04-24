@@ -27,7 +27,7 @@ namespace {
 
 GameStateView::GameStateView()
 	: currentTurn(0), maxTurn(0), currentPlayerName(""), activePlayerIndex(0), hasRolledDice(false),
-	  hasUsedSkillCard(false) {}
+	  hasUsedSkillCard(false), extraRollAvailable(false) {}
 
 GameStateView::GameStateView(const GameState& state) : GameStateView() {
 	refresh(state);
@@ -39,6 +39,7 @@ void GameStateView::refresh(const GameState& state, const Board* board) {
 	activePlayerIndex = state.getActivePlayerIndex();
 	hasRolledDice = state.getHasRolledDice();
 	hasUsedSkillCard = state.getHasUsedSkillCard();
+	extraRollAvailable = state.getExtraRollAvailable();
 
 	currentPlayerName.clear();
 	if (const Player* activePlayer = state.getActivePlayer()) {
@@ -133,6 +134,10 @@ bool GameStateView::getHasRolledDice() const {
 
 bool GameStateView::getHasUsedSkillCard() const {
 	return hasUsedSkillCard;
+}
+
+bool GameStateView::getExtraRollAvailable() const {
+	return extraRollAvailable;
 }
 
 std::string GameStateView::render(const GameState& state) const {

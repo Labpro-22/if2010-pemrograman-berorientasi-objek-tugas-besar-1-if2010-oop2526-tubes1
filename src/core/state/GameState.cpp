@@ -6,7 +6,7 @@
 
 GameState::GameState()
 	: phase(GamePhase::SETUP), currentTurn(0), maxTurn(0), activePlayerIndex(0), hasRolledDice(false),
-	  hasUsedSkillCard(false), consecutiveDoubles(0) {}
+	  hasUsedSkillCard(false), extraRollAvailable(false), consecutiveDoubles(0) {}
 
 GamePhase GameState::getPhase() const {
 	return phase;
@@ -58,6 +58,10 @@ bool GameState::getHasUsedSkillCard() const {
 	return hasUsedSkillCard;
 }
 
+bool GameState::getExtraRollAvailable() const {
+	return extraRollAvailable;
+}
+
 int GameState::getConsecutiveDoubles() const {
 	return consecutiveDoubles;
 }
@@ -104,6 +108,10 @@ void GameState::setHasUsedSkillCard(bool value) {
 	hasUsedSkillCard = value;
 }
 
+void GameState::setExtraRollAvailable(bool value) {
+	extraRollAvailable = value;
+}
+
 void GameState::incrementConsecutiveDoubles() {
 	++consecutiveDoubles;
 }
@@ -115,6 +123,7 @@ void GameState::resetConsecutiveDoubles() {
 void GameState::resetTurnFlags() {
 	hasRolledDice = false;
 	hasUsedSkillCard = false;
+	extraRollAvailable = false;
 	consecutiveDoubles = 0;
 }
 

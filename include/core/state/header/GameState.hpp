@@ -27,6 +27,7 @@ public:
 	const std::vector<Player*>& getTurnOrder() const;
 	bool getHasRolledDice() const;
 	bool getHasUsedSkillCard() const;
+	bool getExtraRollAvailable() const;
 	int getConsecutiveDoubles() const;
 
 	void setPhase(GamePhase value);
@@ -37,6 +38,7 @@ public:
 	void setTurnOrder(const std::vector<Player*>& value);
 	void setHasRolledDice(bool value);
 	void setHasUsedSkillCard(bool value);
+	void setExtraRollAvailable(bool value);
 	void incrementConsecutiveDoubles();
 	void resetConsecutiveDoubles();
 	void resetTurnFlags();
@@ -54,6 +56,7 @@ private:
 	std::vector<PropertyTile*> propertyStates;
 	bool hasRolledDice;
 	bool hasUsedSkillCard;
+	bool extraRollAvailable;
 	int consecutiveDoubles;
 
 protected:

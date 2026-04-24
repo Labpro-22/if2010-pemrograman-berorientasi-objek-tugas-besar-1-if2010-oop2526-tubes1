@@ -87,6 +87,22 @@ namespace {
             setup, findSetupPlayerIndex(setup, username, fallbackIndex));
     }
 
+    const PlayerView* activePlayerView(const GameStateView& state) {
+        if (!state.currentPlayerName.empty()) {
+            for (const PlayerView& player : state.players) {
+                if (player.username == state.currentPlayerName) {
+                    return &player;
+                }
+            }
+        }
+
+        if (state.activePlayerIndex >= 0 &&
+            state.activePlayerIndex < static_cast<int>(state.players.size())) {
+            return &state.players[static_cast<size_t>(state.activePlayerIndex)];
+        }
+        return nullptr;
+    }
+
     std::string tokenTexturePath(const SetupState& setup, const std::string& username, int fallbackIndex) {
         const int colorIndex = selectedPlayerColor(setup, username, fallbackIndex);
         const int characterIndex = selectedPlayerCharacter(setup, username, fallbackIndex);
@@ -238,18 +254,6 @@ namespace {
         layout.tipY = lastRowBottom + kTipGap;
 
         return layout;
-    }
-
-    std::string currentClockLabel() {
-        const std::time_t now = std::time(nullptr);
-        const std::tm* local = std::localtime(&now);
-        if (!local) {
-            return "--:--";
-        }
-
-        char buffer[16];
-        std::snprintf(buffer, sizeof(buffer), "%02d:%02d", local->tm_hour, local->tm_min);
-        return buffer;
     }
 }
 #endif
@@ -418,12 +422,12 @@ void GUIView::drawLeftPanel(const GameStateView& state, Rectangle summaryRect, R
         const std::string roundText = "Ronde " + std::to_string(state.currentTurn) + " / " + std::to_string(state.maxTurn);
         DrawTextEx(am.font("bold"), roundText.c_str(), Vector2{summaryRect.x + 14.f, midY - 14.f}, 19.f, 0.f, TEXT_PRIMARY);
         DrawTextEx(am.font("regular"), "putaran", Vector2{summaryRect.x + 14.f, midY + 7.f}, 13.f, 0.f, TEXT_MUTED);
-        const std::string clockStr = currentClockLabel();
+        const std::string clockStr = formattedElapsedTime();
         const Vector2 clockMeasure = MeasureTextEx(am.font("bold"), clockStr.c_str(), 22.f, 0.f);
         DrawTextEx(am.font("bold"), clockStr.c_str(),
                    Vector2{summaryRect.x + summaryRect.width - clockMeasure.x - 14.f, midY - 14.f},
                    22.f, 0.f, ACCENT_CYAN);
-        DrawTextEx(am.font("regular"), "waktu",
+        DrawTextEx(am.font("regular"), "durasi",
                    Vector2{summaryRect.x + summaryRect.width - clockMeasure.x - 14.f, midY + 7.f},
                    13.f, 0.f, TEXT_MUTED);
     }
@@ -479,9 +483,17 @@ void GUIView::drawLeftPanel(const GameStateView& state, Rectangle summaryRect, R
             DrawTextEx(am.font("semibold"), activeText.c_str(), Vector2{body.x, cy}, 18.f, 0.f, TEXT_PRIMARY);
             cy += 32.f;
 
-            const std::string tip = state.hasRolledDice
-                ? "Bangun, gadai, tebus, gunakan kartu, atau akhiri giliran."
-                : "Lempar dadu untuk memulai aksi utama pada giliran ini.";
+            const PlayerView* activePlayer = activePlayerView(state);
+            std::string tip;
+            if (state.extraRollAvailable) {
+                tip = "Double aktif. Pemain ini wajib lempar dadu lagi sebelum bisa mengakhiri giliran.";
+            } else if (activePlayer && activePlayer->status == PlayerStatus::JAILED) {
+                tip = "Pemain aktif sedang di penjara. Lempar untuk mencoba keluar; hanya double yang membuat pemain bergerak.";
+            } else if (state.hasRolledDice) {
+                tip = "Bangun, gadai, tebus, gunakan kartu, atau akhiri giliran.";
+            } else {
+                tip = "Lempar dadu untuk memulai aksi utama pada giliran ini.";
+            }
             auto tipLines = gui::draw::wrapText(am, "regular", tip, 14.f, body.width);
             for (size_t i = 0; i < tipLines.size() && cy < contentBottom - 16.f; ++i) {
                 DrawTextEx(am.font("regular"),
@@ -770,14 +782,23 @@ void GUIView::drawRightPanel(const GameStateView& state, Rectangle logRect, Rect
     gui::draw::drawPanel(actionsRect, SURFACE_BG, PANEL_BORDER);
     {
         const ActionLayout actionLayout = makeActionLayout(actionsRect);
+        const PlayerView* activePlayer = activePlayerView(state);
+        const bool activeJailed = activePlayer && activePlayer->status == PlayerStatus::JAILED;
         const bool diceDisabled = state.hasRolledDice;
+        const std::string diceTitle =
+            state.extraRollAvailable ? "LEMPAR LAGI" :
+            (activeJailed ? "COBA KABUR" : "LEMPAR DADU");
+        const std::string diceSubtitle =
+            diceDisabled ? "Sudah dilempar" :
+            (state.extraRollAvailable ? "Double: bonus roll aktif" :
+             (activeJailed ? "Harus double untuk keluar" : "Aksi utama giliran ini"));
         gui::draw::drawPanel(actionLayout.diceRect,
                              diceDisabled ? gui::menu::makeColor(0x17, 0x1c, 0x27)
                                           : gui::menu::makeColor(0x26, 0x31, 0x47),
                              diceDisabled ? gui::menu::makeColor(0x4b, 0x57, 0x67)
                                           : ACCENT_GOLD);
         drawTextCentered(am.font("title"),
-                         "LEMPAR DADU",
+                         diceTitle,
                          26.f,
                          diceDisabled ? TEXT_MUTED : TEXT_PRIMARY,
                          Rectangle{
@@ -787,7 +808,7 @@ void GUIView::drawRightPanel(const GameStateView& state, Rectangle logRect, Rect
                              actionLayout.diceRect.height * 0.56f,
                          });
         drawTextCentered(am.font("regular"),
-                         diceDisabled ? "Sudah dilempar" : "Aksi utama giliran ini",
+                         diceSubtitle,
                          14.f,
                          diceDisabled ? TEXT_MUTED : gui::menu::makeColor(0xff, 0xe7, 0x9c),
                          Rectangle{
@@ -797,7 +818,7 @@ void GUIView::drawRightPanel(const GameStateView& state, Rectangle logRect, Rect
                              actionLayout.diceRect.height * 0.30f,
                          });
 
-        const bool setDiceDisabled = state.hasRolledDice;
+        const bool setDiceDisabled = state.hasRolledDice || state.extraRollAvailable || activeJailed;
         gui::draw::drawPanel(actionLayout.setDiceRect,
                              setDiceDisabled ? gui::menu::makeColor(0x11, 0x16, 0x22)
                                              : gui::menu::makeColor(0x16, 0x22, 0x34),
@@ -816,7 +837,9 @@ void GUIView::drawRightPanel(const GameStateView& state, Rectangle logRect, Rect
         }
 
         DrawTextEx(am.font("regular"),
-                   "Bangun, gadai, tebus, simpan, atau buka kartu dari panel ini.",
+                   activeJailed
+                       ? "Saat di penjara, fokus pada percobaan keluar. Atur dadu dimatikan untuk state ini."
+                       : "Bangun, gadai, tebus, simpan, atau buka kartu dari panel ini.",
                    Vector2{actionsRect.x + 14.f, actionLayout.tipY},
                    13.f, 0.f, TEXT_MUTED);
     }
@@ -1152,6 +1175,9 @@ void GUIView::handleInGameClick(float mx, float my, std::string& outCommand, con
     const float H = static_cast<float>(GetScreenHeight());
     const InGameLayout layout = makeInGameLayout(W, H);
     const ActionLayout actionLayout = makeActionLayout(layout.actionsPanel);
+    const PlayerView* activePlayer = activePlayerView(state);
+    const bool activeJailed = activePlayer && activePlayer->status == PlayerStatus::JAILED;
+    const bool setDiceDisabled = state.hasRolledDice || state.extraRollAvailable || activeJailed;
 
     for (size_t i = 0; i < ACTION_LABELS.size(); ++i) {
         if (CheckCollisionPointRec(Vector2{mx, my}, actionLayout.buttons[i])) {
@@ -1161,7 +1187,7 @@ void GUIView::handleInGameClick(float mx, float my, std::string& outCommand, con
     }
 
     if (CheckCollisionPointRec(Vector2{mx, my}, actionLayout.setDiceRect)) {
-        if (!state.hasRolledDice && !diceAnimating_) {
+        if (!setDiceDisabled && !diceAnimating_) {
             outCommand = "ATUR_DADU";
         }
         return;

@@ -105,6 +105,7 @@ int main() {
         engine.initialize(players, engine.getConfig().getMaxTurns());
         engine.start();
         gameInitialized = true;
+        view.startGameTimer();
     };
 
     auto loadGameFromFile = [&](const std::string& path) {
@@ -152,6 +153,7 @@ int main() {
         }
 
         gameInitialized = true;
+        view.startGameTimer();
         return true;
     };
 

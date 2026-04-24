@@ -1,5 +1,28 @@
 #include "ui/GUIView.hpp"
 
+#include <cstdio>
+
+void GUIView::startGameTimer() {
+    gameStartedAt_ = std::chrono::steady_clock::now();
+    gameTimerRunning_ = true;
+}
+
+std::string GUIView::formattedElapsedTime() const {
+    if (!gameTimerRunning_) {
+        return "00:00:00";
+    }
+
+    const auto elapsed =
+        std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - gameStartedAt_).count();
+    const long long hours = elapsed / 3600;
+    const long long minutes = (elapsed % 3600) / 60;
+    const long long seconds = elapsed % 60;
+
+    char buffer[24];
+    std::snprintf(buffer, sizeof(buffer), "%02lld:%02lld:%02lld", hours, minutes, seconds);
+    return buffer;
+}
+
 void GUIView::showDiceResult(int d1, int d2, const string& playerName) {
     lastD1_ = d1;
     lastD2_ = d2;

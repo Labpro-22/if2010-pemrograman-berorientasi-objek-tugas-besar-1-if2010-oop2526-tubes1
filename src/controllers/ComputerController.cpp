@@ -396,6 +396,7 @@ const PlayerView* ComputerController::activePlayerView(const GameStateView& stat
 bool ComputerController::shouldTrySkillCard(const PlayerView& player, const GameStateView& state) const {
     return !attemptedSkillThisTurn_ &&
            !state.getHasUsedSkillCard() &&
+           !state.getExtraRollAvailable() &&
            player.status == PlayerStatus::ACTIVE &&
            player.skillCardCount > 0;
 }

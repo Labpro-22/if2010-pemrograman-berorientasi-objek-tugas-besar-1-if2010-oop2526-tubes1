@@ -22,6 +22,7 @@ public:
 	int    activePlayerIndex{0};
 	bool   hasRolledDice{false};
 	bool   hasUsedSkillCard{false};
+	bool   extraRollAvailable{false};
 
 	GameStateView();
 	explicit GameStateView(const GameState& state);
@@ -36,6 +37,7 @@ public:
 	const std::vector<PropertyView>& getProperties() const;
 	bool getHasRolledDice() const;
 	bool getHasUsedSkillCard() const;
+	bool getExtraRollAvailable() const;
 
 	std::string render(const GameState& state) const;
 };

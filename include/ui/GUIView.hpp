@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "ui/AppScreen.hpp"
 #include "ui/GUIInput.hpp"
 #include "ui/IGameView.hpp"
@@ -75,6 +77,8 @@ public:
     void renderPromptOverlay(const struct GUIPromptState& prompt);
     void setCurrentPrompt(const GUIPromptState* p) { currentPrompt_ = p; }
     bool isDiceAnimating() const { return diceAnimating_; }
+    void startGameTimer();
+    std::string formattedElapsedTime() const;
     void setQueuedManualDice(int d1, int d2) {
         queuedManualDice_ = d1 > 0 && d2 > 0;
         queuedDice1_ = d1;
@@ -109,6 +113,8 @@ private:
 
     std::string saveLoadStatus_;
     int saveLoadStatusFrames_{0};
+    std::chrono::steady_clock::time_point gameStartedAt_{};
+    bool gameTimerRunning_{false};
 
     bool handleLandingInput();
     bool handlePlayerCountInput();
