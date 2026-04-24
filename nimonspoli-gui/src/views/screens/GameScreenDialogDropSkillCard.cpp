@@ -96,11 +96,22 @@ void GameScreen::drawDropSkillCardDialog()
         {
             try
             {
+                std::string droppedCardName = card->getType();
+
                 DropKartuKemampuanCommand cmd(i);
                 cmd.execute(*gm);
 
+                int remainingCards = player->getHandSize();
+
                 dropSkillCardDialog.visible = false;
                 dropSkillCardDialog.errorMsg.clear();
+
+                skillCardResultDialog.visible = true;
+                skillCardResultDialog.title = "Kartu Berhasil Dibuang";
+                skillCardResultDialog.message =
+                    droppedCardName + " telah dibuang. Sekarang kamu memiliki " +
+                    std::to_string(remainingCards) +
+                    " kartu di tangan.";
             }
             catch (const std::exception &e)
             {
