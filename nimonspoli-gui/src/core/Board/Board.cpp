@@ -465,6 +465,7 @@ void TaxTile::onLanded(Player &p, GameState &gs)
             gs.setPhase(GamePhase::BANKRUPTCY);
             throw;
         }
+        gs.setPhase(GamePhase::AWAITING_TAX);
     }
 }
 

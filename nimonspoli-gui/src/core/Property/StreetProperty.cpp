@@ -90,6 +90,23 @@ int StreetProperty::sellAllBuildings()
     return value;
 }
 
+void StreetProperty::downgradeToHouse()
+{
+    if (hasHotel)
+    {
+        hasHotel = false;
+        buildingCount = 4;
+    }
+}
+
+void StreetProperty::removeBuilding()
+{
+    if (!hasHotel && buildingCount > 0)
+    {
+        buildingCount--;
+    }
+}
+
 void StreetProperty::resetFestival()
 {
     festivalMultiplier = 1;

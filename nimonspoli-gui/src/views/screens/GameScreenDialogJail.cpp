@@ -12,30 +12,38 @@
 // ─────────────────────────────────────────────
 void GameScreen::triggerJailDialog()
 {
-    if (!guiManager || !guiManager->getGameMaster()) return;
+    if (!guiManager || !guiManager->getGameMaster())
+        return;
 
-    GameMaster*      gm     = guiManager->getGameMaster();
-    GameState&       gs     = gm->getState();
-    Player*          player = gs.getCurrPlayer();
-    if (!player || !player->isInJail()) return;
+    GameMaster *gm = guiManager->getGameMaster();
+    GameState &gs = gm->getState();
+    Player *player = gs.getCurrPlayer();
+    if (!player || !player->isInJail())
+        return;
 
     // Ambil jailFine dari config via JailTile
     int fine = 50; // fallback default jika JailTile tidak ditemukan
-    Board* board = gs.getBoard();
-    if (board) {
-        for (int i = 0; i < board->getSize(); i++) {
-            JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
-            if (jt) { fine = jt->getJailFine(); break; }
+    Board *board = gs.getBoard();
+    if (board)
+    {
+        for (int i = 0; i < board->getSize(); i++)
+        {
+            JailTile *jt = dynamic_cast<JailTile *>(board->getTile(i));
+            if (jt)
+            {
+                fine = jt->getJailFine();
+                break;
+            }
         }
     }
 
     int turns = player->getJailTurns(); // sudah berapa giliran di penjara
 
-    jailDialog.visible        = true;
-    jailDialog.jailFine       = fine;
-    jailDialog.canAffordFine  = player->canAfford(fine);
-    jailDialog.jailTurnsLeft  = turns;
-    jailDialog.forcedPay      = (turns >= 3); // giliran ke-4 wajib bayar
+    jailDialog.visible = true;
+    jailDialog.jailFine = fine;
+    jailDialog.canAffordFine = player->canAfford(fine);
+    jailDialog.jailTurnsLeft = turns;
+    jailDialog.forcedPay = (turns >= 3); // giliran ke-4 wajib bayar
     jailDialog.rolledThisTurn = false;
 }
 
@@ -44,7 +52,8 @@ void GameScreen::triggerJailDialog()
 // ─────────────────────────────────────────────
 void GameScreen::drawJailDialog()
 {
-    if (!jailDialog.visible) return;
+    if (!jailDialog.visible)
+        return;
 
     // ── Overlay ───────────────────────────────────────────────────────────
     DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 170});
@@ -58,110 +67,118 @@ void GameScreen::drawJailDialog()
 
     // Header
     DrawRectangle((int)px, (int)py, (int)pw, 52, {120, 40, 40, 255});
-    const char* title = "DALAM PENJARA";
+    const char *title = "DALAM PENJARA";
     int tw = MeasureText(title, 18);
-    DrawText(title, (int)(px + pw/2 - tw/2), (int)(py + 8), 18, WHITE);
+    DrawText(title, (int)(px + pw / 2 - tw / 2), (int)(py + 8), 18, WHITE);
 
     // Subtitle giliran
     std::string sub = "Giliran ke-" + std::to_string(jailDialog.jailTurnsLeft + 1) + " di penjara";
-    if (jailDialog.forcedPay) sub += "  [WAJIB BAYAR DENDA]";
+    if (jailDialog.forcedPay)
+        sub += "  [WAJIB BAYAR DENDA]";
     int sw = MeasureText(sub.c_str(), 11);
-    DrawText(sub.c_str(), (int)(px + pw/2 - sw/2), (int)(py + 33), 11,
-             jailDialog.forcedPay ? Color{255, 120, 80, 255} : Color{255,255,255,180});
+    DrawText(sub.c_str(), (int)(px + pw / 2 - sw / 2), (int)(py + 33), 11,
+             jailDialog.forcedPay ? Color{255, 120, 80, 255} : Color{255, 255, 255, 180});
 
     float ry = py + 68.f;
 
     // Info denda
-    DrawText("Denda keluar penjara:", (int)(px + 20), (int)ry, 12, {140,140,180,255});
+    DrawText("Denda keluar penjara:", (int)(px + 20), (int)ry, 12, {140, 140, 180, 255});
     std::string fineStr = "M" + std::to_string(jailDialog.jailFine);
     int fw = MeasureText(fineStr.c_str(), 15);
     DrawText(fineStr.c_str(), (int)(px + pw - 20 - fw), (int)(ry - 2), 15,
-             jailDialog.canAffordFine ? Color{100,220,100,255} : Color{220,80,80,255});
-    DrawLine((int)(px+16), (int)(ry+20), (int)(px+pw-16), (int)(ry+20), {60,60,90,255});
+             jailDialog.canAffordFine ? Color{100, 220, 100, 255} : Color{220, 80, 80, 255});
+    DrawLine((int)(px + 16), (int)(ry + 20), (int)(px + pw - 16), (int)(ry + 20), {60, 60, 90, 255});
     ry += 30.f;
 
     // Pesan hasil roll (jika sudah roll tapi gagal double)
-    if (jailDialog.rolledThisTurn) {
-        const char* msg = "Bukan double — giliran ini tidak bergerak.";
+    if (jailDialog.rolledThisTurn)
+    {
+        const char *msg = "Bukan double — giliran ini tidak bergerak.";
         int mw = MeasureText(msg, 11);
-        DrawText(msg, (int)(px + pw/2 - mw/2), (int)ry, 11, {220, 160, 60, 255});
+        DrawText(msg, (int)(px + pw / 2 - mw / 2), (int)ry, 11, {220, 160, 60, 255});
         ry += 22.f;
     }
 
     // ── Tombol-tombol ─────────────────────────────────────────────────────
-    float btnH  = 44.f;
+    float btnH = 44.f;
     float btnY1 = py + ph - 56.f - btnH - 8.f;
     float btnY2 = py + ph - 56.f;
-    float btnW  = pw - 32.f;
+    float btnW = pw - 32.f;
     Vector2 mouse = GetMousePosition();
 
     // ── Tombol 1: BAYAR DENDA ────────────────────────────────────────────
     bool payDisabled = !jailDialog.canAffordFine;
     Rectangle payBtn = {px + 16, btnY1, btnW, btnH};
-    bool payHover    = CheckCollisionPointRec(mouse, payBtn) && !payDisabled;
-    Color payBg      = payDisabled ? Color{40,42,54,255}
-                     : payHover   ? Color{60,160,80,255}
-                                  : Color{40,120,60,255};
+    bool payHover = CheckCollisionPointRec(mouse, payBtn) && !payDisabled;
+    Color payBg = payDisabled ? Color{40, 42, 54, 255}
+                  : payHover  ? Color{60, 160, 80, 255}
+                              : Color{40, 120, 60, 255};
     DrawRectangleRec(payBtn, payBg);
     DrawRectangleLinesEx(payBtn, 1.5f,
-                         payDisabled ? Color{60,60,80,255} : Color{80,200,110,255});
+                         payDisabled ? Color{60, 60, 80, 255} : Color{80, 200, 110, 255});
     std::string payLbl = "BAYAR DENDA  (M" + std::to_string(jailDialog.jailFine) + ")";
     int plw = MeasureText(payLbl.c_str(), 13);
-    DrawText(payLbl.c_str(), (int)(payBtn.x + btnW/2 - plw/2), (int)(btnY1 + 15), 13,
-             payDisabled ? Color{80,80,100,255} : WHITE);
+    DrawText(payLbl.c_str(), (int)(payBtn.x + btnW / 2 - plw / 2), (int)(btnY1 + 15), 13,
+             payDisabled ? Color{80, 80, 100, 255} : WHITE);
 
     // ── Tombol 2: COBA LEMPAR DADU / TUTUP (jika sudah roll) ─────────────
     bool rollDisabled = jailDialog.forcedPay || jailDialog.rolledThisTurn;
     Rectangle rollBtn = {px + 16, btnY2, btnW * 0.48f, btnH};
-    bool rollHover    = CheckCollisionPointRec(mouse, rollBtn) && !rollDisabled;
-    Color rollBg      = rollDisabled ? Color{40,42,54,255}
-                      : rollHover   ? Color{80,120,200,255}
-                                    : Color{50,80,160,255};
+    bool rollHover = CheckCollisionPointRec(mouse, rollBtn) && !rollDisabled;
+    Color rollBg = rollDisabled ? Color{40, 42, 54, 255}
+                   : rollHover  ? Color{80, 120, 200, 255}
+                                : Color{50, 80, 160, 255};
     DrawRectangleRec(rollBtn, rollBg);
     DrawRectangleLinesEx(rollBtn, 1.5f,
-                         rollDisabled ? Color{60,60,80,255} : Color{100,150,255,255});
-    const char* rollLbl = rollDisabled ? "LEMPAR DADU (N/A)" : "COBA LEMPAR DADU";
+                         rollDisabled ? Color{60, 60, 80, 255} : Color{100, 150, 255, 255});
+    const char *rollLbl = rollDisabled ? "LEMPAR DADU (N/A)" : "COBA LEMPAR DADU";
     int rlw = MeasureText(rollLbl, 11);
-    DrawText(rollLbl, (int)(rollBtn.x + rollBtn.width/2 - rlw/2),
-             (int)(btnY2 + 16), 11, rollDisabled ? Color{80,80,100,255} : WHITE);
+    DrawText(rollLbl, (int)(rollBtn.x + rollBtn.width / 2 - rlw / 2),
+             (int)(btnY2 + 16), 11, rollDisabled ? Color{80, 80, 100, 255} : WHITE);
 
     // ── Tombol 3: TUTUP / LANJUT ──────────────────────────────────────────
     Rectangle closeBtn = {px + 16 + btnW * 0.52f, btnY2, btnW * 0.48f, btnH};
-    bool closeHover    = CheckCollisionPointRec(mouse, closeBtn);
+    bool closeHover = CheckCollisionPointRec(mouse, closeBtn);
     // Tombol tutup hanya aktif jika sudah roll (gagal) atau tidak ada aksi wajib
-    bool closeActive   = jailDialog.rolledThisTurn && !jailDialog.forcedPay;
-    Color closeBg      = !closeActive ? Color{40,42,54,255}
-                       : closeHover  ? Color{160,80,50,255}
-                                     : Color{100,50,30,255};
+    bool closeActive = jailDialog.rolledThisTurn && !jailDialog.forcedPay;
+    Color closeBg = !closeActive ? Color{40, 42, 54, 255}
+                    : closeHover ? Color{160, 80, 50, 255}
+                                 : Color{100, 50, 30, 255};
     DrawRectangleRec(closeBtn, closeBg);
     DrawRectangleLinesEx(closeBtn, 1.5f,
-                         !closeActive ? Color{60,60,80,255} : Color{200,100,80,255});
-    const char* closeLbl = "TUTUP";
+                         !closeActive ? Color{60, 60, 80, 255} : Color{200, 100, 80, 255});
+    const char *closeLbl = "TUTUP";
     int clw = MeasureText(closeLbl, 12);
-    DrawText(closeLbl, (int)(closeBtn.x + closeBtn.width/2 - clw/2),
-             (int)(btnY2 + 16), 12, !closeActive ? Color{80,80,100,255} : WHITE);
+    DrawText(closeLbl, (int)(closeBtn.x + closeBtn.width / 2 - clw / 2),
+             (int)(btnY2 + 16), 12, !closeActive ? Color{80, 80, 100, 255} : WHITE);
 
     // ── Handle klik ───────────────────────────────────────────────────────
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
 
         // BAYAR DENDA
-        if (payHover && !payDisabled) {
-            if (guiManager && guiManager->getGameMaster()) {
-                GameMaster* gm  = guiManager->getGameMaster();
-                Player*     p   = gm->getState().getCurrPlayer();
-                Bank*       bank = gm->getState().getBank();
-                Board*      board = gm->getState().getBoard();
+        if (payHover && !payDisabled)
+        {
+            if (guiManager && guiManager->getGameMaster())
+            {
+                GameMaster *gm = guiManager->getGameMaster();
+                Player *p = gm->getState().getCurrPlayer();
+                Bank *bank = gm->getState().getBank();
+                Board *board = gm->getState().getBoard();
 
-                if (p && bank && board) {
+                if (p && bank && board)
+                {
                     // Cari JailTile dan panggil payFine
-                    for (int i = 0; i < board->getSize(); i++) {
-                        JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
-                        if (jt) {
-                            jt->payFine(*p, gs);
+                    for (int i = 0; i < board->getSize(); i++)
+                    {
+                        JailTile *jt = dynamic_cast<JailTile *>(board->getTile(i));
+                        if (jt)
+                        {
+                            jt->payFine(*p, gm->getState());
                             gm->log(p->getUsername(), "JAIL",
                                     "Membayar denda M" +
-                                    std::to_string(jailDialog.jailFine) +
-                                    " untuk keluar penjara");
+                                        std::to_string(jailDialog.jailFine) +
+                                        " untuk keluar penjara");
                             break;
                         }
                     }
@@ -172,47 +189,55 @@ void GameScreen::drawJailDialog()
         }
 
         // COBA LEMPAR DADU
-        else if (rollHover && !rollDisabled) {
-            if (guiManager && guiManager->getGameMaster()) {
-                GameMaster* gm   = guiManager->getGameMaster();
-                Player*     p    = gm->getState().getCurrPlayer();
-                Dice*       dice = gm->getState().getDice();
+        else if (rollHover && !rollDisabled)
+        {
+            if (guiManager && guiManager->getGameMaster())
+            {
+                GameMaster *gm = guiManager->getGameMaster();
+                Player *p = gm->getState().getCurrPlayer();
+                Dice *dice = gm->getState().getDice();
 
-                if (p && dice) {
+                if (p && dice)
+                {
                     dice->rollRandom();
                     int v1 = dice->getDaduVal1();
                     int v2 = dice->getDaduVal2();
 
                     // Sync dice visual
-                    diceState.val1      = v1;
-                    diceState.val2      = v2;
-                    diceState.isDouble  = dice->isDouble();
+                    diceState.val1 = v1;
+                    diceState.val2 = v2;
+                    diceState.isDouble = dice->isDouble();
                     diceState.animating = true;
                     diceState.animTimer = 0.f;
 
-                    if (dice->isDouble()) {
+                    if (dice->isDouble())
+                    {
                         // Berhasil double → keluar penjara, gerak
                         gm->releaseFromJail(p);
                         gm->log(p->getUsername(), "JAIL",
                                 "Keluar penjara dengan double " +
-                                std::to_string(v1) + "+" + std::to_string(v2));
+                                    std::to_string(v1) + "+" + std::to_string(v2));
                         gm->movePlayer(p, v1 + v2);
                         gm->getState().setHasRolled(true);
                         gm->getState().setPhase(GamePhase::PLAYER_TURN);
                         jailDialog.visible = false;
-                    } else {
+                    }
+                    else
+                    {
                         // Gagal double → tidak bergerak, tandai sudah roll
                         p->incrementJailTurns();
                         gm->log(p->getUsername(), "JAIL",
                                 "Gagal double " + std::to_string(v1) +
-                                "+" + std::to_string(v2) + " — tidak bergerak");
+                                    "+" + std::to_string(v2) + " — tidak bergerak");
                         gm->getState().setHasRolled(true);
                         jailDialog.rolledThisTurn = true;
 
                         // Update forced pay jika sekarang giliran ke-4
-                        if (p->getJailTurns() >= 3) {
+                        if (p->getJailTurns() >= 3)
+                        {
                             jailDialog.forcedPay = true;
                             jailDialog.jailTurnsLeft = p->getJailTurns();
+                            p->setJailTurns(0);
                         }
                     }
                 }
@@ -220,11 +245,11 @@ void GameScreen::drawJailDialog()
         }
 
         // TUTUP (setelah gagal roll)
-        else if (closeHover && closeActive) {
+        else if (closeHover && closeActive)
+        {
             jailDialog.visible = false;
             if (guiManager && guiManager->getGameMaster())
-                guiManager->getGameMaster()->getState()
-                           .setPhase(GamePhase::PLAYER_TURN);
+                guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
         }
     }
 }

@@ -37,6 +37,8 @@ public:
     void buildHouse();
     void upgToHotel();
     int sellAllBuildings();
+    void downgradeToHouse();
+    void removeBuilding();
     void resetFestival();
     void activateFestival(int newMultiplier);
     void decrementFestivalDuration();
