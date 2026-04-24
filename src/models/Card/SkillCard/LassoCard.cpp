@@ -1,10 +1,10 @@
 #include "models/Card/SkillCard/LassoCard.hpp"
 #include "core/GameException.hpp"
 
-void LassoCard::activate(GameState& state) {
-    vector<Player>& players = state.getPlayers();
-    int currPlayerPosition = state.getCurrentPlayer().getPosition();
-    int boardSize = state.getBoard().getSize();
+void LassoCard::activate(SkillContext& ctx) {
+    vector<Player>& players = ctx.getPlayers();
+    int currPlayerPosition = ctx.getCurrentPlayer().getPosition();
+    int boardSize = ctx.getBoard().getSize();
 
     Player* nearestPlayer = nullptr;
     int minDistance = boardSize + 1;
@@ -19,7 +19,7 @@ void LassoCard::activate(GameState& state) {
 
     try {
         nearestPlayer->moveTo(currPlayerPosition, boardSize);
-        state.getCurrentPlayer().setUsedSkillThisTurn(true);
+        ctx.getCurrentPlayer().setUsedSkillThisTurn(true);
     } catch (const GameException& e) {
         std::cerr << e.what() << '\n';
     }

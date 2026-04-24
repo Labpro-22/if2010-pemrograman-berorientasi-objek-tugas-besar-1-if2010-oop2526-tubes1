@@ -5,7 +5,7 @@ class DemolitionCard : public SkillCard {
     public:
         DemolitionCard() = default;
         ~DemolitionCard() = default;
-        void activate(GameState&);
+        void activate(SkillContext& ctx);
         const string getName() const;
         const string getDescription() const;
 };

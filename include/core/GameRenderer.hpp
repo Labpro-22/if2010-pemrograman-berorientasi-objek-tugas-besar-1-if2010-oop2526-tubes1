@@ -1,6 +1,7 @@
 #include "iostream"
 #include "core/GameEngine.hpp"
 #include "core/Formatter.hpp"
+#include "core/BoardFormatter.hpp"
 #include "models/Plot/PropertyPlot/PropertyPlot.hpp"
 using namespace std;
 

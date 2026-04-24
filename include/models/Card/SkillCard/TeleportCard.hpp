@@ -1,5 +1,6 @@
 #pragma once
 #include "models/Card/SkillCard/SkillCard.hpp"
+#include "models/Board/Board.hpp"
 
 class TeleportCard : public SkillCard {
     private:
@@ -7,7 +8,7 @@ class TeleportCard : public SkillCard {
     public:
         TeleportCard(int targetIndex);
         ~TeleportCard();
-        void activate(GameState&);
+        void activate(SkillContext& ctx);
         const string getName() const;
         const string getDescription() const;
 };

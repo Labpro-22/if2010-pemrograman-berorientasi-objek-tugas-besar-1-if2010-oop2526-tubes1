@@ -5,7 +5,7 @@ class ShieldCard : public SkillCard {
     public:
         ShieldCard() = default;
         ~ShieldCard() = default;
-        void activate(GameState&);
+        void activate(SkillContext& ctx);
         const string getName() const;
         const string getDescription() const;
 };

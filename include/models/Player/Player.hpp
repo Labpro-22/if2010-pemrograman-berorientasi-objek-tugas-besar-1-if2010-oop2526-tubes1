@@ -9,6 +9,7 @@
 class Plot;
 class SkillCard;
 struct SkillContext;
+class PropertyPlot;
 
 class Player {
 private:

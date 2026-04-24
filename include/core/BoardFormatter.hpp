@@ -7,7 +7,7 @@
 class Board;
 class Player;
 
-class Formatter {
+class BoardFormatter {
 private:
 static const int CELL_WIDTH = 8;
 

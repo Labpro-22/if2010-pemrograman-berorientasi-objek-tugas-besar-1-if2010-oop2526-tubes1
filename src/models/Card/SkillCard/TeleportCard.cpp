@@ -5,9 +5,9 @@ TeleportCard::TeleportCard(int targetIndex) : targetIndex(targetIndex){}
 
 TeleportCard::~TeleportCard() {}
 
-void TeleportCard::activate(GameState& state) {
-    Player& currPlayer = state.getCurrentPlayer();
-    int boardSize = state.getBoard().getSize();
+void TeleportCard::activate(SkillContext& ctx) {
+    Player& currPlayer = ctx.getCurrentPlayer();
+    int boardSize = ctx.getBoard().getSize();
 
     try {
         currPlayer.moveTo(targetIndex, boardSize);
