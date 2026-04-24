@@ -8,5 +8,5 @@ PlotType StartPlot::getType() const {
 }
 
 void StartPlot::startEvent(PlotContext& ctx) {
-    //TODO (PlotContext)
+    //TODO: tampilkan pesan saja, mekanisme salary dihandle di bagian turn manager
 }

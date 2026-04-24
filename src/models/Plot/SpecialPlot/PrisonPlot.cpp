@@ -8,5 +8,5 @@ PlotType PrisonPlot::getType() const {
 }
 
 void PrisonPlot::startEvent(PlotContext& ctx) {
-    //TODO (PlotContext)
+    //TODO: tampilkan pesan saja, mekanisme jail di handle di bagian turn manager dan player
 }
