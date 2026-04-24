@@ -4,14 +4,14 @@
 #include <vector>
 #include <string>
 #include "../models/Board.hpp" //jujur gatau tar ditaro dimana, placeholder dulu aje
-#include "../models/Player.hpp"
+#include "../core/Player.hpp"
 #include "../models/PropertyTile.hpp"
 #include "../core/TransactionLogger.hpp" //jujur gatau tar ditaro dimana, placeholder dulu aje
 
 
 class Formatter {
 public:
-    static void printBoard(const Board& board, const std::vector<Player>& players, int currentTurn, int maxTurn);
+    static void printBoard(Board& board, const std::vector<Player>& players, int currentTurn, int maxTurn);
     static void printAkta(const PropertyTile& property);
     static void printProperti(const Player& player);
     static void printLog(const TransactionLogger& logger, int limit = -1);

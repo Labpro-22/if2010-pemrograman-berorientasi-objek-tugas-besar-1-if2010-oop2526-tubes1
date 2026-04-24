@@ -1,7 +1,9 @@
-#include "Card.hpp"
-#include "Player.hpp"
-#include "GameEngine.hpp"
-#include "Exceptions.hpp"
+#include "../../include/models/Card.hpp"
+#include "../../include/core/Player.hpp"
+#include "../../include/models/Board.hpp"
+#include "../../include/models/Tile.hpp"
+#include "../../include/core/GameEngine.hpp"
+#include "../../include/core/Exceptions.hpp"
 #include <iostream>
 #include <random>
 
@@ -59,10 +61,9 @@ int MoveCard::getSteps() const {
 
 //BELOM ADA GETTERNYEEE PLAYER
 void MoveCard::use(Player& player, GameEngine& engine) {
-    // std::cout << "[MoveCard] " << player.getUsername()
-    //           << " menggunakan MoveCard — maju " << steps << " petak.\n";
-    // GameEngine menangani pergerakan, pengecekan melewati GO, dan efek mendarat
-    // engine.movePlayerBy(player, steps); perlu liat  implementasi engine lagi
+    std::cout << "[MoveCard] " << player.getUsername()
+              << " menggunakan MoveCard — maju " << steps << " petak.\n";
+    player.move(steps); 
 }
 
 std::string MoveCard::getValueString() const {
@@ -101,8 +102,7 @@ void DiscountCard::decrementTurns(){
 
 // Daftarkan kartu aktif ke player, GameEngine membaca saat menghitung sewa/pajak
 void DiscountCard::use(Player& player, GameEngine& engine) {
-    
-    // player.setActiveDiscountCard(this);
+    player.setActiveDiscountPercent(discountPercent); 
     std::cout << "[DiscountCard] " << player.getUsername()
               << " menggunakan DiscountCard — diskon " << discountPercent
               << "% berlaku selama giliran ini.\n";
@@ -137,10 +137,22 @@ TeleportCard::TeleportCard()
                 SkillCardType::TELEPORT) {}
 
 void TeleportCard::use(Player& player, GameEngine& engine) {
-    std::cout << "[TeleportCard] " << player.getUsername()
-              << " menggunakan TeleportCard.\n";
-    // GameEngine meminta pemain memilih tujuan lalu memindahkan bidak + proses mendarat
-    // engine.handleTeleport(player); nunggguin engine
+    std::cout << "Masukkan kode petak tujuan: ";
+    std::string kode;
+    std::cin >> kode;
+    
+    Board* board = Board::getInstance();
+    Tile* target = board->getTileByKode(kode);
+    if (!target) {
+        std::cout << "Petak tidak ditemukan!\n";
+        return;
+    }
+    int dest = target->getIndex() - 1;
+    int curr = player.getPosition();
+    int steps = (dest - curr + 40) % 40;
+    player.move(steps);
+    std::cout << player.getUsername() << " teleport ke " 
+              << target->getName() << ".\n";
 }
 
 std::string TeleportCard::getValueString() const {
@@ -161,7 +173,7 @@ void LassoCard::use(Player& player, GameEngine& engine) {
     std::cout << "[LassoCard] " << player.getUsername()
               << " menggunakan LassoCard.\n";
     // GameEngine mencari target (lawan paling dekat di depan) dan memindahkannya
-    // engine.handleLasso(player); NUNGGU ENDRA 
+    // engine.handleLasso(player); TODO: endra
 }
 
 std::string LassoCard::getValueString() const {
@@ -180,7 +192,7 @@ void DemolitionCard::use(Player& player, GameEngine& engine) {
     std::cout << "[DemolitionCard] " << player.getUsername()
               << " menggunakan DemolitionCard.\n";
     // GameEngine meminta pemain memilih target properti lawan, lalu menghancurkan bangunan
-    // engine.handleDemolition(player); nunggu endra
+    // engine.handleDemolition(player);   TODO: endra
 }
 
 std::string DemolitionCard::getValueString() const {
@@ -225,12 +237,11 @@ void ChanceCard::execute(Player& player, GameEngine& engine) {
     switch (type) {
         case ChanceCardType::NEAREST_STATION:
             // Pindah ke stasiun railroad terdekat, searah jarum jam dari posisi saat ini
-            // engine.moveToNearestStation(player); lagi2 nunggu endra
+            // engine.moveToNearestStation(player); TODO: endra
             break;
 
         case ChanceCardType::MOVE_BACK_3:
-            // Mundur 3 petak, nilai negatif berarti mundur
-            // engine.movePlayerBy(player, -3); lagi2 nunggu endra
+            player.move(-3); 
             break;
 
         case ChanceCardType::GO_TO_JAIL:
@@ -266,7 +277,7 @@ void CommunityChestCard::execute(Player& player, GameEngine& engine) {
         // semua pemain bayar BIRTHDAY_AMOUNT ke player ini
         case CommunityChestCardType::BIRTHDAY:
         
-            //engine.handleBirthday(player, BIRTHDAY_AMOUNT); lagi2 nunggu endra
+            //engine.handleBirthday(player, BIRTHDAY_AMOUNT); TODO: endra
             break;
 
         // pemain ini harus bayar DOCTOR_AMOUNT
@@ -280,12 +291,12 @@ void CommunityChestCard::execute(Player& player, GameEngine& engine) {
                           << DOCTOR_AMOUNT << ")\n"
                           << "Uang kamu saat ini: M" << player.getMoney() << "\n";
                 
-                // engine.handleBankruptcy(player, nullptr, DOCTOR_AMOUNT); nunggu endra
+                // engine.handleBankruptcy(player, nullptr, DOCTOR_AMOUNT); TODO: endra
             }
             break;
 
         case CommunityChestCardType::ELECTION:
-            // engine.handleElection(player, ELECTION_AMOUNT); nunggu endra
+            // engine.handleElection(player, ELECTION_AMOUNT); TODO: endra
             break;
     }
 }
