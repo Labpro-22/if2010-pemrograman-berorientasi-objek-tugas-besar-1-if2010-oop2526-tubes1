@@ -46,6 +46,7 @@ public:
     void endTurn();
 
     void buyBuilding(const std::string& propertyCode);
+    void sellBuilding(const std::string& colorGroup);
     void mortgageProperty(const std::string& propertyCode);
     void unmortgageProperty(const std::string& propertyCode);
     void useSkillCard(int cardIdx);
