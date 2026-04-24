@@ -1,7 +1,7 @@
 #include "../../include/core/InsufficientFundException.hpp"
 
-InsufficientFundException::InsufficientFundException(int deficit) 
-    : GameException("uang tidak cukup"), deficit(deficit) {}
+InsufficientFundException::InsufficientFundException(int requiredAmount, int currentAmount) 
+    : GameException("uang tidak cukup"), requiredAmount(requiredAmount), currentAmount(currentAmount) {}
 int InsufficientFundException::getDeficit() const {
-    return deficit;
+    return requiredAmount - currentAmount;
 }

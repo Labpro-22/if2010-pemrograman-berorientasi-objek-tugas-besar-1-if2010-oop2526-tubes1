@@ -4,8 +4,9 @@
 class InsufficientFundException : public GameException
 {
 private:
-    int deficit;
+    int requiredAmount;
+    int currentAmount;
 public:
-    InsufficientFundException(int deficit);
+    InsufficientFundException(int requiredAmount, int currentAmount);
     int getDeficit() const;
 };
