@@ -1,6 +1,8 @@
 #include "../../include/models/Player.hpp"
 #include "../../include/models/Account.hpp"
 #include "../../include/models/AbilityCard.hpp"
+#include "../../include/core/InsufficientFundException.hpp"
+#include "../../include/core/BankruptException.hpp"
 #include <stdexcept>
 
 void Player::moveTo(int position) {
@@ -8,7 +10,10 @@ void Player::moveTo(int position) {
 }
 void Player::pay(int amount) {
     if (amount > this->money) {
-        // TODO: THROW EXCEPTION
+        if (this->ownedProperties.empty()) {
+            throw BankruptException(1, "gagal bayar, ga punya properti juga");
+        }
+        throw InsufficientFundException(amount, this->money);
     }
     this->money -= amount;
 }
