@@ -3,10 +3,13 @@
 
 #include "Command.hpp"
 
-class GunakanKemampuanCommand : public Command
+class GunakanKartuKemampuanCommand : public Command
 {
+private:
+    int cardIndex;
+
 public:
-    GunakanKemampuanCommand() = default;
+    explicit GunakanKartuKemampuanCommand(int cardIndex);
     void execute(GameMaster &gm) override;
 };
 

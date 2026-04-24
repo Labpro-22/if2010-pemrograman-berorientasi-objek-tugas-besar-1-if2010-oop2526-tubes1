@@ -46,4 +46,13 @@ public:
     }
 };
 
+class SkillCardInvalidActionException : public NimonspoliException
+{
+public:
+    explicit SkillCardInvalidActionException(const std::string &message)
+        : NimonspoliException("Error Kartu Kemampuan: " + message)
+    {
+    }
+};
+
 #endif

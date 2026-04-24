@@ -1,89 +1,63 @@
 #include "GunakanKartuKemampuanCommand.hpp"
+
 #include "../GameMaster/GameMaster.hpp"
 #include "../GameState/GameState.hpp"
 #include "../Player/Player.hpp"
 #include "../Card/SkillCard.hpp"
+#include "../Exceptions/SkillCardExceptions.hpp"
 
-#include <iostream>
-#include <limits>
-
-using namespace std;
-
-void GunakanKemampuanCommand::execute(GameMaster &gm)
+GunakanKartuKemampuanCommand::GunakanKartuKemampuanCommand(int cardIndex)
+    : cardIndex(cardIndex)
 {
-    Player *player = gm.getState().getCurrPlayer();
+}
+
+void GunakanKartuKemampuanCommand::execute(GameMaster &gm)
+{
+    GameState &gs = gm.getState();
+    Player *player = gs.getCurrPlayer();
+
     if (player == nullptr)
     {
-        cout << "Tidak ada pemain aktif.\n";
-        return;
+        throw SkillCardOverflowNotFoundException();
     }
 
-    if (gm.getState().getHasRolled())
+    if (gs.getPhase() != GamePhase::PLAYER_TURN)
     {
-        cout << "Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.\n";
-        return;
+        throw SkillCardInvalidActionException(
+            "Kartu kemampuan hanya dapat digunakan pada fase giliran pemain.");
+    }
+
+    if (gs.getHasRolled())
+    {
+        throw SkillCardInvalidActionException(
+            "Kartu kemampuan hanya bisa digunakan sebelum melempar dadu.");
     }
 
     if (player->hasUsedCardThisTurn())
     {
-        cout << "Kamu sudah menggunakan kartu kemampuan pada giliran ini! "
-             << "Penggunaan kartu dibatasi maksimal 1 kali dalam 1 giliran.\n";
-        return;
+        throw SkillCardInvalidActionException(
+            "Kamu sudah menggunakan kartu kemampuan pada giliran ini.");
     }
 
-    const vector<SkillCard *> &hand = player->getHand();
+    const std::vector<SkillCard *> &hand = player->getHand();
+
     if (hand.empty())
     {
-        cout << "Kamu tidak memiliki kartu kemampuan.\n";
-        return;
+        throw SkillCardInvalidActionException(
+            "Kamu tidak memiliki kartu kemampuan.");
     }
 
-    cout << "Daftar Kartu Kemampuan Spesial Anda:\n";
-    for (size_t i = 0; i < hand.size(); ++i)
+    if (cardIndex < 0 || cardIndex >= static_cast<int>(hand.size()))
     {
-        if (hand[i] == nullptr)
-            continue;
-
-        cout << (i + 1) << ". "
-             << hand[i]->getType() << " - "
-             << hand[i]->getDescription() << "\n";
+        throw InvalidSkillCardIndexException(cardIndex);
     }
-    cout << "0. Batal\n\n";
 
-    int pilihan;
-    while (true)
+    SkillCard *selectedCard = hand[cardIndex];
+
+    if (selectedCard == nullptr)
     {
-        cout << "Pilih kartu yang ingin digunakan (0-" << hand.size() << "): ";
-
-        if (!(cin >> pilihan))
-        {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Input tidak valid. Masukkan angka.\n";
-            continue;
-        }
-
-        if (pilihan < 0 || pilihan > (int)hand.size())
-        {
-            cout << "Pilihan di luar rentang.\n";
-            continue;
-        }
-
-        break;
+        throw SkillCardDiscardFailedException();
     }
 
-    if (pilihan == 0)
-    {
-        cout << "Penggunaan kartu dibatalkan.\n";
-        return;
-    }
-
-    SkillCard *card = hand[pilihan - 1];
-    if (card == nullptr)
-    {
-        cout << "Kartu tidak valid.\n";
-        return;
-    }
-
-    gm.useSkillCard(player, card, gm.getState());
+    gm.useSkillCard(player, selectedCard, gs);
 }
