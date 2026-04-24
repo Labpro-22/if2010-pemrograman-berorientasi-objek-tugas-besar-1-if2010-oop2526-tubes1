@@ -31,6 +31,7 @@ enum class GamePhase
     AWAITING_TAX,      // menunggu pilihan user untuk PPH (flat vs persen)
     AWAITING_FESTIVAL, // menunggu user pilih properti festival
     AWAITING_JAIL,
+    AWAITING_DROP_SKILL_CARD,
     SHOW_CARD,  // menampilkan hasil kartu Kesempatan/Dana Umum
     AUCTION,    // lelang sedang berjalan
     BANKRUPTCY, // proses likuidasi/kebangkrutan
@@ -72,6 +73,9 @@ private:
     // Untuk SHOW_CARD (CardDialog)
     std::string pendingCardDesc; // deskripsi kartu yang ditarik
     std::string pendingCardDeck; // "Kesempatan" atau "Dana Umum"
+
+    Player *pendingSkillDropPlayer = nullptr;
+    std::string pendingSkillDropMessage;
 
     // Untuk AWAITING_TAX (TaxDialog — PPH saja)
     int pendingPphFlat = 0; // jumlah flat M
@@ -141,6 +145,11 @@ public:
     // ── Helper ───────────────────────────────────
     bool isMaxTurnReached() const;
     int countActivePlayers() const;
+    Player *getPendingSkillDropPlayer() const;
+    const std::string &getPendingSkillDropMessage() const;
+
+    void setPendingSkillDrop(Player *p, const std::string &msg);
+    void clearPendingSkillDrop();
 
     // ── Getter/Setter pending dialog data ────────
     const std::string &getPendingCardDesc() const { return pendingCardDesc; }

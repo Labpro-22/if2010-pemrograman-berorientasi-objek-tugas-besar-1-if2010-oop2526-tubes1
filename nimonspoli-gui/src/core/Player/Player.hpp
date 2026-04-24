@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include "../Property/Property.hpp"
+#include "../Card/SkillCard.hpp"
 
 using namespace std;
 
@@ -72,13 +73,14 @@ public:
 
     // SKILL CARD
     bool addSkillCard(SkillCard *card);
-    void discardSkillCard(int index);
+    SkillCard *discardSkillCard(int index);
     const vector<SkillCard *> &getHand() const;
     int getHandSize() const;
     void setCardUsedThisTurn(bool used);
     bool hasUsedCardThisTurn() const;
     string printSkillCards() const;
     void forceAddSkillCard(SkillCard *card);
+    SkillCard *removeSkillCardAt(int index);
 
     // JAIL
     void goToJail();
