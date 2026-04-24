@@ -4,8 +4,9 @@
 #include "../Bank/Bank.hpp"
 #include "../Dice/Dice.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
-#include "../Card/CardDeck.hpp"
 #include "../utils/TransactionLogger.hpp"
+#include "../Card/CardDeck.hpp"
+#include "../Card/SkillCard.hpp"
 
 // ─────────────────────────────────────────────
 //  Konstruktor
@@ -27,15 +28,19 @@ GameState::GameState(
     AuctionManager *auctionMgr,
     CardDeck<Card> *chanceDeck,
     CardDeck<Card> *communityDeck,
-    CardDeck<Card> *skillDeck,
+    CardDeck<SkillCard> *skillDeck,
     TransactionLogger *log, TaxConfig taxcfg)
     : currTurn(1), maxTurn(maxTurn), phase(GamePhase::NOT_STARTED),
       listPlayer(players), currPlayerIdx(0),
       hasExtraTurn(false), hasRolled(false), hasUsedCard(false),
       gameBoard(board), gameBank(bank), gameDice(dice),
       auctionManager(auctionMgr),
-      chanceCardDeck(chanceDeck), communityCardDeck(communityDeck), skillCardDeck(skillDeck),
-      logger(log), taxcfg(taxcfg) {}
+      chanceCardDeck(chanceDeck),
+      communityCardDeck(communityDeck),
+      skillCardDeck(skillDeck),
+      logger(log),
+      gameMaster(nullptr),
+      taxcfg(taxcfg) {}
 
 // ─────────────────────────────────────────────
 //  Getter: turn & fase
@@ -104,10 +109,13 @@ Dice *GameState::getDice() const { return gameDice; }
 AuctionManager *GameState::getAuctionManager() const { return auctionManager; }
 CardDeck<Card> *GameState::getChanceDeck() const { return chanceCardDeck; }
 CardDeck<Card> *GameState::getCommunityDeck() const { return communityCardDeck; }
-CardDeck<Card> *GameState::getSkillDeck() const { return skillCardDeck; }
+CardDeck<SkillCard> *GameState::getSkillDeck() const
+{
+    return skillCardDeck;
+}
 TransactionLogger *GameState::getLogger() const { return logger; }
 GameMaster *GameState::getGameMaster() const { return gameMaster; }
-TaxConfig GameState::getTaxConfig() const {return taxcfg;}
+TaxConfig GameState::getTaxConfig() const { return taxcfg; }
 
 // ─────────────────────────────────────────────
 //  Setter
@@ -142,6 +150,8 @@ void GameState::nextPlayer()
     {
         currPlayerIdx = (currPlayerIdx + 1) % total;
         attempts++;
+        if (attempts >= total)
+            return;
     } while (listPlayer[currPlayerIdx]->getStatus() == PlayerStatus::BANKRUPT && attempts < total);
 
     hasExtraTurn = false;
@@ -161,6 +171,6 @@ int GameState::countActivePlayers() const
     return static_cast<int>(getActivePlayers().size());
 }
 
-void GameState::setCurrTurn(int t)      { currTurn = t; }
+void GameState::setCurrTurn(int t) { currTurn = t; }
 void GameState::setCurrPlayerIdx(int i) { currPlayerIdx = i; }
-void GameState::setMaxTurn(int m)       { maxTurn = m; }
+void GameState::setMaxTurn(int m) { maxTurn = m; }

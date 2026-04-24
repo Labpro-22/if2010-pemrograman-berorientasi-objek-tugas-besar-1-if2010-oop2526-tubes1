@@ -76,6 +76,9 @@ void LemparDaduCommand::execute(GameMaster &gm)
     if (currentPhase != GamePhase::AWAITING_BUY &&
         currentPhase != GamePhase::AUCTION      &&
         currentPhase != GamePhase::BANKRUPTCY   &&
+        currentPhase != GamePhase::AWAITING_FESTIVAL &&
+        currentPhase != GamePhase::AWAITING_TAX &&
+        currentPhase != GamePhase::SHOW_CARD &&
         currentPhase != GamePhase::GAME_OVER) {
         gameMaster.getState().setPhase(GamePhase::PLAYER_TURN);
     }

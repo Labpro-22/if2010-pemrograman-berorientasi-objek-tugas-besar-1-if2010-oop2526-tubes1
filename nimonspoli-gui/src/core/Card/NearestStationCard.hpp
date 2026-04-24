@@ -8,6 +8,7 @@ class NearestStationCard : public ChanceCard
 {
 public:
     NearestStationCard();
+    NearestStationCard(const string &type, const string &description);
     ~NearestStationCard();
     void execute(Player &p, GameState &gs) override;
 };

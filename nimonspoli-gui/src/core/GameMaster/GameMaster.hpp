@@ -79,13 +79,17 @@ public:
     // Kebangkrutan
     // Cek apakah player mampu bayar debt; jika tidak → proses bangkrut
     // creditor = nullptr berarti bangkrut ke Bank
-    void handleDebtPayment(Player *debtor, int debt, Player *creditor = nullptr);
+    int handleDebtPayment(Player *debtor, int debt, Player *creditor = nullptr);
 
     // Proses kebangkrutan ke pemain lain
     void handleBankruptcy(Player *from, Player *to);
 
     // Proses kebangkrutan ke Bank (lelang semua properti)
     void handleBankruptcy(Player *from, Bank *bank);
+
+    // Helper likuidasi
+    void sellPropertyToBank(Player *player, Property *prop);
+    void mortgageProperty(Player *player, Property *prop);
 
     // Kemenangan
     // Hitung & umumkan pemenang (dipanggil saat GAME_OVER)
@@ -116,10 +120,13 @@ public:
     void useSkillCard(Player *player, SkillCard *card, GameState &gs);
 
     // Proxy metode dialog
-    void handleGadai(Property* prop);
-    void handleTebus(Property* prop);
-    void handleBangun(StreetProperty* sp);
-    void handleJualBangunan(StreetProperty* sp);
+    void handleGadai(Property *prop);
+    void handleTebus(Property *prop);
+    void handleBangun(StreetProperty *sp);
+    void handleJualBangunan(StreetProperty *sp);
+
+    void handleSkillCardOverflow(Player *player);
+    void giveSkillCardToPlayer(Player *player, SkillCard *card);
 };
 
 #endif

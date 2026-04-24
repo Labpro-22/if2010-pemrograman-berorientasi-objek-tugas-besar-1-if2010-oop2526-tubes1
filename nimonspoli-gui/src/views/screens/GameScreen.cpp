@@ -151,13 +151,15 @@ void GameScreen::render(Window& window)
     drawSavePopup();
     drawJailDialog();
     drawPropertiPopup();
-    
-    // Dialogs baru
+    drawAturDaduDialog();
+
     drawGadaiDialog();
     drawTebusDialog();
     drawBangunDialog();
     drawJualBangunanDialog();
     drawSkillCardDialog();
+    drawAktaDialog();
+    drawCetakPropertiDialog();
 
     DrawFPS(LEFT_PANEL + 4, 4);
 }
@@ -263,7 +265,7 @@ void GameScreen::handleInput()
         GameMaster* gm = guiManager->getGameMaster();
         Player* cur = gm->getState().getCurrPlayer();
         if (cur && selectedTile >= 0) {
-            cur->setPosition(selectedTile);  // 0-based internal
+            gm->teleportPlayer(cur, selectedTile, true);
             std::cout << "[DEBUG] Teleport ke tile " << selectedTile
                     << " (" << TILE_DEFS[selectedTile].code << ")" << std::endl;
         }

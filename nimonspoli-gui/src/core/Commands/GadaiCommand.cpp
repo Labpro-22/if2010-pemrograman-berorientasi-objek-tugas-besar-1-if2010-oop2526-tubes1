@@ -10,7 +10,7 @@
 //  Konstruktor
 // ─────────────────────────────────────────────
 
-GadaiCommand::GadaiCommand(Player* p, Property* prop, bool playerConfirmedSell)
+GadaiCommand::GadaiCommand(Player *p, Property *prop, bool playerConfirmedSell)
     : currentPlayer(p), selectedProperty(prop),
       playerConfirmedSell(playerConfirmedSell) {}
 
@@ -18,11 +18,14 @@ GadaiCommand::GadaiCommand(Player* p, Property* prop, bool playerConfirmedSell)
 //  Helper: cek apakah ada bangunan di color group milik pemain ini
 // ─────────────────────────────────────────────
 
-static bool hasBuildingsInColorGroup(Player* player,
-                                     const std::string& colorGroup) {
-    for (Property* prop : player->getProperties()) {
-        if (prop->getColorGroup() != colorGroup) continue;
-        StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
+static bool hasBuildingsInColorGroup(Player *player,
+                                     const std::string &colorGroup)
+{
+    for (Property *prop : player->getProperties())
+    {
+        if (prop->getColorGroup() != colorGroup)
+            continue;
+        StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
         if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
             return true;
     }
@@ -33,14 +36,19 @@ static bool hasBuildingsInColorGroup(Player* player,
 //  Helper: jual semua bangunan di color group, return total nilai jual
 // ─────────────────────────────────────────────
 
-static int sellAllBuildingsInColorGroup(Player* player,
-                                        const std::string& colorGroup) {
+static int sellAllBuildingsInColorGroup(Player *player,
+                                        const std::string &colorGroup)
+{
     int total = 0;
-    for (Property* prop : player->getProperties()) {
-        if (prop->getColorGroup() != colorGroup) continue;
-        StreetProperty* sp = dynamic_cast<StreetProperty*>(prop);
-        if (!sp) continue;
-        if (sp->getBuildingCount() > 0 || sp->gethasHotel()) {
+    for (Property *prop : player->getProperties())
+    {
+        if (prop->getColorGroup() != colorGroup)
+            continue;
+        StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
+        if (!sp)
+            continue;
+        if (sp->getBuildingCount() > 0 || sp->gethasHotel())
+        {
             // sellAllBuildings() sudah return setengah harga beli (sesuai spesifikasi)
             int proceeds = sp->sellAllBuildings();
             *player += proceeds;
@@ -56,30 +64,36 @@ static int sellAllBuildingsInColorGroup(Player* player,
 //  execute()
 // ─────────────────────────────────────────────
 
-void GadaiCommand::execute(GameMaster& gm) {
-    if (!currentPlayer || !selectedProperty) {
+void GadaiCommand::execute(GameMaster &gm)
+{
+    if (!currentPlayer || !selectedProperty)
+    {
         std::cerr << "[GadaiCommand] Error: player atau property null." << std::endl;
         return;
     }
 
     // Hanya properti milik pemain ini yang bisa digadaikan
-    if (selectedProperty->getOwnerId() != currentPlayer->getUsername()) {
+    if (selectedProperty->getOwnerId() != currentPlayer->getUsername())
+    {
         std::cerr << "[GadaiCommand] Properti bukan milik pemain ini." << std::endl;
         return;
     }
 
     // Properti harus berstatus OWNED (bukan MORTGAGED atau BANK)
-    if (selectedProperty->getStatus() != PropertyStatus::OWNED) {
+    if (selectedProperty->getStatus() != PropertyStatus::OWNED)
+    {
         std::cerr << "[GadaiCommand] Properti sudah digadaikan atau bukan milik Bank." << std::endl;
         return;
     }
 
     // ── Cek bangunan di color group (hanya relevan untuk StreetProperty) ─────
     std::string colorGroup = selectedProperty->getColorGroup();
-    bool isStreet = dynamic_cast<StreetProperty*>(selectedProperty) != nullptr;
+    bool isStreet = dynamic_cast<StreetProperty *>(selectedProperty) != nullptr;
 
-    if (isStreet && hasBuildingsInColorGroup(currentPlayer, colorGroup)) {
-        if (!playerConfirmedSell) {
+    if (isStreet && hasBuildingsInColorGroup(currentPlayer, colorGroup))
+    {
+        if (!playerConfirmedSell)
+        {
             // GUI belum dapat konfirmasi — batalkan, GUI akan tampilkan dialog
             std::cout << "[DEBUG] Masih ada bangunan di color group ["
                       << colorGroup << "]. Menunggu konfirmasi jual." << std::endl;
@@ -100,7 +114,7 @@ void GadaiCommand::execute(GameMaster& gm) {
 
     gm.log(currentPlayer->getUsername(), "GADAI",
            selectedProperty->getName() + " digadaikan, menerima M" +
-           std::to_string(mortgageValue));
+               std::to_string(mortgageValue));
 
     std::cout << "[DEBUG] " << selectedProperty->getName()
               << " berhasil digadaikan. Menerima M" << mortgageValue

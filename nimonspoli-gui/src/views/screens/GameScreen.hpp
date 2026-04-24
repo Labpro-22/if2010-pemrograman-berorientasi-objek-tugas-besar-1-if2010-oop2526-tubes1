@@ -212,6 +212,8 @@ private:
         int jailFine    = 50;
         bool canAffordFine  = true;
         int jailTurnsLeft   = 0;
+        bool forcedPay      = false; // giliran ke-4, wajib bayar denda
+        bool rolledThisTurn = false; // sudah lempar dadu untuk coba double
     } jailDialog;
 
 
@@ -300,6 +302,17 @@ private:
     } jualBangunanDialog;
     void triggerJualBangunanDialog();
     void drawJualBangunanDialog();
+
+    // ── Dialog Atur Dadu ──────────────────────────────────────────────────
+    struct AturDaduDialogState {
+        bool visible = false;
+        std::string input1 = "1";
+        std::string input2 = "1";
+        int focusField = 0; // 0=none, 1=val1, 2=val2
+        std::string errorMsg = "";
+    } aturDaduDialog;
+    void triggerAturDaduDialog();
+    void drawAturDaduDialog();
 
     // ── Dialog Skill Card (USE CARD) ──────────────────────────────────────
     struct SkillCardDialogState {
