@@ -113,14 +113,27 @@ void Board::tickFestivals(Player* player) {
 }
 
 vector<Player*> Board::auctionOrder(Player* trigger, const vector<Player*>& activePlayers) const {
-    size_t trigIdx = 0;
+    if (activePlayers.empty()) return {};
+
+    size_t start = 0;
+    bool foundTrigger = false;
     for (size_t i = 0; i < activePlayers.size(); ++i) {
-        if (activePlayers[i] == trigger) { trigIdx = i; break; }
+        if (activePlayers[i] == trigger) {
+            // Lelang dimulai dari pemain setelah pemicu.
+            start = (i + 1) % activePlayers.size();
+            foundTrigger = true;
+            break;
+        }
     }
+
+    // Jika trigger tidak termasuk pemain aktif (mis. sudah bangkrut),
+    // mulai dari pemain aktif pertama.
+    if (!foundTrigger) start = 0;
+
     vector<Player*> order;
-    for (size_t i = 1; i < activePlayers.size(); ++i)
-        order.push_back(activePlayers[(trigIdx + i) % activePlayers.size()]);
-    if (order.empty()) order = activePlayers;
+    order.reserve(activePlayers.size());
+    for (size_t k = 0; k < activePlayers.size(); ++k)
+        order.push_back(activePlayers[(start + k) % activePlayers.size()]);
     return order;
 }
 
