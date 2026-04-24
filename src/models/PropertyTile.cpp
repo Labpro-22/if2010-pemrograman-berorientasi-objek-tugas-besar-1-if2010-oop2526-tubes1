@@ -22,12 +22,12 @@ void PropertyTile::decreaseFestival() {
     if (festival_turns_left > 0) festival_turns_left--;
 }
 
-int PropertyTile::getSellValue() const {
-    return buy_price;
-}
-
 int PropertyTile::getMortgageValue() const {
     return mortgage_price;
+}
+
+int PropertyTile::getBuyPrice() const {
+    return buy_price;
 }
 
 PropertyStatus PropertyTile::getPropertyStatus() const {

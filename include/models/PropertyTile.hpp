@@ -28,16 +28,18 @@ protected:
 public:
     PropertyTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status);
     virtual ~PropertyTile() = default;
-    void onLand(Player& p, TileVisitor& visitor) override;
+
     void applyFestival();
     void decreaseFestival();
-    int getSellValue() const;
+;
     int getMortgageValue() const;
+    int getBuyPrice() const;
     PropertyStatus getPropertyStatus() const;
     void setPropertyStatus(PropertyStatus ps);
     std::weak_ptr<Player> getPropertyOwner() const;
     void setPropertyOwner(std::shared_ptr<Player> p);
-
+    
+    void onLand(Player& p, TileVisitor& visitor) override;
     virtual int calculateRent() const = 0;
     virtual PropertyType getPropertyType() const = 0;
 };

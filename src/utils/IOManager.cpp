@@ -1,33 +1,47 @@
 #include "../../include/utils/IOManager.hpp"
 #include <algorithm>
 
-void IOManager::loadAllConfigs(const std::string& configDirectoryPath){
+FullConfigData IOManager::loadAllConfigs(const std::string& configDirectoryPath){
     IOManager manager;
     std::vector<std::unique_ptr<Tile>> allTiles;
     std::vector<std::unique_ptr<Tile>> Properties = manager.IOparsePropertyTileConfig(configDirectoryPath+"/property.txt");
     std::vector<int> taxes = manager.IOparseTaxConfig(configDirectoryPath+"/tax.txt");
     std::vector<int> special = manager.IOparseSpecialConfig(configDirectoryPath+"/special.txt");
     std::vector<std::unique_ptr<Tile>> ActionTile = manager.IOparseActionTileConfig(configDirectoryPath+"/aksi.txt",taxes,special);
+    std::vector<int> misc = manager.IOparseMiscConfig(configDirectoryPath+"/misc.txt");
+    std::map<int,int> RailroadSewa = manager.IOparseRailroadConfig(configDirectoryPath+"/railroad.txt");
+    std::map<int,int> UtilityMult = manager.IOparseUtilityConfig(configDirectoryPath+"/utility.txt");
 
-    std::cout << "GO_SALARY: " << std::to_string(special.at(0)) << std::endl;
-    std::cout << "JAIL_FINE: " << std::to_string(special.at(1)) << std::endl <<std::endl;
-    std::cout << "PPH_FLAT: " << std::to_string(taxes.at(0)) << std::endl;
-    std::cout << "PPH_PERCENT: " << std::to_string(taxes.at(1)) << std::endl;
-    std::cout << "PBM_FLAT: " << std::to_string(taxes.at(2)) << std::endl << std::endl;
+    return FullConfigData(std::move(Properties),std::move(ActionTile),RailroadSewa,UtilityMult,taxes.at(0),taxes.at(1),taxes.at(2),special.at(0),special.at(1),misc.at(0),misc.at(1));
+
+    // std::cout << "GO_SALARY: " << std::to_string(special.at(0)) << std::endl;
+    // std::cout << "JAIL_FINE: " << std::to_string(special.at(1)) << std::endl <<std::endl;
+    // std::cout << "PPH_FLAT: " << std::to_string(taxes.at(0)) << std::endl;
+    // std::cout << "PPH_PERCENT: " << std::to_string(taxes.at(1)) << std::endl;
+    // std::cout << "PBM_FLAT: " << std::to_string(taxes.at(2)) << std::endl << std::endl;
+    // std::cout << "MAX_TURN: " << std::to_string(special.at(0)) << std::endl;
+    // std::cout << "SALDO_AWAL: " << std::to_string(special.at(1)) << std::endl <<std::endl;
     
-    for(auto& tile : Properties) {
-        allTiles.push_back(std::move(tile));
-    }
-    for(auto& tile : ActionTile) {
-        allTiles.push_back(std::move(tile));
-    }
-    std::sort(allTiles.begin(), allTiles.end(), 
-        [](const std::unique_ptr<Tile>& a, const std::unique_ptr<Tile>& b) {
-            return a->getIndex() < b->getIndex();
-        });
-    for (const auto& tile : allTiles){
-        std::cout << tile->getIndex() << " " << tile->getCode() << " " << tile->getName() << std::endl;
-    }    
+    // for(auto& tile : Properties) {
+    //     allTiles.push_back(std::move(tile));
+    // }
+    // for(auto& tile : ActionTile) {
+    //     allTiles.push_back(std::move(tile));
+    // }
+    // std::sort(allTiles.begin(), allTiles.end(), 
+    //     [](const std::unique_ptr<Tile>& a, const std::unique_ptr<Tile>& b) {
+    //         return a->getIndex() < b->getIndex();
+    //     });
+    // for (const auto& tile : allTiles){
+    //     std::cout << tile->getIndex() << " " << tile->getCode() << " " << tile->getName() << std::endl;
+    // }
+    // std::cout << "\n";
+    // for(const auto& pair : RailroadSewa){
+    //     std::cout << "Jumlah Railroad: " << pair.first << " (" << pair.second << ")" << std::endl;
+    // }
+    // for(const auto& pair : UtilityMult){
+    //     std::cout << "Jumlah Utility: " << pair.first << " (" << pair.second << ")" << std::endl;
+    // }
 }
 
 std::vector<std::unique_ptr<Tile>> IOManager::IOparsePropertyTileConfig(const std::string& filepath){
@@ -144,6 +158,53 @@ std::vector<std::unique_ptr<Tile>> IOManager::IOparseActionTileConfig(const std:
             else if(JENIS=="FESTIVAL"){
                 temp.push_back(std::make_unique<FestivalTile>(ID, NAMA, KODE, WARNA));
             }
+        }
+    }
+    return temp;
+}
+
+std::vector<int> IOManager::IOparseMiscConfig(const std::string& configDirectoryPath){
+    std::ifstream file(configDirectoryPath);
+    std::string line;
+
+    int MAX_TURN, SALDO_AWAL;
+    std::vector<int> temp;
+
+    while(std::getline(file,line)){
+        std::istringstream iss(line);
+        if(iss >> MAX_TURN >> SALDO_AWAL){
+            temp.push_back(MAX_TURN);
+            temp.push_back(SALDO_AWAL);
+        }
+    }
+    return temp;
+}
+std::map<int,int> IOManager::IOparseRailroadConfig(const std::string& configDirectoryPath){
+    std::ifstream file(configDirectoryPath);
+    std::string line;
+
+    int JUMLAH_RAILROAD, BIAYA_SEWA;
+    std::map<int,int> temp;
+
+    while(std::getline(file,line)){
+        std::istringstream iss(line);
+        if(iss >> JUMLAH_RAILROAD >> BIAYA_SEWA){
+            temp.insert({JUMLAH_RAILROAD,BIAYA_SEWA});
+        }
+    }
+    return temp;
+}
+std::map<int,int> IOManager::IOparseUtilityConfig(const std::string& configDirectoryPath){
+    std::ifstream file(configDirectoryPath);
+    std::string line;
+
+    int JUMLAH_UTILITY, FAKTOR_PENGALI;
+    std::map<int,int> temp;
+
+    while(std::getline(file,line)){
+        std::istringstream iss(line);
+        if(iss >> JUMLAH_UTILITY >> FAKTOR_PENGALI){
+            temp.insert({JUMLAH_UTILITY,FAKTOR_PENGALI});
         }
     }
     return temp;
