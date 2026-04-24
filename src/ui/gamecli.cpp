@@ -10,6 +10,7 @@
 #include <climits>
 #include <fstream>
 #include <map>
+#include <set>
 using namespace std;
 namespace Nimonspoli {
 
@@ -83,9 +84,15 @@ void GameCLI::showMainMenu() {
 
 void GameCLI::setupNewGame() {
     int n = promptInt("Jumlah pemain ", 2, 4);
+    set<string> usedNames;
     for (int i = 0; i < n; ++i) {
         string name = prompt("Username pemain " + to_string(i + 1));
         while (name.empty()) name = prompt("Username tidak boleh kosong");
+        while (usedNames.count(name) > 0) {
+            name = prompt("Username sudah dipakai, masukkan username lain");
+            while (name.empty()) name = prompt("Username tidak boleh kosong");
+        }
+        usedNames.insert(name);
         game_.addPlayer(name);
     }
     game_.randomizeTurnOrder();
@@ -120,7 +127,7 @@ void GameCLI::processTurn() {
 
     if (player.isJailed()) {
         cout << "Kamu di penjara (percobaan ke-" << player.jailTurns()
-                  << "). Opsi: BAYAR_DENDA | LEMPAR_DADU\n";
+                  << "). Opsi: BAYAR_DENDA | LEMPAR_DADU | GUNAKAN_KEMAMPUAN\n";
     }
 
     while (!turnOver_ && !game_.isOver()) {
@@ -196,6 +203,7 @@ void GameCLI::cmdCetakProperti() { printer_.printProperties(); }
 
 void GameCLI::cmdLemparDadu() {
     Player& player = game_.currentPlayer();
+    bool wasJailed = player.isJailed();
     if (player.hasRolled() && !game_.dice().isDouble()) {
         printError("Sudah melempar dadu. Ketik SELESAI untuk mengakhiri giliran.");
         return;
@@ -203,33 +211,34 @@ void GameCLI::cmdLemparDadu() {
     cout << "Mengocok dadu...\n";
     game_.cmdRollDice();
     auto& d = game_.dice();
-    if (d.doubleCount() == 3) {
+    if (!wasJailed && player.isJailed() && game_.lastJailWasTripleDouble()) {
         cout << "Tiga kali double — masuk penjara!\n";
         turnOver_ = true;
     } else if (d.isDouble() && d.doubleCount() > 0) {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
         turnOver_ = true;  // keluar dari while loop, processTurn akan cek isDouble
     } else {
-        turnOver_ = false; 
+        turnOver_ = true;
     }
 }
 
 void GameCLI::cmdAturDadu(const string& args) {
     Player& player = game_.currentPlayer();
+    bool wasJailed = player.isJailed();
     istringstream ss(args);
     int d1, d2;
     if (!(ss >> d1 >> d2)) { printError("Format: ATUR_DADU X Y  (1-6)"); return; }
     cout << "Dadu diatur secara manual.\n";
     game_.cmdSetDice(d1, d2);
     auto& d = game_.dice();
-    if (d.doubleCount() == 3) {
+    if (!wasJailed && player.isJailed() && game_.lastJailWasTripleDouble()) {
         cout << "Tiga kali double — masuk penjara!\n";
         turnOver_ = true;
     } else if (d.isDouble() && d.doubleCount() > 0) {
         cout << "Double! Giliran tambahan ke-" << d.doubleCount() << "\n";
         turnOver_ = true;
     } else {
-        turnOver_ = false;
+        turnOver_ = true;
     }
 }
 
@@ -388,13 +397,27 @@ void GameCLI::cmdCetakLog(const string& args) {
 
 void GameCLI::cmdGunakanKemampuan() {
     Player& player = game_.currentPlayer();
-    if (player.isJailed()) {cout << "Tidak bisa menggunakan kartu kemampuan saat di penjara.\n"; return;}
     if (player.hasRolled()) {cout << "Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.\n"; return;}
     if (player.usedCardThisTurn()) {cout << "Sudah menggunakan kartu pada giliran ini (maks 1x).\n"; return;}
     if (player.handSize() == 0) {cout << "Kamu tidak memiliki kartu kemampuan.\n"; return;}
 
+    auto typeName = [](SkillCardType t) -> string {
+        switch (t) {
+            case SkillCardType::MOVE: return "MoveCard";
+            case SkillCardType::DISCOUNT: return "DiscountCard";
+            case SkillCardType::SHIELD: return "ShieldCard";
+            case SkillCardType::TELEPORT: return "TeleportCard";
+            case SkillCardType::LASSO: return "LassoCard";
+            case SkillCardType::DEMOLITION: return "DemolitionCard";
+            default: return "SkillCard";
+        }
+    };
+
     cout << "Daftar Kartu Kemampuan:\n";
-    for (int i = 0; i < player.handSize(); ++i) cout << i+1 << ". " << player.hand()[i]->description() << "\n";
+    for (int i = 0; i < player.handSize(); ++i) {
+        auto* card = player.hand()[i];
+        cout << i+1 << ". " << typeName(card->skillType()) << " - " << card->description() << "\n";
+    }
     cout << "0. Batal\n";
 
     int choice = promptInt("Pilih kartu", 0, player.handSize());
@@ -625,10 +648,24 @@ void GameCLI::promptLiquidation(int required, Player* creditor) {
 }
 
 void GameCLI::promptDropCard(Player& player) {
+    auto typeName = [](SkillCardType t) -> string {
+        switch (t) {
+            case SkillCardType::MOVE: return "MoveCard";
+            case SkillCardType::DISCOUNT: return "DiscountCard";
+            case SkillCardType::SHIELD: return "ShieldCard";
+            case SkillCardType::TELEPORT: return "TeleportCard";
+            case SkillCardType::LASSO: return "LassoCard";
+            case SkillCardType::DEMOLITION: return "DemolitionCard";
+            default: return "SkillCard";
+        }
+    };
+
     cout << "\nPERINGATAN: Tangan penuh (" << player.handSize() << " kartu, maks " << Player::MAX_HAND_SIZE << ")!\n"
          << "Kamu harus membuang 1 kartu:\n";
-    for (int i = 0; i < player.handSize(); ++i)
-        cout << i+1 << ". " << player.hand()[i]->description() << "\n";
+    for (int i = 0; i < player.handSize(); ++i) {
+        auto* card = player.hand()[i];
+        cout << i+1 << ". " << typeName(card->skillType()) << " - " << card->description() << "\n";
+    }
     int choice = promptInt("Pilih kartu yang dibuang", 1, player.handSize());
     // cmdDropCard pakai currentPlayer, jadi kita bypass langsung
     SkillCard* card = player.hand()[choice - 1];

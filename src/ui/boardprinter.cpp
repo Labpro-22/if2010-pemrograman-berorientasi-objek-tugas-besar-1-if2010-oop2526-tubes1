@@ -4,8 +4,17 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <array>
+#include <vector>
+
 using namespace std;
+
 namespace Nimonspoli {
+
+static string fit10(const string& s) {
+    if ((int)s.size() >= 10) return s.substr(0, 10);
+    return s + string(10 - (int)s.size(), ' ');
+}
 
 const char* BoardPrinter::groupColor(ColorGroup cg) const {
     switch (cg) {
@@ -65,6 +74,82 @@ string BoardPrinter::colorCode(int idx) const {
     return Color::DEFAULT_C;
 }
 
+string BoardPrinter::colorTag(int idx) const {
+    auto* tile = game_.board().getTile(idx);
+    if (tile->type() == TileType::PROPERTY) {
+        auto* pt = static_cast<const PropertyTile*>(tile);
+        auto* prop = pt->property();
+        if (prop->type() == PropertyType::UTILITY) return "AB";
+        if (prop->type() == PropertyType::STREET) {
+            auto* s = static_cast<const Street*>(prop);
+            switch (s->colorGroup()) {
+                case ColorGroup::COKLAT: return "CK";
+                case ColorGroup::BIRU_MUDA: return "BM";
+                case ColorGroup::MERAH_MUDA: return "PK";
+                case ColorGroup::ORANGE: return "OR";
+                case ColorGroup::MERAH: return "MR";
+                case ColorGroup::KUNING: return "KN";
+                case ColorGroup::HIJAU: return "HJ";
+                case ColorGroup::BIRU_TUA: return "BT";
+                default: return "DF";
+            }
+        }
+    }
+    return "DF";
+}
+
+array<string,2> BoardPrinter::tileLines(int idx) const {
+    auto* tile = game_.board().getTile(idx);
+    string line1 = "[" + colorTag(idx) + "] " + tile->code();
+    string line2;
+
+    if (tile->type() == TileType::PROPERTY) {
+        auto* pt = static_cast<const PropertyTile*>(tile);
+        auto* prop = pt->property();
+        string owner = ownerStr(prop);
+        if (!owner.empty()) {
+            line2 += owner;
+            if (prop->type() == PropertyType::STREET) {
+                auto* s = static_cast<const Street*>(prop);
+                string b = buildingStr(s->buildingLevel());
+                if (!b.empty()) line2 += " " + b;
+            }
+            if (prop->isMortgaged()) line2 += " [M]";
+        }
+    }
+
+    if (tile->type() == TileType::JAIL) {
+        string jailed, visiting;
+        const auto& players = game_.players();
+        for (int i = 0; i < (int)players.size(); ++i) {
+            const auto& p = players[i];
+            if (p->position() == idx && !p->isBankrupt()) {
+                if (p->isJailed()) {
+                    if (!jailed.empty()) jailed += ",";
+                    jailed += to_string(i + 1);
+                } else {
+                    if (!visiting.empty()) visiting += ",";
+                    visiting += to_string(i + 1);
+                }
+            }
+        }
+        line2.clear();
+        if (!jailed.empty()) line2 += "IN:" + jailed;
+        if (!visiting.empty()) {
+            if (!line2.empty()) line2 += " ";
+            line2 += "V:" + visiting;
+        }
+    } else {
+        string badges = playerBadges(idx);
+        if (!badges.empty()) {
+            if (!line2.empty()) line2 += " ";
+            line2 += badges;
+        }
+    }
+
+    return {line1, line2};
+}
+
 string BoardPrinter::tileCell(int idx) const {
     auto* tile  = game_.board().getTile(idx);
     string code   = tile->code();
@@ -119,10 +204,15 @@ void BoardPrinter::printTopRow() const {
     printHRule();
     cout << "|";
     for (int i = 20; i <= 30; ++i) {
+        auto lines = tileLines(i);
         string col = colorCode(i);
-        string cell = tileCell(i);
-        cout << col << setw(10) << left
-                  << cell.substr(0, 10) << Color::RESET << "|";
+        cout << col << fit10(lines[0]) << Color::RESET << "|";
+    }
+    cout << "\n|";
+    for (int i = 20; i <= 30; ++i) {
+        auto lines = tileLines(i);
+        string col = colorCode(i);
+        cout << col << fit10(lines[1]) << Color::RESET << "|";
     }
     cout << "\n";
     printHRule();
@@ -132,62 +222,95 @@ void BoardPrinter::printBottomRow() const {
     printHRule();
     cout << "|";
     for (int i = 10; i >= 0; --i) {
+        auto lines = tileLines(i);
         string col = colorCode(i);
-        string cell = tileCell(i);
-        cout << col << setw(10) << left
-                  << cell.substr(0, 10) << Color::RESET << "|";
+        cout << col << fit10(lines[0]) << Color::RESET << "|";
+    }
+    cout << "\n|";
+    for (int i = 10; i >= 0; --i) {
+        auto lines = tileLines(i);
+        string col = colorCode(i);
+        cout << col << fit10(lines[1]) << Color::RESET << "|";
     }
     cout << "\n";
     printHRule();
 }
 
 void BoardPrinter::printSideRows() const {
-    vector<string> rightCells, leftCells;
-    for (int i = 31; i <= 39; ++i) rightCells.push_back(tileCell(i));
-    for (int i = 19; i >= 11; --i) leftCells.push_back(tileCell(i));
-    vector<string> center = {
-        "",
-        " ================================== ",
-        " ||       NIMONSPOLI             || ",
-        " ================================== ",
-        "",
-        "  TURN " + to_string(game_.currentTurn()) +
-            (game_.maxTurn() >= 1 ? " / " + to_string(game_.maxTurn()) : " (unlimited)"),
-        "",
-        " ---------------------------------- ",
-        " LEGENDA KEPEMILIKAN & STATUS       ",
-        " P1-P4 : milik Pemain 1-4           ",
-        " ^  : Rumah Lv1  ^^ : Lv2          ",
-        " ^^^: Rumah Lv3   * : Hotel         ",
-        " (1)-(4): Bidak pemain              ",
-        " [M]: Digadaikan                    ",
-        " ---------------------------------- ",
-        " WARNA: [CK]Coklat [BM]Biru Muda   ",
-        "  [PK]Pink   [OR]Orange [MR]Merah   ",
-        "  [KN]Kuning [HJ]Hijau  [BT]Biru Tua",
-        "  [AB]Utilitas [DF]Aksi             ",
-        "",
+    const int centerWidth = 98;
+    vector<string> centerContent(26, string(centerWidth, ' '));
+
+    auto putText = [&](int lineIdx, const string& text, bool centered) {
+        if (lineIdx < 0 || lineIdx >= 26) return;
+        string res = string(centerWidth, ' ');
+        if (centered) {
+            int padding = (centerWidth - (int)text.length()) / 2;
+            if (padding < 0) padding = 0;
+            for (size_t i = 0; i < text.length() && i + padding < centerWidth; ++i) {
+                res[padding + i] = text[i];
+            }
+        } else {
+            int offset = 28; 
+            for (size_t i = 0; i < text.length() && i + offset < centerWidth; ++i) {
+                res[offset + i] = text[i];
+            }
+        }
+        centerContent[lineIdx] = res;
     };
 
-    while ((int)center.size() < 9) center.push_back("");
-    if ((int)center.size() > 9) center.resize(9);
+    // Row 1 & 2 content
+    putText(3, "==================================================", true);
+    putText(4, "||                  NIMONSPOLI                  ||", true);
+    putText(5, "==================================================", true);
+
+    string turn_str = "TURN " + to_string(game_.currentTurn());
+    if (game_.maxTurn() >= 1) turn_str += " / " + to_string(game_.maxTurn());
+    else turn_str += " (unlimited)";
+    putText(7, turn_str, true);
+
+    // Row 3 Legend Separator
+    putText(9, "--------------------------------------------------", true);
+    
+    // Row 4+ Legend Block
+    putText(10, "LEGENDA KEPEMILIKAN & STATUS", false);
+    putText(11, "P1-P4 : Properti milik Pemain 1-4", false);
+    putText(12, "^     : Rumah Level 1", false);
+    putText(13, "^^    : Rumah Level 2", false);
+    putText(14, "^^^   : Rumah Level 3", false);
+    putText(15, "* : Hotel (Maksimal)", false);
+    putText(16, "(1)-(4): Bidak (IN=Tahanan, V=Mampir)", false);
+
+    putText(18, "KODE WARNA:", false);
+    putText(19, "[CK]=Coklat    [MR]=Merah", false);
+    putText(20, "[BM]=Biru Muda [KN]=Kuning", false);
+    putText(21, "[PK]=Pink      [HJ]=Hijau", false);
+    putText(22, "[OR]=Orange    [BT]=Biru Tua", false);
+    putText(23, "[DF]=Aksi      [AB]=Utilitas", false);
 
     for (int row = 0; row < 9; ++row) {
         int leftIdx  = 19 - row;
         int rightIdx = 31 + row;
+        auto l = tileLines(leftIdx);
+        auto r = tileLines(rightIdx);
         string lc = colorCode(leftIdx);
         string rc = colorCode(rightIdx);
 
-        string lCell = leftCells[row].substr(0, 10);
-        string rCell = rightCells[row].substr(0, 10);
-        int lpad = 10 - (int)lCell.size();
-        int rpad = 10 - (int)rCell.size();
+        // Line 1
+        cout << "|" << lc << fit10(l[0]) << Color::RESET << "|";
+        cout << centerContent[row * 3];
+        cout << "|" << rc << fit10(r[0]) << Color::RESET << "|\n";
 
-        cout << "|" << lc << lCell << string(lpad, ' ') << Color::RESET;
-        string cLine = center[row];
-        if ((int)cLine.size() < 97) cLine += string(97 - cLine.size(), ' ');
-        cout << " " << cLine.substr(0, 97) << " ";
-        cout << "|" << rc << rCell << string(rpad, ' ') << Color::RESET << "|\n";
+        // Line 2
+        cout << "|" << lc << fit10(l[1]) << Color::RESET << "|";
+        cout << centerContent[row * 3 + 1];
+        cout << "|" << rc << fit10(r[1]) << Color::RESET << "|\n";
+
+        // Side Rule separator (kecuali pada petak paling bawah)
+        if (row < 8) {
+            cout << "+----------+";
+            cout << centerContent[row * 3 + 2];
+            cout << "+----------+\n";
+        }
     }
 }
 
@@ -198,6 +321,7 @@ void BoardPrinter::printBoard() const {
     printBottomRow();
     cout << "\n";
 }
+
 void BoardPrinter::printDeed(const string& code) const {
     Property* prop = game_.board().getProperty(code);
     if (!prop) {

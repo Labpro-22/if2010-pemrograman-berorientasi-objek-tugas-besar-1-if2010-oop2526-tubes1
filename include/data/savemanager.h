@@ -15,7 +15,7 @@ private:
     static string serializeDeck(const Game& game);
     static string serializeLog(const Game& game);
 
-    static void deserializePlayers(Game& game, istream& in);
+    static void deserializePlayers(Game& game, istream& in, int numPlayers);
     static void deserializeProperties(Game& game, istream& in);
     static void deserializeDeck(Game& game, istream& in);
     static void deserializeLog(Game& game, istream& in);

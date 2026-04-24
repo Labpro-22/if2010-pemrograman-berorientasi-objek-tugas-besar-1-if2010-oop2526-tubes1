@@ -16,6 +16,7 @@ namespace Nimonspoli {
 
 class AuctionManager;  // forward
 class GameCLI;         // forward
+class SaveManager;     // forward
 
 // UI callbacks buat CLI
 class GameCallbacks {
@@ -112,6 +113,7 @@ public:
     void finishAuction(Player& winner, Property& prop, int finalBid);
    
     int  lastDiceTotal() const { return lastDiceTotal_; }
+    bool lastJailWasTripleDouble() const { return lastJailByTripleDouble_; }
 
     // Distribute  1 skill card ke semua player
     void distributeSkillCard(Player& player);
@@ -128,6 +130,8 @@ public:
     void processLanding(Player& player, int tileIndex, int diceTotal);
 
 private:
+    friend class SaveManager;
+
     // helper Internal
     void handleJailTurn(Player& player);
     bool tryLiquidate(Player& player, int required);
@@ -141,6 +145,7 @@ private:
     int                                      turnOrderIdx_ = 0;
     int                                      currentTurn_  = 1;
     int                                      lastDiceTotal_ = 0;
+    bool                                     lastJailByTripleDouble_ = false;
 
     Dice               dice_;
     Bank               bank_;
