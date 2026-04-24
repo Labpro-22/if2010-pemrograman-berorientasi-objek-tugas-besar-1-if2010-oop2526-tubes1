@@ -15,6 +15,8 @@ enum PlayerState {
 
 class Player : public Saveable {
 private:
+    static std::random_device rd;
+    static std::mt19937 gen;
     std::string name;
     int balance;
     int position;

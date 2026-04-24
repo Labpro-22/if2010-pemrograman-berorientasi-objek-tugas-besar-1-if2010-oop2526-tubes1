@@ -59,7 +59,7 @@ void Player::addEffect(std::unique_ptr<Effect> effect){
 int Player::getTotalAssetValue(){
     int sum=this->balance;
     for (auto& asset:this->owned_properties){
-        sum+=asset->getSellValue();
+        sum+=asset->getBuyPrice();
     }
     return sum;
 }
@@ -67,7 +67,7 @@ bool Player::canPay(int amount){
     return this->balance >= amount;
 }
 void Player::buyProperty(PropertyTile &property){
-    float harga=property.getSellValue();
+    float harga=property.getBuyPrice();
     for (auto &ef:this->active_effects){
         ef->modifyPayment(harga);
     }
@@ -80,7 +80,7 @@ void Player::buyProperty(PropertyTile &property){
 }
 void Player::sellProperty(PropertyTile &property, Player& other){
     this->removeProperty(&property);
-    *this+=property.getSellValue();
+    *this+=property.getBuyPrice();
     other.buyProperty(property);
 }
 int Player::liquidateAsset(int required){
@@ -89,7 +89,7 @@ int Player::liquidateAsset(int required){
         properties_to_sell.begin(),
         properties_to_sell.end(),
         [](PropertyTile* a, PropertyTile* b) {
-            return a->getSellValue() < b->getSellValue();
+            return a->getBuyPrice() < b->getBuyPrice();
         }
     );
 
@@ -99,7 +99,7 @@ int Player::liquidateAsset(int required){
             break;
         }
 
-        int sell_value = property->getSellValue();
+        int sell_value = property->getBuyPrice();
         liquidated += sell_value;
         balance += sell_value;
         removeProperty(property);
@@ -149,7 +149,8 @@ void Player::startTurn(Board &board) {
     for (const auto& effect : active_effects) {
         effect->onTurnStart(*this);
     }
-    this->movePlayer();
+    std::uniform_int_distribution<> dist(1, 100);
+    this->movePlayer(dist(gen));
     board.getTile(this->position).onLand(*this);
 }
 
