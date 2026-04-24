@@ -8,6 +8,10 @@ DemolitionCard::DemolitionCard() : SkillCard("Hancurkan properti milik lawan", "
 {
 }
 
+DemolitionCard::DemolitionCard(const string &type, const string &description, bool used) : SkillCard(type, description, used)
+{
+}
+
 DemolitionCard::~DemolitionCard()
 {
 }

@@ -824,7 +824,7 @@ void ComputerPlayer::executeTurn(GameMaster& gm) {
                 for (int i = 0; i < board->getSize(); i++) {
                     JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
                     if (jt) {
-                        jt->payFine(*this, *gs.getBank());
+                        jt->payFine(*this, gs);
                         // Setelah bayar denda, lempar dadu dan bergerak
                         gs.getDice()->rollRandom();
                         int total = gs.getDice()->getTotal();
@@ -859,7 +859,7 @@ void ComputerPlayer::executeTurn(GameMaster& gm) {
                         if (board) {
                             for (int i = 0; i < board->getSize(); i++) {
                                 JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
-                                if (jt) { jt->payFine(*this, *gs.getBank()); break; }
+                                if (jt) { jt->payFine(*this, gs); break; }
                             }
                         }
                         gs.getDice()->rollRandom();

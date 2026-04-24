@@ -6,6 +6,10 @@ ShieldCard::ShieldCard() : SkillCard("Kebal tagihan atau sanksi selama 1 turn", 
 {
 }
 
+ShieldCard::ShieldCard(const string &type, const string &description, bool used, int duration) : SkillCard(type, description, used), duration(duration)
+{
+}
+
 ShieldCard::~ShieldCard()
 {
 }

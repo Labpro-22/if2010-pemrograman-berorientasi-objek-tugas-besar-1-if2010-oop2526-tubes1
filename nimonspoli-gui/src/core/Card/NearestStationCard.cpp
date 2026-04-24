@@ -8,6 +8,10 @@ NearestStationCard::NearestStationCard() : ChanceCard("Pergi ke stasiun terdekat
 {
 }
 
+NearestStationCard::NearestStationCard(const string &type, const string &description) : ChanceCard(description)
+{
+}
+
 NearestStationCard::~NearestStationCard()
 {
 }

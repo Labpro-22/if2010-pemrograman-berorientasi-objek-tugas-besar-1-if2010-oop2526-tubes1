@@ -7,6 +7,10 @@ ElectionCard::ElectionCard() : GeneralFundCard("Anda mau nyaleg. Bayar M200 kepa
 {
 }
 
+ElectionCard::ElectionCard(const string &type, const string &description, int amount) : GeneralFundCard(description), amountPerPlayer(amount)
+{
+}
+
 ElectionCard::~ElectionCard()
 {
 }
@@ -18,28 +22,20 @@ int ElectionCard::getAmountPerPlayer() const
 
 void ElectionCard::execute(Player &p, GameState &gs)
 {
-    vector<Player *> players = gs.getActivePlayers();
     GameMaster* gm = gs.getGameMaster();
-    for (Player *other : players)
+    if (p.getStatus() == PlayerStatus::BANKRUPT) return;
+
+    // Enqueue semua pembayaran dulu, lalu proses satu per satu via queue.
+    // Ini mencegah loop melanjutkan ke pemain berikutnya saat dialog masih aktif.
+    gs.clearPendingPaymentQueue();
+    for (Player* other : gs.getActivePlayers())
     {
-        if (other == &p || p.getStatus() == PlayerStatus::BANKRUPT)
+        if (other == &p)
             continue;
-        // Cek apakah player akan Bankrupt? <-- belum dihandle
-        if (p.getBalance() >= amountPerPlayer) 
-        {
-            p -= amountPerPlayer;
-            *other += amountPerPlayer;
-        } else
-        {
-            // p.setStatus(PlayerStatus::BANKRUPT);
-            if (p.getStatus() == PlayerStatus::BANKRUPT) {
-                break;
-            }
-            // Handle Bankrupt?
-            gm->handleDebtPayment(&p, amountPerPlayer, other);
-            // ini harus nunggu dialog baru proceed
-        }
-        // p -= amountPerPlayer;
-        // *other += amountPerPlayer;
+        // Pembayar = p (pemain yang kena kartu), penerima = other
+        gs.addToPendingPaymentQueue(&p, other, amountPerPlayer);
     }
+
+    // Jalankan pembayaran pertama
+    if (gm) gm->processNextCardPayment();
 }

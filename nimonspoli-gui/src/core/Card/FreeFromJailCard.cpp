@@ -6,6 +6,10 @@ FreeFromJailCard::FreeFromJailCard() : ChanceCard("Keluar Penjara.")
 {
 }
 
+FreeFromJailCard::FreeFromJailCard(const string &type, const string &description) : ChanceCard(description)
+{
+}
+
 FreeFromJailCard::~FreeFromJailCard()
 {
 }

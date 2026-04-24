@@ -11,6 +11,7 @@ private:
 
 public:
     DoctorFeeCard();
+    DoctorFeeCard(const string &type, const string &description, int amount);
     ~DoctorFeeCard();
     int getDoctorFee() const;
     void execute(Player &p, GameState &gs) override;

@@ -157,7 +157,7 @@ void GameScreen::drawJailDialog()
                     for (int i = 0; i < board->getSize(); i++) {
                         JailTile* jt = dynamic_cast<JailTile*>(board->getTile(i));
                         if (jt) {
-                            jt->payFine(*p, *bank);
+                            jt->payFine(*p, gs);
                             gm->log(p->getUsername(), "JAIL",
                                     "Membayar denda M" +
                                     std::to_string(jailDialog.jailFine) +

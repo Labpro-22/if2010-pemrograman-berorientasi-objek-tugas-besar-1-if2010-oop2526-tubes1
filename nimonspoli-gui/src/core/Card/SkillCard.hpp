@@ -13,6 +13,7 @@ private:
 public:
     SkillCard();
     SkillCard(const string &description, const string &type);
+    SkillCard(const string &type, const string &description, bool used);
     virtual ~SkillCard();
     bool isUsed() const;
     void markUsed();

@@ -158,6 +158,7 @@ void GameScreen::render(Window& window)
     drawBangunDialog();
     drawJualBangunanDialog();
     drawSkillCardDialog();
+    drawBankruptcyDialog();
     drawAktaDialog();
     drawCetakPropertiDialog();
 

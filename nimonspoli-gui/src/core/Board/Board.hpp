@@ -151,7 +151,7 @@ public:
     void onLanded(Player&, GameState&) override;
     void sendToJail(Player&);
     bool tryEscape(Player&, Dice&);
-    void payFine(Player&, Bank&);
+    void payFine(Player&, GameState&);
     void useJailCard(Player&);
     void release(Player&);
     bool isInmate(Player&)          const;

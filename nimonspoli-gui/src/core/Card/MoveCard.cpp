@@ -8,6 +8,8 @@ MoveCard::MoveCard() : MoveCard(rand() % 6 + 1) {}
 
 MoveCard::MoveCard(int steps) : SkillCard("Maju " + to_string(steps) + " Petak", "MoveCard"), steps(steps) {}
 
+MoveCard::MoveCard(const string &type, const string &description, bool used, int steps) : SkillCard(type, description, used), steps(steps) {}
+
 MoveCard::~MoveCard()
 {
 }

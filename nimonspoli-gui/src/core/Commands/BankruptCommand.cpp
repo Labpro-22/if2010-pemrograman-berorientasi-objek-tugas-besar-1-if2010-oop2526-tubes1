@@ -1,79 +1,46 @@
 #include "../Commands/BankruptCommand.hpp"
 
-BankruptCommand::BankruptCommand(GameMaster& gm, GameState& gs, Player* from, Player* to, int debt, bool sellOverMortgage, int propToSell = -1) 
+BankruptCommand::BankruptCommand(GameMaster& gm, GameState& gs, Player* from, Player* to, int debt, bool sellOverMortgage, int propToSell)
     : gm(gm), state(gs), from(from), to(to), debt(debt), sellOverMortgage(sellOverMortgage), propToSell(propToSell) {}
 
-// While debt is unpaid (and can be paid with liquidation), try this
+// Dispatcher: evaluasi hutang, simpan konteks ke GameState, atau bangkrutkan langsung.
+// Pilihan properti untuk likuidasi dilakukan oleh GUI (BankruptcyDialog).
 void BankruptCommand::execute(GameMaster& gm)
 {
     GameState& gs = gm.getState();
-    // Player* currPlayer = gs.getCurrPlayer();
-    int liquidation = gm.handleDebtPayment(from, debt, to);
 
-    std::cout << "Evaluasi Bankruptcy" << std::endl;
-    if (liquidation == 0)
+    // Kasus 0: cash cukup → bayar langsung
+    if (from->getBalance() >= debt)
     {
-        // Handle Transfer
-        // std::cout << "Melakukan Transfer Balance ke ";
-        if (to)
-        {
-            *from -= debt;
-            *to += debt;
-            // std::cout << to->getUsername() << std::endl;
-        }
-        else
-        {
-            *from -= debt;
-            // std::cout << "Bank" << std::endl;
-        }
+        if (to) { *from -= debt; *to += debt; }
+        else    { *from -= debt; }
         gs.setPhase(GamePhase::PLAYER_TURN);
+        return;
     }
-    else if (liquidation == 1) 
+
+    int liquidation = gm.handleDebtPayment(from, debt, to);
+    // handleDebtPayment sudah set fase BANKRUPTCY dan simpan pendingDebt/Creditor
+
+    if (liquidation == 1)
     {
-        // while (from->getBalance() < debt) {
-            // Belum ada guardnyaaaaaaaaa
-            // std::cout << "Prop idx: ";
-            // std::cin >> propToSell;
-            // std::cout << "State: ";
-            // std::cin >> sellOverMortgage;
-            if (propToSell < 0 || propToSell >= from->getPropertyCount()) {
-                // err idx out of bounds
-                return;
-            }
-            Property* prop = from->getProperties()[propToSell];
-            if (sellOverMortgage)
-            {
-                // std::cout << "Menjual properti " << prop->getName() << std::endl;
-                gm.sellPropertyToBank(from, prop);
-            }
-            else
-            {
-                // std::cout << "Menggadaikan properti " << prop->getName() << std::endl;
-                gm.mortgageProperty(from, prop);
-            }
-        // }
-        if (from->getBalance() >= debt) {
-            if (to) {
-                *from -= debt;
-                *to += debt;
-            } else {
-                *from -= debt;
-            }
-            gs.setPhase(GamePhase::PLAYER_TURN);
-        }
-         
+        // Fase BANKRUPTCY sudah di-set oleh handleDebtPayment.
+        // GUI (BankruptcyDialog) yang akan handle pilihan likuidasi.
+        std::cout << "[BankruptCommand] Menunggu likuidasi GUI untuk M"
+                  << debt << std::endl;
     }
     else if (liquidation == 2)
     {
-        std::cout << "Player " << from->getUsername() << " telah BANKRUPT";
-        if (to) 
+        // Tidak bisa bayar sama sekali → langsung bangkrut
+        std::cout << "Player " << from->getUsername() << " telah BANKRUPT ke ";
+        if (to)
         {
             gm.handleBankruptcy(from, to);
-            std::cout << "ke " << to->getUsername() << std::endl;
+            std::cout << to->getUsername() << std::endl;
         }
-        else {
+        else
+        {
             gm.handleBankruptcy(from, gs.getBank());
-            std::cout << "ke Bank" << std::endl;
+            std::cout << "Bank" << std::endl;
         }
     }
 }

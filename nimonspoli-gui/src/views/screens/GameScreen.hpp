@@ -327,6 +327,32 @@ private:
     void triggerSkillCardDialog();
     void drawSkillCardDialog();
 
+    // ── Dialog Bankruptcy (Likuidasi & Notifikasi) ───────────────────
+    struct BankruptcyDialogState {
+        bool visible       = false;   // dialog likuidasi aktif
+        bool notifVisible  = false;   // notifikasi bangkrut aktif
+        float scrollY      = 0.f;
+        int   pendingDebt  = 0;
+        std::string creditorName;     // nama kreditur atau "Bank"
+
+        struct Entry {
+            Property* prop;
+            int       tileIdx;
+            bool      canSell;        // bisa dijual ke bank
+            bool      canMortgage;    // bisa digadaikan
+            int       sellValue;
+            int       mortgageValue;
+        };
+        std::vector<Entry> entries;
+        int hoveredSellIdx     = -1;
+        int hoveredMortgageIdx = -1;
+
+        // Untuk notifikasi kebangkrutan
+        std::string bankruptName;     // nama pemain yang bangkrut
+    } bankruptcyDialog;
+    void triggerBankruptcyDialog();
+    void drawBankruptcyDialog();
+
 
     // ── Private methods ──────────────────────────────────────────────────
     Color   getGroupColor(const std::string& group);

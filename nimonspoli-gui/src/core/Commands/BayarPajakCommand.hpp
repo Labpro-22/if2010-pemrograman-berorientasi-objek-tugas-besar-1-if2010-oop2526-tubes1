@@ -6,6 +6,7 @@
 #include "./Command.hpp"
 #include "../Player/Player.hpp"
 #include "../utils/ConfigLoader.hpp"
+#include "../GameMaster/GameMaster.hpp"
 class TaxTile;
 class BayarPajakCommand : public Command
 {
@@ -16,6 +17,7 @@ private:
     TransactionLogger *logger;
     TaxConfig taxConfig;
     int turnNumber;
+    GameMaster* gm = nullptr; // referensi untuk debt handling
 
 public:
     BayarPajakCommand(Player *p, TaxTile *tile, Bank *bank,

@@ -6,6 +6,8 @@ DiscountCard::DiscountCard() : DiscountCard(rand() % 50 + 10, 1) {}
 
 DiscountCard::DiscountCard(int discountPercent, int duration) : SkillCard("Diskon " + to_string(discountPercent) + "%", "DiscountCard"), discountPercent(discountPercent), duration(duration) {}
 
+DiscountCard::DiscountCard(const string &type, const string &description, bool used, double discountPercent, int duration) : SkillCard(type, description, used), discountPercent(static_cast<int>(discountPercent)), duration(duration) {}
+
 DiscountCard::~DiscountCard()
 {
 }

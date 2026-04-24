@@ -13,6 +13,7 @@ private:
 public:
     DiscountCard();
     DiscountCard(int discountPercent, int duration);
+    DiscountCard(const string &type, const string &description, bool used, double discountPercent, int duration);
     ~DiscountCard();
     int getDuration() const;
     void decreaseDuration();

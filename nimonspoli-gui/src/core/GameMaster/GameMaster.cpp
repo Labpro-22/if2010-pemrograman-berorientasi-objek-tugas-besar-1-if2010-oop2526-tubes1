@@ -349,59 +349,34 @@ int GameMaster::handleDebtPayment(Player *debtor, int debt, Player *creditor)
     if (!debtor)
         return -1;
 
-    // Hitung maksimum yang bisa didapat dari likuidasi
-    // (perhitungan detail ada di BankruptcyManager / BangkrutCommand)
-
     int cash = debtor->getBalance();
     if (cash >= debt)
     {
         // Cukup bayar langsung
-        // if (creditor)
-        // {
-        //     *debtor -= debt;
-        //     *creditor += debt;
-        // }
-        // else
-        // {
-        //     *debtor -= debt;
-        // }
         return 0;
     }
 
     // Tidak cukup cash → cek potensi likuidasi
-    int potential = debtor->getWealth();
+    int potential = calculateWealth(debtor);
     state.setPhase(GamePhase::BANKRUPTCY);
-    // int potential = calculateWealth(debtor);
+
     if (potential >= debt)
     {
-        // Wajib likuidasi — BangkrutCommand yang handle panel likuidasi
-        // state.setPhase(GamePhase::BANKRUPTCY);
+        // Wajib likuidasi — simpan konteks agar GUI bisa membacanya
+        state.setPendingDebt(debt);
+        state.setPendingDebtor(debtor);
+        state.setPendingCreditor(creditor);
         log(debtor->getUsername(), "BANKRUPTCY_START",
             "Harus likuidasi untuk bayar M" + std::to_string(debt));
-        // Pilih mau likuidasi asset yang mana (how? need to integrate this into GUI)
 
-        // Jujur gw gatau cara buat milih propnya gimana
-        // Likuidasi --> Handle
-
-        // Dia butuh input, how?
-        // while(debtor->getBalance() < debt) {
-        //     for (Property* p : debtor->getProperties()) {
-
-        //     }
-        // }
         return 1;
     }
     else
     {
-        // Tidak bisa bayar → bangkrut
-        // if (creditor)
-        // {
-        //     handleBankruptcy(debtor, creditor);
-        // }
-        // else
-        // {
-        //     handleBankruptcy(debtor, state.getBank());
-        // }
+        // Tidak bisa bayar sama sekali → langsung bangkrut
+        state.setPendingDebt(debt);
+        state.setPendingDebtor(debtor);
+        state.setPendingCreditor(creditor);
         return 2;
     }
 }
@@ -422,16 +397,32 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
         *to += remaining;
     }
 
-    // Pindahkan semua properti (termasuk yang MORTGAGED, tetap dalam kondisi gadai)
-    for (int i = 0; i < from->getPropertyCount(); i++)
+    // Salin daftar properti dulu agar removeProperty() tidak invalidate iterator
+    std::vector<Property*> props(from->getProperties().begin(),
+                                  from->getProperties().end());
+    for (Property *p : props)
     {
-        Property *p = from->getProperties()[i];
-        if (p)
-        {
-            p->setOwner(to->getUsername());
-            to->addProperty(p);
-        }
+        if (!p) continue;
+        p->setOwner(to->getUsername());
+        to->addProperty(p);
+        from->removeProperty(p);
     }
+
+    // Pindahkan semua kartu kemampuan ke creditor
+    std::vector<SkillCard*> hand = from->getHand();
+    for (SkillCard *c : hand)
+    {
+        if (c) to->forceAddSkillCard(c);
+    }
+    while (from->getHandSize() > 0)
+    {
+        from->discardSkillCard(0);
+    }
+
+    // Reset pending bankruptcy context
+    state.setPendingDebt(0);
+    state.setPendingDebtor(nullptr);
+    state.setPendingCreditor(nullptr);
 
     // Tandai bankrut & keluarkan dari urutan giliran
     state.removePlayer(from);
@@ -440,6 +431,10 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
     if (state.countActivePlayers() <= 1)
     {
         state.setPhase(GamePhase::GAME_OVER);
+    }
+    else
+    {
+        state.setPhase(GamePhase::PLAYER_TURN);
     }
 }
 
@@ -458,25 +453,58 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
         *from -= remaining;
     }
 
-    // Semua properti kembali ke BANK dan dilelang
-    for (int i = 0; i < from->getPropertyCount(); i++)
+    // Salin daftar properti dulu agar removeProperty() tidak invalidate iterator
+    std::vector<Property*> props(from->getProperties().begin(),
+                                  from->getProperties().end());
+
+    // Antrekan semua properti untuk dilelang satu per satu
+    state.clearPendingAuctionQueue();
+    for (Property *p : props)
     {
-        Property *p = from->getProperties()[i];
-        if (p)
-        {
-            p->clearOwner();
-            p->setStatus(PropertyStatus::BANK);
-            // Hancurkan bangunan jika ada (StreetProperty)
-            // → dilakukan di StreetProperty::resetBuildings() jika ada
-            startAuction(p, nullptr);
-        }
+        if (!p) continue;
+        // Hancurkan bangunan jika ada (StreetProperty)
+        auto* sp = dynamic_cast<StreetProperty*>(p);
+        if (sp) sp->resetBuildings();
+
+        p->clearOwner();
+        p->setStatus(PropertyStatus::BANK);
+        from->removeProperty(p);
+        state.addToPendingAuctionQueue(p);
     }
 
+    // Kembalikan semua kartu kemampuan ke deck
+    CardDeck<SkillCard>* skillDeck = state.getSkillDeck();
+    std::vector<SkillCard*> hand = from->getHand();
+    for (SkillCard *c : hand)
+    {
+        if (c && skillDeck) skillDeck->discard(c);
+    }
+    while (from->getHandSize() > 0)
+    {
+        from->discardSkillCard(0);
+    }
+
+    // Reset pending bankruptcy context
+    state.setPendingDebt(0);
+    state.setPendingDebtor(nullptr);
+    state.setPendingCreditor(nullptr);
+
+    // Tandai bankrut & keluarkan dari urutan giliran
     state.removePlayer(from);
 
-    if (state.countActivePlayers() <= 1)
+    // Mulai lelang properti pertama (jika ada)
+    Property* first = state.popPendingAuction();
+    if (first)
+    {
+        startAuction(first, nullptr);
+    }
+    else if (state.countActivePlayers() <= 1)
     {
         state.setPhase(GamePhase::GAME_OVER);
+    }
+    else
+    {
+        state.setPhase(GamePhase::PLAYER_TURN);
     }
 }
 
@@ -497,9 +525,11 @@ void GameMaster::sellPropertyToBank(Player *player, Property *prop)
     auto *sp = dynamic_cast<StreetProperty *>(prop);
     value = sp->calculateSellPrice();
 
-    if (sp)
-    {
+    if (sp) {
+        value = sp->calculateSellPrice();
         sp->resetBuildings();
+    } else {
+        value = prop->calculateSellPrice();
     }
 
     prop->clearOwner();
@@ -530,6 +560,58 @@ void GameMaster::mortgageProperty(Player *player, Property *prop)
 
     log(player->getUsername(), "MORTGAGE",
         prop->getName() + " digadaikan, menerima M" + std::to_string(mortgageValue));
+}
+
+// ─────────────────────────────────────────────
+//  processNextCardPayment
+//  Proses satu entri dari pendingPaymentQueue.
+//  Dipanggil oleh ElectionCard/BirthdayCard::execute() dan
+//  oleh BankruptcyDialog setiap kali satu pembayaran selesai.
+// ─────────────────────────────────────────────
+void GameMaster::processNextCardPayment()
+{
+    while (state.hasPendingPayment())
+    {
+        GameState::PendingPayment pay = state.popPendingPayment();
+
+        Player* debtor   = pay.debtor;
+        Player* creditor = pay.creditor;
+        int     amount   = pay.amount;
+
+        if (!debtor) continue;
+
+        // Skip pemain yang sudah bangkrut
+        if (debtor->getStatus() == PlayerStatus::BANKRUPT) continue;
+
+        if (debtor->getBalance() >= amount)
+        {
+            // Bayar langsung
+            *debtor -= amount;
+            if (creditor) *creditor += amount;
+            log(debtor->getUsername(), "CARD_PAYMENT",
+                "Bayar M" + std::to_string(amount) +
+                " ke " + (creditor ? creditor->getUsername() : "Bank"));
+        }
+        else
+        {
+            // Tidak cukup → trigger bankruptcy dialog.
+            // Kembalikan entri ini ke antrean agar tidak hilang —
+            // BankruptcyDialog akan memanggilnya lagi setelah selesai.
+            // (Tidak perlu: handleDebtPayment menyimpan debt+creditor ke GameState)
+            int status = handleDebtPayment(debtor, amount, creditor);
+            if (status == 1)
+            {
+                // Menunggu dialog likuidasi — stop di sini.
+                // BankruptcyDialog::onFinish() akan memanggil processNextCardPayment()
+                return;
+            }
+            // status == 2: langsung bangkrut, lanjut ke entri berikutnya
+        }
+    }
+
+    // Antrian habis: pastikan fase kembali normal
+    if (state.getPhase() == GamePhase::BANKRUPTCY)
+        state.setPhase(GamePhase::PLAYER_TURN);
 }
 
 // ─────────────────────────────────────────────

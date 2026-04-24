@@ -2,8 +2,13 @@
 
 SkillCard::SkillCard() : Card(""), type(""), used(false) {}
 
-SkillCard::SkillCard(const string &description, const string &type)
-    : Card(description), type(type), used(false) {}
+SkillCard::SkillCard(const string &description, const string &type) : Card(description), type(type), used(false)
+{
+}
+
+SkillCard::SkillCard(const string &type, const string &description, bool used) : Card(description), type(type), used(used)
+{
+}
 
 SkillCard::~SkillCard()
 {

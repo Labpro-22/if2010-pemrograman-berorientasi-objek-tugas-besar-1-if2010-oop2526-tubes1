@@ -8,6 +8,10 @@ MoveToBackThreeCard::MoveToBackThreeCard() : ChanceCard("Mundur 3 petak.")
 {
 }
 
+MoveToBackThreeCard::MoveToBackThreeCard(const string &type, const string &description) : ChanceCard(description)
+{
+}
+
 MoveToBackThreeCard::~MoveToBackThreeCard()
 {
 }

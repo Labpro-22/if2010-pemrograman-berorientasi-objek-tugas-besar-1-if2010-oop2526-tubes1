@@ -7,6 +7,10 @@ BirthdayCard::BirthdayCard() : GeneralFundCard("Ini adalah hari ulang tahun Anda
 {
 }
 
+BirthdayCard::BirthdayCard(const string &type, const string &description, int amount) : GeneralFundCard(description), amountPerPlayer(amount)
+{
+}
+
 BirthdayCard::~BirthdayCard()
 {
 }
@@ -18,23 +22,18 @@ int BirthdayCard::getAmountPerPlayer() const
 
 void BirthdayCard::execute(Player &p, GameState &gs)
 {
-    vector<Player *> players = gs.getActivePlayers();
-    GameMaster *gm = gs.getGameMaster();
-    for (Player *other : players)
+    GameMaster* gm = gs.getGameMaster();
+
+    // Enqueue semua pembayaran dulu: setiap pemain lain harus bayar ke p.
+    gs.clearPendingPaymentQueue();
+    for (Player* other : gs.getActivePlayers())
     {
-        if (other == &p)
+        if (other == &p || other->getStatus() == PlayerStatus::BANKRUPT)
             continue;
-        // Cek apakah player akan Bankrupt? <-- belum dihandle
-        if (other->getBalance() < amountPerPlayer) {
-            // p.setStatus(PlayerStatus::BANKRUPT);
-            // Handle bankrupt by GameMaster
-            if (other->getStatus() == PlayerStatus::BANKRUPT) {
-                break;
-            }
-            // Handle 
-            gm->handleDebtPayment(&p, amountPerPlayer, other);
-        }
-        // *other -= amountPerPlayer;
-        // p += amountPerPlayer;
+        // Debtor = other, creditor = p (pemain ulang tahun)
+        gs.addToPendingPaymentQueue(other, &p, amountPerPlayer);
     }
+
+    // Jalankan pembayaran pertama
+    if (gm) gm->processNextCardPayment();
 }

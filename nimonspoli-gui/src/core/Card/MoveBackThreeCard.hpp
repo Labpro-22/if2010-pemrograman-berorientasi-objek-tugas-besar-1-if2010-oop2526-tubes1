@@ -8,6 +8,7 @@ class MoveToBackThreeCard : public ChanceCard
 {
 public:
     MoveToBackThreeCard();
+    MoveToBackThreeCard(const string &type, const string &description);
     ~MoveToBackThreeCard();
     void execute(Player &p, GameState &gs) override;
 };

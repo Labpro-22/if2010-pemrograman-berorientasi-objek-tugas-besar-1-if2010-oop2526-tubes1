@@ -7,6 +7,10 @@ TeleportCard::TeleportCard() : SkillCard("Pindah ke petak manapun", "TeleportCar
 {
 }
 
+TeleportCard::TeleportCard(const string &type, const string &description, bool used) : SkillCard(type, description, used), targetPosition(-999)
+{
+}
+
 TeleportCard::~TeleportCard()
 {
 }

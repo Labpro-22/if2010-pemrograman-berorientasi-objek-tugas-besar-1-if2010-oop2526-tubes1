@@ -7,6 +7,10 @@ DoctorFeeCard::DoctorFeeCard() : GeneralFundCard("Biaya dokter. Bayar M700."), d
 {
 }
 
+DoctorFeeCard::DoctorFeeCard(const string &type, const string &description, int amount) : GeneralFundCard(description), doctorFee(amount)
+{
+}
+
 int DoctorFeeCard::getDoctorFee() const
 {
     return doctorFee;
@@ -18,21 +22,16 @@ DoctorFeeCard::~DoctorFeeCard()
 
 void DoctorFeeCard::execute(Player &p, GameState &gs)
 {
-    // Cek apakah player akan Bankrupt? <-- belum dihandle
     GameMaster* gm = gs.getGameMaster();
     // Bank* bank = gs.getBank();
-    // if (p.getBalance() < doctorFee) {
-        // p.setStatus(PlayerStatus::BANKRUPT);
-        // Handle bankrupt
-        if (p.getStatus() == PlayerStatus::BANKRUPT) {
-            return;
-        }
-        // Handle Bankrupt?
-        if (p.getBalance() < doctorFee) {
-            gm->handleDebtPayment(&p, doctorFee, nullptr);
-            // ini harus nunggu dialog? then proceed
-        }
-        else p -= doctorFee;
-    // }
-    // p -= doctorFee;
+    
+    if (p.getStatus() == PlayerStatus::BANKRUPT) {
+        return;
+    }
+
+    if (p.getBalance() >= doctorFee) {
+        p -= doctorFee;
+    } else {
+        gm->handleDebtPayment(&p, doctorFee, nullptr);
+    }
 }

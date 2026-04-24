@@ -7,6 +7,10 @@ GoToJailCard::GoToJailCard() : ChanceCard("Masuk Penjara")
 {
 }
 
+GoToJailCard::GoToJailCard(const string &type, const string &description) : ChanceCard(description)
+{
+}
+
 GoToJailCard::~GoToJailCard()
 {
 }
