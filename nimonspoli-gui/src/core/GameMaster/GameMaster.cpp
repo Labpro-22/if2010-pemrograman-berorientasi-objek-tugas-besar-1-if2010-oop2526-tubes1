@@ -742,7 +742,8 @@ int GameMaster::calculateWealth(Player *player) const
     for (int i = 0; i < player->getPropertyCount(); i++)
     {
         Property *p = player->getProperties()[i];
-        if (!p || p->getStatus() == PropertyStatus::MORTGAGED) continue;
+        if (!p || p->getStatus() == PropertyStatus::MORTGAGED)
+            continue;
         wealth += p->calculateSellPrice();
         // Nilai bangunan ditambahkan oleh StreetProperty::calculateSellPrice()
         // jika ada override — di sini gunakan purchasePrice sebagai baseline
@@ -764,30 +765,24 @@ void GameMaster::log(const std::string &username,
 // ─────────────────────────────────────────────
 //  Helper internal
 // ─────────────────────────────────────────────
-
 void GameMaster::distributeSkillCards()
 {
     CardDeck<SkillCard> *deck = state.getSkillDeck();
-    if (!deck)
+
+    if (deck == nullptr)
         return;
 
-    for (Player *p : state.getActivePlayers())
-    {
-        if (!p || p->getStatus() == PlayerStatus::BANKRUPT)
-            continue;
+    Player *player = state.getCurrPlayer();
 
-        SkillCard *skill = deck->draw();
-        if (!skill)
-        {
-            std::cout << "[DEBUG] Skill deck kosong.\n";
-            continue;
-        }
+    if (player == nullptr || player->getStatus() == PlayerStatus::BANKRUPT)
+        return;
 
-        giveSkillCardToPlayer(p, skill);
+    SkillCard *skill = deck->draw();
 
-        log(p->getUsername(), "DRAW_SKILL_CARD",
-            "Mendapat kartu kemampuan: " + skill->getType());
-    }
+    if (skill == nullptr)
+        return;
+
+    giveSkillCardToPlayer(player, skill);
 }
 
 void GameMaster::tickFestivalDurations()
@@ -896,48 +891,13 @@ void GameMaster::handleSkillCardOverflow(Player *player)
     if (player == nullptr)
         return;
 
-    while (player->getHandSize() > 3)
+    if (player->getHandSize() > 3)
     {
-        cout << "PERINGATAN: Kamu sudah memiliki "
-             << player->getHandSize()
-             << " kartu di tangan (Maksimal 3)! "
-             << "Kamu diwajibkan membuang 1 kartu.\n\n";
+        state.setPendingSkillDrop(
+            player,
+            "Kamu memiliki lebih dari 3 kartu kemampuan. Pilih 1 kartu untuk dibuang.");
 
-        cout << player->printSkillCards() << "\n";
-
-        int pilihan;
-        while (true)
-        {
-            cout << "Pilih nomor kartu yang ingin dibuang (1-"
-                 << player->getHandSize() << "): ";
-
-            if (!(cin >> pilihan))
-            {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Input tidak valid. Masukkan angka.\n";
-                continue;
-            }
-
-            if (pilihan < 1 || pilihan > player->getHandSize())
-            {
-                cout << "Pilihan di luar rentang.\n";
-                continue;
-            }
-
-            break;
-        }
-
-        SkillCard *kartuDibuang = player->getHand()[pilihan - 1];
-        string namaKartu = kartuDibuang ? kartuDibuang->getType() : "Kartu";
-
-        player->discardSkillCard(pilihan - 1);
-
-        cout << "\n"
-             << namaKartu << " telah dibuang. "
-             << "Sekarang kamu memiliki "
-             << player->getHandSize()
-             << " kartu di tangan.\n";
+        state.setPhase(GamePhase::AWAITING_DROP_SKILL_CARD);
     }
 }
 
@@ -946,10 +906,12 @@ void GameMaster::giveSkillCardToPlayer(Player *player, SkillCard *card)
     if (player == nullptr || card == nullptr)
         return;
 
-    cout << "Kamu mendapatkan 1 kartu acak baru!\n";
-    cout << "Kartu yang didapat: " << card->getType() << ".\n";
-
     player->forceAddSkillCard(card);
+
+    log(
+        player->getUsername(),
+        "DRAW_SKILL_CARD",
+        "Mendapat kartu kemampuan: " + card->getType());
 
     if (player->getHandSize() > 3)
     {
@@ -975,7 +937,11 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
     {
         if (hand[i] == card)
         {
-            player->discardSkillCard(i);
+            SkillCard *removed = player->discardSkillCard(i);
+            if (removed != nullptr && state.getSkillDeck() != nullptr)
+            {
+                state.getSkillDeck()->discard(removed);
+            }
             break;
         }
     }

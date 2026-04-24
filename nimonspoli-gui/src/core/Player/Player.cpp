@@ -131,11 +131,16 @@ bool Player::addSkillCard(SkillCard *card)
     return true;
 }
 
-void Player::discardSkillCard(int index)
+SkillCard *Player::discardSkillCard(int index)
 {
-    if (index < 0 || index >= (int)skillCards.size())
-        return;
+    if (index < 0 || index >= static_cast<int>(skillCards.size()))
+    {
+        return nullptr;
+    }
+
+    SkillCard *removed = skillCards[index];
     skillCards.erase(skillCards.begin() + index);
+    return removed;
 }
 
 const vector<SkillCard *> &Player::getHand() const

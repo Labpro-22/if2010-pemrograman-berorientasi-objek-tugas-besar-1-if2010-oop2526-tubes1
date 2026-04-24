@@ -41,13 +41,15 @@ void GameScreen::onEnter()
         tiles.push_back(TILE_DEFS[i]);
     loadTextures();
 
-    if (isRealMode()) {
+    if (isRealMode())
+    {
         TraceLog(LOG_INFO, "GameScreen: REAL MODE - players: %d",
                  (int)guiManager->getGameMaster()->getState().getPlayers().size());
         // Mode real: inisialisasi minimal, langsung sync dari GameMaster
         gameState.players.clear();
         gameState.properties.resize(40);
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 40; i++)
+        {
             gameState.properties[i].code = TILE_DEFS[i].code;
             gameState.properties[i].owner = -1;
             gameState.properties[i].buildings = 0;
@@ -59,10 +61,12 @@ void GameScreen::onEnter()
         }
         playerVisuals.clear(); // penting! biar syncFromGameMaster inisialisasi ulang
         syncFromGameMaster();
-    } else {
+    }
+    else
+    {
         TraceLog(LOG_WARNING, "GameScreen: MOCK MODE - guiManager=%s GM=%s",
-            guiManager ? "OK" : "NULL",
-            (guiManager && guiManager->getGameMaster()) ? "OK" : "NULL");
+                 guiManager ? "OK" : "NULL",
+                 (guiManager && guiManager->getGameMaster()) ? "OK" : "NULL");
         // Mode mock: pakai data dummy untuk testing UI
         initMockState();
         initMockLogs();
@@ -71,7 +75,7 @@ void GameScreen::onEnter()
 
 void GameScreen::onExit()
 {
-    for (auto& [k, v] : tileTextures)
+    for (auto &[k, v] : tileTextures)
         UnloadTexture(v);
     if (deckKSP.id != 0)
         UnloadTexture(deckKSP);
@@ -133,7 +137,7 @@ void GameScreen::update(float dt)
 }
 
 // ─── Render ──────────────────────────────────────────────────────────────────
-void GameScreen::render(Window& window)
+void GameScreen::render(Window &window)
 {
     (void)window;
     ClearBackground({20, 22, 30, 255});
@@ -158,6 +162,7 @@ void GameScreen::render(Window& window)
     drawBangunDialog();
     drawJualBangunanDialog();
     drawSkillCardDialog();
+    drawDropSkillCardDialog();
     drawBankruptcyDialog();
     drawAktaDialog();
     drawCetakPropertiDialog();
@@ -166,16 +171,24 @@ void GameScreen::render(Window& window)
 }
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
-Color GameScreen::getGroupColor(const std::string& g)
+Color GameScreen::getGroupColor(const std::string &g)
 {
-    if (g == "COKLAT")      return {139, 69,  19, 255};
-    if (g == "BIRU_MUDA")   return {135, 206, 235, 255};
-    if (g == "PINK" || g == "MERAH_MUDA") return {255, 105, 180, 255};
-    if (g == "ORANGE")      return {255, 165,   0, 255};
-    if (g == "MERAH")       return {220,  20,  60, 255};
-    if (g == "KUNING")      return {255, 215,   0, 255};
-    if (g == "HIJAU")       return { 34, 139,  34, 255};
-    if (g == "BIRU_TUA")    return {  0,   0, 139, 255};
+    if (g == "COKLAT")
+        return {139, 69, 19, 255};
+    if (g == "BIRU_MUDA")
+        return {135, 206, 235, 255};
+    if (g == "PINK" || g == "MERAH_MUDA")
+        return {255, 105, 180, 255};
+    if (g == "ORANGE")
+        return {255, 165, 0, 255};
+    if (g == "MERAH")
+        return {220, 20, 60, 255};
+    if (g == "KUNING")
+        return {255, 215, 0, 255};
+    if (g == "HIJAU")
+        return {34, 139, 34, 255};
+    if (g == "BIRU_TUA")
+        return {0, 0, 139, 255};
     return GRAY;
 }
 
@@ -183,14 +196,20 @@ Color GameScreen::getGroupColor(const std::string& g)
 void GameScreen::loadTextures()
 {
     std::vector<std::string> codes;
-    for (auto& t : tiles) {
+    for (auto &t : tiles)
+    {
         bool found = false;
-        for (auto& c : codes)
-            if (c == t.code) { found = true; break; }
+        for (auto &c : codes)
+            if (c == t.code)
+            {
+                found = true;
+                break;
+            }
         if (!found)
             codes.push_back(t.code);
     }
-    for (auto& code : codes) {
+    for (auto &code : codes)
+    {
         std::string path = "assets/tiles/" + code + ".png";
         if (FileExists(path.c_str()))
             tileTextures[code] = LoadTexture(path.c_str());
@@ -204,56 +223,61 @@ void GameScreen::loadTextures()
 // ─── Mock state ───────────────────────────────────────────────────────────────
 void GameScreen::initMockState()
 {
-    gameState.currentTurn     = 15;
-    gameState.maxTurn         = 50;
+    gameState.currentTurn = 15;
+    gameState.maxTurn = 50;
     gameState.activePlayerIdx = 0;
 
     gameState.players = {
-        {"Uname1", 1500,  0, "ACTIVE",  2, true},
-        {"Uname2",  800,  5, "ACTIVE",  1, false},
-        {"Uname3", 2200, 11, "ACTIVE",  3, false},
-        {"Uname4",    0, 10, "JAILED",  0, false},
+        {"Uname1", 1500, 0, "ACTIVE", 2, true},
+        {"Uname2", 800, 5, "ACTIVE", 1, false},
+        {"Uname3", 2200, 11, "ACTIVE", 3, false},
+        {"Uname4", 0, 10, "JAILED", 0, false},
     };
 
     gameState.properties.resize(40);
-    for (int i = 0; i < 40; i++) {
-        gameState.properties[i].code         = TILE_DEFS[i].code;
-        gameState.properties[i].owner        = -1;
-        gameState.properties[i].buildings    = 0;
-        gameState.properties[i].mortgaged    = false;
+    for (int i = 0; i < 40; i++)
+    {
+        gameState.properties[i].code = TILE_DEFS[i].code;
+        gameState.properties[i].owner = -1;
+        gameState.properties[i].buildings = 0;
+        gameState.properties[i].mortgaged = false;
         gameState.properties[i].festivalMult = 1;
-        gameState.properties[i].festivalDur  = 0;
-        gameState.properties[i].type         = "ACTION";
-        gameState.properties[i].colorGroup   = "";
+        gameState.properties[i].festivalDur = 0;
+        gameState.properties[i].type = "ACTION";
+        gameState.properties[i].colorGroup = "";
     }
 
-    auto setProp = [&](int idx, const std::string& name, const std::string& grp,
+    auto setProp = [&](int idx, const std::string &name, const std::string &grp,
                        int owner, int bld, bool mort, int fmult, int fdur,
                        int p, int mv, int hu, int hotu,
                        int r0, int r1, int r2, int r3, int r4, int r5)
     {
-        auto& pr = gameState.properties[idx];
-        pr.name        = name;
-        pr.colorGroup  = grp;
-        pr.type        = "STREET";
-        pr.owner       = owner;
-        pr.buildings   = bld;
-        pr.mortgaged   = mort;
+        auto &pr = gameState.properties[idx];
+        pr.name = name;
+        pr.colorGroup = grp;
+        pr.type = "STREET";
+        pr.owner = owner;
+        pr.buildings = bld;
+        pr.mortgaged = mort;
         pr.festivalMult = fmult;
         pr.festivalDur = fdur;
-        pr.price       = p;
+        pr.price = p;
         pr.mortgageVal = mv;
-        pr.houseUpg    = hu;
-        pr.hotelUpg    = hotu;
-        pr.rentL0 = r0; pr.rentL1 = r1; pr.rentL2 = r2;
-        pr.rentL3 = r3; pr.rentL4 = r4; pr.rentL5 = r5;
+        pr.houseUpg = hu;
+        pr.hotelUpg = hotu;
+        pr.rentL0 = r0;
+        pr.rentL1 = r1;
+        pr.rentL2 = r2;
+        pr.rentL3 = r3;
+        pr.rentL4 = r4;
+        pr.rentL5 = r5;
     };
 
-    setProp(31, "Bandung", "HIJAU",   1, 1, false, 2, 2, 300, 250, 200, 200, 26, 130, 390,  900, 1100, 1275);
-    setProp(37, "Jakarta", "BIRU_TUA",0, 0, false, 1, 0, 350, 300, 200, 200, 35, 175, 500, 1100, 1300, 1500);
-    setProp( 1, "Garut",   "COKLAT",  0, 0, true,  1, 0,  60,  40,  20,  50,  2,  10,  30,   90,  160,  250);
-    setProp(21, "Makassar","MERAH",   2, 2, false, 4, 1, 220, 175, 150, 150, 18,  90, 250,  700,  875, 1050);
-    setProp( 9, "Bekasi",  "BIRU_MUDA",-1,0,false, 1, 0, 120,  60,  50,  50,  8,  40, 100,  300,  450,  600);
+    setProp(31, "Bandung", "HIJAU", 1, 1, false, 2, 2, 300, 250, 200, 200, 26, 130, 390, 900, 1100, 1275);
+    setProp(37, "Jakarta", "BIRU_TUA", 0, 0, false, 1, 0, 350, 300, 200, 200, 35, 175, 500, 1100, 1300, 1500);
+    setProp(1, "Garut", "COKLAT", 0, 0, true, 1, 0, 60, 40, 20, 50, 2, 10, 30, 90, 160, 250);
+    setProp(21, "Makassar", "MERAH", 2, 2, false, 4, 1, 220, 175, 150, 150, 18, 90, 250, 700, 875, 1050);
+    setProp(9, "Bekasi", "BIRU_MUDA", -1, 0, false, 1, 0, 120, 60, 50, 50, 8, 40, 100, 300, 450, 600);
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -262,13 +286,15 @@ void GameScreen::handleInput()
     if (IsKeyPressed(KEY_W))
         gameOver = true;
 
-    if (IsKeyPressed(KEY_T) && isRealMode()) {
-        GameMaster* gm = guiManager->getGameMaster();
-        Player* cur = gm->getState().getCurrPlayer();
-        if (cur && selectedTile >= 0) {
+    if (IsKeyPressed(KEY_T) && isRealMode())
+    {
+        GameMaster *gm = guiManager->getGameMaster();
+        Player *cur = gm->getState().getCurrPlayer();
+        if (cur && selectedTile >= 0)
+        {
             gm->teleportPlayer(cur, selectedTile, true);
             std::cout << "[DEBUG] Teleport ke tile " << selectedTile
-                    << " (" << TILE_DEFS[selectedTile].code << ")" << std::endl;
+                      << " (" << TILE_DEFS[selectedTile].code << ")" << std::endl;
         }
     }
 
@@ -280,35 +306,43 @@ void GameScreen::handleInput()
     float cy2 = boardY + CORNER_SZ + 9 * TILE_W;
 
     // Zoom (scroll wheel, center area only)
-    if (mouse.x > cx1 && mouse.x < cx2 && mouse.y > cy1 && mouse.y < cy2) {
+    if (mouse.x > cx1 && mouse.x < cx2 && mouse.y > cy1 && mouse.y < cy2)
+    {
         float wheel = GetMouseWheelMove();
-        if (wheel != 0) {
+        if (wheel != 0)
+        {
             float oldZoom = zoomLevel;
             zoomLevel = Clamp(zoomLevel + wheel * 0.1f, 0.5f, 3.f);
             zoomOffset.x += (mouse.x - cx1 - zoomOffset.x) * (1 - zoomLevel / oldZoom);
             zoomOffset.y += (mouse.y - cy1 - zoomOffset.y) * (1 - zoomLevel / oldZoom);
         }
-        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        {
             isDragging = true;
-            dragStart  = mouse;
+            dragStart = mouse;
         }
     }
     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         isDragging = false;
-    if (isDragging) {
+    if (isDragging)
+    {
         zoomOffset.x += mouse.x - dragStart.x;
         zoomOffset.y += mouse.y - dragStart.y;
         dragStart = mouse;
     }
 
     // Tile click → popup
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !isDragging) {
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !isDragging)
+    {
         int hit = tileAtPoint(mouse);
-        if (hit >= 0) {
+        if (hit >= 0)
+        {
             selectedTile = hit;
-            showPopup    = true;
-        } else {
-            showPopup    = false;
+            showPopup = true;
+        }
+        else
+        {
+            showPopup = false;
             selectedTile = -1;
         }
     }

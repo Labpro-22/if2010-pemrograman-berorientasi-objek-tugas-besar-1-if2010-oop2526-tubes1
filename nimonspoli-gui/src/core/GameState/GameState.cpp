@@ -174,3 +174,18 @@ int GameState::countActivePlayers() const
 void GameState::setCurrTurn(int t) { currTurn = t; }
 void GameState::setCurrPlayerIdx(int i) { currPlayerIdx = i; }
 void GameState::setMaxTurn(int m) { maxTurn = m; }
+
+Player *GameState::getPendingSkillDropPlayer() const { return pendingSkillDropPlayer; }
+const std::string &GameState::getPendingSkillDropMessage() const { return pendingSkillDropMessage; }
+
+void GameState::setPendingSkillDrop(Player *p, const std::string &msg)
+{
+    pendingSkillDropPlayer = p;
+    pendingSkillDropMessage = msg;
+}
+
+void GameState::clearPendingSkillDrop()
+{
+    pendingSkillDropPlayer = nullptr;
+    pendingSkillDropMessage.clear();
+}

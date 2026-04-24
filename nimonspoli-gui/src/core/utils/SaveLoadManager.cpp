@@ -440,7 +440,10 @@ void SaveLoadManager::loadPlayers(std::ifstream &in, GameState &state)
         // Recreate kartu dari type string pakai CardFactory
         // Clear tangan dulu supaya tidak duplikat
         for (int c = 0; c < (int)p->getHand().size(); c++)
-            p->discardSkillCard(0);
+        {
+            SkillCard *removed = p->discardSkillCard(0);
+            delete removed;
+        }
 
         for (int c = 0; c < cardCount; c++)
         {
