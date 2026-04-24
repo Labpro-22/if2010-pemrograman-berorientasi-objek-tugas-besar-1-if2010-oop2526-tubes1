@@ -79,6 +79,7 @@ void GameMaster::handleCommand(const std::string &rawInput)
 
 void GameMaster::beginTurn()
 {
+    bool extraTurn = state.getHasExtraTurn();
     state.setPhase(GamePhase::PLAYER_TURN);
     state.setHasRolled(false);
     state.setHasUsedCard(false);
@@ -86,9 +87,12 @@ void GameMaster::beginTurn()
     Player *cur = state.getCurrPlayer();
     if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT)
         return;
-
-    distributeSkillCards();
-
+    if(!extraTurn)
+        distributeSkillCards();
+    if (cur->isInJail())
+    {
+        state.setPhase(GamePhase::AWAITING_JAIL);
+    }
     log(cur->getUsername(), "TURN_START",
         "Giliran Turn " + std::to_string(state.getCurrTurn()));
 }
