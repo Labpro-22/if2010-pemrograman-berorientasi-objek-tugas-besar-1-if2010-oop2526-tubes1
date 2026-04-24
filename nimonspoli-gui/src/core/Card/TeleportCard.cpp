@@ -28,7 +28,18 @@ void TeleportCard::execute(Player &p, GameState &gs)
 {
     if (targetPosition == -999)
         return;
+
     GameMaster *gm = gs.getGameMaster();
+
     if (gm)
-        gm->teleportPlayer(&p, targetPosition);
+    {
+        gm->teleportPlayer(&p, targetPosition, true);
+    }
+
+    targetPosition = -999;
+}
+
+string TeleportCard::successMessage() const
+{
+    return "TeleportCard digunakan. Pilih petak tujuan pada papan untuk memindahkan bidak.";
 }

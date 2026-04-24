@@ -28,3 +28,8 @@ void ShieldCard::execute(Player &p, GameState &gs)
 {
     p.activateShield();
 }
+
+string ShieldCard::successMessage() const
+{
+    return "ShieldCard diaktifkan. Anda kebal terhadap tagihan sewa, pajak, atau sanksi merugikan selama giliran ini.";
+}

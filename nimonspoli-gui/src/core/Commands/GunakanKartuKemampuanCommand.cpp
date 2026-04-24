@@ -21,23 +21,23 @@ void GunakanKartuKemampuanCommand::execute(GameMaster &gm)
         throw SkillCardOverflowNotFoundException();
     }
 
-    if (gs.getPhase() != GamePhase::PLAYER_TURN)
-    {
-        throw SkillCardInvalidActionException(
-            "Kartu kemampuan hanya dapat digunakan pada fase giliran pemain.");
-    }
+    // if (gs.getPhase() != GamePhase::PLAYER_TURN)
+    // {
+    //     throw SkillCardInvalidActionException(
+    //         "Kartu kemampuan hanya dapat digunakan pada fase giliran pemain.");
+    // }
 
-    if (gs.getHasRolled())
-    {
-        throw SkillCardInvalidActionException(
-            "Kartu kemampuan hanya bisa digunakan sebelum melempar dadu.");
-    }
+    // if (gs.getHasRolled())
+    // {
+    //     throw SkillCardInvalidActionException(
+    //         "Kartu kemampuan hanya bisa digunakan sebelum melempar dadu.");
+    // }
 
-    if (player->hasUsedCardThisTurn())
-    {
-        throw SkillCardInvalidActionException(
-            "Kamu sudah menggunakan kartu kemampuan pada giliran ini.");
-    }
+    // if (gs.getHasUsedCard())
+    // {
+    //     throw SkillCardInvalidActionException(
+    //         "Kamu sudah menggunakan kartu kemampuan pada giliran ini.");
+    // }
 
     const std::vector<SkillCard *> &hand = player->getHand();
 

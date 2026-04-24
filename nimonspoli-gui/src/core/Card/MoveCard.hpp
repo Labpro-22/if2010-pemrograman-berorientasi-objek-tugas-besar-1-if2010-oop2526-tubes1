@@ -16,6 +16,7 @@ public:
     ~MoveCard();
     void execute(Player &p, GameState &g) override;
     int getSteps() const;
+    string successMessage() const override;
 };
 
 #endif

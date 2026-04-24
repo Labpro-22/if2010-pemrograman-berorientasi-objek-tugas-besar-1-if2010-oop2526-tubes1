@@ -398,21 +398,23 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
     }
 
     // Salin daftar properti dulu agar removeProperty() tidak invalidate iterator
-    std::vector<Property*> props(from->getProperties().begin(),
+    std::vector<Property *> props(from->getProperties().begin(),
                                   from->getProperties().end());
     for (Property *p : props)
     {
-        if (!p) continue;
+        if (!p)
+            continue;
         p->setOwner(to->getUsername());
         to->addProperty(p);
         from->removeProperty(p);
     }
 
     // Pindahkan semua kartu kemampuan ke creditor
-    std::vector<SkillCard*> hand = from->getHand();
+    std::vector<SkillCard *> hand = from->getHand();
     for (SkillCard *c : hand)
     {
-        if (c) to->forceAddSkillCard(c);
+        if (c)
+            to->forceAddSkillCard(c);
     }
     while (from->getHandSize() > 0)
     {
@@ -454,17 +456,19 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     }
 
     // Salin daftar properti dulu agar removeProperty() tidak invalidate iterator
-    std::vector<Property*> props(from->getProperties().begin(),
+    std::vector<Property *> props(from->getProperties().begin(),
                                   from->getProperties().end());
 
     // Antrekan semua properti untuk dilelang satu per satu
     state.clearPendingAuctionQueue();
     for (Property *p : props)
     {
-        if (!p) continue;
+        if (!p)
+            continue;
         // Hancurkan bangunan jika ada (StreetProperty)
-        auto* sp = dynamic_cast<StreetProperty*>(p);
-        if (sp) sp->resetBuildings();
+        auto *sp = dynamic_cast<StreetProperty *>(p);
+        if (sp)
+            sp->resetBuildings();
 
         p->clearOwner();
         p->setStatus(PropertyStatus::BANK);
@@ -473,11 +477,12 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     }
 
     // Kembalikan semua kartu kemampuan ke deck
-    CardDeck<SkillCard>* skillDeck = state.getSkillDeck();
-    std::vector<SkillCard*> hand = from->getHand();
+    CardDeck<SkillCard> *skillDeck = state.getSkillDeck();
+    std::vector<SkillCard *> hand = from->getHand();
     for (SkillCard *c : hand)
     {
-        if (c && skillDeck) skillDeck->discard(c);
+        if (c && skillDeck)
+            skillDeck->discard(c);
     }
     while (from->getHandSize() > 0)
     {
@@ -493,7 +498,7 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
     state.removePlayer(from);
 
     // Mulai lelang properti pertama (jika ada)
-    Property* first = state.popPendingAuction();
+    Property *first = state.popPendingAuction();
     if (first)
     {
         startAuction(first, nullptr);
@@ -525,10 +530,13 @@ void GameMaster::sellPropertyToBank(Player *player, Property *prop)
     auto *sp = dynamic_cast<StreetProperty *>(prop);
     value = sp->calculateSellPrice();
 
-    if (sp) {
+    if (sp)
+    {
         value = sp->calculateSellPrice();
         sp->resetBuildings();
-    } else {
+    }
+    else
+    {
         value = prop->calculateSellPrice();
     }
 
@@ -574,23 +582,26 @@ void GameMaster::processNextCardPayment()
     {
         GameState::PendingPayment pay = state.popPendingPayment();
 
-        Player* debtor   = pay.debtor;
-        Player* creditor = pay.creditor;
-        int     amount   = pay.amount;
+        Player *debtor = pay.debtor;
+        Player *creditor = pay.creditor;
+        int amount = pay.amount;
 
-        if (!debtor) continue;
+        if (!debtor)
+            continue;
 
         // Skip pemain yang sudah bangkrut
-        if (debtor->getStatus() == PlayerStatus::BANKRUPT) continue;
+        if (debtor->getStatus() == PlayerStatus::BANKRUPT)
+            continue;
 
         if (debtor->getBalance() >= amount)
         {
             // Bayar langsung
             *debtor -= amount;
-            if (creditor) *creditor += amount;
+            if (creditor)
+                *creditor += amount;
             log(debtor->getUsername(), "CARD_PAYMENT",
                 "Bayar M" + std::to_string(amount) +
-                " ke " + (creditor ? creditor->getUsername() : "Bank"));
+                    " ke " + (creditor ? creditor->getUsername() : "Bank"));
         }
         else
         {
@@ -945,5 +956,6 @@ void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
             break;
         }
     }
+    player->markCardUsedThisTurn();
     gs.setHasUsedCard(true);
 }

@@ -153,9 +153,9 @@ int Player::getHandSize() const
     return skillCards.size();
 }
 
-void Player::setCardUsedThisTurn(bool used)
+void Player::markCardUsedThisTurn()
 {
-    cardUsedThisTurn = used;
+    cardUsedThisTurn = true;
 }
 
 bool Player::hasUsedCardThisTurn() const

@@ -24,7 +24,12 @@ void SkillCard::markUsed()
     used = true;
 }
 
-string SkillCard::getType()
+string SkillCard::getType() const
 {
     return type;
+}
+
+std::string SkillCard::successMessage() const
+{
+    return getType() + " berhasil digunakan.";
 }

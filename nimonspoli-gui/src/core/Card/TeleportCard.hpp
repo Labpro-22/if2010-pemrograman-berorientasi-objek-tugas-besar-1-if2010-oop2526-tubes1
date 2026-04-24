@@ -16,6 +16,7 @@ public:
     void execute(Player &p, GameState &gs) override;
     void setTargetPosition(int pos, GameState &gs);
     int getTargetPosition() const;
+    string successMessage() const override;
 };
 
 #endif

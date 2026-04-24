@@ -19,6 +19,7 @@ public:
     void decreaseDuration();
     int getDiscountPercent() const;
     void execute(Player &p, GameState &gs) override;
+    string successMessage() const override;
 };
 
 #endif

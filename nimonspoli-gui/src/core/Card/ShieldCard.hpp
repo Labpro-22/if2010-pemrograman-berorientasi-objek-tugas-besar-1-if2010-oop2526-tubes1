@@ -16,6 +16,7 @@ public:
     int getDuration() const;
     void decreaseDuration();
     void execute(Player &p, GameState &gs) override;
+    string successMessage() const override;
 };
 
 #endif

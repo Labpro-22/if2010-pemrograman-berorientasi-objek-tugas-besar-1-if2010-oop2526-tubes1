@@ -16,6 +16,11 @@ DemolitionCard::~DemolitionCard()
 {
 }
 
+void DemolitionCard::setTargetProperty(Property *target)
+{
+    targetProperty = target;
+}
+
 void DemolitionCard::execute(Player &p, GameState &gs)
 {
     vector<Player *> players = gs.getActivePlayers();
@@ -37,4 +42,9 @@ void DemolitionCard::execute(Player &p, GameState &gs)
         break;
     }
     markUsed();
+}
+
+string DemolitionCard::successMessage() const
+{
+    return "DemolitionCard digunakan. Pilih properti milik lawan yang ingin dihancurkan.";
 }

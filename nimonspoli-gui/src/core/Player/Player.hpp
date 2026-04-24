@@ -76,11 +76,10 @@ public:
     SkillCard *discardSkillCard(int index);
     const vector<SkillCard *> &getHand() const;
     int getHandSize() const;
-    void setCardUsedThisTurn(bool used);
+    void markCardUsedThisTurn();
     bool hasUsedCardThisTurn() const;
     string printSkillCards() const;
     void forceAddSkillCard(SkillCard *card);
-    SkillCard *removeSkillCardAt(int index);
 
     // JAIL
     void goToJail();

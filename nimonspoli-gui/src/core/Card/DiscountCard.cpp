@@ -31,3 +31,12 @@ void DiscountCard::execute(Player &p, GameState &gs)
 {
     p.setDiscount(discountPercent);
 }
+
+string DiscountCard::successMessage() const
+{
+    return "DiscountCard diaktifkan. Anda mendapat diskon " +
+           to_string(getDiscountPercent()) +
+           "% selama " +
+           to_string(getDuration()) +
+           " giliran.";
+}

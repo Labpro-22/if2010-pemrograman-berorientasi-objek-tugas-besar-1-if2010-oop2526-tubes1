@@ -163,6 +163,12 @@ void GameScreen::render(Window &window)
     drawJualBangunanDialog();
     drawSkillCardDialog();
     drawDropSkillCardDialog();
+
+    drawSkillTargetHint();
+    drawLassoTargetDialog();
+    drawDemolitionTargetDialog();
+
+    drawSkillCardResultDialog();
     drawBankruptcyDialog();
     drawAktaDialog();
     drawCetakPropertiDialog();
@@ -332,11 +338,21 @@ void GameScreen::handleInput()
     }
 
     // Tile click → popup
+    // Tile click → popup / Teleport target
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !isDragging)
     {
         int hit = tileAtPoint(mouse);
+
         if (hit >= 0)
         {
+            if (skillCardDialog.awaitingTeleportTile)
+            {
+                handleTeleportTargetClick(hit);
+                showPopup = false;
+                selectedTile = -1;
+                return;
+            }
+
             selectedTile = hit;
             showPopup = true;
         }

@@ -16,6 +16,11 @@ LassoCard::~LassoCard()
 {
 }
 
+void LassoCard::setTargetPlayer(Player *target)
+{
+    targetPlayer = target;
+}
+
 void LassoCard::execute(Player &p, GameState &gs)
 {
     int currPos = p.getPosition();
@@ -43,4 +48,9 @@ void LassoCard::execute(Player &p, GameState &gs)
         if (gm)
             gm->teleportPlayer(target, currPos);
     }
+}
+
+string LassoCard::successMessage() const
+{
+    return "LassoCard digunakan. Pilih pemain lawan yang ingin ditarik ke petak Anda.";
 }

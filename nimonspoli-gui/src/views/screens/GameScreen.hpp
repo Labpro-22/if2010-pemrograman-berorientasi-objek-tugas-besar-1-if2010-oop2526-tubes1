@@ -357,12 +357,56 @@ private:
     } skillCardDialog;
     void triggerSkillCardDialog();
     void drawSkillCardDialog();
+    void drawSkillCardResultDialog();
+
+    struct SkillCardResultDialogState
+    {
+        bool visible = false;
+        std::string title = "";
+        std::string message = "";
+    };
+    SkillCardResultDialogState skillCardResultDialog;
+
+    struct SkillTargetHintState
+    {
+        bool visible = false;
+        std::string message = "";
+    };
+
+    SkillTargetHintState skillTargetHint;
+    void drawSkillTargetHint();
+
+    struct LassoTargetDialogState
+    {
+        bool visible = false;
+        int selectedCardIdx = -1;
+        std::string errorMsg = "";
+    };
+
+    LassoTargetDialogState lassoTargetDialog;
+    void drawLassoTargetDialog();
+
+    struct DemolitionTargetDialogState
+    {
+        bool visible = false;
+        int selectedCardIdx = -1;
+        std::string errorMsg = "";
+    };
+
+    DemolitionTargetDialogState demolitionTargetDialog;
+    void drawDemolitionTargetDialog();
+
+    void handleTeleportTargetClick(int selectedTile);
+
     struct DropSkillCardDialogState
     {
         bool visible = false;
         int hoveredIdx = -1;
         std::string errorMsg = "";
     };
+    DropSkillCardDialogState dropSkillCardDialog;
+    void triggerDropSkillCardDialog();
+    void drawDropSkillCardDialog();
 
     // ── Dialog Bankruptcy (Likuidasi & Notifikasi) ───────────────────
     struct BankruptcyDialogState
@@ -391,10 +435,6 @@ private:
     } bankruptcyDialog;
     void triggerBankruptcyDialog();
     void drawBankruptcyDialog();
-
-    DropSkillCardDialogState dropSkillCardDialog;
-    void triggerDropSkillCardDialog();
-    void drawDropSkillCardDialog();
 
     // ── Private methods ──────────────────────────────────────────────────
     Color getGroupColor(const std::string &group);

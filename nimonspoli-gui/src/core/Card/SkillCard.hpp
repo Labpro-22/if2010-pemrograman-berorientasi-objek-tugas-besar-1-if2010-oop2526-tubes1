@@ -17,8 +17,9 @@ public:
     virtual ~SkillCard();
     bool isUsed() const;
     void markUsed();
-    string getType();
+    string getType() const;
     virtual void execute(Player &p, GameState &gs) = 0;
+    virtual string successMessage() const;
 };
 
 #endif

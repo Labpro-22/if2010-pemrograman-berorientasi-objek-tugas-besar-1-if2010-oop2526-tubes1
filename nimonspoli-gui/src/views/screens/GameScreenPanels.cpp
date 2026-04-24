@@ -171,8 +171,12 @@ void GameScreen::drawRightPanel()
 
         if (isRealMode())
         {
-            GamePhase phase = guiManager->getGameMaster()->getState().getPhase();
-            bool hasRolled = guiManager->getGameMaster()->getState().getHasRolled();
+            GameState &gs = guiManager->getGameMaster()->getState();
+
+            GamePhase phase = gs.getPhase();
+            bool hasRolled = gs.getHasRolled();
+            bool hasUsedCard = gs.getHasUsedCard();
+            Player *cur = gs.getCurrPlayer();
             switch (i)
             {
             case 0:
@@ -180,7 +184,12 @@ void GameScreen::drawRightPanel()
                 disabled = hasRolled || diceState.animating || phase != GamePhase::PLAYER_TURN;
                 break;
             case 2:
-                disabled = phase != GamePhase::PLAYER_TURN || hasRolled;
+                disabled =
+                    phase != GamePhase::PLAYER_TURN ||
+                    hasRolled ||
+                    hasUsedCard ||
+                    cur == nullptr ||
+                    cur->getHandSize() == 0;
                 break;
             case 3:
                 disabled = phase != GamePhase::PLAYER_TURN;

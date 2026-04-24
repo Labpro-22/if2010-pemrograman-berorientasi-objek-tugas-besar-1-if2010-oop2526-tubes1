@@ -27,3 +27,10 @@ void MoveCard::execute(Player &p, GameState &gs)
         gm->movePlayer(&p, steps);
     }
 }
+
+string MoveCard::successMessage() const
+{
+    return "MoveCard digunakan. Bidak Anda bergerak maju " +
+           to_string(getSteps()) +
+           " petak.";
+}
