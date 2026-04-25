@@ -19,7 +19,7 @@ using namespace std;
 // Konstruktor menginisialisasi state awal permainan
 GameEngine::GameEngine(Board *b, TransactionLogger *l)
     : board(b), saveLoadManager(nullptr), logger(l), skillDeck(nullptr),
-      currentTurnIdx(0), roundCount(0), diceRolled(false), turnEnded(false) {}
+      chanceDeck(nullptr), communityDeck(nullptr),  currentTurnIdx(0), roundCount(0), diceRolled(false), turnEnded(false) {}
 
 // Destruktor bertanggung jawab menghapus semua pointer Player yang di-alokasi
 GameEngine::~GameEngine() {
@@ -27,6 +27,35 @@ GameEngine::~GameEngine() {
         delete p;
     }
     players.clear();
+    delete chanceDeck;
+    delete communityDeck;
+    delete skillDeck;
+}
+
+void GameEngine::initDecks() {
+    
+    skillDeck = new CardDeck<SkillCard>();
+    for (int i = 0; i < 4; i++) skillDeck->addCard(new MoveCard());
+    for (int i = 0; i < 3; i++) skillDeck->addCard(new DiscountCard());
+    for (int i = 0; i < 2; i++) skillDeck->addCard(new ShieldCard());
+    for (int i = 0; i < 2; i++) skillDeck->addCard(new TeleportCard());
+    for (int i = 0; i < 2; i++) skillDeck->addCard(new LassoCard());
+    for (int i = 0; i < 2; i++) skillDeck->addCard(new DemolitionCard());
+    skillDeck->shuffle();
+
+    
+    chanceDeck = new CardDeck<ActionCard>();
+    chanceDeck->addCard(new ChanceCard(ChanceCardType::NEAREST_STATION));
+    chanceDeck->addCard(new ChanceCard(ChanceCardType::MOVE_BACK_3));
+    chanceDeck->addCard(new ChanceCard(ChanceCardType::GO_TO_JAIL));
+    chanceDeck->shuffle();
+
+    
+    communityDeck = new CardDeck<ActionCard>();
+    communityDeck->addCard(new CommunityChestCard(CommunityChestCardType::BIRTHDAY));
+    communityDeck->addCard(new CommunityChestCard(CommunityChestCardType::DOCTOR));
+    communityDeck->addCard(new CommunityChestCard(CommunityChestCardType::ELECTION));
+    communityDeck->shuffle();
 }
 
 void GameEngine::startNewGame(const std::vector<std::string> &playerNames) {
@@ -293,11 +322,24 @@ void GameEngine::executeTileAction() {
             }
             break;
         }
-        case EffectType::DRAW_CHANCE:
+        case EffectType::DRAW_CHANCE: {
+            if (!chanceDeck) break;
+            ActionCard* card = chanceDeck->draw();
+            std::cout << "\n[KESEMPATAN] " << activePlayer->getUsername()
+                    << " mengambil kartu Kesempatan!\n";
+            ActionCardEffect cardEffect = card->execute(*activePlayer, *this);
+            chanceDeck->discard(card);
+            handleActionCardEffect(*activePlayer, cardEffect);
+            break;
+        }
         case EffectType::DRAW_COMMUNITY: {
-            std::cout << "\n[KARTU] " << activePlayer->getUsername() << " mengambil kartu " 
-                      << (effect == EffectType::DRAW_CHANCE ? "Kesempatan (Chance)" : "Dana Umum (Community Chest)") << "!\n";
-            std::cout << "(Mekanisme penarikan kartu aksi akan disinkronkan sepenuhnya setelah Deck Kartu Action dibuat)\n";
+            if (!communityDeck) break;
+            ActionCard* card = communityDeck->draw();
+            std::cout << "\n[DANA UMUM] " << activePlayer->getUsername()
+                    << " mengambil kartu Dana Umum!\n";
+            ActionCardEffect cardEffect = card->execute(*activePlayer, *this);
+            communityDeck->discard(card);
+            handleActionCardEffect(*activePlayer, cardEffect);
             break;
         }
         case EffectType::FESTIVAL_TRIGGER: {
@@ -331,6 +373,219 @@ void GameEngine::executeTileAction() {
         }
     }
 }
+void GameEngine::handleActionCardEffect(Player& player, ActionCardEffect effect) {
+    switch (effect) {
+        case ActionCardEffect::CHANCE_NEAREST_STATION: {
+            int pos = player.getPosition();
+            for (int i = 1; i <= 40; i++) {
+                int checkIdx = (pos + i) % 40 + 1;
+                Tile* t = board->getTileAt(checkIdx);
+                RailroadTile* rr = dynamic_cast<RailroadTile*>(t);
+                if (rr) {
+                    player.move(i);
+                    std::cout << player.getUsername()
+                              << " maju ke stasiun terdekat: "
+                              << rr->getName() << ".\n";
+                    break;
+                }
+            }
+            break;
+        }
+
+        case ActionCardEffect::CHANCE_MOVE_BACK_3:
+            player.move(-3);
+            std::cout << player.getUsername() << " mundur 3 petak.\n";
+            break;
+
+        case ActionCardEffect::CHANCE_GO_TO_JAIL:
+            player.goToJail();
+            std::cout << player.getUsername() << " masuk penjara!\n";
+            break;
+
+        case ActionCardEffect::COMMUNITY_BIRTHDAY:
+            for (Player* p : players) {
+                if (p->getUsername() == player.getUsername()) continue;
+                if (p->getStatus() == PlayerStatus::BANKRUPT) continue;
+                try {
+                    *p -= 100;
+                    player += 100;
+                    std::cout << p->getUsername()
+                              << " membayar M100 hadiah ulang tahun ke "
+                              << player.getUsername() << ".\n";
+                } catch (NotEnoughMoneyException&) {
+                    handleBankruptcy(p, &player);
+                }
+            }
+            break;
+
+        case ActionCardEffect::COMMUNITY_DOCTOR:
+            try {
+                player -= 700;
+                std::cout << player.getUsername()
+                          << " membayar M700 biaya dokter ke Bank."
+                          << " Sisa: Rp" << player.getMoney() << ".\n";
+            } catch (NotEnoughMoneyException&) {
+                std::cout << "[BANGKRUT] Tidak bisa membayar biaya dokter!\n";
+                handleBankruptcy(&player, nullptr);
+            }
+            break;
+
+        case ActionCardEffect::COMMUNITY_ELECTION:
+            for (Player* p : players) {
+                if (p->getUsername() == player.getUsername()) continue;
+                if (p->getStatus() == PlayerStatus::BANKRUPT) continue;
+                try {
+                    player -= 200;
+                    *p += 200;
+                    std::cout << player.getUsername()
+                              << " membayar M200 sumbangan pemilu ke "
+                              << p->getUsername() << ".\n";
+                } catch (NotEnoughMoneyException&) {
+                    std::cout << "[BANGKRUT] Tidak bisa membayar sumbangan pemilu!\n";
+                    handleBankruptcy(&player, p);
+                    return;
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+}
+
+void GameEngine::useSkillCard(int cardIdx) {
+    Player* activePlayer = players[currentTurnIdx];
+    auto cards = activePlayer->getHandCards();
+
+    if (cardIdx < 0 || cardIdx >= (int)cards.size()) {
+        std::cout << "Index kartu tidak valid.\n";
+        return;
+    }
+
+    if (activePlayer->getHasUsedCardThisTurn()) {
+        std::cout << "Kamu sudah menggunakan kartu pada giliran ini!\n";
+        return;
+    }
+
+    if (diceRolled) {
+        std::cout << "Kartu kemampuan hanya bisa digunakan SEBELUM melempar dadu.\n";
+        return;
+    }
+
+    SkillCard* card = cards[cardIdx];
+    SkillCardEffect effect = card->use(*activePlayer, *this);
+    activePlayer->removeCard(cardIdx);
+    activePlayer->setHasUsedCardThisTurn(true);
+
+    std::cout << "Anda menggunakan kartu: " << card->getCardName() << "!\n";
+    if (logger) logger->logEvent(roundCount, activePlayer->getUsername(),
+                                 LogActionType::CARD, card->getCardName());
+
+    switch (effect) {
+        case SkillCardEffect::MOVE: {
+            MoveCard* mc = dynamic_cast<MoveCard*>(card);
+            if (mc) {
+                activePlayer->move(mc->getSteps());
+                std::cout << activePlayer->getUsername()
+                          << " maju " << mc->getSteps() << " petak.\n";
+            }
+            break;
+        }
+
+        case SkillCardEffect::DISCOUNT: {
+            DiscountCard* dc = dynamic_cast<DiscountCard*>(card);
+            if (dc) {
+                activePlayer->setActiveDiscountPercent(dc->getDiscountPercent());
+                std::cout << "Diskon " << dc->getDiscountPercent()
+                          << "% aktif untuk giliran ini.\n";
+            }
+            break;
+        }
+
+        case SkillCardEffect::SHIELD:
+            activePlayer->setShieldActive(true);
+            std::cout << "Shield aktif! Kebal tagihan giliran ini.\n";
+            break;
+
+        case SkillCardEffect::TELEPORT: {
+            std::cout << "Masukkan kode petak tujuan: ";
+            std::string kode;
+            std::cin >> kode;
+            Tile* target = board->getTileByKode(kode);
+            if (!target) {
+                std::cout << "Petak tidak ditemukan!\n";
+                break;
+            }
+            int dest  = target->getIndex() - 1;
+            int curr  = activePlayer->getPosition();
+            int steps = (dest - curr + 40) % 40;
+            activePlayer->move(steps);
+            std::cout << activePlayer->getUsername()
+                      << " teleport ke " << target->getName() << ".\n";
+            break;
+        }
+
+        case SkillCardEffect::LASSO: {
+            int myPos = activePlayer->getPosition();
+            Player* target = nullptr;
+            int minDist = 40;
+            for (Player* p : players) {
+                if (p->getUsername() == activePlayer->getUsername()) continue;
+                if (p->getStatus() == PlayerStatus::BANKRUPT) continue;
+                int dist = (p->getPosition() - myPos + 40) % 40;
+                if (dist > 0 && dist < minDist) {
+                    minDist = dist;
+                    target = p;
+                }
+            }
+            if (!target) {
+                std::cout << "Tidak ada lawan di depan.\n";
+                break;
+            }
+            int pullSteps = (myPos - target->getPosition() + 40) % 40;
+            target->move(pullSteps);
+            std::cout << target->getUsername() << " ditarik ke posisi "
+                      << activePlayer->getUsername() << ".\n";
+            break;
+        }
+
+        case SkillCardEffect::DEMOLITION: {
+            std::vector<StreetTile*> targets;
+            for (Player* p : players) {
+                if (p->getUsername() == activePlayer->getUsername()) continue;
+                if (p->getStatus() == PlayerStatus::BANKRUPT) continue;
+                for (PropertyTile* prop : p->getOwnedProperties()) {
+                    StreetTile* st = dynamic_cast<StreetTile*>(prop);
+                    if (st && st->hasBuildings()) targets.push_back(st);
+                }
+            }
+            if (targets.empty()) {
+                std::cout << "Tidak ada properti lawan yang memiliki bangunan.\n";
+                break;
+            }
+            std::cout << "Pilih properti untuk dihancurkan:\n";
+            for (int i = 0; i < (int)targets.size(); i++) {
+                std::cout << i+1 << ". " << targets[i]->getName()
+                          << " [" << targets[i]->getColorGroup() << "]\n";
+            }
+            int choice;
+            std::cin >> choice;
+            if (choice >= 1 && choice <= (int)targets.size()) {
+                targets[choice-1]->demolish();
+                std::cout << targets[choice-1]->getName()
+                          << " bangunannya berhasil dihancurkan!\n";
+            }
+            break;
+        }
+
+        default:
+            break;
+    }
+
+    // Kembalikan kartu ke discard pile skill deck
+    if (skillDeck) skillDeck->discard(card);
+}
+
 
 void GameEngine::handleBankruptcy(Player* bankruptPlayer, Player* creditor) {
     bankruptPlayer->declareBankruptcy();
@@ -446,19 +701,7 @@ void GameEngine::unmortgageProperty(const std::string& propertyCode) {
     }
 }
 
-void GameEngine::useSkillCard(int cardIdx) {
-    Player* activePlayer = players[currentTurnIdx];
-    auto cards = activePlayer->getHandCards();
-    if (cardIdx < 0 || cardIdx >= (int)cards.size()) {
-        std::cout << "Index kartu tidak valid.\n";
-        return;
-    }
-    
-    SkillCard* card = cards[cardIdx];
-    card->use(*activePlayer, *this); // Efek kartu diaplikasikan
-    activePlayer->removeCard(cardIdx);
-    std::cout << "Anda menggunakan kartu: " << card->getCardName() << "!\n";
-}
+
 
 void GameEngine::endTurn() {
     if (!diceRolled) {

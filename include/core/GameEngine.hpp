@@ -22,16 +22,23 @@ private:
     SaveLoadManager* saveLoadManager;
     TransactionLogger* logger;
     CardDeck<SkillCard>* skillDeck; // Sesuaikan dengan tipe dari Miguel
+    CardDeck<ActionCard>* chanceDeck;
+    CardDeck<ActionCard>* communityDeck;    
     
     int currentTurnIdx; // Indeks pemain aktif (0-3)
     int roundCount;     // Jumlah putaran yang sudah berjalan
     bool diceRolled;
     bool turnEnded;
+   
 
     // Utilitas Internal
     void checkWinCondition();
     void nextTurn();
     void handleBankruptcy(Player* bankruptPlayer, Player* creditor = nullptr);
+    void runAuction(PropertyTile* prop);
+    void handleActionCardEffect(Player& player, ActionCardEffect effect);
+    void initDecks();
+
 
 public:
     GameEngine(Board *board, TransactionLogger *logger);
@@ -59,6 +66,7 @@ public:
     
     bool hasDiceRolled() const { return diceRolled; }
     bool isTurnEnded() const { return turnEnded; }
+    const std::vector<SkillCard*>& getSkillDeckCards()    const;
 };
 
 #endif
