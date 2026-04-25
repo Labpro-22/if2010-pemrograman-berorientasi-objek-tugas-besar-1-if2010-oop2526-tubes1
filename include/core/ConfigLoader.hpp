@@ -3,7 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
-#include "Tile.hpp"
+#include "../models/Tile.hpp"
 using namespace std;
 
 class ConfigLoader {
