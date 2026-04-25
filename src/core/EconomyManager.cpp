@@ -107,5 +107,18 @@ bool EconomyManager::isBankruptcyInevitable(Player& player, int debtAmount) cons
     }
     return false;
 }
-void EconomyManager::executeBankruptcy(Player& bankruptPlayer, std::shared_ptr<Player> creditor){
+void EconomyManager::executeBankruptcy(std::shared_ptr<Player>  bankruptPlayer, std::shared_ptr<Player> creditor,int amount){
+    if(isBankruptcyInevitable(*bankruptPlayer,amount)){
+        bankruptPlayer->declareBankruptcy();
+    }
+    // printopsi(bankruptPlayer)
+    PropertyTile &dijual;
+    //dijual=pilihopsi(bankruptPlayer)
+    if (condition) //jual=true, mortgage=false;
+    {
+        bankruptPlayer->sellProperty(dijual);
+    } else{
+        GameManager::property_manager.get()->tryMortgage(bankruptPlayer,&dijual);
+    }
+    bankruptPlayer->transferTo(*creditor,amount);
 }

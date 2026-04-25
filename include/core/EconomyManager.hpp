@@ -40,6 +40,5 @@ public:
     // Proses ketika pemain tidak bisa membayar kewajiban
 
     bool isBankruptcyInevitable(Player& player, int debtAmount) const;
-    void executeBankruptcy(Player& bankruptPlayer, 
-                           std::shared_ptr<Player> creditor);
+    void executeBankruptcy(std::shared_ptr<Player>  bankruptPlayer, std::shared_ptr<Player> creditor,int amount);
 };

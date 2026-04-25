@@ -46,7 +46,7 @@ public:
     int getTotalAssetValue();
     bool canPay(int amount);
     void buyProperty(PropertyTile &property);
-    void sellProperty(PropertyTile &property, Player& other);
+    void sellProperty(PropertyTile &property);
     int liquidateAsset(int required);
     void declareBankruptcy();
 

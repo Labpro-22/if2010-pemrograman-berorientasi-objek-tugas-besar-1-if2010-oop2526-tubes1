@@ -78,10 +78,10 @@ void Player::buyProperty(PropertyTile &property){
     this->addProperty(&property);
     property.setPropertyOwner(std::make_shared<Player>(this));
 }
-void Player::sellProperty(PropertyTile &property, Player& other){
+void Player::sellProperty(PropertyTile &property){
     this->removeProperty(&property);
     *this+=property.getBuyPrice();
-    other.buyProperty(property);
+    property.setPropertyStatus(PropertyStatus::BANK);
 }
 int Player::liquidateAsset(int required){
     std::vector<PropertyTile*> properties_to_sell = owned_properties;
