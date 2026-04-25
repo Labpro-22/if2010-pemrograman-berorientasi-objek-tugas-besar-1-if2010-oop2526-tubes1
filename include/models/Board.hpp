@@ -23,6 +23,7 @@ public:
     int getTotalTiles() const;
     Tile* getTileAt(int index);
     Tile* getTileByKode(const string& kode);
+    vector<Tile*> getTileByColorGroup(const string& colorGroup);
     int getJailPosition() const;
 
     void printBoardStatus();
