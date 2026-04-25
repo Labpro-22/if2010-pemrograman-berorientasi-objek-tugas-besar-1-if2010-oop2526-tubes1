@@ -51,8 +51,9 @@ class GameState
 public:
     // ── Tipe publik ──────────────────────────────
     // Antrian pembayaran multi-pemain (ElectionCard / BirthdayCard)
-    struct PendingPayment
+    class PendingPayment
     {
+        public:
         Player *debtor;   // yang harus bayar
         Player *creditor; // yang menerima (nullptr = Bank)
         int amount;

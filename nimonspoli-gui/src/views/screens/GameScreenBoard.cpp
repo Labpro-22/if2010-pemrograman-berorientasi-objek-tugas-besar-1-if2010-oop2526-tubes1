@@ -498,7 +498,11 @@ void GameScreen::drawPopup()
     }
 
     float btnY = py+ph-50, btnW = pw/3.f-8;
-    struct PBtn { const char* lbl; Color c; };
+    class PBtn{
+        public:
+            const char* lbl;
+            Color c;
+    };
     PBtn pbts[] = {{"Tutup",{80,80,90,255}},{"Gadai",{180,80,60,255}},{"Bangun",{60,140,80,255}}};
     for (int i = 0; i < 3; i++) {
         Rectangle b = {px+6+i*(btnW+4),btnY,btnW,36};

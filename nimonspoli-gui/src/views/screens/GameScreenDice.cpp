@@ -66,7 +66,10 @@ void GameScreen::drawDiceArea()
             return;
         }
 
-        struct Dot { float nx, ny; };
+        class Dot {
+        public:
+            float nx, ny;
+        };
         static const Dot dots[6][6] = {
             {{.5f,.5f}},
             {{.25f,.25f},{.75f,.75f}},

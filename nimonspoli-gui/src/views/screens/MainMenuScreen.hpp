@@ -8,13 +8,14 @@
 #include <array>
 
 // ─── Data yang dikumpulkan dari main menu ────────────────────────────────────
-struct GameSetup {
-    int playerCount;                    // 2-4
-    std::array<std::string, 4> names;   // username tiap slot
-    std::array<bool, 4>        isBot;   // true = COM
-    COMDifficulty              botDifficulty; // difficulty global untuk semua COM
-    std::string saveFile;               // kosong = new game, isi = load game
-    bool isLoadGame;
+class GameSetup{
+    public:
+        int playerCount;
+        std::array<std::string, 4> names;   // username tiap slot
+        std::array<bool, 4>        isBot;   // true = COM
+        COMDifficulty              botDifficulty; // difficulty global untuk semua COM
+        std::string saveFile;               // kosong = new game, isi = load game
+        bool isLoadGame;
 };
 
 // ─── MainMenuScreen ──────────────────────────────────────────────────────────

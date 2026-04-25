@@ -5,33 +5,39 @@
 #include <fstream>
 #include <sstream>
 
-struct PropertyData {
+class PropertyData {
+public:
     int    id;
     std::string code, name, type, color;
     double price, mortgage, upgHouse, upgHotel;
     std::vector<double> rentLevels; // index 0=L0, 1=L1, ... 5=L5
 };
 
-struct ActionData{
+class ActionData {
+public:
     int id;
     std::string code, name, type, color;
 };
 
-struct TaxConfig {
+class TaxConfig {
+public:
     double pphFlat       = 150;
     double pphPercentage = 10;
     double pbmFlat       = 200;
 };
 
-struct SpecialConfig {
+class SpecialConfig {
+public:
     int goSalary = 200;
     int jailFine = 50;
 };
 
-struct MiscConfig {
-    int maxTurn       = 50;
+class MiscConfig {
+public:
+    int maxTurn        = 50;
     int initialBalance = 1000;
 };
+
 class ConfigLoader {
 public:
     explicit ConfigLoader(std::string basePath);
@@ -43,9 +49,9 @@ public:
     SpecialConfig               loadSpecial();       // special.txt
     MiscConfig                  loadMisc();          // misc.txt
     std::vector<ActionData>     loadActions();
+
 private:
     std::string basePath;
     std::ifstream openFile(const std::string& filename);
-
     std::vector<std::string> parseLine(const std::string& line);
 };

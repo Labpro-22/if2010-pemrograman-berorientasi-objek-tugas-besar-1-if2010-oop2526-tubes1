@@ -7,13 +7,14 @@
 
 // ─── Data satu pemain untuk rekap ────────────────────────────────────────────
 // Diisi dari GameState saat game selesai
-struct PlayerResult {
+class PlayerResult {
+public:
     std::string username;
     int         money;          // uang akhir
     int         propertyCount;  // jumlah properti dimiliki
     int         cardCount;      // jumlah kartu di tangan
     bool        bankrupt;       // apakah sudah bangkrut
-    int         rank;           // 1 = pemenang, dst. Bisa lebih dari 1 yang rank 1 kalau seri
+    int         rank;           // 1 = pemenang, dst.
     bool        isWinner;       // true kalau rank 1
     Color       color;          // warna player
 };

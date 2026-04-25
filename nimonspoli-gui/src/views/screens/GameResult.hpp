@@ -5,7 +5,8 @@
 #include <string>
 #include "../../../lib/raylib/include/raylib.h"
 
-struct PlayerResult {
+class PlayerResult {
+    public:
     std::string username;
     int         money;
     int         propertyCount;

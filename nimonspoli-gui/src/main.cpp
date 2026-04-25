@@ -35,6 +35,16 @@
 #include "core/Card/DemolitionCard.hpp"
 #include "core/Card/DeckFactory.hpp"
 
+class PlayerInfo
+{
+public:
+    std::string name;
+    bool isBot;
+    COMDifficulty diff;
+};
+std::vector<PlayerInfo> infos;
+
+
 int main()
 {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
@@ -119,12 +129,6 @@ int main()
 
             if (setup.isLoadGame)
             {
-                struct PlayerInfo
-                {
-                    std::string name;
-                    bool isBot;
-                    COMDifficulty diff;
-                };
                 std::vector<PlayerInfo> infos;
                 {
                     std::ifstream peek(setup.saveFile);

@@ -235,7 +235,12 @@ void MainMenuScreen::drawLeftPanel() {
     DrawText("DIFFICULTY COM", (int)px, (int)sy, 14, {85,85,150,255});
     sy += 22;
 
-    struct DiffBtn { const char* label; COMDifficulty diff; Color col; };
+    class DiffBtn {
+    public:
+        const char* label;
+        COMDifficulty diff;
+        Color col;
+    };
     DiffBtn diffs[] = {
         {"EASY",   COMDifficulty::EASY,   {60,180,80,255}},
         {"MEDIUM", COMDifficulty::MEDIUM, {220,160,40,255}},
