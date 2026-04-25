@@ -20,7 +20,17 @@ BangunCommand::BangunCommand(Player *player,
                              Bank *bank,
                              TransactionLogger *logger,
                              int turn)
-    : player(player), bank(bank), logger(logger), turn(turn) {}
+    : player(player), bank(bank), logger(logger), turn(turn),
+      guiTargetProp(nullptr), guiIsHotel(false) {}
+
+// Constructor GUI: langsung bangun properti tertentu tanpa prompt CLI
+BangunCommand::BangunCommand(Player *player,
+                             StreetProperty *targetProp,
+                             bool isHotel,
+                             TransactionLogger *logger,
+                             int turn)
+    : player(player), bank(nullptr), logger(logger), turn(turn),
+      guiTargetProp(targetProp), guiIsHotel(isHotel) {}
 
 // ─────────────────────────────────────────────
 //  execute  — entry point
@@ -30,6 +40,20 @@ void BangunCommand::execute(GameMaster &gm)
 {
     if (!player)
         return;
+
+    // ── GUI mode: langsung bangun/upgrade properti yang sudah dipilih ──
+    if (guiTargetProp != nullptr)
+    {
+        if (guiIsHotel)
+            upgradeToHotel(guiTargetProp,
+                           guiTargetProp->getName() + " (" + guiTargetProp->getCode() + ")",
+                           gm);
+        else
+            buildHouse(guiTargetProp,
+                       guiTargetProp->getName() + " (" + guiTargetProp->getCode() + ")",
+                       gm);
+        return;
+    }
 
     // 1. Kumpulkan color group yang eligible
     auto groups = collectEligibleGroups(gm);
@@ -414,16 +438,8 @@ void BangunCommand::upgradeToHotel(StreetProperty *prop,
 {
     int cost = prop->getHotelUpgCost();
 
-    std::cout << "Upgrade ke hotel? Biaya: M" << cost << " (y/n): ";
-    char confirm;
-    std::cin >> confirm;
-    std::cin.ignore();
-
-    if (confirm != 'y' && confirm != 'Y')
-    {
-        std::cout << "Upgrade dibatalkan.\n";
-        return;
-    }
+    // Dalam mode GUI, konfirmasi sudah dilakukan di BangunDialog sebelum command ini dipanggil.
+    // Dalam mode CLI, upgrade langsung dieksekusi tanpa prompt (pemain sudah memilih properti ini).
 
     if (!player->canAfford(cost))
     {

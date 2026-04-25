@@ -3,6 +3,7 @@
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
 #include "../../core/Property/StreetProperty.hpp"
+#include "../../core/Commands/JualBangunanCommand.hpp"
 
 void GameScreen::triggerJualBangunanDialog() {
     jualBangunanDialog.visible = true;
@@ -71,7 +72,12 @@ void GameScreen::drawJualBangunanDialog() {
         
         if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             if (isRealMode()) {
-                guiManager->getGameMaster()->handleJualBangunan(sp);
+                GameMaster* gm = guiManager->getGameMaster();
+                GameState&  gs = gm->getState();
+                Player* cur    = gs.getCurrPlayer();
+                if (cur)
+                    guiManager->pushCommand(
+                        new JualBangunanCommand(cur, sp, gs.getCurrTurn()));
             }
             jualBangunanDialog.visible = false;
         }

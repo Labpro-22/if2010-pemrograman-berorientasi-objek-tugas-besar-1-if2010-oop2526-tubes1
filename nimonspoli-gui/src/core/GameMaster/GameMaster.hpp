@@ -30,6 +30,7 @@ private:
     int findJailIndex() const;    // indeks petak penjara di Board
     void distributeSkillCards();  // bagikan 1 kartu ke tiap pemain awal giliran
     void tickFestivalDurations(); // kurangi durasi festival semua properti pemain aktif
+    void tickDiscountDurations();
     void checkWinCondition();     // evaluasi kondisi menang, set GAME_OVER jika perlu
 
 public:

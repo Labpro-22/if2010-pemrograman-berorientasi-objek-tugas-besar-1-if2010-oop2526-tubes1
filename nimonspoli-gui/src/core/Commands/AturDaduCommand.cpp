@@ -78,6 +78,12 @@ void AturDaduCommand::execute(GameMaster& gm) {
     if (currentPhase != GamePhase::AWAITING_BUY &&
         currentPhase != GamePhase::AUCTION      &&
         currentPhase != GamePhase::BANKRUPTCY   &&
+        currentPhase != GamePhase::AWAITING_FESTIVAL &&
+        currentPhase != GamePhase::AWAITING_TAX &&
+        currentPhase != GamePhase::AWAITING_RENT &&
+        currentPhase != GamePhase::AWAITING_PBM &&
+        currentPhase != GamePhase::SHOW_CARD &&
+        currentPhase != GamePhase::AWAITING_JAIL &&
         currentPhase != GamePhase::GAME_OVER) {
         gameMaster.getState().setPhase(GamePhase::PLAYER_TURN);
     }

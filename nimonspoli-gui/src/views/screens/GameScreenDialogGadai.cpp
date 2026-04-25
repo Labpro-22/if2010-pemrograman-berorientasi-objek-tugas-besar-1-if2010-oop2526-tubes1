@@ -3,6 +3,7 @@
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
 #include "../../core/Property/StreetProperty.hpp"
+#include "../../core/Commands/GadaiCommand.hpp"
 
 void GameScreen::triggerGadaiDialog() {
     gadaiDialog.visible = true;
@@ -71,7 +72,13 @@ void GameScreen::drawGadaiDialog() {
         
         if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             if (isRealMode()) {
-                guiManager->getGameMaster()->handleGadai(p);
+                GameMaster* gm = guiManager->getGameMaster();
+                GameState&  gs = gm->getState();
+                Player* cur    = gs.getCurrPlayer();
+                if (cur)
+                    // canGadai sudah terfilter di trigger (tidak ada bangunan)
+                    // playerConfirmedSell = true karena sudah pasti tidak ada bangunan
+                    guiManager->pushCommand(new GadaiCommand(cur, p, true));
             }
             gadaiDialog.visible = false;
         }

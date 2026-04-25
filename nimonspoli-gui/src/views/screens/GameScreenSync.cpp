@@ -7,21 +7,31 @@
 #include "../../core/Property/UtilityProperty.hpp"
 #include "../../core/Player/Player.hpp"
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  syncFromGameMaster()
-// ─────────────────────────────────────────────────────────────────────────────
 void GameScreen::syncFromGameMaster()
 {
     if (!isRealMode())
         return;
 
     GameMaster *gm = guiManager->getGameMaster();
-    const GameState &gs = gm->getState();
+    GameState &gs = gm->getState(); // non-const agar bisa setPhase
     Board *board = gs.getBoard();
 
     gameState.currentTurn = gs.getCurrTurn();
     gameState.maxTurn = gs.getMaxTurn();
     gameState.activePlayerIdx = gs.getCurrPlayerIdx();
+
+    // ── Fix bug 3: cek win condition setiap frame ─────────────────────────
+    // isMaxTurnReached() = currTurn > maxTurn (maxTurn >= 1)
+    if (gs.getPhase() != GamePhase::GAME_OVER)
+    {
+        if (gs.isMaxTurnReached() || gs.countActivePlayers() <= 1)
+            gs.setPhase(GamePhase::GAME_OVER);
+    }
+    if (gs.getPhase() == GamePhase::GAME_OVER)
+    {
+        gameOver = true;
+        return;
+    }
 
     // ── Sync Players ──────────────────────────────────────────────────────
     const auto &realPlayers = gs.getPlayers();
@@ -30,7 +40,7 @@ void GameScreen::syncFromGameMaster()
         playerVisuals.resize(realPlayers.size());
         for (int i = 0; i < (int)realPlayers.size(); i++)
         {
-            playerVisuals[i].currentTileIdx = (float)(realPlayers[i]->getPosition());
+            playerVisuals[i].currentTileIdx = (float)realPlayers[i]->getPosition();
             playerVisuals[i].targetTileIdx = playerVisuals[i].currentTileIdx;
         }
     }
@@ -51,7 +61,6 @@ void GameScreen::syncFromGameMaster()
         mp.status = (p->getStatus() == PlayerStatus::JAILED)     ? "JAILED"
                     : (p->getStatus() == PlayerStatus::BANKRUPT) ? "BANKRUPT"
                                                                  : "ACTIVE";
-
         if (realPos != (int)playerVisuals[i].targetTileIdx)
             playerVisuals[i].targetTileIdx = (float)realPos;
     }
@@ -64,17 +73,14 @@ void GameScreen::syncFromGameMaster()
             Tile *tile = board->getTile(i);
             if (!tile)
                 continue;
-
             PropertyTile *pt = dynamic_cast<PropertyTile *>(tile);
             if (!pt)
                 continue;
-
             Property *prop = pt->getProperty();
             if (!prop)
                 continue;
 
             MockProperty &mp = gameState.properties[i];
-
             mp.name = prop->getName();
             mp.colorGroup = prop->getColorGroup();
 
@@ -104,23 +110,61 @@ void GameScreen::syncFromGameMaster()
             }
             else
             {
-                if (dynamic_cast<RailroadProperty *>(prop))
-                    mp.type = "RAILROAD";
-                else if (dynamic_cast<UtilityProperty *>(prop))
-                    mp.type = "UTILITY";
-                else
-                    mp.type = "ACTION";
-
+                mp.type = dynamic_cast<RailroadProperty *>(prop)  ? "RAILROAD"
+                          : dynamic_cast<UtilityProperty *>(prop) ? "UTILITY"
+                                                                  : "ACTION";
                 mp.buildings = 0;
                 mp.festivalMult = 1;
                 mp.festivalDur = 0;
             }
         }
     }
+
+    // ── Trigger Dialogs berdasarkan phase (dipanggil setiap frame) ────────
+    GamePhase phase = gs.getPhase();
+    Player *currP = gs.getCurrPlayer();
+
+    if (phase == GamePhase::AWAITING_BUY && !buyDialog.visible && currP)
+        triggerBuyDialog(currP->getPosition());
+
+    if (phase == GamePhase::AWAITING_TAX && !taxDialog.visible)
+        triggerTaxDialog();
+
+    if (phase == GamePhase::AWAITING_PBM && !pbmDialog.visible)
+        triggerPbmDialog();
+
+    if (phase == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
+        triggerFestivalDialog();
+
+    if (phase == GamePhase::AWAITING_RENT && !sewaDialog.visible)
+        triggerSewaDialog();
+
+    if (phase == GamePhase::SHOW_CARD && !cardDialog.visible)
+        triggerCardDialog();
+
+    if (phase == GamePhase::AUCTION && !auctionDialog.visible)
+        triggerAuctionDialog();
+
+    if (phase == GamePhase::AWAITING_JAIL && !jailDialog.visible)
+        triggerJailDialog();
+
+    if (phase == GamePhase::BANKRUPTCY && !bankruptcyDialog.visible && !bankruptcyDialog.notifVisible)
+        triggerBankruptcyDialog();
+
+    if (phase == GamePhase::AWAITING_DROP_SKILL_CARD && !dropSkillCardDialog.visible)
+        triggerDropSkillCardDialog();
+
+    // Lanjut lelang berikutnya jika antrian masih ada
+    if (phase == GamePhase::PLAYER_TURN && !gs.getPendingAuctionQueue().empty() && !auctionDialog.visible)
+    {
+        Property *next = gs.popPendingAuction();
+        if (next)
+            gm->startAuction(next, nullptr);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  syncDiceResult()
+//  syncDiceResult() — hanya animasi dadu, tidak ada trigger dialog
 // ─────────────────────────────────────────────────────────────────────────────
 void GameScreen::syncDiceResult()
 {
@@ -146,35 +190,4 @@ void GameScreen::syncDiceResult()
         diceState.animTimer = 0.f;
     }
     diceState.hasRolled = gm->getState().getHasRolled();
-
-    // ── Trigger Dialogs ────────────────────────────────────────────────────
-    const GameState &gs = gm->getState();
-    if (gs.getPhase() == GamePhase::AWAITING_BUY && !buyDialog.visible)
-        triggerBuyDialog(gs.getCurrPlayer()->getPosition());
-    if (gs.getPhase() == GamePhase::AWAITING_TAX && !taxDialog.visible)
-        triggerTaxDialog();
-    if (gs.getPhase() == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
-        triggerFestivalDialog();
-    if (gs.getPhase() == GamePhase::SHOW_CARD && !cardDialog.visible)
-        triggerCardDialog();
-    if (gs.getPhase() == GamePhase::AUCTION && !auctionDialog.visible)
-        triggerAuctionDialog();
-    if (gs.getPhase() == GamePhase::AWAITING_JAIL && !jailDialog.visible)
-        triggerJailDialog();
-    // Fase BANKRUPTCY → tampilkan dialog likuidasi
-    if (gs.getPhase() == GamePhase::BANKRUPTCY && !bankruptcyDialog.visible && !bankruptcyDialog.notifVisible)
-    {
-        triggerBankruptcyDialog();
-    }
-
-    // Setelah lelang selesai (properti bangkrut ke Bank), mulai lelang berikutnya
-    // jika masih ada antrian
-    if (gs.getPhase() == GamePhase::PLAYER_TURN && !gs.getPendingAuctionQueue().empty() && !auctionDialog.visible)
-    {
-        Property *next = gm->getState().popPendingAuction();
-        if (next)
-            gm->startAuction(next, nullptr);
-    }
-    if (gs.getPhase() == GamePhase::AWAITING_DROP_SKILL_CARD && !dropSkillCardDialog.visible)
-        triggerDropSkillCardDialog();
 }

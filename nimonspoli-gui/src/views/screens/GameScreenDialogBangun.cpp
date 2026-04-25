@@ -3,6 +3,7 @@
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
 #include "../../core/Property/StreetProperty.hpp"
+#include "../../core/Commands/BangunCommand.hpp"
 
 void GameScreen::triggerBangunDialog() {
     bangunDialog.visible = true;
@@ -106,7 +107,19 @@ void GameScreen::drawBangunDialog() {
             
             if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && !sp->gethasHotel()) {
                 if (isRealMode()) {
-                    guiManager->getGameMaster()->handleBangun(sp);
+                    GameMaster* gm = guiManager->getGameMaster();
+                    GameState&  gs = gm->getState();
+                    Player* cur    = gs.getCurrPlayer();
+                    if (cur) {
+                        // Cek apakah siap upgrade hotel (semua 4 rumah)
+                        auto& groupEntries = bangunDialog.groups[bangunDialog.selectedGroupIdx].second;
+                        bool allFour = true;
+                        for (auto* ep : groupEntries)
+                            if (!ep->gethasHotel() && ep->getBuildingCount() < 4) { allFour = false; break; }
+                        bool isHotel = allFour && sp->getBuildingCount() == 4;
+                        guiManager->pushCommand(
+                            new BangunCommand(cur, sp, isHotel, gs.getLogger(), gs.getCurrTurn()));
+                    }
                 }
                 bangunDialog.visible = false;
             }

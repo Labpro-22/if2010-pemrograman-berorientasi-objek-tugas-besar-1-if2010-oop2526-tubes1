@@ -187,7 +187,7 @@ private:
         bool canAfford = true;
     } buyDialog;
 
-    // ── Tax Dialog ────────────────────────────────────────────────────────
+    // ── Tax Dialog (PPH — user pilih flat vs persen) ──────────────────────
     struct TaxDialogState
     {
         bool visible = false;
@@ -198,6 +198,15 @@ private:
         bool canAffordPct = true;
         int taxAmtPct = 0;
     } taxDialog;
+
+    // ── PBM Dialog (info saja — sudah dieksekusi, user klik OK) ──────────
+    struct PbmDialogState
+    {
+        bool visible = false;
+        int amount = 0;        // jumlah PBM yang sudah dibayar
+        int balanceBefore = 0; // saldo sebelum bayar (untuk display)
+        int balanceAfter = 0;  // saldo setelah bayar
+    } pbmDialog;
 
     // ── Festival Dialog ───────────────────────────────────────────────────
     struct FestivalDialogState
@@ -274,7 +283,6 @@ private:
     {
         bool visible = false;
         float scrollY = 0.f;
-        // list PropertyTile* yang bisa digadaikan
         struct Entry
         {
             Property *prop;
@@ -307,9 +315,7 @@ private:
     {
         bool visible = false;
         float scrollY = 0.f;
-        // Group terpilih: -1 = belum pilih group
         int selectedGroupIdx = -1;
-        // Map: colorGroup → list StreetProperty*
         std::vector<std::pair<std::string, std::vector<StreetProperty *>>> groups;
         int hoveredIdx = -1;
     } bangunDialog;
@@ -338,7 +344,7 @@ private:
         bool visible = false;
         std::string input1 = "1";
         std::string input2 = "1";
-        int focusField = 0; // 0=none, 1=val1, 2=val2
+        int focusField = 0;
         std::string errorMsg = "";
     } aturDaduDialog;
     void triggerAturDaduDialog();
@@ -349,9 +355,7 @@ private:
     {
         bool visible = false;
         int hoveredIdx = -1;
-        // TeleportCard needs tile selection
         bool awaitingTeleportTile = false;
-        // LassoCard needs target player selection
         bool awaitingLassoTarget = false;
         int selectedCardIdx = -1;
     } skillCardDialog;
@@ -372,7 +376,6 @@ private:
         bool visible = false;
         std::string message = "";
     };
-
     SkillTargetHintState skillTargetHint;
     void drawSkillTargetHint();
 
@@ -382,7 +385,6 @@ private:
         int selectedCardIdx = -1;
         std::string errorMsg = "";
     };
-
     LassoTargetDialogState lassoTargetDialog;
     void drawLassoTargetDialog();
 
@@ -392,7 +394,6 @@ private:
         int selectedCardIdx = -1;
         std::string errorMsg = "";
     };
-
     DemolitionTargetDialogState demolitionTargetDialog;
     void drawDemolitionTargetDialog();
 
@@ -411,18 +412,18 @@ private:
     // ── Dialog Bankruptcy (Likuidasi & Notifikasi) ───────────────────
     struct BankruptcyDialogState
     {
-        bool visible = false;      // dialog likuidasi aktif
-        bool notifVisible = false; // notifikasi bangkrut aktif
+        bool visible = false;
+        bool notifVisible = false;
         float scrollY = 0.f;
         int pendingDebt = 0;
-        std::string creditorName; // nama kreditur atau "Bank"
+        std::string creditorName;
 
         struct Entry
         {
             Property *prop;
             int tileIdx;
-            bool canSell;     // bisa dijual ke bank
-            bool canMortgage; // bisa digadaikan
+            bool canSell;
+            bool canMortgage;
             int sellValue;
             int mortgageValue;
         };
@@ -430,11 +431,28 @@ private:
         int hoveredSellIdx = -1;
         int hoveredMortgageIdx = -1;
 
-        // Untuk notifikasi kebangkrutan
-        std::string bankruptName; // nama pemain yang bangkrut
+        std::string bankruptName;
     } bankruptcyDialog;
     void triggerBankruptcyDialog();
     void drawBankruptcyDialog();
+
+    // ── Dialog Sewa (AWAITING_RENT) ───────────────────────────────────────
+    // Ditampilkan saat player mendarat di properti milik lawan.
+    // Berisi info sewa dan tombol BAYAR yang push BayarSewaCommand.
+    struct SewaDialogState
+    {
+        bool visible = false;
+        // Info untuk ditampilkan
+        std::string tileName;     // nama properti, e.g. "Jakarta (JKT)"
+        std::string ownerName;    // nama pemilik properti
+        std::string conditionStr; // kondisi bangunan, e.g. "2 rumah" / "Hotel"
+        int rentAmount = 0;       // jumlah sewa
+        int landerBalBefore = 0;  // saldo pemain yang landing sebelum bayar
+        int ownerBalBefore = 0;   // saldo pemilik sebelum bayar
+        bool canAfford = true;    // apakah pemain mampu bayar
+    } sewaDialog;
+    void triggerSewaDialog();
+    void drawSewaDialog();
 
     // ── Private methods ──────────────────────────────────────────────────
     Color getGroupColor(const std::string &group);
@@ -471,6 +489,10 @@ private:
     void triggerTaxDialog();
     void drawTaxDialog();
 
+    // ── GameScreenDialogPbm.cpp ───────────────────────────────────────────
+    void triggerPbmDialog();
+    void drawPbmDialog();
+
     // ── GameScreenDialogFestival.cpp ──────────────────────────────────────
     void triggerFestivalDialog();
     void drawFestivalDialog();
@@ -491,7 +513,7 @@ private:
     void drawPropertiPopup();
 
     // ── GameScreenDialogAkta.cpp ─────────────────────────────────────────
-    void triggerAktaDialog(); // buka dialog input kode
+    void triggerAktaDialog();
     void drawAktaDialog();
 
     // ── GameScreenDialogCetakProperti.cpp ────────────────────────────────

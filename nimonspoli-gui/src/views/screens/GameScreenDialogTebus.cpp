@@ -2,6 +2,7 @@
 #include "../../core/GameMaster/GameMaster.hpp"
 #include "../../core/Board/Board.hpp"
 #include "../../core/Property/Property.hpp"
+#include "../../core/Commands/TebusCommand.hpp"
 
 void GameScreen::triggerTebusDialog() {
     tebusDialog.visible = true;
@@ -66,7 +67,11 @@ void GameScreen::drawTebusDialog() {
         
         if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             if (isRealMode()) {
-                guiManager->getGameMaster()->handleTebus(p);
+                GameMaster* gm = guiManager->getGameMaster();
+                GameState&  gs = gm->getState();
+                Player* cur    = gs.getCurrPlayer();
+                if (cur)
+                    guiManager->pushCommand(new TebusCommand(cur, p));
             }
             tebusDialog.visible = false;
         }

@@ -15,6 +15,7 @@ class TransactionLogger;
 class GameMaster;
 class Property;
 class SkillCard;
+class PropertyTile;
 
 // CardDeck adalah template class — tidak bisa forward declare, harus include
 #include "../Card/CardDeck.hpp"
@@ -30,6 +31,8 @@ enum class GamePhase
     DICE_ROLLED,       // sudah lempar dadu, menunggu resolusi petak
     AWAITING_BUY,      // menunggu keputusan beli properti
     AWAITING_TAX,      // menunggu pilihan user untuk PPH (flat vs persen)
+    AWAITING_PBM,      // menunggu user dismiss dialog PBM (sudah dieksekusi)
+    AWAITING_RENT,     // menunggu user klik BAYAR di dialog sewa
     AWAITING_FESTIVAL, // menunggu user pilih properti festival
     AWAITING_JAIL,
     AWAITING_DROP_SKILL_CARD,
@@ -43,14 +46,16 @@ enum class GamePhase
 //  GameState: snapshot seluruh data permainan
 //  Diakses oleh GameMaster dan semua Command
 // ─────────────────────────────────────────────
-class GameState {
+class GameState
+{
 public:
     // ── Tipe publik ──────────────────────────────
     // Antrian pembayaran multi-pemain (ElectionCard / BirthdayCard)
-    struct PendingPayment {
-        Player* debtor;    // yang harus bayar
-        Player* creditor;  // yang menerima (nullptr = Bank)
-        int     amount;
+    struct PendingPayment
+    {
+        Player *debtor;   // yang harus bayar
+        Player *creditor; // yang menerima (nullptr = Bank)
+        int amount;
     };
 
 private:
@@ -87,14 +92,22 @@ private:
     std::string pendingSkillDropMessage;
 
     // Untuk AWAITING_TAX (TaxDialog — PPH saja)
-    int pendingPphFlat = 0;         // jumlah flat M
-    int pendingPphPct  = 0;         // persentase %
+    int pendingPphFlat = 0; // jumlah flat M
+    int pendingPphPct = 0;  // persentase %
+
+    // Untuk AWAITING_PBM (PbmDialog — info saja, sudah dieksekusi)
+    int pendingPbmAmount = 0; // jumlah yang sudah dibayar (info display)
+
+    // Untuk AWAITING_RENT (SewaDialog)
+    PropertyTile *pendingRentTile = nullptr; // tile yang menghasilkan sewa
+    int pendingRentDice = 0;                 // nilai dadu saat landing
+    int pendingRentAmount = 0;               // nilai sewa yang dihitung
 
     // Untuk BANKRUPTCY (LikuidasiDialog)
-    int     pendingDebt      = 0;       // jumlah hutang yang harus dibayar
-    Player* pendingDebtor    = nullptr; // pemain yang berhutang
-    Player* pendingCreditor  = nullptr; // kreditur (nullptr = Bank)
-    std::vector<Property*> pendingAuctionQueue; // antrian lelang properti bangkrut ke Bank
+    int pendingDebt = 0;                         // jumlah hutang yang harus dibayar
+    Player *pendingDebtor = nullptr;             // pemain yang berhutang
+    Player *pendingCreditor = nullptr;           // kreditur (nullptr = Bank)
+    std::vector<Property *> pendingAuctionQueue; // antrian lelang properti bangkrut ke Bank
 
     // Antrian pembayaran multi-pemain (private storage)
     std::vector<PendingPayment> pendingPaymentQueue;
@@ -174,40 +187,62 @@ public:
     const std::string &getPendingCardDeck() const { return pendingCardDeck; }
     int getPendingPphFlat() const { return pendingPphFlat; }
     int getPendingPphPct() const { return pendingPphPct; }
+    int getPendingPbmAmount() const { return pendingPbmAmount; }
 
     void setPendingCardDesc(const std::string &s) { pendingCardDesc = s; }
     void setPendingCardDeck(const std::string &s) { pendingCardDeck = s; }
     void setPendingPphFlat(int v) { pendingPphFlat = v; }
-    void setPendingPphPct(int v)  { pendingPphPct  = v; }
+    void setPendingPphPct(int v) { pendingPphPct = v; }
+    void setPendingPbmAmount(int v) { pendingPbmAmount = v; }
+
+    // ── Getter/Setter pending rent (AWAITING_RENT) ──
+    PropertyTile *getPendingRentTile() const { return pendingRentTile; }
+    int getPendingRentDice() const { return pendingRentDice; }
+    int getPendingRentAmount() const { return pendingRentAmount; }
+
+    void setPendingRentTile(PropertyTile *t) { pendingRentTile = t; }
+    void setPendingRentDice(int d) { pendingRentDice = d; }
+    void setPendingRentAmount(int a) { pendingRentAmount = a; }
+    void clearPendingRent()
+    {
+        pendingRentTile = nullptr;
+        pendingRentDice = 0;
+        pendingRentAmount = 0;
+    }
 
     // ── Getter/Setter bankruptcy context ─────────
-    int     getPendingDebt()     const { return pendingDebt; }
-    Player* getPendingDebtor()   const { return pendingDebtor; }
-    Player* getPendingCreditor() const { return pendingCreditor; }
-    const std::vector<Property*>& getPendingAuctionQueue() const { return pendingAuctionQueue; }
+    int getPendingDebt() const { return pendingDebt; }
+    Player *getPendingDebtor() const { return pendingDebtor; }
+    Player *getPendingCreditor() const { return pendingCreditor; }
+    const std::vector<Property *> &getPendingAuctionQueue() const { return pendingAuctionQueue; }
 
-    void setPendingDebt(int d)          { pendingDebt = d; }
-    void setPendingDebtor(Player* p)    { pendingDebtor = p; }
-    void setPendingCreditor(Player* p)  { pendingCreditor = p; }
-    void addToPendingAuctionQueue(Property* p) { pendingAuctionQueue.push_back(p); }
-    void clearPendingAuctionQueue()     { pendingAuctionQueue.clear(); }
+    void setPendingDebt(int d) { pendingDebt = d; }
+    void setPendingDebtor(Player *p) { pendingDebtor = p; }
+    void setPendingCreditor(Player *p) { pendingCreditor = p; }
+    void addToPendingAuctionQueue(Property *p) { pendingAuctionQueue.push_back(p); }
+    void clearPendingAuctionQueue() { pendingAuctionQueue.clear(); }
 
     // Multi-player payment queue
-    void addToPendingPaymentQueue(Player* debtor, Player* creditor, int amount) {
+    void addToPendingPaymentQueue(Player *debtor, Player *creditor, int amount)
+    {
         pendingPaymentQueue.push_back({debtor, creditor, amount});
     }
     void clearPendingPaymentQueue() { pendingPaymentQueue.clear(); }
-    bool hasPendingPayment() const  { return !pendingPaymentQueue.empty(); }
-    PendingPayment popPendingPayment() {
+    bool hasPendingPayment() const { return !pendingPaymentQueue.empty(); }
+    PendingPayment popPendingPayment()
+    {
         PendingPayment p = pendingPaymentQueue.front();
         pendingPaymentQueue.erase(pendingPaymentQueue.begin());
         return p;
     }
-    const std::vector<PendingPayment>& getPendingPaymentQueue() const { return pendingPaymentQueue; }
+    const std::vector<PendingPayment> &getPendingPaymentQueue() const { return pendingPaymentQueue; }
+
     // Ambil & hapus properti pertama dari antrian lelang
-    Property* popPendingAuction() {
-        if (pendingAuctionQueue.empty()) return nullptr;
-        Property* p = pendingAuctionQueue.front();
+    Property *popPendingAuction()
+    {
+        if (pendingAuctionQueue.empty())
+            return nullptr;
+        Property *p = pendingAuctionQueue.front();
         pendingAuctionQueue.erase(pendingAuctionQueue.begin());
         return p;
     }

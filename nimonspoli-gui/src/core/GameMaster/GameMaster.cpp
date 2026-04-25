@@ -4,6 +4,7 @@
 #include "../Bank/Bank.hpp"
 #include "../Dice/Dice.hpp"
 #include "../Card/SkillCard.hpp"
+#include "../Card/DiscountCard.hpp"
 #include "../Card/CardDeck.hpp"
 #include "../AuctionManager/AuctionManager.hpp"
 #include "../Property/Property.hpp"
@@ -100,19 +101,18 @@ void GameMaster::beginTurn()
 void GameMaster::endTurn()
 {
     tickFestivalDurations();
-
+    tickDiscountDurations(); 
     if (!state.getHasExtraTurn())
     {
-        // Satu siklus penuh (semua pemain sudah jalan) → naikkan turn
         int prevIdx = state.getCurrPlayerIdx();
         state.nextPlayer();
         if (state.getCurrPlayerIdx() <= prevIdx)
         {
-            // Sudah berputar penuh
             state.advanceTurn();
         }
     }
-    // Jika hasExtraTurn, pemain yang sama jalan lagi — tidak nextPlayer()
+
+    checkWinCondition();
 }
 
 // ─────────────────────────────────────────────
@@ -281,9 +281,11 @@ void GameMaster::setExtraTurn(bool val)
 void GameMaster::endCurrentTurn()
 {
     state.setHasExtraTurn(false);
-    state.setHasRolled(true); // block: pemain tidak bisa lempar dadu lagi
+    state.setHasRolled(true);
     state.setPhase(GamePhase::PLAYER_TURN);
-    // nextPlayer() dan advanceTurn() tetap dilakukan oleh endTurn()
+
+    // Cek win condition di sini agar GUI flow juga mendeteksi game over
+    checkWinCondition();
 }
 
 bool GameMaster::hasExtraTurn() const
@@ -815,6 +817,35 @@ void GameMaster::tickFestivalDurations()
             {
                 sp->decrementFestivalDuration();
             }
+        }
+    }
+}
+
+void GameMaster::tickDiscountDurations()
+{
+    for (Player *p : state.getActivePlayers())
+    {
+        if (!p || !p->hasActiveDiscount())
+            continue;
+
+        // Cari DiscountCard yang masih aktif di tangan pemain
+        // dan kurangi durasinya. Jika habis, clear discount.
+        bool stillActive = false;
+        for (SkillCard *sc : p->getHand())
+        {
+            DiscountCard *dc = dynamic_cast<DiscountCard *>(sc);
+            if (!dc)
+                continue;
+            dc->decreaseDuration();
+            if (dc->getDuration() > 0)
+                stillActive = true;
+        }
+
+        if (!stillActive)
+        {
+            p->clearDiscount();
+            log(p->getUsername(), "DISCOUNT_EXPIRED",
+                "Efek diskon habis.");
         }
     }
 }

@@ -30,7 +30,11 @@ public:
         StreetProperty *prop;
     };
 
+    // Constructor CLI: interaktif, prompt pengguna
     BangunCommand(Player *player, Bank *bank, TransactionLogger *logger, int turn);
+    // Constructor GUI: langsung bangun/upgrade satu properti tertentu tanpa prompt
+    BangunCommand(Player *player, StreetProperty *targetProp, bool isHotel,
+                  TransactionLogger *logger, int turn);
     void execute(GameMaster &gm) override;
 
 private:
@@ -38,6 +42,9 @@ private:
     Bank *bank;
     TransactionLogger *logger;
     int turn;
+    // GUI-mode fields (nullptr = CLI mode)
+    StreetProperty *guiTargetProp = nullptr;
+    bool guiIsHotel = false;
 
     std::map<std::string, std::vector<TileEntry>> collectEligibleGroups(GameMaster &gm) const;
     bool canBuildOnTile(const TileEntry &entry, const std::vector<TileEntry> &group) const;

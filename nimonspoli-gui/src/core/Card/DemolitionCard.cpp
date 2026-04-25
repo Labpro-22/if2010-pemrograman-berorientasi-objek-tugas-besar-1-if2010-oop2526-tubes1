@@ -23,24 +23,37 @@ void DemolitionCard::setTargetProperty(Property *target)
 
 void DemolitionCard::execute(Player &p, GameState &gs)
 {
-    vector<Player *> players = gs.getActivePlayers();
-
-    for (Player *other : players)
+    if (targetProperty)
     {
-        if (other == &p)
-            continue;
-        vector<Property *> props = other->getProperties();
-        for (Property *prop : props)
+        StreetProperty *sp = dynamic_cast<StreetProperty *>(targetProperty);
+        if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
         {
-            StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
-            if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
-            {
-                sp->sellAllBuildings();
-                break;
-            }
+            sp->sellAllBuildings();
         }
-        break;
     }
+    else
+    {
+        vector<Player *> players = gs.getActivePlayers();
+
+        for (Player *other : players)
+        {
+            if (other == &p)
+                continue;
+            vector<Property *> props = other->getProperties();
+            for (Property *prop : props)
+            {
+                StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
+                if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
+                {
+                    sp->sellAllBuildings();
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    
+    targetProperty = nullptr;
     markUsed();
 }
 

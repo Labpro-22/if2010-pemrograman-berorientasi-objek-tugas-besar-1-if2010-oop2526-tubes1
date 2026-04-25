@@ -24,21 +24,24 @@ void LassoCard::setTargetPlayer(Player *target)
 void LassoCard::execute(Player &p, GameState &gs)
 {
     int currPos = p.getPosition();
-    int boardSize = gs.getBoard()->getSize();
-    vector<Player *> players = gs.getActivePlayers();
+    Player *target = targetPlayer;
 
-    Player *target = nullptr;
-    int minSteps = boardSize + 1;
-
-    for (Player *other : players)
+    if (!target)
     {
-        if (other == &p)
-            continue;
-        int steps = (other->getPosition() - currPos + boardSize) % boardSize;
-        if (steps > 0 && steps < minSteps)
+        int boardSize = gs.getBoard()->getSize();
+        vector<Player *> players = gs.getActivePlayers();
+        int minSteps = boardSize + 1;
+
+        for (Player *other : players)
         {
-            minSteps = steps;
-            target = other;
+            if (other == &p)
+                continue;
+            int steps = (other->getPosition() - currPos + boardSize) % boardSize;
+            if (steps > 0 && steps < minSteps)
+            {
+                minSteps = steps;
+                target = other;
+            }
         }
     }
 
@@ -48,6 +51,8 @@ void LassoCard::execute(Player &p, GameState &gs)
         if (gm)
             gm->teleportPlayer(target, currPos);
     }
+
+    targetPlayer = nullptr;
 }
 
 string LassoCard::successMessage() const

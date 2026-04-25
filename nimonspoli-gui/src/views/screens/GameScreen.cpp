@@ -94,6 +94,7 @@ bool GameScreen::isRealMode() const
 void GameScreen::update(float dt)
 {
     syncFromGameMaster();
+    syncDiceResult();
 
     // Update Animasi Pion
     for (int i = 0; i < (int)playerVisuals.size(); i++)
@@ -149,7 +150,9 @@ void GameScreen::render(Window &window)
     drawBuyDialog();
     drawAuctionDialog();
     drawTaxDialog();
+    drawPbmDialog();
     drawFestivalDialog();
+    drawSewaDialog();
     drawCardDialog();
     drawLogPopup();
     drawSavePopup();

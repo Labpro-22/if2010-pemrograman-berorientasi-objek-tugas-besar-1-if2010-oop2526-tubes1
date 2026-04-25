@@ -40,12 +40,12 @@ Board::Board(const vector<Tile *> &Tile, int Size)
 
 Board::~Board()
 {
-    for (Tile* t : tile)
+    for (Tile *t : tile)
     {
         delete t;
     }
 }
-// FIX #2: const di akhir, bukan sebelum parameter
+
 Tile *Board::getTile(int idx) const
 {
     if (idx < 0 || idx >= size)
@@ -61,7 +61,6 @@ Tile *Board::getNextTile(int cur, int next) const
 
 int Board::getSize() const { return size; }
 
-// FIX #3: `tiles` → `tile`
 int Board::findTileIndexByCode(const string &code) const
 {
     for (int i = 0; i < size; ++i)
@@ -92,13 +91,12 @@ string Tile::getCode() const { return code; }
 string Tile::getTileName() const { return name; }
 string Tile::getTileType() const { return tileTypeToString(type); }
 string Tile::getDisp() const { return colorDisplay; }
-string Tile::getPic() const {return picDisplay;}
+string Tile::getPic() const { return picDisplay; }
 
 // ═════════════════════════════════════════════
 //  ActionTile
 // ═════════════════════════════════════════════
 
-// FIX #4: tileName → TileName (kapital T)
 ActionTile::ActionTile(int id, string display, TileType type, string name, string code)
     : Tile(id, display, type, name, code) {}
 
@@ -106,8 +104,6 @@ ActionTile::ActionTile(int id, string display, TileType type, string name, strin
 //  PropertyTile
 // ═════════════════════════════════════════════
 
-// FIX #5 #6: Board.hpp tidak ada prop di constructor → prop diinit nullptr
-// FIX #7: virtual int calculateRent = 0 di luar class dihapus
 PropertyTile::PropertyTile(int id, string display, TileType type, string name, string code)
     : Tile(id, display, type, name, code), prop(nullptr) {}
 
@@ -128,32 +124,24 @@ void StreetTile::onLanded(Player &p, GameState &gs)
 
     if (property->getStatus() == PropertyStatus::BANK)
     {
-        // BeliCommand dipanggil dari dispatcher berdasarkan phase
         gs.setPhase(GamePhase::AWAITING_BUY);
     }
     else if (property->getStatus() == PropertyStatus::OWNED)
     {
         if (property->getOwnerId() != p.getUsername())
         {
-            // BayarSewaCommand dipanggil dari dispatcher
-            if(!p.isShielded()){
-                try
-                {
-                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
-                    sewa.execute(*gs.getGameMaster());
-                }
-                catch (const InsufficientFundsException &e)
-                {
-                    std::cout << e.what() << "\n";
-                    // Bisa trigger mekanisme bangkrut / jual aset nanti
-                }
+            if (!p.isShielded())
+            {
+                // Simpan data sewa ke GameState, biarkan dialog yang eksekusi
+                gs.setPendingRentTile(this);
+                gs.setPendingRentDice(gs.getDice() ? gs.getDice()->getTotal() : 0);
+                gs.setPhase(GamePhase::AWAITING_RENT);
             }
         }
     }
     // MORTGAGED → tidak ada aksi
 }
 
-// FIX #10: tambah const; akses prop via getProperty() bukan direct
 int StreetTile::calculateRent(int /*diceTotal*/) const
 {
     Property *property = getProperty();
@@ -169,7 +157,6 @@ int StreetTile::calculateRent(int /*diceTotal*/) const
 //  RailroadTile
 // ═════════════════════════════════════════════
 
-// FIX #8: RailRoadTile → RailroadTile
 RailRoadTile::RailRoadTile(int id, string display, TileType type, string name, string code)
     : PropertyTile(id, display, type, name, code) {}
 
@@ -192,21 +179,14 @@ void RailRoadTile::onLanded(Player &p, GameState &gs)
         {
             if (!p.isShielded())
             {
-                try
-                {
-                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
-                    sewa.execute(*gs.getGameMaster());
-                }
-                catch (const InsufficientFundsException &e)
-                {
-                    std::cout << e.what() << "\n";
-                }
+                gs.setPendingRentTile(this);
+                gs.setPendingRentDice(gs.getDice() ? gs.getDice()->getTotal() : 0);
+                gs.setPhase(GamePhase::AWAITING_RENT);
             }
         }
     }
 }
 
-// FIX #8: tambah class qualifier RailroadTile:: dan const
 int RailRoadTile::calculateRent(int /*diceTotal*/) const
 {
     Property *property = getProperty();
@@ -222,7 +202,6 @@ int RailRoadTile::calculateRent(int /*diceTotal*/) const
 //  UtilityTile
 // ═════════════════════════════════════════════
 
-// FIX #9: tambah `:` sebelum PropertyTile
 UtilityTile::UtilityTile(int id, string display, TileType type, string name, string code)
     : PropertyTile(id, display, type, name, code) {}
 
@@ -245,21 +224,14 @@ void UtilityTile::onLanded(Player &p, GameState &gs)
         {
             if (!p.isShielded())
             {
-                try
-                {
-                    BayarSewaCommand sewa(&p, this, gs.getDice()->getTotal(), gs.getLogger(), gs.getCurrTurn());
-                    sewa.execute(*gs.getGameMaster());
-                }
-                catch (const InsufficientFundsException &e)
-                {
-                    std::cout << e.what() << "\n";
-                }
+                gs.setPendingRentTile(this);
+                gs.setPendingRentDice(gs.getDice() ? gs.getDice()->getTotal() : 0);
+                gs.setPhase(GamePhase::AWAITING_RENT);
             }
         }
     }
 }
 
-// FIX #10: tambah const
 int UtilityTile::calculateRent(int diceTotal) const
 {
     Property *property = getProperty();
@@ -278,7 +250,6 @@ int UtilityTile::calculateRent(int diceTotal) const
 GoTile::GoTile(int id, string display, TileType type, string name, string code, int salary)
     : ActionTile(id, display, type, name, code), salary(salary) {}
 
-// FIX #11: `p + salary` tidak mengubah uang → harus via Bank::payPlayer
 void GoTile::onLanded(Player &p, GameState &gs)
 {
     Bank *bank = gs.getBank();
@@ -306,7 +277,6 @@ JailTile::JailTile(int id, string display, TileType type, string name, string co
 
 int JailTile::getJailFine() const { return jailFine; }
 
-// FIX #12: push_back(p) → push_back(&p) karena vector<Player*>
 void JailTile::onLanded(Player &p, GameState & /*gs*/)
 {
     if (!isInmate(p))
@@ -325,7 +295,6 @@ void JailTile::sendToJail(Player &p)
     p.setStatus(PlayerStatus::JAILED);
 }
 
-// FIX #13: getConsecutiveDoubles() → isDouble() untuk cek hasil lemparan ini
 bool JailTile::tryEscape(Player &p, Dice &d)
 {
     d.rollRandom();
@@ -337,7 +306,6 @@ bool JailTile::tryEscape(Player &p, Dice &d)
     return false;
 }
 
-// FIX #14: Bank:: Player butuh Player*, bukan Player&
 void JailTile::payFine(Player &p, GameState &gs)
 {
     GameMaster *gm = gs.getGameMaster();
@@ -351,8 +319,6 @@ void JailTile::payFine(Player &p, GameState &gs)
         if (gm)
         {
             gm->handleDebtPayment(&p, jailFine, nullptr);
-            // Lepaskan dari penjara agar setelah urusan bangkrut/likuidasi selesai, 
-            // status penjaranya sudah bersih (atau dia dihapus dari game)
             release(p);
         }
         else
@@ -364,8 +330,6 @@ void JailTile::payFine(Player &p, GameState &gs)
 
 void JailTile::useJailCard(Player &p)
 {
-    // Catatan: kartu "Bebas dari Penjara" tidak ada di spesifikasi kartu kemampuan.
-    // Method ini tetap ada untuk handle edge case jika ditambahkan nanti.
     release(p);
 }
 
@@ -376,7 +340,6 @@ void JailTile::release(Player &p)
     p.setStatus(PlayerStatus::ACTIVE);
 }
 
-// FIX #15: tambah const sesuai deklarasi di header
 bool JailTile::isInmate(Player &p) const
 {
     for (auto inmate : inmates)
@@ -396,8 +359,6 @@ GoToJail::GoToJail(int id, string display, TileType type, string name, string co
 
 void GoToJail::onLanded(Player &p, GameState &gs)
 {
-    // Gunakan GameMaster::sendPlayerToJail() agar semua side-effect tertangani:
-    // posisi, status JAILED, log, dan endCurrentTurn
     GameMaster *gm = gs.getGameMaster();
     if (gm)
     {
@@ -405,7 +366,6 @@ void GoToJail::onLanded(Player &p, GameState &gs)
         return;
     }
 
-    // Fallback jika GameMaster belum terdaftar (tidak seharusnya terjadi)
     Board *board = gs.getBoard();
     if (!board)
         return;
@@ -435,7 +395,9 @@ void FreeParkingTile::onLanded(Player & /*p*/, GameState & /*gs*/)
 TaxTile::TaxTile(int id, string display, TileType type, string name, string code)
     : ActionTile(id, display, type, name, code) {}
 
-// FIX #17: Pisahkan antara PPH (perlu input user) dan PBM (langsung)
+// PPH  → set AWAITING_TAX, simpan data ke GameState, dialog yang handle pilihan user.
+// PBM  → eksekusi langsung via command, simpan amount hasil, set AWAITING_PBM agar
+//         dialog info muncul. User tekan OK → kembali ke PLAYER_TURN.
 void TaxTile::onLanded(Player &p, GameState &gs)
 {
     TransactionLogger *logger = gs.getLogger();
@@ -452,9 +414,18 @@ void TaxTile::onLanded(Player &p, GameState &gs)
         gs.setPendingPphPct(static_cast<int>(taxCfg.pphPercentage));
         gs.setPhase(GamePhase::AWAITING_TAX);
     }
-    else
+    else // PBM
     {
-        // PBM: tidak perlu input user, langsung execute
+        // PBM: langsung eksekusi, lalu tampilkan dialog info
+        int flatAmount = static_cast<int>(taxCfg.pbmFlat);
+        gs.setPendingPbmAmount(flatAmount); // simpan dulu buat display
+
+        if (!gm)
+        {
+            gs.setPhase(GamePhase::AWAITING_PBM);
+            return;
+        }
+
         BayarPajakCommand cmd(&p, this, bank, logger, taxCfg, turn);
         try
         {
@@ -463,9 +434,11 @@ void TaxTile::onLanded(Player &p, GameState &gs)
         catch (const InsufficientFundsException &)
         {
             gs.setPhase(GamePhase::BANKRUPTCY);
-            throw;
+            return;
         }
-        gs.setPhase(GamePhase::AWAITING_TAX);
+
+        // Set phase AWAITING_PBM agar GUI menampilkan dialog info PBM
+        gs.setPhase(GamePhase::AWAITING_PBM);
     }
 }
 
@@ -473,13 +446,10 @@ void TaxTile::onLanded(Player &p, GameState &gs)
 //  CardTile
 // ═════════════════════════════════════════════
 
-// FIX #18: CardDeck* → CardDeck<Card>*
 CardTile::CardTile(int id, string display, TileType type, string name, string code,
                    CardDeck<Card> *cardDeck)
     : ActionTile(id, display, type, name, code), card(cardDeck) {}
 
-// CardTile::onLanded: execute CardCommand lalu simpan hasil ke GameState,
-// kemudian set phase SHOW_CARD agar GUI menampilkan CardDialog.
 void CardTile::onLanded(Player &p, GameState &gs)
 {
     if (!card)
@@ -489,9 +459,14 @@ void CardTile::onLanded(Player &p, GameState &gs)
 
     TransactionLogger *logger = gs.getLogger();
     int turn = gs.getCurrTurn();
-    GameMaster* gm = gs.getGameMaster();
+    GameMaster *gm = gs.getGameMaster();
 
     CardCommand cmd(&p, card, &gs, logger, turn, label);
+    if (!gm)
+    {
+        // Tidak ada GameMaster → tidak bisa eksekusi command, langsung return
+        return;
+    }
     try
     {
         cmd.execute(*gm);
@@ -502,11 +477,11 @@ void CardTile::onLanded(Player &p, GameState &gs)
         throw;
     }
 
-    // Simpan deskripsi kartu ke GameState agar bisa dibaca oleh CardDialog
     gs.setPendingCardDesc(cmd.getLastDescription());
     gs.setPendingCardDeck(label);
     gs.setPhase(GamePhase::SHOW_CARD);
 }
+
 // ═════════════════════════════════════════════
 //  FestivalTile
 // ═════════════════════════════════════════════
@@ -514,26 +489,16 @@ void CardTile::onLanded(Player &p, GameState &gs)
 FestivalTile::FestivalTile(int id, string display, TileType type, string name, string code)
     : ActionTile(id, display, type, name, code) {}
 
-// FestivalTile::onLanded: set phase AWAITING_FESTIVAL.
-// GUI (FestivalDialog) yang akan menampilkan list properti dan memanggil
-// FestivalCommand::executeWithProperty(selected) setelah user memilih.
+// FestivalTile::onLanded: SELALU set phase AWAITING_FESTIVAL.
+// GUI (FestivalDialog) menampilkan dialog:
+//   - Jika ada properti eligible → tampilkan list untuk dipilih.
+//   - Jika tidak ada → tampilkan pesan info, user klik OK untuk lanjut.
 void FestivalTile::onLanded(Player &p, GameState &gs)
 {
-    TransactionLogger *logger = gs.getLogger();
-    int turn = gs.getCurrTurn();
-    GameMaster* gm = gs.getGameMaster();
+    // Selalu masuk ke phase AWAITING_FESTIVAL agar GUI selalu menampilkan dialog
+    // (baik ada properti maupun tidak)
+    gs.setPhase(GamePhase::AWAITING_FESTIVAL);
 
-    // Buat command sementara untuk cek apakah ada properti eligible
-    FestivalCommand checkCmd(&p, logger, turn);
-    checkCmd.execute(*gm);  // execute hanya log jika kosong, tidak block
-
-    // Hanya masuk AWAITING_FESTIVAL jika ada properti eligible
-    auto eligible = checkCmd.getEligibleStreets();
-    std::cout << "[DEBUG] FestivalTile: " << p.getUsername() << " landed. Eligible: " << eligible.size() << std::endl;
-    if (!eligible.empty())
-    {
-        gs.setPhase(GamePhase::AWAITING_FESTIVAL);
-        std::cout << "[DEBUG] Phase set to AWAITING_FESTIVAL" << std::endl;
-    }
-    // Jika kosong: execute() sudah log, tidak perlu phase khusus
+    std::cout << "[DEBUG] FestivalTile: " << p.getUsername()
+              << " landed. Phase set to AWAITING_FESTIVAL." << std::endl;
 }
