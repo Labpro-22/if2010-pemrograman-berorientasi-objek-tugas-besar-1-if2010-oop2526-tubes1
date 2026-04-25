@@ -104,7 +104,7 @@ void GameScreen::update(float dt)
         // Jika belum sampai di target tile
         if (pv.currentTileIdx != pv.targetTileIdx)
         {
-            float step = 5.0f * dt; // Kecepatan gerak (5 tile per detik)
+            float step = 6.0f * dt; // Kecepatan gerak (5 tile per detik)
 
             // Logika berputar (handling modulo 40)
             float diff = pv.targetTileIdx - pv.currentTileIdx;

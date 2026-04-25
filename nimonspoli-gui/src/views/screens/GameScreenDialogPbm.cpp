@@ -48,7 +48,7 @@ void GameScreen::drawPbmDialog()
 
     // Header
     DrawRectangle((int)px, (int)py, (int)PW, 52, {160, 50, 30, 255});
-    const char *title = "PAJAK BUMI DAN BANGUNAN (PBM)";
+    const char *title = "PAJAK BARANG MEWAH(PBM)";
     int tw = MeasureText(title, 14);
     DrawText(title, (int)(px + PW / 2 - tw / 2), (int)(py + 18), 14, WHITE);
 

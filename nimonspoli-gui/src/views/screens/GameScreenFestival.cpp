@@ -67,9 +67,6 @@ void GameScreen::drawFestivalDialog()
         DrawText(line2, (int)(px + PW / 2 - w2 / 2), (int)(msgY + 22), 13, {200, 200, 220, 255});
         DrawText(line3, (int)(px + PW / 2 - w3 / 2), (int)(msgY + 52), 11, {150, 150, 180, 255});
 
-        // Ikon dekoratif
-        DrawText("🎉", (int)(px + PW / 2 - 14), (int)(py + 160), 28, {239, 159, 39, 120});
-
         // Tombol OK
         float btnW = 120.f;
         Rectangle okBtn = {px + PW / 2 - btnW / 2, py + PH - 70, btnW, 42};

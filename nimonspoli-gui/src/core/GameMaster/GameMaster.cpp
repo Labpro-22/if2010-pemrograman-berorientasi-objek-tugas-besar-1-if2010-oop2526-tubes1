@@ -144,13 +144,14 @@ void GameMaster::movePlayer(Player *player, int steps)
                 "Melewati GO, menerima M" + std::to_string(go->getSalary()));
         }
     }
-
+    log(player->getUsername(), "DADU",
+        "Berangkat dari tile ke-" + std::to_string(curIdx) + " dengan langkah sebesar " + std::to_string(steps) + " menuju tile ke-" + std::to_string(targetIdx));
     player->setPosition(targetIdx);
 
     Tile *landedTile = board->getTile(targetIdx);
     if (landedTile)
     {
-        log(player->getUsername(), "MOVE",
+        log(player->getUsername(), "DADU",
             "Mendarat di " + landedTile->getCode() +
                 " (" + landedTile->getTileName() + ")");
         landedTile->onLanded(*player, state);
@@ -159,6 +160,10 @@ void GameMaster::movePlayer(Player *player, int steps)
         {
             return; // STOP di sini → tunggu dialog selesai
         }
+    }
+    else{
+        log(player->getUsername(), "DADU",
+            "Anda tidak mendarat di mana pun");
     }
 }
 
