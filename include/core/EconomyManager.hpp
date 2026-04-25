@@ -33,14 +33,13 @@ public:
     void placeBid(int amount, std::shared_ptr<Player> &player);
     void EconomyManager::foldBid(std::vector<std::shared_ptr<Player>>::iterator p);
     bool isAuctionOver() const;
-    void resolveAuction(TransactionLog& logger);
-    std::shared_ptr<Player> getCurrentBidder() const;
+    void resolveAuction(PropertyTile *tile,std::shared_ptr<Player> & winner);
+    std::vector<std::shared_ptr<Player>> getCurrentBidder() const;
     int getHighestBid() const;
 
     // Proses ketika pemain tidak bisa membayar kewajiban
 
     bool isBankruptcyInevitable(Player& player, int debtAmount) const;
     void executeBankruptcy(Player& bankruptPlayer, 
-                           std::shared_ptr<Player> creditor, 
-                           TransactionLog& logger);
+                           std::shared_ptr<Player> creditor);
 };

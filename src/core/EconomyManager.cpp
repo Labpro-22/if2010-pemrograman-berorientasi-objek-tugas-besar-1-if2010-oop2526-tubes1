@@ -1,5 +1,6 @@
 #include "../../include/core/EconomyManager.hpp"
 #include "../../include/core/TransactionLog.hpp"
+#include "../../include/core/GameManager.hpp"
 #include <memory>
 #include <algorithm>
 #include <iostream>
@@ -9,7 +10,7 @@ void EconomyManager::addMoney(Player& player, float amount){
 }
 bool EconomyManager::deductMoney(Player& player, float amount){
     if(!player.canPay(amount)){
-        executeBankruptcy();
+        executeBankruptcy(player,nil);
     }
     player-=amount;
 }
@@ -83,9 +84,11 @@ bool EconomyManager::isAuctionOver() const{
     }
     return false;
 }
-void EconomyManager::resolveAuction(PropertyManager& propMgr,PropertyTile *tile, std::shared_ptr<Player> & winner,TransactionLog& logger){
-    propMgr.assignOwnership(tile,winner);
-    logger.recordEvent(LogEntry(0,winner->getname(),actions::LELANG,"si A menang lelang cuy"));
+void EconomyManager::resolveAuction(PropertyTile *tile, std::shared_ptr<Player> & winner){
+    auto& logger= GameManager::logger;
+    auto &propMgr=GameManager::property_manager;
+    propMgr->assignOwnership(tile,winner);
+    logger->recordEvent(LogEntry(0,winner->getname(),actions::LELANG,"si A menang lelang cuy"));
 }
 std::vector<std::shared_ptr<Player>> EconomyManager::getCurrentBidder() const{
     return this->active_bidders;
@@ -101,5 +104,4 @@ bool EconomyManager::isBankruptcyInevitable(Player& player, int debtAmount) cons
     return false;
 }
 void EconomyManager::executeBankruptcy(Player& bankruptPlayer, 
-                       std::shared_ptr<Player> creditor, 
-                       TransactionLog& logger){}
+                       std::shared_ptr<Player> creditor){}
