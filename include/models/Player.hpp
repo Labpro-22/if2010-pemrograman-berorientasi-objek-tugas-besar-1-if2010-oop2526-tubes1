@@ -27,7 +27,7 @@ private:
 
 public:
     Player(std::string name, int balance, int position, PlayerState player_state);
-
+    std::string getname();
     Player& operator+=(int amount);
     Player& operator-=(int amount);
     Player operator+(int amount) const;

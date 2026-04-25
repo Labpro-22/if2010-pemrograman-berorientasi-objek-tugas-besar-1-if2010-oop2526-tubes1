@@ -22,8 +22,8 @@ public:
     ~EconomyManager() = default;
 
     // Transaksi Dasar
-    void addMoney(Player& player, int amount);
-    bool deductMoney(Player& player, int amount);
+    void addMoney(Player& player, float amount);
+    bool deductMoney(Player& player, float amount);
     bool transferMoney(Player& payer, Player& receiver, int amount);
 
     // Pemrosesan pajak
@@ -31,16 +31,16 @@ public:
 
     // Proses lelang
     void startAuction(PropertyTile* property, const std::vector<std::shared_ptr<Player>>& players);
-    bool placeBid(int amount);
-    void foldBid();
+    void placeBid(int amount, std::shared_ptr<Player> &player);
+    void EconomyManager::foldBid(std::vector<std::shared_ptr<Player>>::iterator p);
     bool isAuctionOver() const;
-    void resolveAuction(PropertyManager& propMgr, TransactionLog& logger);
-    std::shared_ptr<Player> getCurrentBidder() const;
+    void resolveAuction(PropertyManager& propMgr,PropertyTile *tile, std::shared_ptr<Player> & winner,TransactionLog& logger);
+    std::vector<std::shared_ptr<Player>> getCurrentBidder() const;
     int getHighestBid() const;
 
     // Proses ketika pemain tidak bisa membayar kewajiban
 
-    bool isBankruptcyInevitable(const Player& player, int debtAmount) const;
+    bool isBankruptcyInevitable(Player& player, int debtAmount) const;
     void executeBankruptcy(Player& bankruptPlayer, 
                            std::shared_ptr<Player> creditor, 
                            PropertyManager& propMgr, 
