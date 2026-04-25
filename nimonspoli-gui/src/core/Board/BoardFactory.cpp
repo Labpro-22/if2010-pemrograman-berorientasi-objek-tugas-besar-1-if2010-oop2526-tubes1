@@ -11,11 +11,11 @@ Board *BoardFactory::createBoard(const vector<PropertyData> &propertyDataList, c
         {
             t = new GoTile(a.id, a.color, TileType::SPECIAL, a.name, a.code, config.goSalary);
         }
-        else if (a.code == "DNU")
+        else if (a.code == "KSP")
         {
             t = new CardTile(a.id, a.color, TileType::CARD, a.name, a.code, chanceCard);
         }
-        else if (a.code == "KSP")
+        else if (a.code == "DNU")
         {
             t = new CardTile(a.id, a.color, TileType::CARD, a.name, a.code, genFundCard);
         }
