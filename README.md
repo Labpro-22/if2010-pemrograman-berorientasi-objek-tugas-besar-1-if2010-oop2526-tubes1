@@ -1,4 +1,9 @@
 # NIMONSPOLY
+
+<p align="center">
+  <img src="assets/bg/GameView.png" width="500"/>
+</p>
+
 ## IF2010 Object Oriented Programming
 NIMONSPOLY is a C++ Monopoly-inspired board game project developed with a strong Object-Oriented Programming approach to model the game’s core components in a modular and maintainable way, including players, boards, tiles, properties, cards, transactions, turn management, configuration handling, and save/load functionality. The game supports interactive gameplay through features such as property purchasing and auctions, rent payments, taxes, jail mechanics, Chance and Community Chest cards, skill cards, festival effects, bankruptcy handling, and winner calculation based on the final game state. In addition to the command-line interface, NIMONSPOLY includes a Raylib-based graphical user interface that visualizes the game board, player status, real-time action logs, integrated input prompts, dice animations, and direct interactions with tiles and owned properties. The project is designed for extensibility through clear class responsibility separation, inheritance and polymorphism in the tile and card systems, external configuration files, and support for flexible board layouts.
 
