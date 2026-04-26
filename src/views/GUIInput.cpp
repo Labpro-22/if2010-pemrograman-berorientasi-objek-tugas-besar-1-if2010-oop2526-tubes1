@@ -263,11 +263,20 @@ int GUIInput::getLiquidationChoice(int numOptions) {
     return prompt_.resInt;
 }
 
-int GUIInput::getSkillCardChoice(int numCards) {
+int GUIInput::getSkillCardChoice(const vector<CardInfo>& cards) {
+    vector<string> options;
+    options.reserve(cards.size() * 2);
+    for (size_t i = 0; i < cards.size(); ++i) {
+        const CardInfo& card = cards[i];
+        options.push_back(std::to_string(i + 1) + " " + card.name);
+        options.push_back(card.description.empty() ? "-" : card.description);
+    }
+
     activatePrompt(GUIPromptType::SKILL_CARD,
                    "Pilih kartu (0 = batal)",
                    0,
-                   numCards);
+                   static_cast<int>(cards.size()),
+                   options);
     waitForResolution();
     return prompt_.resInt;
 }

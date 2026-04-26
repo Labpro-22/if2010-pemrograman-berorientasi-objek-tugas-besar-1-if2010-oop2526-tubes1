@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 
+#include "ui/UiDtos.hpp"
 #include "utils/Enums.hpp"
 #include "utils/Types.hpp"
 
@@ -27,6 +28,6 @@ public:
 
     virtual TaxChoice getTaxChoice() = 0;
     virtual int       getLiquidationChoice(int numOptions) = 0;
-    virtual int       getSkillCardChoice(int numCards) = 0;
+    virtual int       getSkillCardChoice(const vector<CardInfo>& cards) = 0;
     virtual string    getPropertyCodeInput(const string& prompt) = 0;
 };

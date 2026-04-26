@@ -25,7 +25,7 @@ TaxChoice HumanController::decideTax(int flatAmount, int percentAmount) {
 }
 
 int HumanController::decideSkillCard(const vector<CardInfo>& cards) {
-    return input->getSkillCardChoice(static_cast<int>(cards.size()));
+    return input->getSkillCardChoice(cards);
 }
 
 string HumanController::decideFestivalProperty(const vector<PropertyInfo>& props) {
@@ -46,7 +46,7 @@ int HumanController::decideLiquidation(const LiquidationState& state) {
 }
 
 int HumanController::decideDropCard(const vector<CardInfo>& cards) {
-    return input->getSkillCardChoice(static_cast<int>(cards.size()));
+    return input->getSkillCardChoice(cards);
 }
 
 bool HumanController::decideJailPay() {

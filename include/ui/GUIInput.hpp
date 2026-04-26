@@ -66,7 +66,7 @@ public:
 
     TaxChoice getTaxChoice() override;
     int       getLiquidationChoice(int numOptions) override;
-    int       getSkillCardChoice(int numCards) override;
+    int       getSkillCardChoice(const vector<CardInfo>& cards) override;
     string    getPropertyCodeInput(const string& prompt) override;
 
 private:
