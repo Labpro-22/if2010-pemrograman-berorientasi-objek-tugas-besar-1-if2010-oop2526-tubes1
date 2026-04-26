@@ -46,6 +46,8 @@ void LassoCard::execute(Player &p, GameState &gs)
 
             if (other == &p)
                 continue;
+            if (other->isInJail())
+                break;
 
             if (other->getUsername() == targetPlayerUsername)
             {

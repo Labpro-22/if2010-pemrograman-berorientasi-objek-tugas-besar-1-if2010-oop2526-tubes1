@@ -14,6 +14,23 @@
 #include <functional>
 #include <string>
 
+static std::string getSkillCardTextureKey(const std::string &type)
+{
+    if (type == "DemolitionCard")
+        return "KKS-Demolition";
+    if (type == "DiscountCard")
+        return "KKS-Discount";
+    if (type == "LassoCard")
+        return "KKS-Lasso";
+    if (type == "MoveCard")
+        return "KKS-Move";
+    if (type == "ShieldCard")
+        return "KKS-Shield";
+    if (type == "TeleportCard")
+        return "KKS-Teleport";
+    return "";
+}
+
 static void drawWrappedText(
     const std::string &text,
     int x,
@@ -275,24 +292,48 @@ void GameScreen::drawSkillCardDialog()
         int descFont = 11;
         int gap = 6;
 
+
+        constexpr float THUMB = 36.f;
+        float thumbX = row.x + 4.f;
+        float thumbY = row.y + (row.height - THUMB) / 2.f;
+
+        std::string sTexKey = getSkillCardTextureKey(type);
+        if (!sTexKey.empty() && cardTextures.count(sTexKey))
+        {
+            Texture2D &tex = cardTextures[sTexKey];
+            float scale = THUMB / (tex.width > tex.height ? tex.width : tex.height);
+            float dw = tex.width * scale;
+            float dh = tex.height * scale;
+            DrawTextureEx(tex,
+                          {thumbX + (THUMB - dw) / 2.f, thumbY + (THUMB - dh) / 2.f},
+                          0.f, scale, WHITE);
+        }
+        else
+        {
+            // Fallback kotak kecil berwarna
+            DrawRectangle((int)thumbX, (int)thumbY,
+                          (int)THUMB, (int)THUMB, {50, 55, 80, 255});
+        }
+
+        // Teks type & deskripsi (geser ke kanan setelah thumbnail)
+        float labelX = row.x + THUMB + 10.f;
+        float maxDescW = row.width - THUMB - 18.f;
         int blockH = titleFont + gap + descFont;
         int textY = (int)(row.y + row.height / 2 - blockH / 2 + 2);
-
-        DrawText(
-            type.c_str(),
-            (int)row.x + 12,
-            textY,
-            titleFont,
-            WHITE);
-
+        DrawText(type.c_str(), (int)labelX, textY, titleFont, WHITE);
         if (!desc.empty())
         {
-            DrawText(
-                desc.c_str(),
-                (int)row.x + 12,
-                textY + titleFont + gap,
-                descFont,
-                {175, 178, 205, 255});
+            std::string descTrunc = desc;
+            // Potong kalau terlalu panjang
+            if (MeasureText(descTrunc.c_str(), descFont) > (int)maxDescW)
+            {
+                while (!descTrunc.empty() &&
+                       MeasureText((descTrunc + "...").c_str(), descFont) > (int)maxDescW)
+                    descTrunc.pop_back();
+                descTrunc += "...";
+            }
+            DrawText(descTrunc.c_str(), (int)labelX,
+                     textY + titleFont + gap, descFont, {175, 178, 205, 255});
         }
 
         if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -702,7 +743,8 @@ void GameScreen::drawLassoTargetDialog()
     {
         if (p == nullptr || p == cur || p->getStatus() == PlayerStatus::BANKRUPT)
             continue;
-
+        if (p->isInJail())
+            continue;
         Rectangle row = {px + 24, py + 70 + rowIndex * 48.0f, PW - 48, 38};
         bool hover = CheckCollisionPointRec(GetMousePosition(), row);
 
