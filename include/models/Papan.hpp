@@ -21,6 +21,7 @@ public:
     Petak* findNearestByKode(const std::string& kode, int indeks);
 
     int getTotalPetak() const;
+    const std::vector<Petak*>& getDaftarPetak() const { return daftarPetak; }
 
     ~Papan();
 };

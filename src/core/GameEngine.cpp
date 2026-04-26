@@ -26,7 +26,7 @@ void GameEngine::startGame() {
     randomizeTurn();
 
     // iterasi sebanyak jumlah turn
-    for (int currentTurn = 1; currentTurn <= maxTurn; currentTurn++) {
+    for (currentGlobalTurn = 1; currentGlobalTurn <= maxTurn; currentGlobalTurn++) {
 
         // jalanin turn buat tiap player
         for (auto player : urutanPemain) {
@@ -43,7 +43,7 @@ void GameEngine::startGame() {
 
 
             // player bisa pilih mau liat2 akta, atau liat2 properti dia sendiri, ato mau jalan, ato mau make kartu
-            startTurn (player, currentTurn);
+            startTurn (player, currentGlobalTurn);
 
             // habis turnya selesai normalnya player pindah tempat -> jalanin onlanded dari petak yang diinjek
             Petak* diTempati = papanPermainan->getPetak((const int)player->getPosisi());

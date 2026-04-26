@@ -44,6 +44,7 @@ private :
     // Turn Management (dari TurnController)
     vector<Pemain*> urutanPemain;
     int currentTurnIndex;
+    int currentGlobalTurn;
     int maxTurn;
     bool arahNormalTurn;
 
@@ -97,6 +98,9 @@ public :
 
     int getMaxTurn() const { return maxTurn; }
     void setMaxTurn(int max) { this->maxTurn = max; }
+
+    int getCurrentGlobalTurn() const { return currentGlobalTurn; }
+    void setCurrentGlobalTurn(int turn) { this->currentGlobalTurn = turn; }
 
     bool isArahNormalTurn() const { return arahNormalTurn; }
     void setArahNormalTurn(bool arah) { this->arahNormalTurn = arah; }
