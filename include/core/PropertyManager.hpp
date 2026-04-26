@@ -31,7 +31,7 @@ public:
     bool tryUnmortgage(std::shared_ptr<Player> player, PropertyTile* tile);
 
     // Membungkus panggilan tile->calculateRent(), misal tambahan untuk kasus khusus UtilityTile yang membutuhkan nilai dadu
-    int getFinalRentPrice(PropertyTile* tile, int diceRoll = 0) const;
+    float getFinalRentPrice(PropertyTile* tile, int diceRoll = 0) const;
 
     // Memulai festival di suatu PropertyTile
     void startFestival(PropertyTile* tile);

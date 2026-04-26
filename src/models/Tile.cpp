@@ -30,9 +30,9 @@ void CardTile::onLand(Player& p) {
 }
 
 // TaxTile
-TaxTile::TaxTile(int index, std::string name, std::string code, std::string color, TaxType tax_type, int tax_amount)
+TaxTile::TaxTile(int index, std::string name, std::string code, std::string color, TaxType tax_type, float tax_amount)
     :  Tile(index, name, code, color), tax_type(tax_type), tax_amount(tax_amount) {}
-int TaxTile::getTaxAmount(){
+float TaxTile::getTaxAmount(){
     return tax_amount;
 }
 void TaxTile::onLand(Player& p) {
@@ -48,10 +48,10 @@ void FestivalTile::onLand(Player& p){
 }
 
 // GoTile
-GoTile::GoTile(int index, std::string name, std::string code, std::string color, int go_reward) 
+GoTile::GoTile(int index, std::string name, std::string code, std::string color, float go_reward) 
     : Tile(index, name, code, color), go_reward(go_reward) {}
 
-int GoTile::getReward(){
+float GoTile::getReward(){
     return go_reward;
 }
 void GoTile::onLand(Player& p) {

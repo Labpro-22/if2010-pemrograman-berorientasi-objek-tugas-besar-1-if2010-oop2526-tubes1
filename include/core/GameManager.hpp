@@ -36,29 +36,29 @@ private:
     // Map yang menghubungkan command dengan fungsi. Parameter string di dalamnya digunakan untuk menampung argumen tambahan (contoh: "500" dari "BID 500")
     std::unordered_map<std::string, std::function<void(const std::string&)>> command_map;
 
-    void setupCommands(); // Fungsi mendaftarkan isi commandMap
+    // void setupCommands(); // Fungsi mendaftarkan isi commandMap
 
-    // Handler tiap command
-    void printBoard(const std::string& args);
-    void printCertificate(const std::string& args);     
-    void printProperty(const std::string& args);
-    void printLog(const std::string& args);     
-    void mortgage(const std::string& args);
-    void redeem(const std::string& args);
-    void build(const std::string& args);       
-    void useAbility(const std::string& args);
-    void rollDice(const std::string& args);
-    void setDice(const std::string& args);     
-    void bid(const std::string& args);       
-    void pass(const std::string& args);          
-    void save(const std::string& args); 
-    void load(const std::string& args);
-    void endTurn(const std::string& args);
+    // // Handler tiap command
+    // void printBoard(const std::string& args);
+    // void printCertificate(const std::string& args);     
+    // void printProperty(const std::string& args);
+    // void printLog(const std::string& args);     
+    // void mortgage(const std::string& args);
+    // void redeem(const std::string& args);
+    // void build(const std::string& args);       
+    // void useAbility(const std::string& args);
+    // void rollDice(const std::string& args);
+    // void setDice(const std::string& args);     
+    // void bid(const std::string& args);       
+    // void pass(const std::string& args);          
+    // void save(const std::string& args); 
+    // void load(const std::string& args);
+    // void endTurn(const std::string& args);
 
 
-    std::shared_ptr<Player> getCurrentPlayer();
-    void nextPlayer();
-    void checkGameOver();
+    // std::shared_ptr<Player> getCurrentPlayer();
+    // void nextPlayer();
+    // void checkGameOver();
 
 public:
 static std::unique_ptr<CardManager> card_manager;
@@ -76,9 +76,9 @@ static std::unique_ptr<CardManager> card_manager;
     ~GameManager() = default;
 
     // Siklus utama permainan
-    void startGame(){}
-    void processCommand(const std::string& commandLine);
-    
+    void startGame();
+    // void processCommand(const std::string& commandLine);    
+    void displayBoard() const;    
     GameState getState() const { return current_state; }
 
     // Implementasi visitor tile

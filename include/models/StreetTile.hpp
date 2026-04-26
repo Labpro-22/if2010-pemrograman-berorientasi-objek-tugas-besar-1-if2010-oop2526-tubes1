@@ -5,14 +5,14 @@
 class StreetTile : public PropertyTile {
 private:
     int building_level;
-    std::vector<int> rent_list;
-    int house_price;
-    int hotel_price;
+    std::vector<float> rent_list;
+    float house_price;
+    float hotel_price;
 
 public:
-    StreetTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status, int building_level, const std::vector<int>& rent_list, int house_price, int hotel_price);
+    StreetTile(int index, std::string name, std::string code, std::string color, float buy_price, float mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status, int building_level, const std::vector<float>& rent_list, float house_price, float hotel_price);
                
-    int calculateRent() const override;
+    float calculateRent() const override;
     void onLand(Player& p) override;
     PropertyType getPropertyType() const override;
 
@@ -26,6 +26,6 @@ public:
     void buildHotel();
     void sellBuilding();
 
-    int getHousePrice() const;
-    int getHotelPrice() const;
+    float getHousePrice() const;
+    float getHotelPrice() const;
 };

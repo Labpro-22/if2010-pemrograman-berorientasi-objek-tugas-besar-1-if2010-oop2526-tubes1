@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-
+#include "Player.hpp"
 class Tile {
 protected:
     int index;
@@ -42,11 +42,11 @@ enum TaxType {
 class TaxTile : public Tile {
 private:
     TaxType tax_type;
-    int tax_amount;
+    float tax_amount;
 
 public:
-    TaxTile(int index, std::string name, std::string code, std::string color, TaxType tax_type, int tax_amount);
-    int getTaxAmount();
+    TaxTile(int index, std::string name, std::string code, std::string color, TaxType tax_type, float tax_amount);
+    float getTaxAmount();
     void onLand(Player& p) override;
 };
 
@@ -58,11 +58,11 @@ public:
 
 class GoTile : public Tile {
 private:
-    int go_reward;
+    float go_reward;
 
 public:
-    GoTile(int index, std::string name, std::string code, std::string color, int go_reward);
-    int getReward();
+    GoTile(int index, std::string name, std::string code, std::string color, float go_reward);
+    float getReward();
     void onLand(Player& p) override;
 };
 

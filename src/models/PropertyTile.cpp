@@ -7,7 +7,7 @@ const std::map<int, int> RailroadTile::railroad_multiplier;
 const std::map<int, int> UtilityTile::utility_multiplier;
 
 // PropertyTile
-PropertyTile::PropertyTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status)
+PropertyTile::PropertyTile(int index, std::string name, std::string code, std::string color, float buy_price, float mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status)
     : Tile(index, name, code, color), buy_price(buy_price), mortgage_price(mortgage_price), owner(owner), festival_level(festival_level), festival_turns_left(festival_turns_left), property_status(property_status) {}
 
 void PropertyTile::onLand(Player& p) {}
@@ -21,11 +21,11 @@ void PropertyTile::decreaseFestival() {
     if (festival_turns_left > 0) festival_turns_left--;
 }
 
-int PropertyTile::getMortgageValue() const {
+float PropertyTile::getMortgageValue() const {
     return mortgage_price;
 }
 
-int PropertyTile::getBuyPrice() const {
+float PropertyTile::getBuyPrice() const {
     return buy_price;
 }
 
@@ -46,14 +46,14 @@ void PropertyTile::setPropertyOwner(std::shared_ptr<Player> p) {
 }
 
 // RailroadTile
-RailroadTile::RailroadTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status)
+RailroadTile::RailroadTile(int index, std::string name, std::string code, std::string color, float buy_price, float mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status)
     : PropertyTile(index, name, code, color, buy_price, mortgage_price, owner, festival_level, festival_turns_left, property_status) {}
 
-int RailroadTile::calculateRent() const {
+float RailroadTile::calculateRent() const {
     std::shared_ptr<Player> current_owner = owner.lock();
     if (!current_owner) return 0; 
 
-    int rent_price = 0;
+    float rent_price = 0;
     int owned_count = current_owner->countOwnedRailroad();
     
     auto it = railroad_multiplier.find(owned_count);
@@ -76,14 +76,14 @@ PropertyType RailroadTile::getPropertyType() const{
 };
 
 // UtilityTile
-UtilityTile::UtilityTile(int index, std::string name, std::string code, std::string color, int buy_price, int mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status) 
+UtilityTile::UtilityTile(int index, std::string name, std::string code, std::string color, float buy_price, float mortgage_price, std::shared_ptr<Player> owner, int festival_level, int festival_turns_left, PropertyStatus property_status) 
     : PropertyTile(index, name, code, color, buy_price, mortgage_price, owner, festival_level, festival_turns_left, property_status) {}
 
-int UtilityTile::calculateRent() const {
+float UtilityTile::calculateRent() const {
     std::shared_ptr<Player> current_owner = owner.lock();
     if (!current_owner) return 0; 
 
-    int rent_price = 0;
+    float rent_price = 0;
     int owned_count = current_owner->countOwnedUtility();
     
     auto it = utility_multiplier.find(owned_count);

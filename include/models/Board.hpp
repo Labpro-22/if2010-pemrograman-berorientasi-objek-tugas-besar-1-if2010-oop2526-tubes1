@@ -15,6 +15,7 @@ private:
 
 public:
     Board();
+    std::string toSaveFormat() const;
     Tile& getTile(int index);
     void addTile(std::unique_ptr<Tile> tile);
     const std::vector<Tile*>& getPropertiesByGroup(const std::string& color) const;

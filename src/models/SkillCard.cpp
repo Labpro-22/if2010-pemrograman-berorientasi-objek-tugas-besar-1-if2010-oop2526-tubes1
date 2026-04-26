@@ -3,14 +3,14 @@
 #include "../../include/models/Board.hpp"
 #include "../../include/models/Effect.hpp"
 #include "../../include/core/GameManager.hpp"
+#include "../../include/core/PropertyManager.hpp"
 #include <random>
 #include <limits>
 #include <sstream>
-
+#include <iostream>
 // SkillCard
 SkillCard::SkillCard(std::string name):name(name){};
 void SkillCard::onDraw(Player& p) {
-    p.addSkillCard(std::unique_ptr<SkillCard>(this));
 }
 std::string SkillCard::toSaveFormat() const{
     std::ostringstream out;
@@ -21,7 +21,6 @@ std::string SkillCard::toSaveFormat() const{
 // MoveSkillCard
 MoveSkillCard::MoveSkillCard(std::string name):SkillCard(name){}
 void MoveSkillCard::onDraw(Player& p) {
-    p.addSkillCard(std::unique_ptr<SkillCard>(this));
     std::uniform_int_distribution<> dist(1, 100);
     this->step = dist(gen);
 }
@@ -37,7 +36,6 @@ std::string MoveSkillCard::toSaveFormat() const{
 // DiscountSkillCard
 DiscountSkillCard::DiscountSkillCard(std::string name):SkillCard(name){}
 void DiscountSkillCard::onDraw(Player& p) {
-    p.addSkillCard(std::unique_ptr<SkillCard>(this));
     std::uniform_real_distribution<> dist(1, 100);
     this->percentage = dist(gen);
 }
@@ -60,9 +58,8 @@ void ShieldSkillCard::useEffect(Player& p) {
 
 // TeleportSkillCard
 TeleportSkillCard::TeleportSkillCard(std::string name):SkillCard(name){}
-TeleportSkillCard::TeleportSkillCard(std::string name):SkillCard(name){}
 void TeleportSkillCard::useEffect(Player& p) {
-    int steps;
+    int steps = 0;
     p.movePlayer(steps);
 }
 
@@ -70,16 +67,24 @@ void TeleportSkillCard::useEffect(Player& p) {
 LassoSkillCard::LassoSkillCard(std::string name):SkillCard(name){}
 void LassoSkillCard::useEffect(Player& p) {
     auto &all=GameManager::players;
+    const int boardSize = PropertyManager::getBoard().getSize();
+    int myPos = p.getPosition();
     Player* moved = nullptr;
-    int distance = (int)std::numeric_limits<float>::infinity();
+    int distance = std::numeric_limits<int>::max();
     for (auto& pl : all) {
-        int temp = pl->getPosition() - p.getPosition();
-        if (temp < distance && temp >= 0 && &p != pl.get()) {
+        if (&p == pl.get()) {
+            continue;
+        }
+        int targetPos = pl->getPosition() % boardSize;
+        if (targetPos < 0) {
+            targetPos += boardSize;
+        }
+        int temp = (targetPos - myPos + boardSize) % boardSize;
+        if (temp > 0 && temp < distance) {
             distance = temp;
             moved = pl.get();
         }
-    }
-    if (moved) {
+    }if (moved) {
         moved->movePlayer(-distance);
     }
 }

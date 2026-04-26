@@ -7,7 +7,7 @@ enum class transaction_type {PLAYER_TO_BANK, BANK_TO_PLAYER, PLAYER_TO_ALL, ALL_
 class FinancialActionCard : public ActionCard { 
     private:
         transaction_type t;
-        int amount;
+        float amount;
     public:
         FinancialActionCard();
         /**

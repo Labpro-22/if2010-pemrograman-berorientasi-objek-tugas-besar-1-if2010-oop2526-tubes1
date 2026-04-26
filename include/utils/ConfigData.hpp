@@ -10,10 +10,10 @@ public:
     std::string code;
     std::string name;
     std::string color;
-    int buy_price;
-    int mortgage_price;
-    int house_price;
-    int hotel_price;
+    float buy_price;
+    float mortgage_price;
+    float house_price;
+    float hotel_price;
     std::vector<int> rent_prices;
 };
 

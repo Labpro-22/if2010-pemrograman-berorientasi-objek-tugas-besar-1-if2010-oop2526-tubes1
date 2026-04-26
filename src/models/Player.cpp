@@ -1,31 +1,49 @@
 #include <algorithm>
 #include <memory>
 #include <sstream>
-#include "../models/Player.hpp"
-#include "../models/PropertyTile.hpp"
-#include "../models/SkillCard.hpp"
-#include "../models/Board.hpp"
+#include <iostream>
+#include "../../include/models/Player.hpp"
+#include "../../include/models/PropertyTile.hpp"
+#include "../../include/models/SkillCard.hpp"
+#include "../../include/models/Board.hpp"
+#include "../../include/core/PropertyManager.hpp"
 
-Player::Player(std::string name, int balance, int position, PlayerState player_state):name(name),balance(balance),position(position){}
-Player& Player::operator+=(int amount){
+std::random_device Player::rd;
+std::mt19937 Player::gen(Player::rd());
+
+Player::Player(std::string name, float balance, int position, PlayerState player_state): name(name), balance(balance), position(position), player_state(player_state) {}
+std::string Player::getname() {
+    return name;
+}
+Player& Player::operator+=(float amount){
     balance += amount;
     return *this;
 }
-Player& Player::operator-=(int amount){
+Player& Player::operator-=(float amount){
     balance -= amount;
     return *this;
 }
-Player Player::operator+(int amount) const{
-    Player result = *this;
+Player Player::operator+(float amount) const{
+    Player result(name, balance, position, player_state);
     result.balance += amount;
     return result;
 }
-Player Player::operator-(int amount) const{
-    Player result = *this;
+Player Player::operator-(float amount) const{
+    Player result(name, balance, position, player_state);
     result.balance -= amount;
     return result;
 }
-void Player::transferTo(Player& player, int amount){
+void Player::receive(int amount){
+    *this+=amount;
+}
+void Player::pay(int amount){
+        *this-=amount;
+}
+void Player::declareBankruptcy(){
+    this->player_state=PlayerState::BANKCRUPT;
+}
+
+void Player::transferTo(Player& player, float amount){
     int paid_amount=amount;
     for (const auto& effect : active_effects) {
         if (effect->blocksPayment()) {
@@ -34,9 +52,14 @@ void Player::transferTo(Player& player, int amount){
     }
     balance -= paid_amount;
     player+=paid_amount;
+
+}
+float Player::getmoney(){
+    return this->balance;
 }
 void Player::movePlayer(int steps){
-    position+=steps;
+    int size=PropertyManager::getBoard().getSize();
+    position=(position+steps) % size;
 }
 void Player::addProperty(PropertyTile* property){
     this->owned_properties.push_back(property);
@@ -56,14 +79,14 @@ void Player::useSkillCard(int index){
 void Player::addEffect(std::unique_ptr<Effect> effect){
     this->active_effects.push_back(std::move(effect));
 }
-int Player::getTotalAssetValue(){
-    int sum=this->balance;
+float Player::getTotalAssetValue(){
+    float sum=this->balance;
     for (auto& asset:this->owned_properties){
         sum+=asset->getBuyPrice();
     }
     return sum;
 }
-bool Player::canPay(int amount){
+bool Player::canPay(float amount){
     return this->balance >= amount;
 }
 void Player::buyProperty(PropertyTile &property){
@@ -76,14 +99,15 @@ void Player::buyProperty(PropertyTile &property){
     }
     *this-=harga;
     this->addProperty(&property);
-    property.setPropertyOwner(std::make_shared<Player>(this));
+    property.setPropertyStatus(PropertyStatus::OWNED);
+    property.setPropertyOwner(shared_from_this());
 }
 void Player::sellProperty(PropertyTile &property){
     this->removeProperty(&property);
     *this+=property.getBuyPrice();
     property.setPropertyStatus(PropertyStatus::BANK);
 }
-int Player::liquidateAsset(int required){
+float Player::liquidateAsset(float required){
     std::vector<PropertyTile*> properties_to_sell = owned_properties;
     std::sort(
         properties_to_sell.begin(),
@@ -120,6 +144,9 @@ std::string Player::toSaveFormat() const {
     case PlayerState::INJAIL:
         out<<"INJAIL\n";
         break;
+    case PlayerState::BANKCRUPT:
+        out<<"BANKCRUPT\n";
+        break;
     }
 
     out << saved_cards.size() << "\n";
@@ -145,12 +172,13 @@ void Player::setFree() {
     player_state = PlayerState::FREE;
 }
 
-void Player::startTurn(Board &board) {
+void Player::startTurn(int step) {
+    auto& board = PropertyManager::getBoard();
     for (const auto& effect : active_effects) {
         effect->onTurnStart(*this);
     }
-    std::uniform_int_distribution<> dist(1, 100);
-    this->movePlayer(dist(gen));
+    // std::uniform_int_distribution<> dist(1, 100);
+    this->movePlayer(step);
     board.getTile(this->position).onLand(*this);
 }
 

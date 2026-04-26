@@ -1,9 +1,9 @@
-#pragma once
+// #pragma once
 
-#include "../../include/models/Saveable.hpp"
-#include <string>
-class GameManager;
-class SaveLoadManager{
-     public:
-        void save(GameManager g, std::string dir);
-};
+// #include "../../include/models/Saveable.hpp"
+// #include <string>
+// class GameManager;
+// class SaveLoadManager{
+//      public:
+//         void save(GameManager g, std::string dir);
+// };

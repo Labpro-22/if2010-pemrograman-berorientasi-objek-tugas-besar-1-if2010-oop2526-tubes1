@@ -8,9 +8,9 @@
 
 class CardManager : Saveable {
 private:
-    Deck<Card*> chance_deck;
-    Deck<Card*> community_chest_deck;
-    Deck<Card*> skill_deck;
+    Deck<std::unique_ptr<ActionCard>> chance_deck;
+    Deck<std::unique_ptr<ActionCard>> community_chest_deck;
+    Deck<std::unique_ptr<SkillCard>> skill_deck;
 
 public:
     CardManager();
@@ -29,6 +29,6 @@ public:
     void giveSkillCardToPlayer(Player& player);
 
     // Fungsi ini dipanggil oleh GameManager ketika pemain selesai menggunakan SkillCard.
-    void discardSkillCard(SkillCard* usedCard);
+    void discardSkillCard(std::unique_ptr<SkillCard> usedCard);
     std::string toSaveFormat() const override;
 };

@@ -4,6 +4,12 @@
 #include "../../include/models/Player.hpp"
 #include <stdexcept>
 
+Board::Board() = default;
+
+std::string Board::toSaveFormat() const {
+    
+}
+
 Tile& Board::getTile(int index) {
     if (tiles.empty()) {
         throw std::runtime_error("Cannot get tile: Board is empty!");

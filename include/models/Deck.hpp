@@ -18,7 +18,8 @@ public:
         if(cards.empty()){
             throw "placeholder";
         }
-        T temp= cards.top();
+
+        T temp = std::move(cards.top());
         cards.pop();
         return temp;
     }
@@ -30,13 +31,39 @@ public:
         std::mt19937 g(rd());
         std::shuffle(discard.begin(), discard.end(), g);
         for (auto& card : discard) {
-            cards.push(card);
+            cards.push(std::move(card));
         }
         discard.clear();
     }
-    void AddToDiscard(T &card){ //belum ada di m1
-        discard.push_back(card);
-    }
-    std::string toSaveFormat()const override;
 
+    void AddToDiscard(T card) { // belum ada di m1
+        discard.push_back(std::move(card));
+    }
+    std::string toSaveFormat()const override {
+        return "";
+    }
 };
+// template<class T>
+// std::string Deck<ActionCard>::toSaveFormat() const{
+
+// }
+// template<class T>  
+// std::string Deck<SkillCard>::toSaveFormat() const{
+
+// }
+// template<class T>  
+// std::string Deck<Card*>::toSaveFormat() const{
+
+// }
+
+template <>
+inline std::unique_ptr<ActionCard> Deck<std::unique_ptr<ActionCard>>::drawCard(){
+    if(cards.empty()){
+        throw "placeholder";
+    }
+
+    std::unique_ptr<ActionCard> temp = std::move(cards.top());
+    cards.pop();
+    this->AddToDiscard(std::move(temp));
+    return temp;
+}

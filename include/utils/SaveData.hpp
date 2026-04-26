@@ -6,7 +6,7 @@
 class CardSaveData {
 public:
     std::string card_type;
-    int value;
+    float value;
     int remaining_duration;
 
     CardSaveData() : value(0), remaining_duration(0) {}
@@ -15,7 +15,7 @@ public:
 class PlayerSaveData {
 public:
     std::string username;
-    int balance;
+    float balance;
     std::string position_code;
     std::string status;
     std::vector<CardSaveData> hand_cards;

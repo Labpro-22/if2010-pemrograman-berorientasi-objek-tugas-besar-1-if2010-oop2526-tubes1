@@ -57,7 +57,7 @@ std::vector<std::unique_ptr<Tile>> IOManager::IOparsePropertyTileConfig(const st
         if(iss >> ID >> KODE >> NAMA >> JENIS){
             if(JENIS=="STREET"){
                 if(iss >> WARNA >> HARGA_LAHAN >> NILAI_GADAI >> UPG_RUMAH >> UPG_HT >> RENT_L0 >> RENT_L1 >> RENT_L2 >> RENT_L3 >> RENT_L4 >> RENT_L5){
-                    std::vector<int> rent;
+                    std::vector<float> rent;
                     rent.push_back(RENT_L0);
                     rent.push_back(RENT_L1);
                     rent.push_back(RENT_L2);

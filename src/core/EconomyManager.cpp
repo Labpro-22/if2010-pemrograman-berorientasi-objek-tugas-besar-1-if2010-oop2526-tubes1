@@ -4,7 +4,7 @@
 #include <memory>
 #include <algorithm>
 #include <iostream>
-#include <PropertyManager.hpp>
+#include "../../include/core/PropertyManager.hpp"
 void EconomyManager::addMoney(Player& player, float amount){
     player+=amount;
 }
@@ -15,11 +15,12 @@ bool EconomyManager::deductMoney(Player& player, float amount){
     player-=amount;
     return true;
 }
-bool EconomyManager::transferMoney(Player& payer, Player& receiver, int amount){
+bool EconomyManager::transferMoney(Player& payer, Player& receiver, float amount){
     payer.transferTo(receiver,amount);
+    return true;
 }
 // Pemrosesan pajak
-bool EconomyManager::processTax(Player& player, TaxType type, int baseTaxAmount){
+bool EconomyManager::processTax(std::shared_ptr<Player> player, TaxType type, float baseTaxAmount){
     auto &logger=GameManager::logger;
     float tax;
     if (type==TaxType::PPH){
@@ -29,52 +30,51 @@ bool EconomyManager::processTax(Player& player, TaxType type, int baseTaxAmount)
             tax=baseTaxAmount;
         }
         else{
-            tax=player.getTotalAssetValue() * 0.1;
+            tax=player->getTotalAssetValue() * 0.1;
         }
     }else{
         tax=baseTaxAmount;
     }
-    if(deductMoney(player,tax)){
-        logger->recordEvent(LogEntry(0,player.getname(),actions::PAJAK,"bayar pajak sebanyak "));
+    if(deductMoney(*player,tax)){
+        logger->recordEvent(LogEntry(0,player->getname(),actions::PAJAK,"bayar pajak sebanyak "));
+        return true;
     } else{
-        executeBankruptcy(player,nullptr);
+        executeBankruptcy(player,nullptr,tax);
+        return false;
     }
 }
 // Proses lelang
-void EconomyManager::startAuction(PropertyTile* property, const std::vector<std::shared_ptr<Player>>& players){
-    for (auto& p:players){
-        active_bidders.push_back(p);
-    }
-    auto p=active_bidders.begin();
-    while (!isAuctionOver())
-    {
+void EconomyManager::startAuction(PropertyTile* property){
+    active_bidders = GameManager::players;
+    current_highest_bid = 0;
+    current_highest_bidder.reset();
+    size_t bidder_index = 0;
+    while (!isAuctionOver()) {
         int bid;
-        std::cin>>bid;
-        try{
-            if (bid==0){
-                foldBid(p);
-                p++;
-                if (p == active_bidders.end()) {
-                    p = active_bidders.begin();
+        std::cin >> bid;
+        try {
+            if (bid == 0) {
+                active_bidders.erase(active_bidders.begin() + bidder_index);
+                if (bidder_index >= active_bidders.size()) {
+                    bidder_index = 0;
                 }
-            } else{
-                placeBid(bid,*p);
-            }  
-            p++;
-            if (p == active_bidders.end()) {
-                p = active_bidders.begin();
-            } 
+            } else {
+                placeBid(bid, active_bidders[bidder_index]);
+                bidder_index = (bidder_index + 1) % active_bidders.size();
+            }
         }
-        catch(const std::exception& e){
-            std::cerr << e.what() << '\n';
+        catch(const char* e) {
+            std::cerr << e << " " << current_highest_bid << ">" << bid << '\n';
         }
     }
+    resolveAuction(property,active_bidders[0]);
  
 }
-void EconomyManager::placeBid(int amount, std::shared_ptr<Player> &player){
+void EconomyManager::placeBid(float amount, std::shared_ptr<Player> &player){
     if (current_highest_bid<=amount){
         current_highest_bid=amount;
         current_highest_bidder=player;
+        return;
     }
     throw "ga cukup uang elu";
 }
@@ -100,25 +100,32 @@ std::vector<std::shared_ptr<Player>> EconomyManager::getCurrentBidder() const{
 int EconomyManager::getHighestBid() const{
     return this->current_highest_bid;
 }
+std::string EconomyManager::toSaveFormat() const {
+    return "";
+}
 // Proses ketika pemain tidak bisa membayar kewajiban
-bool EconomyManager::isBankruptcyInevitable(Player& player, int debtAmount) const{
+bool EconomyManager::isBankruptcyInevitable(Player& player, float debtAmount) const{
     if(player.getTotalAssetValue()<debtAmount){
         return true;
     }
     return false;
 }
-void EconomyManager::executeBankruptcy(std::shared_ptr<Player>  bankruptPlayer, std::shared_ptr<Player> creditor,int amount){
+void EconomyManager::executeBankruptcy(std::shared_ptr<Player>  bankruptPlayer, std::shared_ptr<Player> creditor,float amount){
     if(isBankruptcyInevitable(*bankruptPlayer,amount)){
         bankruptPlayer->declareBankruptcy();
     }
     // printopsi(bankruptPlayer)
-    PropertyTile &dijual;
+    PropertyTile *dijual = nullptr;
     //dijual=pilihopsi(bankruptPlayer)
-    if (condition) //jual=true, mortgage=false;
+    if (dijual != nullptr) // jual=true, mortgage=false;
     {
-        bankruptPlayer->sellProperty(dijual);
+        bankruptPlayer->sellProperty(*dijual);
     } else{
-        GameManager::property_manager.get()->tryMortgage(bankruptPlayer,&dijual);
+        GameManager::property_manager.get()->tryMortgage(bankruptPlayer,dijual);
     }
-    bankruptPlayer->transferTo(*creditor,amount);
+    if (creditor) {
+        bankruptPlayer->transferTo(*creditor,amount);
+    }
 }
+
+
