@@ -12,6 +12,10 @@
 #include "../Bank/Bank.hpp"
 #include "../Commands/BeliCommand.hpp"
 #include "../Commands/FestivalCommand.hpp"
+#include "../Card/LassoCard.hpp"
+#include "../Card/TeleportCard.hpp"
+#include "../Card/DemolitionCard.hpp"
+#include "../Card/DiscountCard.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -805,16 +809,70 @@ void ComputerPlayer::executeTurn(GameMaster& gm) {
               << " | Saldo: M" << getBalance()
               << " | Properti: " << getPropertyCount() << std::endl;
 
-    // ── 1. Gunakan Skill Card (sebelum lempar dadu) ──────────────────
-    if (!hasUsedCardThisTurn() && !getHand().empty()) {
-        int cardIdx = decideUseSkillCard(gs);
-        if (cardIdx >= 0 && cardIdx < getHandSize()) {
-            SkillCard* chosen = getHand()[cardIdx];
-            if (chosen) {
+// ── 1. Gunakan Skill Card (sebelum lempar dadu) ──────────────────
+if (!gs.getHasUsedCard() && !getHand().empty()) {
+    int cardIdx = decideUseSkillCard(gs);
+    if (cardIdx >= 0 && cardIdx < getHandSize()) {
+        SkillCard* chosen = getHand()[cardIdx];
+        if (chosen) {
+            std::string type = chosen->getType();
+            
+            // LassoCard — pilih target dulu
+            if (type == "LassoCard") {
+                auto* lasso = dynamic_cast<LassoCard*>(chosen);
+                if (lasso) {
+                    // Pilih target: player dengan properti terbanyak
+                    Player* target = nullptr;
+                    int maxProp = 0;
+                    for (Player* p : gs.getActivePlayers()) {
+                        if (p == this) continue;
+                        if (p->getPropertyCount() > maxProp) {
+                            maxProp = p->getPropertyCount();
+                            target = p;
+                        }
+                    }
+                    if (target) {
+                        lasso->setTargetPlayerUsername(target->getUsername());
+                        gm.useSkillCard(this, chosen, gs);
+                        gs.setHasUsedCard(true);
+                    }
+                }
+            }
+            // TeleportCard — pilih tile properti bank terdekat
+            else if (type == "TeleportCard") {
+                auto* teleport = dynamic_cast<TeleportCard*>(chosen);
+                if (teleport) {
+                    Board* board = gs.getBoard();
+                    int bestPos = -1;
+                    int bestScore = -1;
+                    if (board) {
+                        for (int i = 0; i < board->getSize(); i++) {
+                            auto* pt = dynamic_cast<PropertyTile*>(board->getTile(i));
+                            if (!pt || !pt->getProperty()) continue;
+                            if (pt->getProperty()->getStatus() == PropertyStatus::BANK) {
+                                int price = pt->getProperty()->getPurchasePrice();
+                                if (price > bestScore && canAfford(price)) {
+                                    bestScore = price;
+                                    bestPos = i;
+                                }
+                            }
+                        }
+                    }
+                    if (bestPos >= 0) {
+                        teleport->setTargetPosition(bestPos, gs);
+                        gm.useSkillCard(this, chosen, gs);
+                        gs.setHasUsedCard(true);
+                    }
+                }
+            }
+            // Kartu lain — langsung pakai
+            else {
                 gm.useSkillCard(this, chosen, gs);
+                gs.setHasUsedCard(true);
             }
         }
     }
+}
 
     // ── 2. Tangani penjara ───────────────────────────────────────────
     if (isInJail()) {
