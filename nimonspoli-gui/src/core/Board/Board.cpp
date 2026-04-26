@@ -457,6 +457,11 @@ void TaxTile::onLanded(Player &p, GameState &gs)
             return;
         }
 
+        if (p.getStatus() == PlayerStatus::BANKRUPT || gs.getPhase() == GamePhase::BANKRUPTCY)
+        {
+            return;
+        }
+
         // Set phase AWAITING_PBM agar GUI menampilkan dialog info PBM
         gs.setPhase(GamePhase::AWAITING_PBM);
     }

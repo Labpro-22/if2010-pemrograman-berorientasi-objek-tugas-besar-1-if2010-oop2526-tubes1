@@ -276,7 +276,7 @@ int Player::getWealth() const
     int total = balance;
     for (auto *p : properties)
     {
-        total += p->getPurchasePrice();
+        if(p->getStatus() != PropertyStatus::MORTGAGED) total += p->getPurchasePrice();
     }
     return total;
 }

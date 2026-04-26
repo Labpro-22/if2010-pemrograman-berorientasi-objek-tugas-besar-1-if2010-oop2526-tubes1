@@ -35,7 +35,12 @@ void BayarPajakCommand::handlePPHChoice(int choice)
         if (!p->canAfford(flatAmount))
         {
             // Tidak mampu bayar → trigger bankruptcy flow
-            if (gm) gm->handleDebtPayment(p, flatAmount, nullptr);
+            if (gm) {
+                int liq = gm->handleDebtPayment(p, flatAmount, nullptr);
+                if (liq == 2) {
+                    gm->handleBankruptcy(p, gm->getState().getBank());
+                }
+            }
             return;
         }
         *p -= flatAmount;
@@ -50,7 +55,12 @@ void BayarPajakCommand::handlePPHChoice(int choice)
         if (!p->canAfford(taxAmt))
         {
             // Tidak mampu bayar → trigger bankruptcy flow
-            if (gm) gm->handleDebtPayment(p, taxAmt, nullptr);
+            if (gm) {
+                int liq = gm->handleDebtPayment(p, taxAmt, nullptr);
+                if (liq == 2) {
+                    gm->handleBankruptcy(p, gm->getState().getBank());
+                }
+            }
             return;
         }
         *p -= taxAmt;
@@ -67,7 +77,12 @@ void BayarPajakCommand::handlePBM()
     if (!p->canAfford(flatAmount))
     {
         // Tidak mampu bayar → trigger bankruptcy flow
-        if (gm) gm->handleDebtPayment(p, flatAmount, nullptr);
+        if (gm) {
+            int liq = gm->handleDebtPayment(p, flatAmount, nullptr);
+            if (liq == 2) {
+                gm->handleBankruptcy(p, gm->getState().getBank());
+            }
+        }
         return;
     }
 

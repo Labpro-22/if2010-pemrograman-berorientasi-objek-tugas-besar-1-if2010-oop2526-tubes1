@@ -541,7 +541,6 @@ void GameMaster::sellPropertyToBank(Player *player, Property *prop)
 
     int value;
     auto *sp = dynamic_cast<StreetProperty *>(prop);
-    value = sp->calculateSellPrice();
 
     if (sp)
     {
@@ -629,7 +628,18 @@ void GameMaster::processNextCardPayment()
                 // BankruptcyDialog::onFinish() akan memanggil processNextCardPayment()
                 return;
             }
-            // status == 2: langsung bangkrut, lanjut ke entri berikutnya
+            else if (status == 2)
+            {
+                // status == 2: langsung bangkrut, lanjut ke entri berikutnya
+                if (creditor)
+                {
+                    handleBankruptcy(debtor, creditor);
+                }
+                else
+                {
+                    handleBankruptcy(debtor, state.getBank());
+                }
+            }
         }
     }
 

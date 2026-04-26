@@ -63,7 +63,13 @@ string Property::getOwnerId() const
 void Property::setOwner(const string &newOwnerId)
 {
     ownerId = newOwnerId;
-    status = newOwnerId.empty() ? PropertyStatus::BANK : PropertyStatus::OWNED;
+    if (newOwnerId.empty()) {
+        status = PropertyStatus::BANK;
+    } else if (status == PropertyStatus::MORTGAGED) {
+        status = PropertyStatus::MORTGAGED;
+    } else {
+        status = PropertyStatus::OWNED;
+    }
 }
 
 void Property::clearOwner()
