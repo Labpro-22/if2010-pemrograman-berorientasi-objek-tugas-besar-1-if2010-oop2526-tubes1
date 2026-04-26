@@ -7,8 +7,7 @@
 RollDiceCommand::RollDiceCommand() : Command("roll_dice", "Roll dice for current turn") {}
 
 void RollDiceCommand::execute(GameEngine& engine, Player& player) {
-	engine.getState().setHasRolledDice(true);
-	player.setHasRolledDiceThisTurn(true);
+	engine.processCommand("lempar", player);
 }
 
 bool RollDiceCommand::canExecute(const GameStateView& state) const {
@@ -18,8 +17,7 @@ bool RollDiceCommand::canExecute(const GameStateView& state) const {
 EndTurnCommand::EndTurnCommand() : Command("end_turn", "End current player's turn") {}
 
 void EndTurnCommand::execute(GameEngine& engine, Player& player) {
-	engine.getState().resetTurnFlags();
-	player.resetTurnFlags();
+	engine.processCommand("selesai", player);
 }
 
 bool EndTurnCommand::canExecute(const GameStateView& state) const {
@@ -29,10 +27,12 @@ bool EndTurnCommand::canExecute(const GameStateView& state) const {
 
 PrintBoardCommand::PrintBoardCommand() : Command("print_board", "Display board snapshot") {}
 
-void PrintBoardCommand::execute(GameEngine&, Player&) {
+void PrintBoardCommand::execute(GameEngine& engine, Player& player) {
+	engine.processCommand("cetak papan", player);
 }
 
 PrintLogCommand::PrintLogCommand() : Command("print_log", "Display transaction log") {}
 
-void PrintLogCommand::execute(GameEngine&, Player&) {
+void PrintLogCommand::execute(GameEngine& engine, Player& player) {
+	engine.processCommand("cetak log", player);
 }
