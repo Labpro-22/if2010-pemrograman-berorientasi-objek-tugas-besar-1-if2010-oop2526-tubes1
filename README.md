@@ -1,13 +1,6 @@
-<!-- [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/b842RB8g)
-# Tugas Besar 1 IF2010 Pemrograman Berorientasi Objek
-
-Project Structure ini hanyalah referensi, Anda dapat menyesuaikannya dengan kebutuhan tim Anda
- -->
-
 # NIMONSPOLY
 ## IF2010 Object Oriented Programming
-
-This program is made for IF2010 Object Oriented Programming course @ Institut Teknologi Bandung.
+NIMONSPOLY is a C++ Monopoly-inspired board game project developed with a strong Object-Oriented Programming approach to model the game’s core components in a modular and maintainable way, including players, boards, tiles, properties, cards, transactions, turn management, configuration handling, and save/load functionality. The game supports interactive gameplay through features such as property purchasing and auctions, rent payments, taxes, jail mechanics, Chance and Community Chest cards, skill cards, festival effects, bankruptcy handling, and winner calculation based on the final game state. In addition to the command-line interface, NIMONSPOLY includes a Raylib-based graphical user interface that visualizes the game board, player status, real-time action logs, integrated input prompts, dice animations, and direct interactions with tiles and owned properties. The project is designed for extensibility through clear class responsibility separation, inheritance and polymorphism in the tile and card systems, external configuration files, and support for flexible board layouts.
 
 ## Meet the developers – [BCC] BurntCheesecake 
 
