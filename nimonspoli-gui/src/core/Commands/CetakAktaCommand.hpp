@@ -5,7 +5,8 @@
 #include <string>
 using namespace std;
 
-class GameState;
+class GameMaster;
+class Property;
 
 class CetakAktaCommand : public Command
 {
@@ -14,7 +15,9 @@ private:
 
 public:
     explicit CetakAktaCommand(const string &kodePetak);
-    void execute(GameMaster &gs) override;
+
+    void execute(GameMaster &gm) override;
+    string getOutput(GameMaster &gm);
 };
 
 #endif
