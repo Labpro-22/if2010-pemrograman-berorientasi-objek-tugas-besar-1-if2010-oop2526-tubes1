@@ -50,11 +50,6 @@ public:
     virtual bool canBeMortgaged(Game* game) const;
 
     bool isOwnable() const override;
-    Player* getOwner() const;
-    PropertyStatus getStatus() const;
-    int getMortgageValue() const;
-    int getFestivalMultiplier() const;
-    int getFestivalDuration() const;
 };
 
 #endif

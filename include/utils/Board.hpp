@@ -36,7 +36,6 @@ public:
         const std::string& turnInfo = ""
     ) const;
     
-    std::vector<PropertyTile*>& getPropertyTiles();
 };
 
 #endif

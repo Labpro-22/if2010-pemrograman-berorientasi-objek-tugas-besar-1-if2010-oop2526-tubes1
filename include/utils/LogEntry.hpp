@@ -11,8 +11,11 @@ private:
     string actionType;
     string detail;
 public:
-    int getTurn() const { return turn; }
-    std::string getUsername() const { return username; }
-    std::string getActionType() const { return actionType; }
-    std::string getDetail() const { return detail; }string toString();
+    LogEntry();
+    LogEntry(int turn, string username, string actionType, string detail);
+    int getTurn() const;
+    string getUsername() const;
+    string getActionType() const;
+    string getDetail() const;
+    string toString() const;
 };
