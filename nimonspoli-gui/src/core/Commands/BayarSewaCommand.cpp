@@ -154,7 +154,9 @@ void BayarSewaCommand::processPayment(GameMaster &gm, Player *owner, int rent)
                                " (" + prop->getCode() + ")");
         }
 
-        // Delegasi ke GameMaster untuk handle debt/bankruptcy
-        gm.handleDebtPayment(lander, rent, owner);
+        int status = gm.handleDebtPayment(lander, rent, owner);
+        if (status == 2) {
+            gm.handleBankruptcy(lander, owner);
+        }
     }
 }

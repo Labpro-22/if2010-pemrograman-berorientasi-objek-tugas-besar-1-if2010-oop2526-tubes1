@@ -355,7 +355,10 @@ void JailTile::payFine(Player &p, GameState &gs)
     {
         if (gm)
         {
-            gm->handleDebtPayment(&p, jailFine, nullptr);
+            int status = gm->handleDebtPayment(&p, jailFine, nullptr);
+            if (status == 2) {
+                gm->handleBankruptcy(&p, gs.getBank());
+            }
             release(p);
         }
         else

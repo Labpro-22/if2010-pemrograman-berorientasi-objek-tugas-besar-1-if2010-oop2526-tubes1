@@ -126,6 +126,7 @@ void GameScreen::drawTaxDialog()
                 player, taxTile, bank, gs.getLogger(), gs.getTaxConfig(), gs.getCurrTurn());
             try
             {
+                cmd->execute(*gm);
                 cmd->handlePPHChoice(1);
             }
             catch (...)
@@ -138,8 +139,9 @@ void GameScreen::drawTaxDialog()
             delete cmd;
             if (gs.getPendingDebt() > 0)
                 gs.setPhase(GamePhase::BANKRUPTCY);
-            else
+            else if (gs.getPhase() == GamePhase::AWAITING_TAX)
                 gs.setPhase(GamePhase::PLAYER_TURN);
+            
             taxDialog.visible = false;
         }
         else if (pctHov && !pctDis && player && bank && taxTile)
@@ -148,6 +150,7 @@ void GameScreen::drawTaxDialog()
                 player, taxTile, bank, gs.getLogger(), gs.getTaxConfig(), gs.getCurrTurn());
             try
             {
+                cmd->execute(*gm);
                 cmd->handlePPHChoice(2);
             }
             catch (...)
@@ -160,8 +163,9 @@ void GameScreen::drawTaxDialog()
             delete cmd;
             if (gs.getPendingDebt() > 0)
                 gs.setPhase(GamePhase::BANKRUPTCY);
-            else
+            else if (gs.getPhase() == GamePhase::AWAITING_TAX)
                 gs.setPhase(GamePhase::PLAYER_TURN);
+                
             taxDialog.visible = false;
         }
     }
