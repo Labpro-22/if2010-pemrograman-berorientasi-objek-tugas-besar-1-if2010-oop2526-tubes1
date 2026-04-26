@@ -420,6 +420,9 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
         p->setOwner(to->getUsername());
         to->addProperty(p);
         from->removeProperty(p);
+
+        log(to->getUsername(), "BELI",
+            "Mengambil alih " + p->getName() + " dari " + from->getUsername());
     }
 
     // Pindahkan semua kartu kemampuan ke creditor
@@ -427,7 +430,11 @@ void GameMaster::handleBankruptcy(Player *from, Player *to)
     for (SkillCard *c : hand)
     {
         if (c)
+        {
             to->forceAddSkillCard(c);
+            log(to->getUsername(), "KARTU",
+                "Mengambil alih kartu " + c->getType() + " dari " + from->getUsername());
+        }
     }
     while (from->getHandSize() > 0)
     {
@@ -487,6 +494,9 @@ void GameMaster::handleBankruptcy(Player *from, Bank *bank)
         p->setStatus(PropertyStatus::BANK);
         from->removeProperty(p);
         state.addToPendingAuctionQueue(p);
+
+        log("Bank", "BELI",
+            p->getName() + " kembali ke Bank dari " + from->getUsername());
     }
 
     // Kembalikan semua kartu kemampuan ke deck

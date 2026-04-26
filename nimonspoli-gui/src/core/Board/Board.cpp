@@ -3,6 +3,7 @@
 #include "../Property/RailroadProperty.hpp"
 #include "../Property/UtilityProperty.hpp"
 #include "../Player/Player.hpp"
+#include "../utils/TransactionLogger.hpp"
 
 // ═════════════════════════════════════════════
 //  Helper functions
@@ -188,6 +189,14 @@ void RailRoadTile::onLanded(Player &p, GameState &gs)
         property->setOwner(p.getUsername());
         property->setStatus(PropertyStatus::OWNED);
         p.addProperty(property);
+
+        // Log ke TransactionLogger
+        TransactionLogger *logger = gs.getLogger();
+        if (logger)
+        {
+            logger->addLog(gs.getCurrTurn(), p.getUsername(), "BELI",
+                           "Akuisisi otomatis " + property->getName() + " (Gratis)");
+        }
     }
     else if (property->getStatus() == PropertyStatus::OWNED)
     {
@@ -233,6 +242,14 @@ void UtilityTile::onLanded(Player &p, GameState &gs)
         property->setOwner(p.getUsername());
         property->setStatus(PropertyStatus::OWNED);
         p.addProperty(property);
+
+        // Log ke TransactionLogger
+        TransactionLogger *logger = gs.getLogger();
+        if (logger)
+        {
+            logger->addLog(gs.getCurrTurn(), p.getUsername(), "BELI",
+                           "Akuisisi otomatis " + property->getName() + " (Gratis)");
+        }
     }
     else if (property->getStatus() == PropertyStatus::OWNED)
     {

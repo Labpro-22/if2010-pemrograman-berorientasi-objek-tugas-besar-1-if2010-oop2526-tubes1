@@ -35,6 +35,8 @@ std::string GameScreen::getActionIcon(const std::string& action)
     if (action == "KARTU")  return "[K]";
     if (action == "LELANG") return "[L]";
     if (action == "BAYAR")  return "[P]";
+    if (action == "FESTIVAL") return "[F]";
+    if (action == "BANKRUPT") return "[X]";
     return "[?]";
 }
 
@@ -48,6 +50,8 @@ Color GameScreen::getActionColor(const std::string& action)
     if (action == "KARTU")  return {180,120,220,255};
     if (action == "LELANG") return {240,200, 60,255};
     if (action == "BAYAR")  return {220, 80, 80,255};
+    if (action == "FESTIVAL") return {255, 100, 200, 255};
+    if (action == "BANKRUPT") return {255, 50, 50, 255};
     return {180,180,180,255};
 }
 

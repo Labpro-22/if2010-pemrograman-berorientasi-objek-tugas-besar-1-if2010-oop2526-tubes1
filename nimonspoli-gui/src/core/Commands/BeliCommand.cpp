@@ -1,5 +1,6 @@
 #include "BeliCommand.hpp"
 #include "../Player/Player.hpp"
+#include "../Utils/TransactionLogger.hpp"
 #include "../Property/Property.hpp"
 #include "../GameMaster/GameMaster.hpp"
 #include "../GameState/GameState.hpp"
@@ -60,6 +61,18 @@ void BeliCommand::execute(GameMaster &gm)
         }
 
         std::cout << ". Saldo: M" << currentPlayer->getBalance() << std::endl;
+
+        // Log ke TransactionLogger
+        TransactionLogger *logger = gs.getLogger();
+        if (logger)
+        {
+            std::string detail = "Membeli " + property->getName() + " seharga M" + std::to_string(finalPrice);
+            if (finalPrice < originalPrice)
+            {
+                detail += " (Diskon " + std::to_string(currentPlayer->getDiscount()) + "%)";
+            }
+            logger->addLog(gs.getCurrTurn(), currentPlayer->getUsername(), "BELI", detail);
+        }
 
         gs.setPhase(GamePhase::PLAYER_TURN);
     }

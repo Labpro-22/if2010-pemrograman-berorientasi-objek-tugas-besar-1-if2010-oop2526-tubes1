@@ -59,6 +59,9 @@ void LemparDaduCommand::execute(GameMaster &gm)
     // ── Gerakkan pemain ───────────────────────────────────────────────────
     gameMaster.movePlayer(currentPlayer, total);
 
+    // Tambah log
+    gameMaster.log(currentPlayer->getUsername(), "DADU",
+                       "Player mendapatkan dadu1: " + to_string(val1) + " &  dadu2:" + to_string(val2));
     // ── Handle double (giliran tambahan) ──────────────────────────────────
     if (dice.isDouble())
     {
