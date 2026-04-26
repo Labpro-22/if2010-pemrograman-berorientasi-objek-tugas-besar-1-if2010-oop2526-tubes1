@@ -165,7 +165,7 @@ void GameScreen::drawDemolitionTargetDialog()
 
                 try
                 {
-                    demoCard->setTargetProperty(prop);
+                    demoCard->setTargetProperty(prop->getId());
 
                     GunakanKartuKemampuanCommand cmd(idx);
                     cmd.execute(*gm);
@@ -537,7 +537,7 @@ void GameScreen::drawLassoTargetDialog()
 
             try
             {
-                lassoCard->setTargetPlayer(p);
+                lassoCard->setTargetPlayerUsername(p->getUsername());
 
                 GunakanKartuKemampuanCommand cmd(idx);
                 cmd.execute(*gm);

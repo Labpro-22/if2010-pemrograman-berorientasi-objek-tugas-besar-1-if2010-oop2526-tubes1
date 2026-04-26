@@ -79,6 +79,22 @@ Tile *Board::findTileByCode(const string &code) const
     return tile[idx];
 }
 
+Property *Board::findPropertyById(int id) const
+{
+    for (Tile *t : tile)
+    {
+        PropertyTile *pt = dynamic_cast<PropertyTile *>(t);
+        if (!pt)
+            continue;
+
+        Property *prop = pt->getProperty();
+        if (prop && prop->getId() == id)
+            return prop;
+    }
+
+    return nullptr;
+}
+
 // ═════════════════════════════════════════════
 //  Tile (base)
 // ═════════════════════════════════════════════

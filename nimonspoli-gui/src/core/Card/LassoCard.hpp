@@ -7,13 +7,13 @@ using namespace std;
 class LassoCard : public SkillCard
 {
 private:
-    Player *targetPlayer = nullptr;
+    string targetPlayerUsername;
 
 public:
     LassoCard();
     LassoCard(const string &type, const string &description, bool used);
-    void setTargetPlayer(Player *target);
     ~LassoCard();
+    void setTargetPlayerUsername(const string &target);
     void execute(Player &p, GameState &gs) override;
     string successMessage() const override;
 };

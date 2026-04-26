@@ -1,59 +1,67 @@
 #include "DemolitionCard.hpp"
 #include "../GameState/GameState.hpp"
+#include "../Board/Board.hpp"
+#include "../GameState/GameState.hpp"
 #include "../Player/Player.hpp"
 #include "../Property/Property.hpp"
 #include "../Property/StreetProperty.hpp"
+
+class GameMaster;
+class Board;
 
 DemolitionCard::DemolitionCard() : SkillCard("Hancurkan properti milik lawan", "DemolitionCard")
 {
 }
 
-DemolitionCard::DemolitionCard(const string &type, const string &description, bool used) : SkillCard(type, description, used)
+DemolitionCard::DemolitionCard(const string &type, const string &description, bool used) : SkillCard(type, description, used), targetPropertyId(-1)
 {
 }
 
 DemolitionCard::~DemolitionCard()
 {
 }
-
-void DemolitionCard::setTargetProperty(Property *target)
+int DemolitionCard::getTargetPropertyId() const
 {
-    targetProperty = target;
+    return targetPropertyId;
+}
+void DemolitionCard::setTargetProperty(int targetPropertyId)
+{
+    this->targetPropertyId = targetPropertyId;
 }
 
 void DemolitionCard::execute(Player &p, GameState &gs)
 {
-    if (targetProperty)
-    {
-        StreetProperty *sp = dynamic_cast<StreetProperty *>(targetProperty);
-        if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
-        {
-            sp->sellAllBuildings();
-        }
-    }
-    else
-    {
-        vector<Player *> players = gs.getActivePlayers();
+    if (targetPropertyId == -1)
+        return;
 
-        for (Player *other : players)
-        {
-            if (other == &p)
-                continue;
-            vector<Property *> props = other->getProperties();
-            for (Property *prop : props)
-            {
-                StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
-                if (sp && (sp->getBuildingCount() > 0 || sp->gethasHotel()))
-                {
-                    sp->sellAllBuildings();
-                    break;
-                }
-            }
-            break;
-        }
-    }
-    
-    targetProperty = nullptr;
+    GameMaster *gm = gs.getGameMaster();
+    if (!gm)
+        return;
+
+    Board *board = gm->getState().getBoard();
+    if (!board)
+        return;
+
+    Property *targetProperty = board->findPropertyById(targetPropertyId);
+    if (!targetProperty)
+        return;
+
+    if (targetProperty->getOwnerId() == p.getUsername())
+        return;
+
+    if (targetProperty->getStatus() != PropertyStatus::OWNED)
+        return;
+
+    StreetProperty *sp = dynamic_cast<StreetProperty *>(targetProperty);
+    if (!sp)
+        return;
+
+    if (sp->getBuildingCount() <= 0 && !sp->gethasHotel())
+        return;
+
+    sp->sellAllBuildings();
+
+    targetPropertyId = -1;
     markUsed();
 }
 

@@ -22,7 +22,7 @@ Property::~Property()
 {
 }
 
-int Property::getUsername() const
+int Property::getId() const
 {
     return id;
 }

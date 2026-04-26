@@ -3,12 +3,16 @@
 #include "../GameState/GameState.hpp"
 #include "../GameMaster/GameMaster.hpp"
 #include "../Board/Board.hpp"
+#include "../Board/Board.hpp"
+
+class Board;
+class GameMaster;
 
 LassoCard::LassoCard() : SkillCard("Tarik lawan ke petakmu", "LassoCard")
 {
 }
 
-LassoCard::LassoCard(const string &type, const string &description, bool used) : SkillCard(type, description, used)
+LassoCard::LassoCard(const string &type, const string &description, bool used) : SkillCard(type, description, used), targetPlayerUsername("")
 {
 }
 
@@ -16,27 +20,57 @@ LassoCard::~LassoCard()
 {
 }
 
-void LassoCard::setTargetPlayer(Player *target)
+void LassoCard::setTargetPlayerUsername(const string &target)
 {
-    targetPlayer = target;
+    this->targetPlayerUsername = target;
 }
 
 void LassoCard::execute(Player &p, GameState &gs)
 {
-    int currPos = p.getPosition();
-    Player *target = targetPlayer;
+    Board *board = gs.getBoard();
+    if (!board)
+        return;
 
-    if (!target)
+    int currPos = p.getPosition();
+    int boardSize = board->getSize();
+
+    Player *target = nullptr;
+
+    vector<Player *> players = gs.getActivePlayers();
+
+    if (!targetPlayerUsername.empty())
     {
-        int boardSize = gs.getBoard()->getSize();
-        vector<Player *> players = gs.getActivePlayers();
+        for (Player *other : players)
+        {
+            if (!other)
+                continue;
+
+            if (other == &p)
+                continue;
+
+            if (other->getUsername() == targetPlayerUsername)
+            {
+                int steps = (other->getPosition() - currPos + boardSize) % boardSize;
+
+                // Lasso hanya valid untuk pemain lawan yang ada di depan
+                if (steps > 0)
+                    target = other;
+
+                break;
+            }
+        }
+    }
+    else
+    {
         int minSteps = boardSize + 1;
 
         for (Player *other : players)
         {
-            if (other == &p)
+            if (!other || other == &p)
                 continue;
+
             int steps = (other->getPosition() - currPos + boardSize) % boardSize;
+
             if (steps > 0 && steps < minSteps)
             {
                 minSteps = steps;
@@ -45,14 +79,17 @@ void LassoCard::execute(Player &p, GameState &gs)
         }
     }
 
-    if (target)
-    {
-        GameMaster *gm = gs.getGameMaster();
-        if (gm)
-            gm->teleportPlayer(target, currPos);
-    }
+    if (!target)
+        return;
 
-    targetPlayer = nullptr;
+    GameMaster *gm = gs.getGameMaster();
+    if (!gm)
+        return;
+
+    gm->teleportPlayer(target, currPos, false);
+
+    targetPlayerUsername = "";
+    markUsed();
 }
 
 string LassoCard::successMessage() const

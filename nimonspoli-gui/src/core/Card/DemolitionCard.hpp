@@ -9,13 +9,14 @@ class Property;
 class DemolitionCard : public SkillCard
 {
 private:
-    Property *targetProperty = nullptr;
+    int targetPropertyId;
 
 public:
     DemolitionCard();
     DemolitionCard(const string &type, const string &description, bool used);
     ~DemolitionCard();
-    void setTargetProperty(Property *target);
+    int getTargetPropertyId() const;
+    void setTargetProperty(int targetPropertyId);
     void execute(Player &p, GameState &gs) override;
     string successMessage() const override;
 };

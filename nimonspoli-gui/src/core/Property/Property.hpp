@@ -47,7 +47,7 @@ public:
              int purchasePrice, int mortageValue, const string &ownerId);
     virtual ~Property();
 
-    int getUsername() const;
+    int getId() const;
     string getCode() const;
     string getName() const;
     string getColorGroup() const;
