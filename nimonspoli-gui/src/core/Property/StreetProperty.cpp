@@ -209,7 +209,7 @@ string StreetProperty::cetakAkta() const
 {
     ostringstream out;
 
-    printHeader(out);
+    // printHeader(out);
     printBasicInfo(out);
 
     printLine(out, '-');
@@ -236,7 +236,7 @@ string StreetProperty::cetakAkta() const
         }
     }
 
-    printLine(out, '-');
+    out << "\n";
     printRow(out, "Harga Rumah", moneyToString(getHouseUpgCost()));
     printRow(out, "Harga Hotel", moneyToString(getHotelUpgCost()));
 

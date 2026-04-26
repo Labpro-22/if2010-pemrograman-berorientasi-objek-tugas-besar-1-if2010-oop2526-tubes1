@@ -84,68 +84,47 @@ string Property::moneyToString(int value)
     return "M" + to_string(value);
 }
 
-void Property::printLine(ostringstream &out, char c)
+void Property::printLine(ostringstream &out, char ch)
 {
-    out << "+" << string(INNER_WIDTH + 2, c) << "+\n";
+    // Border ditangani GUI, jadi tidak mencetak apa pun.
 }
 
 void Property::printRow(ostringstream &out, const string &leftText, const string &rightText)
 {
-    out << "| " << left << setw(18) << leftText
-        << ": " << setw(10) << rightText << " |\n";
+    out << leftText << " : " << rightText << "\n";
 }
 
 void Property::printFullRow(ostringstream &out, const string &text)
 {
-    string content = text;
-    if ((int)content.size() > INNER_WIDTH)
-        content = content.substr(0, INNER_WIDTH);
-
-    out << "| " << left << setw(INNER_WIDTH) << content << " |\n";
+    out << text << "\n";
 }
 
 void Property::printCenteredRow(ostringstream &out, const string &text)
 {
-    string content = text;
-    if ((int)content.size() > INNER_WIDTH)
-        content = content.substr(0, INNER_WIDTH);
-
-    int totalPadding = INNER_WIDTH - (int)content.size();
-    int leftPadding = totalPadding / 2;
-    int rightPadding = totalPadding - leftPadding;
-
-    out << "| "
-        << string(leftPadding, ' ')
-        << content
-        << string(rightPadding, ' ')
-        << " |\n";
+    out << text << "\n";
 }
-
-void Property::printHeader(ostringstream &out) const
-{
-    printLine(out, '=');
-    printCenteredRow(out, "AKTA KEPEMILIKAN");
-    printCenteredRow(out, "[" + getColorGroup() + "] " +
-                              getName() + " (" + getCode() + ")");
-    printLine(out, '=');
-}
+// void Property::printHeader(ostringstream &out) const
+// {
+//     // Header ditangani GUI.
+// }
 
 void Property::printBasicInfo(ostringstream &out) const
 {
-    printRow(out, "Harga Beli", moneyToString(getPurchasePrice()));
-    printRow(out, "Nilai Gadai", moneyToString(getMortageValue()));
+    printRow(out, "Harga Beli", moneyToString(purchasePrice));
+    printRow(out, "Nilai Gadai", moneyToString(mortageValue));
+    out << "\n";
 }
 
 void Property::printFooterStatus(ostringstream &out) const
 {
-    printLine(out, '=');
+    out << "\n";
 
-    string statusLine = statusToString(getStatus());
-    if (!getOwnerId().empty())
-        statusLine += " (" + getOwnerId() + ")";
+    string statusLine = statusToString(status);
 
-    printFullRow(out, "Status : " + statusLine);
-    printLine(out, '=');
+    if (!ownerId.empty() && ownerId != "BANK")
+        statusLine += " (" + ownerId + ")";
+
+    printRow(out, "Status", statusLine);
 }
 
 string Property::statusToString(PropertyStatus status)

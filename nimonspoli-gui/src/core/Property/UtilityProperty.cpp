@@ -54,7 +54,7 @@ string UtilityProperty::cetakAkta() const
 {
     ostringstream out;
 
-    printHeader(out);
+    // printHeader(out);
     printBasicInfo(out);
 
     printLine(out, '-');

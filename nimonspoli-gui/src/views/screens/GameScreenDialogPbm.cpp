@@ -88,7 +88,16 @@ void GameScreen::drawPbmDialog()
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && okHov && isRealMode())
     {
-        guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
+        GameMaster* gm = guiManager->getGameMaster();
+        GameState& gs = gm->getState();
+        if (gs.getPendingDebt() > 0)
+        {
+            gs.setPhase(GamePhase::BANKRUPTCY);
+        }
+        else
+        {
+            gs.setPhase(GamePhase::PLAYER_TURN);
+        }
         pbmDialog.visible = false;
     }
 }

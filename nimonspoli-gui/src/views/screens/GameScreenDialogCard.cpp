@@ -186,7 +186,18 @@ void GameScreen::drawCardDialog()
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && okHov)
     {
         if (isRealMode())
-            guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
+        {
+            GameMaster* gm = guiManager->getGameMaster();
+            GameState& gs = gm->getState();
+            if (gs.getPendingDebt() > 0 || gs.hasPendingPayment())
+            {
+                gs.setPhase(GamePhase::BANKRUPTCY);
+            }
+            else
+            {
+                gs.setPhase(GamePhase::PLAYER_TURN);
+            }
+        }
         cardDialog.visible = false;
     }
 }

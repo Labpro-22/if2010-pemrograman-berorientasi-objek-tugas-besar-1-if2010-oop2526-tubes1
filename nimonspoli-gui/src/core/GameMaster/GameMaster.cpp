@@ -88,7 +88,7 @@ void GameMaster::beginTurn()
     Player *cur = state.getCurrPlayer();
     if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT)
         return;
-    if(!extraTurn)
+    if (!extraTurn)
         distributeSkillCards();
     if (cur->isInJail())
     {
@@ -101,7 +101,7 @@ void GameMaster::beginTurn()
 void GameMaster::endTurn()
 {
     tickFestivalDurations();
-    tickDiscountDurations(); 
+    tickDiscountDurations();
     if (!state.getHasExtraTurn())
     {
         int prevIdx = state.getCurrPlayerIdx();
@@ -161,7 +161,8 @@ void GameMaster::movePlayer(Player *player, int steps)
             return; // STOP di sini → tunggu dialog selesai
         }
     }
-    else{
+    else
+    {
         log(player->getUsername(), "DADU",
             "Anda tidak mendarat di mana pun");
     }
@@ -973,29 +974,45 @@ void GameMaster::giveSkillCardToPlayer(Player *player, SkillCard *card)
 void GameMaster::useSkillCard(Player *player, SkillCard *card, GameState &gs)
 {
     if (!player || !card)
-        return;
+        throw runtime_error("Player atau kartu tidak valid.");
+
     if (gs.getHasUsedCard())
-        return;
+        throw runtime_error("Kamu sudah menggunakan kartu kemampuan pada giliran ini.");
+
     if (card->isUsed())
-        return;
+        throw runtime_error("Kartu ini sudah digunakan.");
 
     card->execute(*player, gs);
-    gs.getLogger()->addLog(gs.getCurrTurn(), player->getUsername(), "SKILL_CARD", card->getDescription());
 
-    card->markUsed();
+    if (gs.getLogger())
+    {
+        gs.getLogger()->addLog(
+            gs.getCurrTurn(),
+            player->getUsername(),
+            "SKILL_CARD",
+            card->getDescription());
+    }
+
+    if (!card->isUsed())
+        card->markUsed();
+
     const vector<SkillCard *> &hand = player->getHand();
-    for (int i = 0; i < (int)hand.size(); i++)
+
+    for (int i = 0; i < static_cast<int>(hand.size()); i++)
     {
         if (hand[i] == card)
         {
             SkillCard *removed = player->discardSkillCard(i);
+
             if (removed != nullptr && state.getSkillDeck() != nullptr)
             {
                 state.getSkillDeck()->discard(removed);
             }
+
             break;
         }
     }
+
     player->markCardUsedThisTurn();
     gs.setHasUsedCard(true);
 }
