@@ -291,8 +291,6 @@ string Player::cetakProperti() const
         return out.str();
     }
 
-    out << "=== Properti Milik: " << getUsername() << " ===\n\n";
-
     map<string, vector<Property *>> grouped;
     int totalWealth = 0;
 

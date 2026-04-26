@@ -17,14 +17,7 @@ string CetakPropertiCommand::getOutput(GameMaster &gm)
         return "Tidak ada pemain aktif.\n";
     }
 
-    string hasil = player->cetakProperti();
-
-    if (hasil.empty())
-    {
-        return "Kamu belum memiliki properti apapun.\n";
-    }
-
-    return hasil;
+    return player->cetakProperti();
 }
 
 void CetakPropertiCommand::execute(GameMaster &gm)
