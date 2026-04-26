@@ -58,7 +58,7 @@ public :
     
     // Methods buat TurnController
     void randomizeTurn();
-    void startTurn(Pemain* p, int currentTurn);
+    bool startTurn(Pemain* p, int currentTurn, int& doubleCount);
 
     // Getter dan Setter untuk Game Data
     ConfigData* getConfigData() const { return configData; }

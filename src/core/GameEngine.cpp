@@ -43,12 +43,22 @@ void GameEngine::startGame() {
 
 
             // player bisa pilih mau liat2 akta, atau liat2 properti dia sendiri, ato mau jalan, ato mau make kartu
-            startTurn (player, currentGlobalTurn);
+            bool extraTurn = false;
+            int doubleCount = 0;
+            do {
+                extraTurn = startTurn(player, currentGlobalTurn, doubleCount);
 
-            // habis turnya selesai normalnya player pindah tempat -> jalanin onlanded dari petak yang diinjek
-            Petak* diTempati = papanPermainan->getPetak((const int)player->getPosisi());
-            diTempati->onLanded(*player, *actionService);
-            
+                // habis turnya selesai normalnya player pindah tempat -> jalanin onlanded dari petak yang diinjek
+                if (player->getStatus() == StatusPemain::ACTIVE || 
+                    (player->getStatus() == StatusPemain::JAILED && doubleCount == 3)) { // if 3 doubles, they are jailed and move to jail
+                    Petak* diTempati = papanPermainan->getPetak((const int)player->getPosisi());
+                    diTempati->onLanded(*player, *actionService);
+                }
+                
+                if (player->getStatus() == StatusPemain::BANKRUPT) {
+                    break;
+                }
+            } while (extraTurn && doubleCount < 3);
         }
     }
 
@@ -65,42 +75,60 @@ void GameEngine::randomizeTurn() {
     std::shuffle(urutanPemain.begin(), urutanPemain.end(), gen);
 }
 
-void GameEngine::startTurn(Pemain* p, int currentTurn) {
+bool GameEngine::startTurn(Pemain* p, int currentTurn, int& doubleCount) {
     // Tahap 2: command dispatcher + validasi dasar (skill sebelum dadu)
-    bool awalGiliran = true;
+    bool awalGiliran = (doubleCount == 0);
     bool sudahLemparDadu = false;
+    bool extraTurn = false;
 
     // Awal giliran: reset status dan bagikan 1 kartu skill acak
-    p->resetSkillUsage();
+    if (awalGiliran) {
+        p->resetSkillUsage();
 
-    if (deckSkill) {
-        try {
-            KartuKemampuanSpesial* baru = deckSkill->ambilKartu();
+        if (deckSkill) {
             try {
-                p->tambahKartu(baru, *deckSkill);
-                OutputHandler::cetakEfekKartu("Kartu Skill", "Kamu mendapatkan: " + baru->getDeskripsi());
-            } catch (const SlotKartuPenuhException&) {
-                // slot penuh → wajib buang 1 kartu, lalu masukkan kartu baru
-                OutputHandler::cetakError("Kamu sudah memiliki 3 kartu (maksimal). Kamu wajib membuang 1 kartu.");
-                const auto& hand = p->getKartuDiTangan();
-                for (size_t i = 0; i < hand.size(); ++i) {
-                    OutputHandler::cetakPesan(std::to_string(i + 1) + ". " + hand[i]->getDeskripsi());
-                }
-                OutputHandler::cetakPesan(std::to_string(hand.size() + 1) + ". " + baru->getDeskripsi() + " (kartu baru)");
-                int pilih = InputHandler::promptAngka("Pilih kartu yang dibuang (1-" + std::to_string(hand.size() + 1) + "): ", 1, hand.size() + 1);
-                if (pilih == static_cast<int>(hand.size() + 1)) {
-                    // buang kartu baru
-                    deckSkill->buangKartu(baru);
-                } else {
-                    p->buangKartu(pilih - 1, *deckSkill);
+                KartuKemampuanSpesial* baru = deckSkill->ambilKartu();
+                try {
                     p->tambahKartu(baru, *deckSkill);
                     OutputHandler::cetakEfekKartu("Kartu Skill", "Kamu mendapatkan: " + baru->getDeskripsi());
+                } catch (const SlotKartuPenuhException&) {
+                    // slot penuh → wajib buang 1 kartu, lalu masukkan kartu baru
+                    OutputHandler::cetakError("Kamu sudah memiliki 3 kartu (maksimal). Kamu wajib membuang 1 kartu.");
+                    const auto& hand = p->getKartuDiTangan();
+                    for (size_t i = 0; i < hand.size(); ++i) {
+                        OutputHandler::cetakPesan(std::to_string(i + 1) + ". " + hand[i]->getDeskripsi());
+                    }
+                    OutputHandler::cetakPesan(std::to_string(hand.size() + 1) + ". " + baru->getDeskripsi() + " (kartu baru)");
+                    int pilih = InputHandler::promptAngka("Pilih kartu yang dibuang (1-" + std::to_string(hand.size() + 1) + "): ", 1, hand.size() + 1);
+                    if (pilih == static_cast<int>(hand.size() + 1)) {
+                        // buang kartu baru
+                        deckSkill->buangKartu(baru);
+                    } else {
+                        p->buangKartu(pilih - 1, *deckSkill);
+                        p->tambahKartu(baru, *deckSkill);
+                        OutputHandler::cetakEfekKartu("Kartu Skill", "Kamu mendapatkan: " + baru->getDeskripsi());
+                    }
                 }
+            } catch (const std::exception&) {
+                // deck kosong → abaikan (akan dihandle DeckKartu::acakUlang)
             }
-        } catch (const std::exception&) {
-            // deck kosong → abaikan (akan dihandle DeckKartu::acakUlang)
         }
     }
+
+    if (awalGiliran && p->getStatus() == StatusPemain::JAILED) {
+        OutputHandler::cetakPesan("\n=== " + p->getUsername() + " berada di PENJARA ===");
+        if (p->getPercobaanKeluarPenjara() >= 3) {
+            OutputHandler::cetakPesan("Sudah 3 giliran di penjara. Kamu dipaksa membayar denda!");
+            managerPenjara->paksaBayar(*p, *actionService);
+        } else {
+            OutputHandler::cetakPesan("Kamu memiliki opsi untuk keluar dari penjara:");
+            if (configData) OutputHandler::cetakPesan("- Ketik BAYAR_DENDA untuk membayar M" + std::to_string(configData->getDendaPenjara()));
+            OutputHandler::cetakPesan("- Ketik GUNAKAN_KEMAMPUAN untuk memakai kartu Bebas Penjara (jika ada)");
+            OutputHandler::cetakPesan("- Ketik LEMPAR_DADU / ATUR_DADU untuk mencoba mendapat double.");
+        }
+    }
+
+    OutputHandler::cetakPesan("\n=== Giliran " + p->getUsername() + " (Turn " + std::to_string(currentTurn) + "/" + std::to_string(maxTurn) + ") ===");
 
     while (true) {
         try {
@@ -140,6 +168,29 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
                 continue;
             }
 
+            if (cmd == "CETAK_AKTA") {
+                if (tok.size() >= 2) {
+                    Petak* petak = papanPermainan->getPetak(tok[1]);
+                    auto prop = dynamic_cast<PetakProperti*>(petak);
+                    if (!prop) {
+                        OutputHandler::cetakError("Kode properti tidak valid!");
+                    } else if (configData) {
+                        OutputHandler::cetakAktaProperti(prop, *configData);
+                    }
+                } else {
+                    std::string kode = InputHandler::promptString("Masukkan kode petak: ");
+                    Petak* petak = papanPermainan->getPetak(kode);
+                    auto prop = dynamic_cast<PetakProperti*>(petak);
+                    if (!prop) {
+                        OutputHandler::cetakError("Kode properti tidak valid!");
+                    } else if (configData) {
+                        OutputHandler::cetakAktaProperti(prop, *configData);
+                    }
+                }
+                awalGiliran = false;
+                continue;
+            }
+
             if (cmd == "CETAK_PROPERTI") {
                 if (configData) OutputHandler::cetakPropertiPemain(p, *configData);
                 awalGiliran = false;
@@ -162,6 +213,40 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
                             OutputHandler::cetakPesan("[Turn " + std::to_string(e.getRonde()) + "] " + e.getUsername() + " | " + e.getAksi() + " | " + e.getDetail());
                         }
                     }
+                }
+                awalGiliran = false;
+                continue;
+            }
+
+            if (cmd == "GADAI") {
+                if (sudahLemparDadu) {
+                    OutputHandler::cetakError("GADAI hanya bisa dilakukan SEBELUM melempar dadu.");
+                    continue;
+                }
+                if (configData) {
+                    OutputHandler::tampilkanPropertiYangBisaDigadai(p, *configData);
+                    // Panggil PlayerActionService
+                    // (Isi aktual gadaiProperti akan diimplementasikan di Tahap 2)
+                    // actionService->gadaiProperti(*p, properti); // STUB (akan diimplementasikan di tahap 2)
+                }
+                awalGiliran = false;
+                continue;
+            }
+
+            if (cmd == "TEBUS") {
+                if (configData) {
+                    OutputHandler::tampilkanPropertiYangBisaDitebus(p, *configData);
+                    // Panggil PlayerActionService (flow untuk batal gadai)
+                }
+                awalGiliran = false;
+                continue;
+            }
+
+            if (cmd == "BANGUN") {
+                if (configData) {
+                    OutputHandler::tampilkanPropertiYangBisaDibangun(p, *managerProperti, *configData);
+                    // Panggil PlayerActionService
+                    // actionService->bangunProperti(*p, lahan); // STUB (akan diimplementasikan di tahap 2)
                 }
                 awalGiliran = false;
                 continue;
@@ -193,15 +278,46 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
                     OutputHandler::cetakError("Kamu sudah melempar dadu di giliran ini.");
                     continue;
                 }
-                if (p->getStatus() == StatusPemain::ACTIVE) {
-                    dadu->rollRandom();
-                    OutputHandler::cetakPesan("Hasil: " + std::to_string(dadu->getNilaid1()) + " + " + std::to_string(dadu->getNilaid2()) + " = " + std::to_string(dadu->getTotalNilaiDadu()));
-                    actionService->movePlayerRelative(*p, dadu->getTotalNilaiDadu());
+                
+                dadu->rollRandom();
+                OutputHandler::cetakPesan("Hasil: " + std::to_string(dadu->getNilaid1()) + " + " + std::to_string(dadu->getNilaid2()) + " = " + std::to_string(dadu->getTotalNilaiDadu()));
+                
+                bool isDouble = dadu->isDouble();
+
+                if (p->getStatus() == StatusPemain::JAILED) {
+                    if (isDouble) {
+                        OutputHandler::cetakPesan("Double! Kamu berhasil keluar dari penjara.");
+                        p->setStatus(StatusPemain::ACTIVE);
+                        p->resetPercobaanPenjara();
+                        actionService->movePlayerRelative(*p, dadu->getTotalNilaiDadu());
+                        extraTurn = false; 
+                    } else {
+                        OutputHandler::cetakPesan("Bukan double. Kamu tetap di penjara.");
+                        p->tambahPercobaanPenjara();
+                        extraTurn = false;
+                    }
                     sudahLemparDadu = true;
-                    break; // selesai phase command → lanjut onLanded
+                    break;
                 }
-                OutputHandler::cetakError("Kamu tidak bisa melempar dadu saat status tidak ACTIVE.");
-                continue;
+
+                if (isDouble) {
+                    doubleCount++;
+                    OutputHandler::cetakPesan("[DOUBLE] " + std::to_string(doubleCount) + "x berturut-turut!");
+                    if (doubleCount == 3) {
+                        OutputHandler::cetakPesan("3x double! Kamu melanggar batas kecepatan dan masuk penjara!");
+                        actionService->sendToJail(*p);
+                        extraTurn = false;
+                        sudahLemparDadu = true;
+                        break;
+                    }
+                    extraTurn = true;
+                } else {
+                    extraTurn = false;
+                }
+
+                actionService->movePlayerRelative(*p, dadu->getTotalNilaiDadu());
+                sudahLemparDadu = true;
+                break;
             }
 
             if (cmd == "ATUR_DADU") {
@@ -219,15 +335,60 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
                     OutputHandler::cetakError("Nilai dadu harus 1-6.");
                     continue;
                 }
-                if (p->getStatus() != StatusPemain::ACTIVE) {
-                    OutputHandler::cetakError("Tidak bisa ATUR_DADU saat kamu dipenjara.");
-                    continue;
-                }
+
                 dadu->rollManual(x, y);
                 OutputHandler::cetakPesan("Hasil: " + std::to_string(x) + " + " + std::to_string(y) + " = " + std::to_string(dadu->getTotalNilaiDadu()));
+                
+                bool isDouble = dadu->isDouble();
+
+                if (p->getStatus() == StatusPemain::JAILED) {
+                    if (isDouble) {
+                        OutputHandler::cetakPesan("Double! Kamu berhasil keluar dari penjara.");
+                        p->setStatus(StatusPemain::ACTIVE);
+                        p->resetPercobaanPenjara();
+                        actionService->movePlayerRelative(*p, dadu->getTotalNilaiDadu());
+                        extraTurn = false; 
+                    } else {
+                        OutputHandler::cetakPesan("Bukan double. Kamu tetap di penjara.");
+                        p->tambahPercobaanPenjara();
+                        extraTurn = false;
+                    }
+                    sudahLemparDadu = true;
+                    break;
+                }
+
+                if (isDouble) {
+                    doubleCount++;
+                    OutputHandler::cetakPesan("[DOUBLE] " + std::to_string(doubleCount) + "x berturut-turut!");
+                    if (doubleCount == 3) {
+                        OutputHandler::cetakPesan("3x double! Kamu melanggar batas kecepatan dan masuk penjara!");
+                        actionService->sendToJail(*p);
+                        extraTurn = false;
+                        sudahLemparDadu = true;
+                        break;
+                    }
+                    extraTurn = true;
+                } else {
+                    extraTurn = false;
+                }
+
                 actionService->movePlayerRelative(*p, dadu->getTotalNilaiDadu());
                 sudahLemparDadu = true;
                 break;
+            }
+
+            if (cmd == "BAYAR_DENDA") {
+                if (p->getStatus() == StatusPemain::JAILED) {
+                    if (configData && p->getSaldo() >= configData->getDendaPenjara()) {
+                        managerPenjara->escapeByFine(*p, *actionService);
+                        // Giliran berlanjut (boleh lempar dadu)
+                    } else {
+                        OutputHandler::cetakError("Uang tidak cukup untuk bayar denda penjara.");
+                    }
+                } else {
+                    OutputHandler::cetakError("Kamu tidak sedang dipenjara.");
+                }
+                continue;
             }
 
             if (cmd == "SIMPAN") {
@@ -246,7 +407,7 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
             }
 
             if (cmd == "BANTUAN" || cmd == "HELP") {
-                OutputHandler::cetakPesan("Perintah tersedia: CETAK_PAPAN, CETAK_PROPERTI, CETAK_LOG [N], GUNAKAN_KEMAMPUAN, LEMPAR_DADU, ATUR_DADU X Y, SIMPAN <file>");
+                OutputHandler::cetakPesan("Perintah tersedia: CETAK_PAPAN, CETAK_PROPERTI, CETAK_AKTA, CETAK_LOG [N], GADAI, TEBUS, BANGUN, GUNAKAN_KEMAMPUAN, LEMPAR_DADU, ATUR_DADU X Y, BAYAR_DENDA, SIMPAN <file>");
                 continue;
             }
 
@@ -258,4 +419,5 @@ void GameEngine::startTurn(Pemain* p, int currentTurn) {
             OutputHandler::cetakError(e.what());
         }
     }
+    return extraTurn;
 }
