@@ -40,10 +40,18 @@ void GameScreen::triggerBangunDialog()
 
     for (auto const &[color, props] : ownerGroups)
     {
-        if (gm->hasMonopoly(cur, color))
-        {
-            bangunDialog.groups.push_back({color, props});
-        }
+        if (!gm->hasMonopoly(cur, color))
+            continue;
+        bool anyMortgaged = false;
+        for (auto *sp : props)
+            if (sp->getStatus() == PropertyStatus::MORTGAGED)
+            {
+                anyMortgaged = true;
+                break;
+            }
+        if (anyMortgaged)
+            continue;
+        bangunDialog.groups.push_back({color, props});
     }
 }
 
