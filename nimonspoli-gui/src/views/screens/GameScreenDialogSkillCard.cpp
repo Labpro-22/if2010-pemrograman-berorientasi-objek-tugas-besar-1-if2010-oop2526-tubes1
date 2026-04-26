@@ -6,8 +6,13 @@
 #include "../../core/Card/DemolitionCard.hpp"
 #include "../../core/Player/Player.hpp"
 #include "../../core/Property/Property.hpp"
+#include "../../core/Property/StreetProperty.hpp"
 #include "../../core/Commands/GunakanKartuKemampuanCommand.hpp"
+
 #include <exception>
+#include <unordered_map>
+#include <functional>
+#include <string>
 
 static void drawWrappedText(
     const std::string &text,
@@ -25,7 +30,7 @@ static void drawWrappedText(
     {
         char c = (i < text.size()) ? text[i] : ' ';
 
-        if (c == ' ' || i == text.size())
+        if (c == ' ' || c == '\n' || i == text.size())
         {
             if (!word.empty())
             {
@@ -43,6 +48,16 @@ static void drawWrappedText(
                 }
 
                 word.clear();
+            }
+
+            if (c == '\n')
+            {
+                if (!line.empty())
+                {
+                    DrawText(line.c_str(), x, curY, fontSize, color);
+                    curY += fontSize + 6;
+                    line.clear();
+                }
             }
         }
         else
@@ -72,6 +87,14 @@ void GameScreen::triggerSkillCardDialog()
     skillCardDialog.awaitingTeleportTile = false;
     skillCardDialog.awaitingLassoTarget = false;
     skillCardDialog.selectedCardIdx = -1;
+
+    lassoTargetDialog.visible = false;
+    lassoTargetDialog.selectedCardIdx = -1;
+    lassoTargetDialog.errorMsg.clear();
+
+    demolitionTargetDialog.visible = false;
+    demolitionTargetDialog.selectedCardIdx = -1;
+    demolitionTargetDialog.errorMsg.clear();
 }
 
 static bool discardUsedSkillCard(GameMaster *gm, Player *player, int idx)
@@ -94,107 +117,6 @@ static bool discardUsedSkillCard(GameMaster *gm, Player *player, int idx)
     gs.setHasUsedCard(true);
 
     return true;
-}
-
-void GameScreen::drawDemolitionTargetDialog()
-{
-    if (!demolitionTargetDialog.visible)
-        return;
-
-    if (!isRealMode() || !guiManager || !guiManager->getGameMaster())
-        return;
-
-    GameMaster *gm = guiManager->getGameMaster();
-    GameState &gs = gm->getState();
-    Player *cur = gs.getCurrPlayer();
-
-    if (cur == nullptr)
-        return;
-
-    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 150});
-
-    const float PW = 560.0f;
-    const float PH = 380.0f;
-    const float px = SCREEN_W / 2.0f - PW / 2.0f;
-    const float py = SCREEN_H / 2.0f - PH / 2.0f;
-
-    DrawRectangleRounded({px, py, PW, PH}, 0.04f, 8, {18, 20, 34, 255});
-    DrawRectangleRoundedLines({px, py, PW, PH}, 0.04f, 8, {90, 95, 150, 255});
-    DrawText("PILIH PROPERTI TARGET", (int)px + 20, (int)py + 20, 16, WHITE);
-
-    int rowIndex = 0;
-
-    // SESUAIKAN bagian ini dengan struktur project kamu.
-    // Contoh kalau Player punya getProperties():
-    for (Player *owner : gs.getPlayers())
-    {
-        if (owner == nullptr || owner == cur || owner->getStatus() == PlayerStatus::BANKRUPT)
-            continue;
-
-        for (Property *prop : owner->getProperties())
-        {
-            if (prop == nullptr)
-                continue;
-
-            Rectangle row = {px + 24, py + 70 + rowIndex * 48.0f, PW - 48, 38};
-            bool hover = CheckCollisionPointRec(GetMousePosition(), row);
-
-            DrawRectangleRounded(row, 0.08f, 8, hover ? Color{55, 65, 105, 255} : Color{32, 35, 54, 255});
-
-            std::string label = prop->getName() + " (" + prop->getCode() + ") - milik " + owner->getUsername();
-            DrawText(label.c_str(), (int)row.x + 14, (int)row.y + 11, 13, WHITE);
-
-            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
-            {
-                int idx = demolitionTargetDialog.selectedCardIdx;
-                const auto &hand = cur->getHand();
-
-                if (idx < 0 || idx >= static_cast<int>(hand.size()))
-                {
-                    demolitionTargetDialog.errorMsg = "Index DemolitionCard tidak valid.";
-                    return;
-                }
-
-                DemolitionCard *demoCard = dynamic_cast<DemolitionCard *>(hand[idx]);
-
-                if (demoCard == nullptr)
-                {
-                    demolitionTargetDialog.errorMsg = "Kartu yang dipilih bukan DemolitionCard.";
-                    return;
-                }
-
-                try
-                {
-                    demoCard->setTargetProperty(prop->getId());
-
-                    GunakanKartuKemampuanCommand cmd(idx);
-                    cmd.execute(*gm);
-
-                    demolitionTargetDialog.visible = false;
-                    demolitionTargetDialog.selectedCardIdx = -1;
-                    demolitionTargetDialog.errorMsg.clear();
-
-                    skillCardResultDialog.visible = true;
-                    skillCardResultDialog.title = "DemolitionCard";
-                    skillCardResultDialog.message =
-                        "DemolitionCard berhasil digunakan pada " + prop->getName() + ".";
-                }
-                catch (const std::exception &e)
-                {
-                    demolitionTargetDialog.errorMsg = e.what();
-                }
-
-                return;
-            }
-
-            rowIndex++;
-        }
-    }
-
-    if (rowIndex == 0)
-    {
-        DrawText("Tidak ada properti lawan yang valid.", (int)px + 24, (int)py + 80, 13, {220, 220, 220, 255});
-    }
 }
 
 void GameScreen::drawSkillCardDialog()
@@ -250,6 +172,68 @@ void GameScreen::drawSkillCardDialog()
         return;
     }
 
+    auto executeSkillCardImmediately = [this, gm](SkillCard *selectedCard, int cardIdx)
+    {
+        if (selectedCard == nullptr)
+            return;
+
+        try
+        {
+            std::string successTitle = selectedCard->getType();
+
+            GunakanKartuKemampuanCommand cmd(cardIdx);
+            cmd.execute(*gm);
+
+            std::string successMessage = buildSkillCardSuccessMessage(selectedCard);
+
+            skillCardDialog.visible = false;
+
+            skillCardResultDialog.visible = true;
+            skillCardResultDialog.title = successTitle;
+            skillCardResultDialog.message = successMessage;
+        }
+        catch (const std::exception &e)
+        {
+            skillCardDialog.visible = false;
+
+            skillCardResultDialog.visible = true;
+            skillCardResultDialog.title = "Gagal Menggunakan Kartu";
+            skillCardResultDialog.message = e.what();
+        }
+    };
+
+    using Handler = std::function<void(SkillCard *, int)>;
+
+    const std::unordered_map<std::string, Handler> popupHandlers = {
+        {"TeleportCard",
+         [this](SkillCard *selectedCard, int cardIdx)
+         {
+             skillCardDialog.awaitingTeleportTile = true;
+             skillCardDialog.selectedCardIdx = cardIdx;
+             skillCardDialog.visible = false;
+
+             skillTargetHint.visible = true;
+             skillTargetHint.message = selectedCard ? selectedCard->successMessage() : "Pilih petak tujuan.";
+         }},
+        {"LassoCard",
+         [this](SkillCard *, int cardIdx)
+         {
+             skillCardDialog.visible = false;
+
+             lassoTargetDialog.visible = true;
+             lassoTargetDialog.selectedCardIdx = cardIdx;
+             lassoTargetDialog.errorMsg.clear();
+         }},
+        {"DemolitionCard",
+         [this](SkillCard *, int cardIdx)
+         {
+             skillCardDialog.visible = false;
+
+             demolitionTargetDialog.visible = true;
+             demolitionTargetDialog.selectedCardIdx = cardIdx;
+             demolitionTargetDialog.errorMsg.clear();
+         }}};
+
     const float listY = py + 64.f;
 
     for (int i = 0; i < static_cast<int>(hand.size()); ++i)
@@ -277,67 +261,213 @@ void GameScreen::drawSkillCardDialog()
             if (selectedCard == nullptr)
                 return;
 
-            std::string type = selectedCard->getType();
+            auto it = popupHandlers.find(selectedCard->getType());
 
-            if (type == "TeleportCard")
+            if (it != popupHandlers.end())
             {
-                skillCardDialog.awaitingTeleportTile = true;
-                skillCardDialog.selectedCardIdx = i;
-                skillCardDialog.visible = false;
-
-                skillTargetHint.visible = true;
-                skillTargetHint.message = selectedCard->successMessage();
-
+                it->second(selectedCard, i);
                 return;
             }
 
-            if (type == "LassoCard")
-            {
-                skillCardDialog.visible = false;
-
-                lassoTargetDialog.visible = true;
-                lassoTargetDialog.selectedCardIdx = i;
-                lassoTargetDialog.errorMsg.clear();
-
-                return;
-            }
-
-            if (type == "DemolitionCard")
-            {
-                skillCardDialog.visible = false;
-
-                demolitionTargetDialog.visible = true;
-                demolitionTargetDialog.selectedCardIdx = i;
-                demolitionTargetDialog.errorMsg.clear();
-
-                return;
-            }
-
-            try
-            {
-                std::string successTitle = selectedCard->getType();
-                std::string successMessage = selectedCard->successMessage();
-
-                GunakanKartuKemampuanCommand cmd(i);
-                cmd.execute(*gm);
-
-                skillCardDialog.visible = false;
-
-                skillCardResultDialog.visible = true;
-                skillCardResultDialog.title = successTitle;
-                skillCardResultDialog.message = successMessage;
-            }
-            catch (const std::exception &e)
-            {
-                skillCardDialog.visible = false;
-
-                skillCardResultDialog.visible = true;
-                skillCardResultDialog.title = "Gagal Menggunakan Kartu";
-                skillCardResultDialog.message = e.what();
-            }
-
+            executeSkillCardImmediately(selectedCard, i);
             return;
         }
+    }
+}
+
+void GameScreen::drawDemolitionTargetDialog()
+{
+    if (!demolitionTargetDialog.visible)
+        return;
+
+    if (!isRealMode() || !guiManager || !guiManager->getGameMaster())
+        return;
+
+    GameMaster *gm = guiManager->getGameMaster();
+    GameState &gs = gm->getState();
+    Player *cur = gs.getCurrPlayer();
+
+    if (cur == nullptr)
+        return;
+
+    DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 150});
+
+    const float PW = 600.0f;
+    const float PH = 440.0f;
+    const float px = SCREEN_W / 2.0f - PW / 2.0f;
+    const float py = SCREEN_H / 2.0f - PH / 2.0f;
+
+    DrawRectangleRounded({px, py, PW, PH}, 0.04f, 8, {18, 20, 34, 255});
+    DrawRectangleRoundedLines({px, py, PW, PH}, 0.04f, 8, {90, 95, 150, 255});
+
+    DrawRectangleRounded({px, py, PW, 48}, 0.04f, 8, {32, 34, 52, 255});
+    DrawText("PILIH PROPERTI TARGET", (int)px + 20, (int)py + 16, 16, WHITE);
+
+    Rectangle xBtn = {px + PW - 38, py + 10, 28, 28};
+    bool xHov = CheckCollisionPointRec(GetMousePosition(), xBtn);
+
+    DrawRectangleRec(xBtn, xHov ? Color{180, 60, 60, 255} : Color{110, 40, 40, 255});
+    DrawText("X", (int)(xBtn.x + 9), (int)(xBtn.y + 8), 12, WHITE);
+
+    if (xHov && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        demolitionTargetDialog.visible = false;
+        demolitionTargetDialog.selectedCardIdx = -1;
+        demolitionTargetDialog.errorMsg.clear();
+
+        skillCardDialog.visible = true;
+        return;
+    }
+
+    DrawText(
+        "Pilih Street milik lawan yang berstatus OWNED dan memiliki rumah/hotel.",
+        (int)px + 24,
+        (int)py + 58,
+        12,
+        {190, 195, 220, 255});
+
+    int idx = demolitionTargetDialog.selectedCardIdx;
+    const auto &hand = cur->getHand();
+
+    if (idx < 0 || idx >= static_cast<int>(hand.size()))
+    {
+        DrawText("Index DemolitionCard tidak valid.", (int)px + 24, (int)py + 92, 13, {255, 150, 150, 255});
+        return;
+    }
+
+    DemolitionCard *demoCard = dynamic_cast<DemolitionCard *>(hand[idx]);
+
+    if (demoCard == nullptr)
+    {
+        DrawText("Kartu yang dipilih bukan DemolitionCard.", (int)px + 24, (int)py + 92, 13, {255, 150, 150, 255});
+        return;
+    }
+
+    int rowIndex = 0;
+    bool hasTarget = false;
+
+    const float listY = py + 88.0f;
+    const float rowH = 50.0f;
+    const float rowGap = 8.0f;
+    const float maxListBottom = py + PH - 70.0f;
+
+    for (Player *owner : gs.getPlayers())
+    {
+        if (owner == nullptr)
+            continue;
+
+        if (owner == cur)
+            continue;
+
+        if (owner->getStatus() == PlayerStatus::BANKRUPT)
+            continue;
+
+        for (Property *prop : owner->getProperties())
+        {
+            if (prop == nullptr)
+                continue;
+
+            if (prop->getStatus() != PropertyStatus::OWNED)
+                continue;
+
+            StreetProperty *sp = dynamic_cast<StreetProperty *>(prop);
+
+            if (sp == nullptr)
+                continue;
+
+            if (sp->getBuildingCount() <= 0 && !sp->gethasHotel())
+                continue;
+
+            hasTarget = true;
+
+            float rowY = listY + rowIndex * (rowH + rowGap);
+
+            if (rowY + rowH > maxListBottom)
+                break;
+
+            Rectangle row = {px + 24, rowY, PW - 48, rowH};
+            bool hover = CheckCollisionPointRec(GetMousePosition(), row);
+
+            DrawRectangleRounded(
+                row,
+                0.08f,
+                8,
+                hover ? Color{55, 65, 105, 255} : Color{32, 35, 54, 255});
+
+            DrawRectangleRoundedLines(row, 0.08f, 8, {75, 80, 115, 255});
+
+            std::string buildingInfo;
+
+            if (sp->gethasHotel())
+                buildingInfo = "Hotel";
+            else
+                buildingInfo = std::to_string(sp->getBuildingCount()) + " rumah";
+
+            std::string line1 = prop->getName() + " (" + prop->getCode() + ")";
+            std::string line2 = "Pemilik: " + owner->getUsername() + " | " + buildingInfo;
+
+            DrawText(line1.c_str(), (int)row.x + 14, (int)row.y + 8, 14, WHITE);
+            DrawText(line2.c_str(), (int)row.x + 14, (int)row.y + 28, 12, {190, 195, 220, 255});
+
+            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
+                try
+                {
+                    std::string propName = prop->getName();
+                    std::string ownerName = owner->getUsername();
+
+                    demoCard->setTargetProperty(prop->getId());
+
+                    GunakanKartuKemampuanCommand cmd(idx);
+                    cmd.execute(*gm);
+
+                    demolitionTargetDialog.visible = false;
+                    demolitionTargetDialog.selectedCardIdx = -1;
+                    demolitionTargetDialog.errorMsg.clear();
+
+                    skillCardResultDialog.visible = true;
+                    skillCardResultDialog.title = "DemolitionCard";
+                    skillCardResultDialog.message =
+                        "DemolitionCard berhasil digunakan pada " +
+                        propName + " milik " + ownerName + ".";
+                }
+                catch (const std::exception &e)
+                {
+                    demolitionTargetDialog.errorMsg = e.what();
+                }
+
+                return;
+            }
+
+            rowIndex++;
+        }
+    }
+
+    if (!hasTarget)
+    {
+        DrawText(
+            "Tidak ada properti lawan yang bisa dihancurkan.",
+            (int)px + 24,
+            (int)py + 100,
+            14,
+            {255, 190, 190, 255});
+
+        DrawText(
+            "Syarat: properti harus Street, milik lawan, OWNED, dan punya rumah/hotel.",
+            (int)px + 24,
+            (int)py + 126,
+            12,
+            {190, 195, 220, 255});
+    }
+
+    if (!demolitionTargetDialog.errorMsg.empty())
+    {
+        DrawText(
+            demolitionTargetDialog.errorMsg.c_str(),
+            (int)px + 24,
+            (int)(py + PH - 42),
+            12,
+            {255, 120, 120, 255});
     }
 }
 
@@ -499,7 +629,25 @@ void GameScreen::drawLassoTargetDialog()
 
     DrawRectangleRounded({px, py, PW, PH}, 0.04f, 8, {18, 20, 34, 255});
     DrawRectangleRoundedLines({px, py, PW, PH}, 0.04f, 8, {90, 95, 150, 255});
-    DrawText("PILIH TARGET LASSO", (int)px + 20, (int)py + 20, 16, WHITE);
+
+    DrawRectangleRounded({px, py, PW, 48}, 0.04f, 8, {32, 34, 52, 255});
+    DrawText("PILIH TARGET LASSO", (int)px + 20, (int)py + 16, 16, WHITE);
+
+    Rectangle xBtn = {px + PW - 38, py + 10, 28, 28};
+    bool xHov = CheckCollisionPointRec(GetMousePosition(), xBtn);
+
+    DrawRectangleRec(xBtn, xHov ? Color{180, 60, 60, 255} : Color{110, 40, 40, 255});
+    DrawText("X", (int)(xBtn.x + 9), (int)(xBtn.y + 8), 12, WHITE);
+
+    if (xHov && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        lassoTargetDialog.visible = false;
+        lassoTargetDialog.selectedCardIdx = -1;
+        lassoTargetDialog.errorMsg.clear();
+
+        skillCardDialog.visible = true;
+        return;
+    }
 
     int rowIndex = 0;
 
@@ -567,6 +715,7 @@ void GameScreen::drawLassoTargetDialog()
     {
         DrawText("Tidak ada pemain lawan yang valid.", (int)px + 24, (int)py + 80, 13, {220, 220, 220, 255});
     }
+
     if (!lassoTargetDialog.errorMsg.empty())
     {
         DrawText(

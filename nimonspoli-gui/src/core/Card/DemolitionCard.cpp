@@ -1,29 +1,33 @@
 #include "DemolitionCard.hpp"
 #include "../GameState/GameState.hpp"
+#include "../GameMaster/GameMaster.hpp"
 #include "../Board/Board.hpp"
-#include "../GameState/GameState.hpp"
 #include "../Player/Player.hpp"
 #include "../Property/Property.hpp"
 #include "../Property/StreetProperty.hpp"
+#include <stdexcept>
 
-class GameMaster;
-class Board;
-
-DemolitionCard::DemolitionCard() : SkillCard("Hancurkan properti milik lawan", "DemolitionCard")
+DemolitionCard::DemolitionCard()
+    : SkillCard("Hancurkan properti milik lawan", "DemolitionCard"),
+      targetPropertyId(-1)
 {
 }
 
-DemolitionCard::DemolitionCard(const string &type, const string &description, bool used) : SkillCard(type, description, used), targetPropertyId(-1)
+DemolitionCard::DemolitionCard(const string &type, const string &description, bool used)
+    : SkillCard(type, description, used),
+      targetPropertyId(-1)
 {
 }
 
 DemolitionCard::~DemolitionCard()
 {
 }
+
 int DemolitionCard::getTargetPropertyId() const
 {
     return targetPropertyId;
 }
+
 void DemolitionCard::setTargetProperty(int targetPropertyId)
 {
     this->targetPropertyId = targetPropertyId;
@@ -32,32 +36,32 @@ void DemolitionCard::setTargetProperty(int targetPropertyId)
 void DemolitionCard::execute(Player &p, GameState &gs)
 {
     if (targetPropertyId == -1)
-        return;
+        throw runtime_error("Target properti DemolitionCard belum dipilih.");
 
     GameMaster *gm = gs.getGameMaster();
     if (!gm)
-        return;
+        throw runtime_error("GameMaster tidak tersedia.");
 
     Board *board = gm->getState().getBoard();
     if (!board)
-        return;
+        throw runtime_error("Board tidak tersedia.");
 
     Property *targetProperty = board->findPropertyById(targetPropertyId);
     if (!targetProperty)
-        return;
+        throw runtime_error("Properti target tidak ditemukan.");
 
     if (targetProperty->getOwnerId() == p.getUsername())
-        return;
+        throw runtime_error("DemolitionCard tidak bisa digunakan pada properti sendiri.");
 
     if (targetProperty->getStatus() != PropertyStatus::OWNED)
-        return;
+        throw runtime_error("DemolitionCard hanya bisa digunakan pada properti milik lawan yang berstatus OWNED.");
 
     StreetProperty *sp = dynamic_cast<StreetProperty *>(targetProperty);
     if (!sp)
-        return;
+        throw runtime_error("DemolitionCard hanya bisa digunakan pada properti Street.");
 
     if (sp->getBuildingCount() <= 0 && !sp->gethasHotel())
-        return;
+        throw runtime_error("Properti target tidak memiliki bangunan yang bisa dihancurkan.");
 
     sp->sellAllBuildings();
 
@@ -67,5 +71,5 @@ void DemolitionCard::execute(Player &p, GameState &gs)
 
 string DemolitionCard::successMessage() const
 {
-    return "DemolitionCard digunakan. Pilih properti milik lawan yang ingin dihancurkan.";
+    return "DemolitionCard berhasil digunakan.";
 }
