@@ -2,21 +2,22 @@
 #define MAIN_MENU_SCENE_HPP
 
 #include <vector>
+#include <string>
 #include "Button.hpp"
 #include "Scene.hpp"
 #include "TextField.hpp"
 
 class MainMenuScene : public Scene {
 public:
-    MainMenuScene(SceneManager* manager, IGameFacade* facade);
-
+    MainMenuScene(SceneManager* sm, GameManager* gm, AccountManager* am);
     void update() override;
     void draw()   override;
     void onEnter() override;
-
 private:
+    // Config folder
+    TextField configPathField;
+    // Player setup
     Button newGameButton;
-    Button loadDemoButton;
     Button quitButton;
     Button startGameButton;
     Button cancelButton;
@@ -24,16 +25,18 @@ private:
     Button minusButton;
 
     std::vector<TextField> playerFields;
-    bool  showNewGameModal;
+    bool  showSetupModal;
     int   playerCount;
     float sceneTime;
-    float modalVisibility;
+    float modalVis;
+    std::string errorMsg;
 
-    void layoutButtons(Rectangle screenRect);
-    void drawBackground(Rectangle screenRect);
-    void drawHero(Rectangle screenRect);
-    void drawFeatureCards(Rectangle screenRect);
-    void drawNewGameModal(Rectangle screenRect);
+    void layoutButtons(Rectangle sr);
+    void drawBackground(Rectangle sr);
+    void drawHero(Rectangle sr);
+    void drawFeatureCards(Rectangle sr);
+    void drawSetupModal(Rectangle sr);
+    void onStartGame();
 };
 
 #endif

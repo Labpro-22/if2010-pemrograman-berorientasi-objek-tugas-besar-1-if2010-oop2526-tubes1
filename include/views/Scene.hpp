@@ -1,21 +1,21 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-class IGameFacade;
+class GameManager;
+class AccountManager;
 class SceneManager;
 
 class Scene {
 public:
-    Scene(SceneManager* manager, IGameFacade* facade);
+    Scene(SceneManager* sm, GameManager* gm, AccountManager* am);
     virtual ~Scene() = default;
-
     virtual void update() = 0;
     virtual void draw() = 0;
     virtual void onEnter() {}
-
 protected:
-    SceneManager* sceneManager;
-    IGameFacade* gameFacade;
+    SceneManager*   sceneManager;
+    GameManager*    gameManager;
+    AccountManager* accountManager;
 };
 
 #endif

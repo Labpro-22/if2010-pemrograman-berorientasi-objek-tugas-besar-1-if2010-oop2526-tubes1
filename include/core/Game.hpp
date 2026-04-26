@@ -61,6 +61,7 @@ public:
     Logger& getLogger();
     Config& getConfig();
 
+    void setConfig(const Config& cfg);
     bool isGameOver() const;
     void setGameOver(bool status);
 };

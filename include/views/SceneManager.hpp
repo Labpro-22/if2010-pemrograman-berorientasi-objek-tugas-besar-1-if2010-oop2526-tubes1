@@ -1,34 +1,29 @@
 #ifndef SCENE_MANAGER_HPP
 #define SCENE_MANAGER_HPP
-
 #include <memory>
 
-class IGameFacade;
+class GameManager;
+class AccountManager;
 class Scene;
 class MainMenuScene;
 class InGameScene;
 
-enum class SceneType {
-    MainMenu,
-    InGame
-};
+enum class SceneType { MainMenu, InGame };
 
 class SceneManager {
 public:
     SceneManager();
-    explicit SceneManager(IGameFacade* facade);
     ~SceneManager();
-
-    void initialize(IGameFacade* facade);
+    void initialize(GameManager* gm, AccountManager* am);
     void setScene(SceneType type);
     void update();
     void draw();
-
 private:
-    IGameFacade* gameFacade;
+    GameManager*    gameManager = nullptr;
+    AccountManager* accountManager = nullptr;
     std::unique_ptr<MainMenuScene> mainMenuScene;
-    std::unique_ptr<InGameScene> inGameScene;
-    Scene* currentScene;
+    std::unique_ptr<InGameScene>   inGameScene;
+    Scene* currentScene = nullptr;
 };
 
 #endif

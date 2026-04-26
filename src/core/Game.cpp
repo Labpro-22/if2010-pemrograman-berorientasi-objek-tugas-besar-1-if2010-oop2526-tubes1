@@ -393,5 +393,6 @@ TradeManager& Game::getTradeManager() { return tradeManager; }
 LiquidationManager& Game::getLiquidationManager() { return liquidationManager; }
 Logger& Game::getLogger() { return logger; }
 Config& Game::getConfig() { return config; }
+void Game::setConfig(const Config& cfg) { config = cfg; }
 bool Game::isGameOver() const { return gameOver; }
 void Game::setGameOver(bool status) { gameOver = status; }

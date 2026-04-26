@@ -1,39 +1,44 @@
 #ifndef IN_GAME_SCENE_HPP
 #define IN_GAME_SCENE_HPP
 
+#include <string>
 #include <vector>
 #include "Button.hpp"
 #include "Scene.hpp"
 
 class InGameScene : public Scene {
 public:
-    InGameScene(SceneManager* manager, IGameFacade* facade);
-
+    InGameScene(SceneManager* sm, GameManager* gm, AccountManager* am);
     void update() override;
-    void draw() override;
+    void draw()   override;
     void onEnter() override;
-
 private:
     std::vector<Button> actionButtons;
-    Button closeOverlayButton;
-    Button backToMenuButton;
+    Button closeOverlayBtn;
+    Button backToMenuBtn;
     std::vector<Rectangle> tileRects;
-    std::vector<Vector2> tokenPositions;
-    std::vector<float> tokenPhases;
+    std::vector<Vector2> tokenPos;
+    std::vector<float>   tokenPhase;
     float sceneTime;
-    float overlayVisibility;
+    int selectedTile;
 
-    void layoutUi(Rectangle screenRect, Rectangle& boardRect, Rectangle& sidebarRect);
-    void updateAnimations(const Rectangle& boardRect);
-    void updateBoardSelection();
-    void drawBackground(Rectangle screenRect);
-    void drawHeader(Rectangle screenRect);
-    void drawBoard(const Rectangle& boardRect);
-    void drawCenterPanel(const Rectangle& boardRect);
-    void drawSidebar(const Rectangle& sidebarRect);
-    void drawOverlay(Rectangle screenRect);
-    Vector2 getTileCenter(const Rectangle& boardRect, int index) const;
-    Rectangle getTileRect(const Rectangle& boardRect, int index) const;
+    // Simple overlay
+    bool overlayOpen;
+    std::string overlayTitle;
+    std::vector<std::string> overlayLines;
+    float overlayVis;
+
+    void layoutUi(Rectangle sr, Rectangle& br, Rectangle& sb);
+    Rectangle getTileRect(const Rectangle& br, int idx) const;
+    Vector2   getTileCenter(const Rectangle& br, int idx) const;
+    void updateAnimations(const Rectangle& br);
+    void drawBackground(Rectangle sr);
+    void drawHeader(Rectangle sr);
+    void drawBoard(const Rectangle& br);
+    void drawCenterPanel(const Rectangle& br);
+    void drawSidebar(const Rectangle& sb);
+    void drawOverlay(Rectangle sr);
+    void showOverlay(const std::string& title, const std::vector<std::string>& lines);
 };
 
 #endif

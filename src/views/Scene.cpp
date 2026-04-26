@@ -1,3 +1,3 @@
 #include "../../include/views/Scene.hpp"
-
-Scene::Scene(SceneManager* manager, IGameFacade* facade) : sceneManager(manager), gameFacade(facade) {}
+Scene::Scene(SceneManager* sm, GameManager* gm, AccountManager* am)
+    : sceneManager(sm), gameManager(gm), accountManager(am) {}
