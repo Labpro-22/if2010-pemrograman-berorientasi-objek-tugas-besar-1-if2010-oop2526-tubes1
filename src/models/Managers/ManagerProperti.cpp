@@ -1,3 +1,4 @@
+#include "models/Pemain.hpp"
 #include "models/Managers/ManagerProperti.hpp"
 
 ManagerProperti::ManagerProperti(const ConfigData& configData) : 
@@ -158,3 +159,25 @@ ManagerProperti::~ManagerProperti(){
     }
 }
 
+
+
+std::vector<PetakLahan*> ManagerProperti::getPropertiBisaDihancurkan(Pemain* pemain) {
+    std::vector<PetakLahan*> result;
+    if (!pemain) return result;
+    for (PetakProperti* p : pemain->getAsetPemain()) {
+        auto* street = dynamic_cast<PetakLahan*>(p);
+        if (street && street->getJumlahBangunan() > 0) {
+            result.push_back(street);
+        }
+    }
+    return result;
+}
+
+int ManagerProperti::hancurkanSemuaBangunan(PetakLahan* target) {
+    if (!target) return 0;
+    int count = target->getJumlahBangunan();
+    while (target->getJumlahBangunan() > 0) {
+        target->turunkanBangunan();
+    }
+    return count;
+}

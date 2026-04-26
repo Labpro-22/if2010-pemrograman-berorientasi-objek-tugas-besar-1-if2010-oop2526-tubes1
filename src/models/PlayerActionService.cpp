@@ -1,7 +1,9 @@
+#include "models/Managers/ManagerTransaksi.hpp"
 #include "models/PlayerActionService.hpp"
 #include "models/Managers/ManagerProperti.hpp"
 #include "models/Pemain.hpp"
 #include "models/Petak/PetakProperti.hpp"
+#include "models/Papan.hpp"
 #include "utils/LogTransaksiGame.hpp"
 #include "utils/NimonspoliException.hpp"
 #include <iostream>
@@ -10,7 +12,7 @@
 #include <algorithm>
 #include <limits>
 
-PlayerActionService::PlayerActionService( MovementController* mc, ManagerPenjara* mp, ManagerProperti* mpr, ManagerFestival* mf, LogTransaksiGame* log, std::vector<Pemain*>* pemain, int* turnIdx) : movementController(mc), managerPenjara(mp), managerProperti(mpr), managerFestival(mf), logger(log), daftarPemain(pemain), arahNormal(true), currentTurnIdx(turnIdx) {}
+PlayerActionService::PlayerActionService( MovementController* mc, ManagerPenjara* mp, ManagerProperti* mpr, ManagerFestival* mf, ManagerTransaksi* mt, Papan* papan, LogTransaksiGame* log, std::vector<Pemain*>* pemain, int* turnIdx) : movementController(mc), managerPenjara(mp), managerProperti(mpr), managerFestival(mf), managerTransaksi(mt), papan(papan), logger(log), daftarPemain(pemain), arahNormal(true), currentTurnIdx(turnIdx) {}
 
 void PlayerActionService::logAksi(Pemain& pemain, const std::string& aksi, const std::string& detail) {
     if (logger) {
@@ -24,55 +26,20 @@ void PlayerActionService::logFestivalActivation(Pemain& pemain, PetakProperti& p
 }
 
 void PlayerActionService::transferMoney(Pemain* asal, Pemain* tujuan, int jumlah) {
-    if (asal) {
-        if (asal->getSaldo() < jumlah) {
-            if (Likuidasi::bisaBayarDenganLikuidasi(asal, jumlah)) {
-                Likuidasi::tampilkanPanelLikuidasi(asal, jumlah);
-                *asal -= jumlah;
-            }
-            else {
-                beriSemuaAset (asal, tujuan);
-                Kebangkrutan::declareBangkrut (asal);
-            }
-        }
-        else {
-            *asal -= jumlah;
-        }
-    } 
-    if (tujuan) *tujuan += jumlah;
+    managerTransaksi->transferMoney(asal, tujuan, jumlah);
 }
 
 void PlayerActionService::collectFromAllPlayers(Pemain& penerima, int jumlahPerOrang) {
-    for (Pemain* p : *daftarPemain) {
-        if (p == &penerima) continue;
-        if (p->getStatus() != StatusPemain::ACTIVE) continue;
-        try {
-            transferMoney(p, &penerima, jumlahPerOrang);
-            std::cout << p->getUsername() << " membayar M" << jumlahPerOrang << " ke " << penerima.getUsername() << ".\n";
-        } catch (UangTidakCukupException&) {
-            int sisa = p->getSaldo();
-            transferMoney(p, &penerima, sisa);
-            std::cout << p->getUsername() << " hanya bisa membayar M" << sisa << ".\n";
-        }
-    }
+    managerTransaksi->collectFromAllPlayers(penerima, jumlahPerOrang);
 }
 
 void PlayerActionService::payToAllPlayers(Pemain& pembayar, int jumlahPerOrang) {
-    for (Pemain* p : *daftarPemain) {
-        if (p == &pembayar) continue;
-        if (p->getStatus() != StatusPemain::ACTIVE) continue;
-        try {
-            transferMoney(&pembayar, p, jumlahPerOrang);
-            std::cout << pembayar.getUsername() << " membayar M" << jumlahPerOrang << " ke " << p->getUsername() << ".\n";
-        } catch (UangTidakCukupException&) {
-            throw;
-        }
-    }
+    managerTransaksi->payToAllPlayers(pembayar, jumlahPerOrang);
 }
 
 void PlayerActionService::movePlayerRelative(Pemain& p, int n) {
     // stub: MovementController::moveSteps() akan dipakai saat integrasi
-    int totalPetak = 40; // override oleh Papan::getTotalPetak()
+    int totalPetak = papan ? papan->getTotalPetak() : 40;
     int posiBaru = ((p.getPosisi() + n) % totalPetak + totalPetak) % totalPetak;
     p.setPosisi(posiBaru);
     std::cout << p.getUsername() << " bergerak ke petak " << posiBaru << ".\n";
@@ -151,7 +118,6 @@ void PlayerActionService::demolishOpponentProperty(Pemain& pemain) {
         return;
     }
 
-    // pilih target pemain
     std::cout << "Pilih pemain yang propertinya ingin dihancurkan:\n";
     for (size_t i = 0; i < aktif.size(); ++i)
         std::cout << "  " << (i+1) << ". " << aktif[i]->getUsername() << "\n";
@@ -163,13 +129,10 @@ void PlayerActionService::demolishOpponentProperty(Pemain& pemain) {
     }
     Pemain* target = aktif[pilihanPemain - 1];
 
-    std::vector<PetakLahan*> punyaBangunan;
-    for (PetakProperti* p : target->getAsetPemain()) {
-        auto* street = dynamic_cast<PetakLahan*>(p);
-        if (street && street->getJumlahBangunan() > 0) punyaBangunan.push_back(street);
-    }
+    std::vector<PetakLahan*> punyaBangunan = managerProperti->getPropertiBisaDihancurkan(target);
+    
     if (punyaBangunan.empty()) {
-        std::cout << target->getUsername() << " tidak punya properti Street dengan bangunan " << "\n";
+        std::cout << target->getUsername() << " tidak punya properti Lahan dengan bangunan\n";
         return;
     }
 
@@ -187,18 +150,15 @@ void PlayerActionService::demolishOpponentProperty(Pemain& pemain) {
     }
     PetakLahan* dipilih = punyaBangunan[pilihanProperti - 1];
 
-    // hancurkan semua bangunan
-    int jumlahSebelum = dipilih->getJumlahBangunan();
-    while (dipilih->getJumlahBangunan() > 0) {
-        dipilih->turunkanBangunan();
-    }
+    int jumlahSebelum = managerProperti->hancurkanSemuaBangunan(dipilih);
+
     std::cout << "[DemolitionCard] Semua bangunan (" << jumlahSebelum << (jumlahSebelum == 5 ? " — hotel" : " rumah") << ") di " << dipilih->getNama() << " milik " << target->getUsername() << " telah dihancurkan.\n";
     logAksi(pemain, "KARTU", "DemolitionCard " + dipilih->getKode() + " milik " + target->getUsername());
 }
 
 void PlayerActionService::pullPlayerAhead(Pemain& pemain) {
     int posiSaya = pemain.getPosisi();
-    static constexpr int TOTAL_PETAK = 40;
+    int TOTAL_PETAK = papan ? papan->getTotalPetak() : 40;
     std::vector<Pemain*> kandidat;
     for (Pemain* p : *daftarPemain) {
         if (p == &pemain) continue;
@@ -262,16 +222,5 @@ void PlayerActionService::reverseTurnOrder(Pemain& pemain) {
 }
 
 void PlayerActionService::beriSemuaAset (Pemain* asal, Pemain *tujuan) {
-    if (tujuan) {
-        *tujuan += asal->getSaldo();
-        for (auto aset : asal->getAsetPemain()) {
-            aset->setPemilik(tujuan);
-        }
-    }
-    else {
-        for (auto aset : asal->getAsetPemain()) {
-            aset->setPemilik(nullptr);
-            aset->setStatus(PetakProperti::StatusProperti::BANK);
-        }
-    }
-} // nullptr = bank
+    managerTransaksi->beriSemuaAset(asal, tujuan);
+}

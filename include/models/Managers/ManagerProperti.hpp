@@ -23,6 +23,9 @@ public:
 
     void jualSemuaBangunan(Pemain* pemain, std::string warna);
 
+    std::vector<PetakLahan*> getPropertiBisaDihancurkan(Pemain* pemain);
+    int hancurkanSemuaBangunan(PetakLahan* target); // returns count of buildings destroyed
+
     int hitungLikuidasi(Pemain* pemain);
 
     bool isPunyaSemuaDalamGrup(Pemain* pemain, std::string warna);

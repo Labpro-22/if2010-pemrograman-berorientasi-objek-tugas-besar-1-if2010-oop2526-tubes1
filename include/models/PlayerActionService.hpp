@@ -12,6 +12,7 @@ class MovementController;
 class ManagerPenjara;
 class ManagerProperti;
 class ManagerFestival;
+class ManagerTransaksi;
 class LogTransaksiGame;
 
 class PlayerActionService {
@@ -20,7 +21,9 @@ private:
     ManagerPenjara* managerPenjara;
     ManagerProperti* managerProperti;
     ManagerFestival* managerFestival;
+    ManagerTransaksi* managerTransaksi;
     ConfigData* config;
+    Papan* papan;
     LogTransaksiGame* logger;
 
     std::vector<Pemain*>* daftarPemain;
@@ -28,7 +31,7 @@ private:
     int* currentTurnIdx; // turn index saat ini untuk reverse
 
 public:
-    PlayerActionService(MovementController* mc, ManagerPenjara* mp, ManagerProperti* mpr, ManagerFestival* mf, LogTransaksiGame* log, std::vector<Pemain*>* pemain, int* turnIdx);
+    PlayerActionService(MovementController* mc, ManagerPenjara* mp, ManagerProperti* mpr, ManagerFestival* mf, ManagerTransaksi* mt, Papan* papan, LogTransaksiGame* log, std::vector<Pemain*>* pemain, int* turnIdx);
     ~PlayerActionService() = default;
     void movePlayerRelative(Pemain& p, int n); // untuk maju dan mundur sejumlah n petak, kalau negatif berarti mundur
     void teleportByInput(Pemain& p, const std::string& kodeOrIndeks); // teleport ke petak berdasarkan input
