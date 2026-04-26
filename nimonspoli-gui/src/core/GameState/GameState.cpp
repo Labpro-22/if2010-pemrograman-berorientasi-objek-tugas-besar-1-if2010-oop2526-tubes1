@@ -189,3 +189,30 @@ void GameState::clearPendingSkillDrop()
     pendingSkillDropPlayer = nullptr;
     pendingSkillDropMessage.clear();
 }
+
+Property *GameState::getPropertyByCode(const std::string &code) const
+{
+    Board *board = getBoard();
+    if (!board)
+        return nullptr;
+
+    for (int i = 0; i < board->getSize(); ++i)
+    {
+        Tile *tile = board->getTile(i);
+        if (!tile || tile->getCode() != code)
+            continue;
+
+        if (PropertyTile *pt = dynamic_cast<PropertyTile *>(tile))
+            return pt->getProperty();
+
+        if (RailRoadTile *rt = dynamic_cast<RailRoadTile *>(tile))
+            return rt->getProperty();
+
+        if (UtilityTile *ut = dynamic_cast<UtilityTile *>(tile))
+            return ut->getProperty();
+
+        return nullptr;
+    }
+
+    return nullptr;
+}
