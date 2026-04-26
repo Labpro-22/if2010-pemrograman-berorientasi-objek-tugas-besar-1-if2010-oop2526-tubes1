@@ -7,6 +7,8 @@
 *.o
 *.obj
 build/
+build-*/
+cmake/
 obj/
 bin/
 
@@ -42,3 +44,16 @@ bin/
 
 # debug information files
 *.dwo
+
+# mac type shi
+*.DS_Store
+
+#other files
+*.log
+*.tmp
+*.bak
+*.pdf
+
+# Docs / Specs (should not be committed)
+*.pdf
+OOPClassDesign.md
