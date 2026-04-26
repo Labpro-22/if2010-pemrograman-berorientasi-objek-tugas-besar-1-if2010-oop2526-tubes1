@@ -23,6 +23,16 @@ std::string InputHandler::promptString(const std::string& pesan) {
     return input;
 }
 
+std::string InputHandler::promptLine(const std::string& pesan) {
+    std::string input;
+    std::cout << pesan;
+    std::getline(std::cin, input);
+    if (std::cin.fail()) {
+        std::cin.clear();
+    }
+    return input;
+}
+
 int InputHandler::mintaPilihanPajak(int pphFlat, int pphPersen) {
     std::cout << "\nKamu mendarat di Petak Pajak Penghasilan (PPH)!\n";
     std::cout << "Pilih opsi pembayaran pajak:\n";

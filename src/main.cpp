@@ -48,6 +48,7 @@ int main() {
         isiDeckKesempatan(*deckKesempatan);
         isiDeckDanaUmum(*deckDanaUmum);
         isiDeckSkill(*deckSkill, true);
+        engine.setDeckSkill(deckSkill);
 
         // --- Manager & papan ---
         auto* managerFestival = new ManagerFestival();

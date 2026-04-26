@@ -15,6 +15,7 @@
 #include "../models/Managers/ManagerProperti.hpp"
 #include "../models/Kartu/Kartu.hpp"
 #include "../models/Kartu/DeckKartu.hpp"
+#include "../models/Kartu/KartuKemampuanSpesial.hpp"
 #include "../utils/LogTransaksiGame.hpp"
 #include "../views/OutputHandler.hpp"
 #include "BangkrutDanEndGame.hpp"
@@ -35,6 +36,7 @@ private :
     Papan* papanPermainan;
     LogTransaksiGame* logGame;
     DeckKartu<Kartu>* deckKartu;
+    DeckKartu<KartuKemampuanSpesial>* deckSkill;
     Dadu* dadu;
     ManagerPenjara* managerPenjara;
     ManagerProperti* managerProperti;
@@ -73,6 +75,9 @@ public :
 
     DeckKartu<Kartu>* getDeckKartu() const { return deckKartu; }
     void setDeckKartu(DeckKartu<Kartu>* deck) { this->deckKartu = deck; }
+
+    DeckKartu<KartuKemampuanSpesial>* getDeckSkill() const { return deckSkill; }
+    void setDeckSkill(DeckKartu<KartuKemampuanSpesial>* deck) { this->deckSkill = deck; }
 
     Dadu* getDadu() const { return dadu; }
     void setDadu(Dadu* d) { this->dadu = d; }

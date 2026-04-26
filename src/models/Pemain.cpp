@@ -46,6 +46,36 @@ void Pemain::tambahKartu(KartuKemampuanSpesial* kartuBaru, DeckKartu<KartuKemamp
     kartuDiTangan.push_back(kartuBaru);
 }
 
+void Pemain::buangKartu(int index, DeckKartu<KartuKemampuanSpesial>& deckSkill) {
+    if (index < 0 || index >= static_cast<int>(kartuDiTangan.size())) {
+        throw NimonspoliException(999, "INDEX_KARTU_TIDAK_VALID");
+    }
+    KartuKemampuanSpesial* k = kartuDiTangan.at(index);
+    kartuDiTangan.erase(kartuDiTangan.begin() + index);
+    deckSkill.buangKartu(k);
+}
+
+void Pemain::gunakanKartu(int index, PlayerActionService& svc, DeckKartu<KartuKemampuanSpesial>& deckSkill, bool bolehPakaiSkill) {
+    if (!bolehPakaiSkill) {
+        throw NimonspoliException(998, "TIDAK_BOLEH_PAKAI_SKILL");
+    }
+    if (sudahPakaiSkill) {
+        throw NimonspoliException(997, "SUDAH_PAKAI_SKILL_TURN_INI");
+    }
+    if (index < 0 || index >= static_cast<int>(kartuDiTangan.size())) {
+        throw NimonspoliException(999, "INDEX_KARTU_TIDAK_VALID");
+    }
+
+    KartuKemampuanSpesial* k = kartuDiTangan.at(index);
+    // pakai efek
+    k->gunakan(*this, svc);
+    sudahPakaiSkill = true;
+
+    // sekali pakai → buang
+    kartuDiTangan.erase(kartuDiTangan.begin() + index);
+    deckSkill.buangKartu(k);
+}
+
 // properti management 
 void Pemain::tambahAset(PetakProperti* p){
     asetPemain.push_back(p);

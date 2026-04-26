@@ -1,0 +1,158 @@
+```
+.
+├── all_code.txt
+├── bin
+│   └── game
+├── build
+│   ├── core
+│   │   ├── BangkrutDanEndGame.o
+│   │   └── GameEngine.o
+│   ├── main.o
+│   ├── models
+│   │   ├── ConfigData.o
+│   │   ├── Dadu.o
+│   │   ├── Kartu
+│   │   │   ├── KartuDanaUmum.o
+│   │   │   ├── KartuKemampuanSpesial.o
+│   │   │   ├── KartuKesempatan.o
+│   │   │   └── Kartu.o
+│   │   ├── Managers
+│   │   │   ├── ManagerFestival.o
+│   │   │   ├── ManagerLelang.o
+│   │   │   ├── ManagerPenjara.o
+│   │   │   ├── ManagerProperti.o
+│   │   │   └── ManagerTransaksi.o
+│   │   ├── Papan.o
+│   │   ├── Pemain.o
+│   │   ├── Petak
+│   │   │   ├── PetakAksi.o
+│   │   │   ├── PetakFestival.o
+│   │   │   ├── PetakKartu.o
+│   │   │   ├── PetakLahan.o
+│   │   │   ├── Petak.o
+│   │   │   ├── PetakPajak.o
+│   │   │   ├── PetakProperti.o
+│   │   │   ├── PetakSpesial.o
+│   │   │   ├── PetakStasiun.o
+│   │   │   └── PetakUtilitas.o
+│   │   └── PlayerActionService.o
+│   ├── utils
+│   │   ├── ConfigLoader.o
+│   │   ├── FileHelper.o
+│   │   ├── GameConstants.o
+│   │   ├── LogTransaksiGame.o
+│   │   └── SaveNLoad.o
+│   └── views
+│       ├── InputHandler.o
+│       └── OutputHandler.o
+├── config
+│   ├── aksi.txt
+│   ├── misc.txt
+│   ├── property.txt
+│   ├── railroad.txt
+│   ├── special.txt
+│   ├── tax.txt
+│   └── utility.txt
+├── data
+├── doc
+│   └── Spesifikasi Tugas Besar 1_ Nimonspoli.pdf
+├── include
+│   ├── core
+│   │   ├── BangkrutDanEndGame.hpp
+│   │   └── GameEngine.hpp
+│   ├── models
+│   │   ├── ConfigData.hpp
+│   │   ├── Dadu.hpp
+│   │   ├── Kartu
+│   │   │   ├── DeckFactory.hpp
+│   │   │   ├── DeckKartu.hpp
+│   │   │   ├── KartuDanaUmum.hpp
+│   │   │   ├── Kartu.hpp
+│   │   │   ├── KartuKemampuanSpesial.hpp
+│   │   │   └── KartuKesempatan.hpp
+│   │   ├── Managers
+│   │   │   ├── ManagerFestival.hpp
+│   │   │   ├── ManagerKartu.hpp
+│   │   │   ├── ManagerLelang.hpp
+│   │   │   ├── ManagerPenjara.hpp
+│   │   │   ├── ManagerProperti.hpp
+│   │   │   └── ManagerTransaksi.hpp
+│   │   ├── Papan.hpp
+│   │   ├── Pemain.hpp
+│   │   ├── Petak
+│   │   │   ├── PetakAksi.hpp
+│   │   │   ├── PetakFestival.hpp
+│   │   │   ├── Petak.hpp
+│   │   │   ├── PetakKartu.hpp
+│   │   │   ├── PetakLahan.hpp
+│   │   │   ├── PetakPajak.hpp
+│   │   │   ├── PetakProperti.hpp
+│   │   │   ├── PetakSpesial.hpp
+│   │   │   ├── PetakStasiun.hpp
+│   │   │   └── PetakUtilitas.hpp
+│   │   └── PlayerActionService.hpp
+│   ├── utils
+│   │   ├── ConfigLoader.hpp
+│   │   ├── FileHelper.hpp
+│   │   ├── GameConstants.hpp
+│   │   ├── LogTransaksiGame.hpp
+│   │   ├── NimonspoliException.hpp
+│   │   └── SaveNLoad.hpp
+│   └── views
+│       ├── InputHandler.hpp
+│       └── OutputHandler.hpp
+├── load_game_patch.py
+├── makefile
+├── README.md
+├── spesifikasi.txt
+├── src
+│   ├── core
+│   │   ├── BangkrutDanEndGame.cpp
+│   │   └── GameEngine.cpp
+│   ├── main.cpp
+│   ├── models
+│   │   ├── ConfigData.cpp
+│   │   ├── Dadu.cpp
+│   │   ├── Kartu
+│   │   │   ├── Kartu.cpp
+│   │   │   ├── KartuDanaUmum.cpp
+│   │   │   ├── KartuKemampuanSpesial.cpp
+│   │   │   └── KartuKesempatan.cpp
+│   │   ├── Managers
+│   │   │   ├── ManagerFestival.cpp
+│   │   │   ├── ManagerLelang.cpp
+│   │   │   ├── ManagerPenjara.cpp
+│   │   │   ├── ManagerProperti.cpp
+│   │   │   └── ManagerTransaksi.cpp
+│   │   ├── Papan.cpp
+│   │   ├── Pemain.cpp
+│   │   ├── Petak
+│   │   │   ├── PetakAksi.cpp
+│   │   │   ├── Petak.cpp
+│   │   │   ├── PetakFestival.cpp
+│   │   │   ├── PetakKartu.cpp
+│   │   │   ├── PetakLahan.cpp
+│   │   │   ├── PetakPajak.cpp
+│   │   │   ├── PetakProperti.cpp
+│   │   │   ├── PetakSpesial.cpp
+│   │   │   ├── PetakStasiun.cpp
+│   │   │   └── PetakUtilitas.cpp
+│   │   └── PlayerActionService.cpp
+│   ├── utils
+│   │   ├── ConfigLoader.cpp
+│   │   ├── FileHelper.cpp
+│   │   ├── GameConstants.cpp
+│   │   ├── LogTransaksiGame.cpp
+│   │   └── SaveNLoad.cpp
+│   └── views
+│       ├── InputHandler.cpp
+│       └── OutputHandler.cpp
+├── structure.md
+└── testing
+    ├── test_config_loader.cpp
+    ├── test_kartu.cpp
+    ├── test_papan.cpp
+    └── test_properti.cpp
+
+30 directories, 124 files
+```
