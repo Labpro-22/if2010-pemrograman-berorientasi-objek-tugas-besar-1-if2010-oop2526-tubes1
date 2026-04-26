@@ -27,8 +27,6 @@ private:
     string ownerId;
 
 protected:
-    static const int INNER_WIDTH;
-
     static string moneyToString(int value);
     static string statusToString(PropertyStatus status);
 

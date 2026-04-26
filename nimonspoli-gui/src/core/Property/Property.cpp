@@ -1,7 +1,5 @@
 #include "Property.hpp"
 
-const int Property::INNER_WIDTH = 30;
-
 Property::Property()
     : id(0), code(""), name(""), colorGroup(""),
       purchasePrice(0), mortageValue(0),
