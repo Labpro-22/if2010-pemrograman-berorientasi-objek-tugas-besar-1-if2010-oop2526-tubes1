@@ -8,6 +8,39 @@
 //  CardDialog
 // ─────────────────────────────────────────────────────────────────────────────
 
+static std::string getCardTextureKey(const std::string &deckLabel,
+                                     const std::string &description)
+{
+    // DNU (Dana Umum)
+    if (deckLabel == "Dana Umum" || deckLabel == "DNU")
+    {
+        if (description.find("ulang tahun") != std::string::npos ||
+            description.find("Birthday") != std::string::npos)
+            return "DNU-Birthday";
+        if (description.find("dokter") != std::string::npos ||
+            description.find("Doctor") != std::string::npos)
+            return "DNU-DoctorFee";
+        if (description.find("nyaleg") != std::string::npos ||
+            description.find("Election") != std::string::npos ||
+            description.find("run for") != std::string::npos)
+            return "DNU-RunForOffice";
+    }
+    // KSP (Kesempatan / ChanceCard)
+    if (deckLabel == "Kesempatan" || deckLabel == "KSP")
+    {
+        if (description.find("Penjara") != std::string::npos ||
+            description.find("Jail") != std::string::npos)
+            return "KSP-GoToJail";
+        if (description.find("Mundur") != std::string::npos ||
+            description.find("mundur") != std::string::npos)
+            return "KSP-MoveBack";
+        if (description.find("stasiun") != std::string::npos ||
+            description.find("Station") != std::string::npos)
+            return "KSP-NearStation";
+    }
+    return "";
+}
+
 static void DrawWrappedText(
     const std::string &text,
     float x,
@@ -80,50 +113,75 @@ void GameScreen::drawCardDialog()
 
     DrawRectangle(0, 0, SCREEN_W, SCREEN_H, {0, 0, 0, 160});
 
-    constexpr float PW = 440.f, PH = 260.f;
+    constexpr float PW = 520.f, PH = 300.f;
     float px = SCREEN_W / 2.f - PW / 2.f;
     float py = SCREEN_H / 2.f - PH / 2.f;
 
     bool isKSP = (cardDialog.deckLabel == "Kesempatan");
     Color hdrCol = isKSP ? Color{180, 120, 0, 255} : Color{60, 60, 200, 255};
     Color bordCol = isKSP ? Color{240, 180, 40, 255} : Color{100, 120, 240, 255};
-    Color iconCol = isKSP ? Color{255, 200, 60, 255} : Color{140, 160, 255, 255};
 
     DrawRectangle((int)px, (int)py, (int)PW, (int)PH, {22, 24, 38, 255});
     DrawRectangleLinesEx({px, py, PW, PH}, 2.f, bordCol);
-    DrawRectangle((int)px, (int)py, (int)PW, 52, hdrCol);
+    DrawRectangle((int)px, (int)py, (int)PW, 48, hdrCol);
 
-    const char *icon = isKSP ? "?" : "$";
-    DrawText(icon, (int)(px + 20), (int)(py + 14), 22, iconCol);
+    // Header label di tengah
     std::string dl = cardDialog.deckLabel;
     int dlw = MeasureText(dl.c_str(), 17);
-    DrawText(dl.c_str(), (int)(px + PW / 2 - dlw / 2), (int)(py + 17), 17, WHITE);
+    DrawText(dl.c_str(), (int)(px + PW / 2 - dlw / 2), (int)(py + 15), 17, WHITE);
 
-    BeginScissorMode(
-        (int)(px + 24),
-        (int)(py + 70),
-        (int)(PW - 48),
-        (int)(PH - 150));
+    // ── Cari texture ──────────────────────────────────────────────
+    std::string texKey = getCardTextureKey(cardDialog.deckLabel,
+                                           cardDialog.description);
 
-    DrawWrappedText(
-        cardDialog.description,
-        px + 24,
-        py + 70,
-        PW - 48,
-        13,
-        6,
-        {220, 220, 240, 255});
+    constexpr float IMG_W = 130.f;
+    constexpr float IMG_H = PH - 48.f - 70.f; // sisakan ruang tombol
+    float imgX = px + 16.f;
+    float imgY = py + 58.f;
 
-    EndScissorMode();
+    if (!texKey.empty() && cardTextures.count(texKey))
+    {
+        Texture2D &tex = cardTextures[texKey];
+        // Scale agar muat, jaga aspek rasio
+        float scaleX = IMG_W / tex.width;
+        float scaleY = IMG_H / tex.height;
+        float scale = (scaleX < scaleY) ? scaleX : scaleY;
+        float dw = tex.width * scale;
+        float dh = tex.height * scale;
+        float dx = imgX + (IMG_W - dw) / 2.f;
+        float dy = imgY + (IMG_H - dh) / 2.f;
+        DrawTextureEx(tex, {dx, dy}, 0.f, scale, WHITE);
+    }
+    else
+    {
+        // Fallback: kotak placeholder dengan ikon
+        DrawRectangle((int)imgX, (int)imgY, (int)IMG_W, (int)IMG_H, {35, 38, 55, 255});
+        DrawRectangleLinesEx({imgX, imgY, IMG_W, IMG_H}, 1.f, bordCol);
+        const char *icon = isKSP ? "?" : "$";
+        int iw = MeasureText(icon, 28);
+        DrawText(icon, (int)(imgX + IMG_W / 2 - iw / 2),
+                 (int)(imgY + IMG_H / 2 - 16), 28, hdrCol);
+    }
 
-    DrawLine((int)(px + 16), (int)(py + PH - 64), (int)(px + PW - 16), (int)(py + PH - 64), {60, 60, 90, 255});
+    // ── Teks deskripsi di sebelah kanan gambar ────────────────────
+    float textX = px + 16.f + IMG_W + 12.f;
+    float textW = PW - IMG_W - 16.f - 12.f - 16.f;
+    float textY = py + 62.f;
+
+    DrawWrappedText(cardDialog.description,
+                    textX, textY, textW,
+                    13, 6, {220, 220, 240, 255});
+
+    // ── Tombol OK ─────────────────────────────────────────────────
+    DrawLine((int)(px + 16), (int)(py + PH - 62),
+             (int)(px + PW - 16), (int)(py + PH - 62), {60, 60, 90, 255});
     float btnW = 120.f;
-    Rectangle okBtn = {px + PW / 2 - btnW / 2, py + PH - 52, btnW, 38};
+    Rectangle okBtn = {px + PW / 2 - btnW / 2, py + PH - 50, btnW, 36};
     bool okHov = CheckCollisionPointRec(GetMousePosition(), okBtn);
     DrawRectangleRec(okBtn, okHov ? Color{80, 160, 100, 255} : Color{50, 110, 70, 255});
     DrawRectangleLinesEx(okBtn, 1.5f, {100, 200, 130, 255});
     int okw = MeasureText("OK", 14);
-    DrawText("OK", (int)(okBtn.x + btnW / 2 - okw / 2), (int)(okBtn.y + 11), 14, WHITE);
+    DrawText("OK", (int)(okBtn.x + btnW / 2 - okw / 2), (int)(okBtn.y + 10), 14, WHITE);
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && okHov)
     {
@@ -132,7 +190,6 @@ void GameScreen::drawCardDialog()
         cardDialog.visible = false;
     }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 //  JailDialog
 // ─────────────────────────────────────────────────────────────────────────────

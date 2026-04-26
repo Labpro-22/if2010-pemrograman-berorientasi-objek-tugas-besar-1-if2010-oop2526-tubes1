@@ -4,12 +4,26 @@
 #include "../../core/GameMaster/GameMaster.hpp"
 #include "../../core/Board/Board.hpp"
 #include "../../core/Commands/LemparDaduCommand.hpp"
+#include "../../core/Card/FreeFromJailCard.hpp"
 #include <string>
 
 // ─────────────────────────────────────────────
 //  triggerJailDialog()
 //  Dipanggil dari syncDiceResult() saat phase == AWAITING_JAIL
 // ─────────────────────────────────────────────
+static int findFreeJailCardIdx(Player *p)
+{
+    if (!p)
+        return -1;
+    const auto &hand = p->getHand();
+    for (int i = 0; i < (int)hand.size(); i++)
+    {
+        if (dynamic_cast<FreeFromJailCard *>(hand[i]))
+            return i;
+    }
+    return -1;
+}
+
 void GameScreen::triggerJailDialog()
 {
     if (!guiManager || !guiManager->getGameMaster())
@@ -99,11 +113,21 @@ void GameScreen::drawJailDialog()
         ry += 22.f;
     }
 
+    Player *currP = nullptr;
+    int freeCardIdx = -1;
+    if (isRealMode())
+    {
+        currP = guiManager->getGameMaster()->getState().getCurrPlayer();
+        freeCardIdx = findFreeJailCardIdx(currP);
+    }
+    bool hasFreeCard = (freeCardIdx >= 0);
+
     // ── Tombol-tombol ─────────────────────────────────────────────────────
-    float btnH = 44.f;
-    float btnY1 = py + ph - 56.f - btnH - 8.f;
-    float btnY2 = py + ph - 56.f;
+    float btnH = 40.f;
     float btnW = pw - 32.f;
+    float btnY1 = py + ph - 56.f - btnH * 2 - 16.f;
+    float btnY2 = btnY1 + btnH + 8.f;
+    float btnY3 = btnY2 + btnH + 8.f; 
     Vector2 mouse = GetMousePosition();
 
     // ── Tombol 1: BAYAR DENDA ────────────────────────────────────────────
@@ -151,6 +175,64 @@ void GameScreen::drawJailDialog()
     int clw = MeasureText(closeLbl, 12);
     DrawText(closeLbl, (int)(closeBtn.x + closeBtn.width / 2 - clw / 2),
              (int)(btnY2 + 16), 12, !closeActive ? Color{80, 80, 100, 255} : WHITE);
+
+    if (hasFreeCard)
+    {
+        bool cardDisabled = jailDialog.rolledThisTurn; // sudah roll → tidak bisa
+        Rectangle cardBtn = {px + 16, btnY3, btnW, btnH};
+        bool cardHover = CheckCollisionPointRec(mouse, cardBtn) && !cardDisabled;
+
+        Color cardBg = cardDisabled ? Color{40, 42, 54, 255}
+                       : cardHover  ? Color{160, 120, 200, 255}
+                                    : Color{100, 60, 160, 255};
+        DrawRectangleRec(cardBtn, cardBg);
+        DrawRectangleLinesEx(cardBtn, 1.5f,
+                             cardDisabled ? Color{60, 60, 80, 255} : Color{200, 150, 255, 255});
+
+        // Label: tampilkan nama kartu
+        const auto &hand = currP->getHand();
+        std::string cardName = "Kartu Bebas Penjara";
+        if (freeCardIdx >= 0 && freeCardIdx < (int)hand.size())
+            cardName = hand[freeCardIdx]->getType();
+        std::string cardLbl = "GUNAKAN: " + cardName;
+        int cwl = MeasureText(cardLbl.c_str(), 12);
+        DrawText(cardLbl.c_str(), (int)(cardBtn.x + btnW / 2 - cwl / 2),
+                 (int)(btnY3 + 13), 12,
+                 cardDisabled ? Color{80, 80, 100, 255} : Color{230, 200, 255, 255});
+
+        if (cardDisabled)
+        {
+            const char *hint = "(tidak bisa digunakan setelah lempar dadu)";
+            int hw = MeasureText(hint, 9);
+            DrawText(hint, (int)(cardBtn.x + btnW / 2 - hw / 2),
+                     (int)(btnY3 + btnH + 4), 9, {120, 100, 140, 255});
+        }
+
+        // Handle klik kartu
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && cardHover && !cardDisabled && isRealMode())
+        {
+            GameMaster *gm = guiManager->getGameMaster();
+            GameState &gs = gm->getState();
+
+            // Eksekusi kartu: releaseFromJail via FreeFromJailCard::execute()
+            SkillCard *card = currP->getHand()[freeCardIdx];
+            card->execute(*currP, gs);
+
+            // Buang kartu dari tangan dan kembalikan ke deck
+            SkillCard *removed = currP->discardSkillCard(freeCardIdx);
+            if (removed && gs.getSkillDeck())
+                gs.getSkillDeck()->discard(removed);
+
+            gm->log(currP->getUsername(), "JAIL",
+                    "Menggunakan kartu " + card->getType() + " untuk keluar penjara");
+
+            // Player bebas → bisa langsung lempar dadu normal giliran ini
+            gs.setHasRolled(false);
+            gs.setPhase(GamePhase::PLAYER_TURN);
+            jailDialog.visible = false;
+            return;
+        }
+    }
 
     // ── Handle klik ───────────────────────────────────────────────────────
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -224,14 +306,6 @@ void GameScreen::drawJailDialog()
                     }
                     else
                     {
-                        // Gagal double → tidak bergerak, tandai sudah roll
-                        p->incrementJailTurns();
-                        gm->log(p->getUsername(), "JAIL",
-                                "Gagal double " + std::to_string(v1) +
-                                    "+" + std::to_string(v2) + " — tidak bergerak");
-                        gm->getState().setHasRolled(true);
-                        jailDialog.rolledThisTurn = true;
-
                         // Update forced pay jika sekarang giliran ke-4
                         if (p->getJailTurns() >= 3)
                         {
@@ -239,6 +313,16 @@ void GameScreen::drawJailDialog()
                             jailDialog.jailTurnsLeft = p->getJailTurns();
                             p->setJailTurns(0);
                         }
+                        // Gagal double → tidak bergerak, tandai sudah roll
+                        p->incrementJailTurns();
+                        gm->log(p->getUsername(), "JAIL",
+                                "Gagal double " + std::to_string(v1) +
+                                    "+" + std::to_string(v2) + " — tidak bergerak");
+                        gm->getState().setHasRolled(true);
+                        gm->getState().setHasExtraTurn(false);
+                        jailDialog.rolledThisTurn = true;
+
+                        
                     }
                 }
             }
@@ -248,7 +332,13 @@ void GameScreen::drawJailDialog()
         else if (closeHover && closeActive)
         {
             jailDialog.visible = false;
-            if (guiManager && guiManager->getGameMaster())
+            GameMaster *gm = guiManager->getGameMaster();
+            Player *p = gm->getState().getCurrPlayer();
+            if(p && p->getHandSize() > 3){
+                    gm->getState().setPhase(GamePhase::AWAITING_DROP_SKILL_CARD);
+               
+            }
+            if (guiManager && gm)
                 guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
         }
     }
