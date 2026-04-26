@@ -1,0 +1,194 @@
+#include "core/propertytypes.h"
+#include "core/game.h"
+#include "core/player.h"
+#include <stdexcept>
+#include <string>
+#include <algorithm>
+#include <climits>
+#include <iostream>
+
+namespace Nimonspoli {
+
+void Property::handlePurchase(Player& player, Game& game) {
+    if (type_ == PropertyType::RAILROAD || type_ == PropertyType::UTILITY) {
+        setOwner(&player);
+        setStatus(PropertyStatus::OWNED);
+        player.addProperty(this);
+        game.refreshPropertyCounts(&player);
+        if (game.callbacks().onAutoPurchase) game.callbacks().onAutoPurchase(*this);
+        TransactionLogger::log(game.currentTurn(), player.username(), type_ == PropertyType::RAILROAD ? "RAILROAD" : "UTILITY", name_ + " kini milik " + player.username() + " (otomatis)");
+        return;
+    }
+    bool wantsBuy = player.canAfford(buyPrice_) && game.callbacks().onOfferPurchase && game.callbacks().onOfferPurchase(*this);
+    if (!wantsBuy) { this->handleAuction(game); return; }
+    
+    int price = buyPrice_;
+    if (player.hasDiscount()) {
+        price = price * (100 - player.discountPct()) / 100;
+        player.clearDiscount();
+        TransactionLogger::log(game.currentTurn(), player.username(), "DISKON", name_ + " diskon -> M" + std::to_string(price));
+    }
+    
+    game.bank().collect(player, price);
+    setOwner(&player);
+    setStatus(PropertyStatus::OWNED);
+    player.addProperty(this);
+    game.refreshPropertyCounts(&player);
+    std::cout << name_ << " kini menjadi milikmu! Saldo: M" << player.balance() << "\n";
+    TransactionLogger::log(game.currentTurn(), player.username(), "BELI", "Beli " + name_ + " seharga M" + std::to_string(price));
+}
+
+void Property::handleRent(Player& payer, int diceTotal, Game& game) {
+    if (isMortgaged()) return;
+    if (owner_ == &payer) return;
+
+    if (payer.isShielded()) {
+        payer.setShielded(false);
+        std::cout << "[SHIELD ACTIVE]: ShieldCard melindungimu! Sewa di " << name_ << " dibatalkan.\n";
+        TransactionLogger::log(game.currentTurn(), payer.username(), "SHIELD", "ShieldCard mencegah bayar sewa di " + name_);
+        return;
+    }
+
+    int rent = calcRent(diceTotal);
+    if (rent <= 0) return;
+
+    std::cout << "Kamu mendarat di " << name_ << " (" << code_ << "), milik " << owner_->username() << "!\n";
+    if (type_ == PropertyType::STREET) {
+        auto* s = static_cast<Street*>(this);
+        std::string kondisi;
+        if (s->hasHotel())              kondisi = "Hotel";
+        else if (s->buildingLevel() > 0) kondisi = std::to_string(s->buildingLevel()) + " rumah";
+        else if (s->hasMonopoly())       kondisi = "Monopoli (tanpa bangunan)";
+        else                             kondisi = "Tanah kosong";
+        std::cout << "Kondisi      : " << kondisi << "\n";
+        if (s->festival().isActive())
+            std::cout << "Festival     : aktif x" << s->festival().multiplier()
+                      << " (sisa " << s->festival().duration() << " giliran)\n";
+    } else if (type_ == PropertyType::RAILROAD) {
+        std::cout << "Kondisi      : Railroad (dimiliki " << owner_->username() << ")\n";
+    } else if (type_ == PropertyType::UTILITY) {
+        std::cout << "Kondisi      : Utilitas (dadu: " << diceTotal << ")\n";
+    }
+    std::cout << "Sewa         : M" << rent << "\n";
+
+    if (!payer.canAfford(rent)) {
+        std::cout << "Kamu tidak mampu membayar sewa penuh! (M" << rent << ")\n"
+                  << "Uang kamu saat ini: M" << payer.balance() << "\n";
+        game.handleBankruptcy(payer, owner_, rent);
+        return;
+    }
+
+    int payerBefore = payer.balance();
+    int ownerBefore = owner_->balance();
+    game.bank().transfer(payer, *owner_, rent);
+    std::cout << "Uang kamu     : M" << payerBefore << " -> M" << payer.balance() << "\n"
+              << "Uang " << owner_->username() << " : M" << ownerBefore << " -> M" << owner_->balance() << "\n";
+    TransactionLogger::log(game.currentTurn(), payer.username(), "SEWA",
+                           "Bayar M" + std::to_string(rent) + " ke " + owner_->username() + " (" + name_ + ")");
+}
+
+void Property::handleAuction(Game& game) {
+    TransactionLogger::log(game.currentTurn(), "SISTEM", "LELANG", "Lelang dimulai: " + name_);
+    if (game.callbacks().onAuction) {
+        game.callbacks().onAuction(*this);
+    }
+}
+
+void Property::finishAuction(Player& winner, int finalBid, Game& game) {
+    Player* previousOwner = owner_;
+    
+    if (finalBid > 0) game.bank().collect(winner, finalBid);
+    
+    setOwner(&winner);
+    setStatus(PropertyStatus::OWNED);
+    winner.addProperty(this);
+    
+    if (previousOwner && previousOwner != &winner) {
+        previousOwner->removeProperty(this);
+        game.refreshPropertyCounts(previousOwner);
+    }
+    
+    game.refreshPropertyCounts(&winner);
+    TransactionLogger::log(game.currentTurn(), winner.username(), "LELANG", "Menang lelang " + name_ + " seharga M" + std::to_string(finalBid));
+}
+
+void Property::performMortgage(Player& player, Game& game) {
+    if (isMortgaged()) throw std::logic_error("Properti sudah digadaikan.");
+    game.bank().pay(player, mortgageValue());
+    setStatus(PropertyStatus::MORTGAGED);
+    TransactionLogger::log(game.currentTurn(), player.username(), "GADAI", name_ + " digadaikan, menerima M" + std::to_string(mortgageValue()));
+}
+
+void Property::performRedeem(Player& player, Game& game) {
+    if (!isMortgaged()) throw std::logic_error("Properti tidak sedang digadaikan.");
+    int cost = buyPrice();
+    if (!player.canAfford(cost)) throw std::runtime_error("Uang tidak cukup untuk menebus. Harga tebus: M" + std::to_string(cost));
+    game.bank().collect(player, cost);
+    setStatus(PropertyStatus::OWNED);
+    TransactionLogger::log(game.currentTurn(), player.username(), "TEBUS", name_ + " ditebus, bayar M" + std::to_string(cost));
+}
+
+void Street::performMortgage(Player& player, Game& game) {
+    if (isMortgaged()) throw std::logic_error("Properti sudah digadaikan.");
+    auto group = game.board().colorGroupStreets(colorGroup_);
+    bool hasBldg = false;
+    for (auto* s : group) if (s->buildingLevel() > 0) { hasBldg = true; break; }
+    if (hasBldg) {
+        for (auto* s : group) {
+            int refund = s->demolishAll();
+            if (refund > 0) {
+                game.bank().pay(player, refund);
+                TransactionLogger::log(game.currentTurn(), player.username(), "JUAL_BANGUNAN", s->name() + " -> refund M" + std::to_string(refund));
+            }
+        }
+    }
+    Property::performMortgage(player, game);
+}
+
+void Street::buildHouseOrHotel(Player& player, Game& game) {
+    if (!hasMonopoly()) throw std::logic_error("Kamu belum memonopoli color group ini.");
+    if (hasHotel()) throw std::logic_error("Properti sudah memiliki hotel (maksimal).");
+    auto groupStreets = game.board().colorGroupStreets(colorGroup_);
+    int minLevel = INT_MAX;
+    for (auto* s : groupStreets) minLevel = std::min(minLevel, s->buildingLevel());
+    if (buildingLevel_ > minLevel) throw std::logic_error("Pemerataan bangunan tidak terpenuhi.");
+    int cost = nextBuildCost();
+    if (!player.canAfford(cost)) throw std::runtime_error("Uang tidak cukup untuk membangun.");
+    game.bank().collect(player, cost);
+    addBuilding();
+    std::string label = hasHotel() ? "Hotel" : std::to_string(buildingLevel_) + " rumah";
+    TransactionLogger::log(game.currentTurn(), player.username(), "BANGUN", name_ + " -> " + label + " (biaya M" + std::to_string(cost) + ")");
+}
+
+void Street::applyFestivalBoost(Player& player, Game& game) {
+    festival_.boost();
+    TransactionLogger::log(game.currentTurn(), player.username(), "FESTIVAL", name_ + ": sewa x" + std::to_string(festival_.multiplier()) + " selama 3 giliran");
+}
+
+
+void Property::performLiquidation(Player& player, Game& game) {
+    if (owner_ != &player) throw std::invalid_argument("Properti bukan milikmu.");
+    if (isMortgaged()) throw std::logic_error("Properti tergadai tidak bisa langsung dijual ke Bank.");
+
+    int val = liquidationValue();
+    game.bank().pay(player, val);
+    
+    setOwner(nullptr);
+    setStatus(PropertyStatus::BANK);
+    player.removeProperty(this);
+    game.refreshPropertyCounts(&player);
+    
+    TransactionLogger::log(game.currentTurn(), player.username(), "JUAL", name_ + " -> M" + std::to_string(val));
+    game.handleAuction(*this);
+}
+
+void Street::performLiquidation(Player& player, Game& game) {
+    if (owner_ != &player) throw std::invalid_argument("Properti bukan milikmu.");
+    
+    // Hancurkan semua bangunan terlebih dahulu
+    demolishAll(); 
+    
+    // Lanjutkan dengan likuidasi standar milik Property
+    Property::performLiquidation(player, game);
+}
+}
