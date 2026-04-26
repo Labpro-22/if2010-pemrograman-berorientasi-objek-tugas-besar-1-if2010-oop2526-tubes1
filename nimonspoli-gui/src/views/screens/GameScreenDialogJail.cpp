@@ -107,7 +107,7 @@ void GameScreen::drawJailDialog()
     // Pesan hasil roll (jika sudah roll tapi gagal double)
     if (jailDialog.rolledThisTurn)
     {
-        const char *msg = "Bukan double — giliran ini tidak bergerak.";
+        const char *msg = "Bukan double giliran ini tidak bergerak.";
         int mw = MeasureText(msg, 11);
         DrawText(msg, (int)(px + pw / 2 - mw / 2), (int)ry, 11, {220, 160, 60, 255});
         ry += 22.f;
@@ -210,7 +210,7 @@ void GameScreen::drawJailDialog()
         {
             GameMaster *gm = guiManager->getGameMaster();
             GameState &gs = gm->getState();
-
+            Player* savedPlayer = currP;
             // Eksekusi kartu: releaseFromJail via FreeFromJailCard::execute()
             SkillCard *card = currP->getHand()[freeCardIdx];
             card->execute(*currP, gs);
@@ -225,8 +225,11 @@ void GameScreen::drawJailDialog()
 
             // Player bebas → bisa langsung lempar dadu normal giliran ini
             gs.setHasRolled(false);
-            gs.setPhase(GamePhase::PLAYER_TURN);
             jailDialog.visible = false;
+            if (savedPlayer->getHandSize() > 3)
+                gm->handleSkillCardOverflow(savedPlayer);
+            else
+                gs.setPhase(GamePhase::PLAYER_TURN);
             return;
         }
     }
@@ -264,9 +267,16 @@ void GameScreen::drawJailDialog()
                         }
                     }
                     if (gm->getState().getPendingDebt() > 0)
+                    {
                         gm->getState().setPhase(GamePhase::BANKRUPTCY);
+                    }
                     else
-                        gm->getState().setPhase(GamePhase::PLAYER_TURN);
+                    {
+                        if (p->getHandSize() > 3)
+                            gm->handleSkillCardOverflow(p);
+                        else
+                            gm->getState().setPhase(GamePhase::PLAYER_TURN);
+                    }
                 }
             }
             jailDialog.visible = false;
@@ -304,8 +314,11 @@ void GameScreen::drawJailDialog()
                                     std::to_string(v1) + "+" + std::to_string(v2));
                         gm->movePlayer(p, v1 + v2);
                         gm->getState().setHasRolled(true);
-                        gm->getState().setPhase(GamePhase::PLAYER_TURN);
                         jailDialog.visible = false;
+                        if (p->getHandSize() > 3)
+                            gm->handleSkillCardOverflow(p);
+                        else
+                            gm->getState().setPhase(GamePhase::PLAYER_TURN);
                     }
                     else
                     {

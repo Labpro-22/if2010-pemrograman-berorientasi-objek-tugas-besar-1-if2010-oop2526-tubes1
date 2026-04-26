@@ -33,3 +33,5 @@ std::string SkillCard::successMessage() const
 {
     return getType() + " berhasil digunakan.";
 }
+
+void SkillCard::resetUsed() { used = false; }

@@ -41,6 +41,7 @@ public:
 
     int activePlayerCount = 4;
     bool gameOver = false;
+    bool pendingTileEffectAfterCard = false;
     bool isGameOver() const { return gameOver; }
 
     // Sinkronisasi dengan GameMaster (mode real)

@@ -303,12 +303,16 @@ void JailTile::onLanded(Player &p, GameState & /*gs*/)
 
 void JailTile::sendToJail(Player &p)
 {
-    visitor.erase(remove(visitor.begin(), visitor.end(), &p), visitor.end());
-    if (!isInmate(p))
-    {
-        inmates.push_back(&p);
+    if(p.isShielded()) return;
+    else{
+        visitor.erase(remove(visitor.begin(), visitor.end(), &p), visitor.end());
+        if (!isInmate(p))
+        {
+            inmates.push_back(&p);
+        }
+        p.setStatus(PlayerStatus::JAILED);
     }
-    p.setStatus(PlayerStatus::JAILED);
+  
 }
 
 bool JailTile::tryEscape(Player &p, Dice &d)
@@ -472,32 +476,33 @@ void CardTile::onLanded(Player &p, GameState &gs)
         return;
 
     std::string label = (code == "KSP") ? "Kesempatan" : "Dana Umum";
-
     TransactionLogger *logger = gs.getLogger();
     int turn = gs.getCurrTurn();
     GameMaster *gm = gs.getGameMaster();
 
     CardCommand cmd(&p, card, &gs, logger, turn, label);
     if (!gm)
-    {
-        // Tidak ada GameMaster → tidak bisa eksekusi command, langsung return
         return;
-    }
+
     try
     {
         cmd.execute(*gm);
     }
     catch (const InsufficientFundsException &)
     {
+        gs.setPendingCardDesc(cmd.getLastDescription());
+        gs.setPendingCardDeck(label);
         gs.setPhase(GamePhase::BANKRUPTCY);
-        throw;
+        return;
     }
 
     gs.setPendingCardDesc(cmd.getLastDescription());
     gs.setPendingCardDeck(label);
-    gs.setPhase(GamePhase::SHOW_CARD);
-}
 
+    GamePhase cur = gs.getPhase();
+    if (cur == GamePhase::PLAYER_TURN || cur == GamePhase::DICE_ROLLED)
+        gs.setPhase(GamePhase::SHOW_CARD);
+}
 // ═════════════════════════════════════════════
 //  FestivalTile
 // ═════════════════════════════════════════════

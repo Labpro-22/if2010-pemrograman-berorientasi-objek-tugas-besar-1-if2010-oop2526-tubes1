@@ -223,6 +223,7 @@ void GameScreen::drawSkillCardDialog()
                 skillCardResultDialog.title = successTitle;
                 skillCardResultDialog.message = successMessage;
             }
+            pendingTileEffectAfterCard = true;
         }
         catch (const std::exception &e)
         {
@@ -605,6 +606,7 @@ void GameScreen::drawSkillCardResultDialog()
         skillCardResultDialog.visible = false;
         skillCardResultDialog.title.clear();
         skillCardResultDialog.message.clear();
+        pendingTileEffectAfterCard = false;
     }
 }
 

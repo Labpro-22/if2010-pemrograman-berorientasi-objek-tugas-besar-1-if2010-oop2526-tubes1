@@ -88,6 +88,7 @@ void GameMaster::beginTurn()
     Player *cur = state.getCurrPlayer();
     if (!cur || cur->getStatus() == PlayerStatus::BANKRUPT)
         return;
+    cur->onTurnStart();
     if (!extraTurn)
         distributeSkillCards();
     if (cur->isInJail())
@@ -241,7 +242,7 @@ void GameMaster::sendPlayerToJail(Player *player)
 {
     if (!player)
         return;
-
+    if(player->isShielded())return;
     int jailIdx = findJailIndex();
     if (jailIdx >= 0)
         player->setPosition(jailIdx);

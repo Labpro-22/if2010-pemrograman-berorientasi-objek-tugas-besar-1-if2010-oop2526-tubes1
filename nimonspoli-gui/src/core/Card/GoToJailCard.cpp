@@ -17,6 +17,12 @@ GoToJailCard::~GoToJailCard()
 
 void GoToJailCard::execute(Player &p, GameState &gs)
 {
+    GameMaster *gm = gs.getGameMaster();
+    if (gm)
+    {
+        gm->sendPlayerToJail(&p);
+        return;
+    }
     int jailIdx = gs.getBoard()->findTileIndexByCode("PEN");
     p.setPosition(jailIdx);
     p.goToJail();

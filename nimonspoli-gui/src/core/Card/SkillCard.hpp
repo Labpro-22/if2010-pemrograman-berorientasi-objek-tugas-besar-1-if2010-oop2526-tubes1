@@ -18,6 +18,7 @@ public:
     bool isUsed() const;
     void markUsed();
     string getType() const;
+    void resetUsed();
     virtual void execute(Player &p, GameState &gs) = 0;
     virtual string successMessage() const;
 };

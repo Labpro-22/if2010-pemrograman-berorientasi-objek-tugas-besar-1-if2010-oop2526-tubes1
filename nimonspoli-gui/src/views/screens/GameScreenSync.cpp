@@ -13,15 +13,13 @@ void GameScreen::syncFromGameMaster()
         return;
 
     GameMaster *gm = guiManager->getGameMaster();
-    GameState &gs = gm->getState(); // non-const agar bisa setPhase
+    GameState &gs = gm->getState();
     Board *board = gs.getBoard();
 
     gameState.currentTurn = gs.getCurrTurn();
     gameState.maxTurn = gs.getMaxTurn();
     gameState.activePlayerIdx = gs.getCurrPlayerIdx();
 
-    // ── Fix bug 3: cek win condition setiap frame ─────────────────────────
-    // isMaxTurnReached() = currTurn > maxTurn (maxTurn >= 1)
     if (gs.getPhase() != GamePhase::GAME_OVER)
     {
         if (gs.isMaxTurnReached() || gs.countActivePlayers() <= 1)
@@ -83,17 +81,14 @@ void GameScreen::syncFromGameMaster()
             MockProperty &mp = gameState.properties[i];
             mp.name = prop->getName();
             mp.colorGroup = prop->getColorGroup();
-
-            const std::string &ownerId = prop->getOwnerId();
             mp.owner = -1;
             mp.mortgaged = (prop->getStatus() == PropertyStatus::MORTGAGED);
 
             if (prop->getStatus() != PropertyStatus::BANK)
             {
-                mp.owner = -1; // default if not found
                 for (int pi = 0; pi < (int)realPlayers.size(); ++pi)
                 {
-                    if (realPlayers[pi]->getUsername() == ownerId)
+                    if (realPlayers[pi]->getUsername() == prop->getOwnerId())
                     {
                         mp.owner = pi;
                         break;
@@ -121,41 +116,46 @@ void GameScreen::syncFromGameMaster()
         }
     }
 
-    // ── Trigger Dialogs berdasarkan phase (dipanggil setiap frame) ────────
+    // ── Trigger Dialogs ───────────────────────────────────────────────────
     GamePhase phase = gs.getPhase();
     Player *currP = gs.getCurrPlayer();
+    
+    bool blockTileDialogs = skillCardResultDialog.visible && pendingTileEffectAfterCard;
 
-    if (phase == GamePhase::AWAITING_BUY && !buyDialog.visible && currP)
-        triggerBuyDialog(currP->getPosition());
+    if (!blockTileDialogs)
+    {
+        if (phase == GamePhase::AWAITING_BUY && !buyDialog.visible && currP)
+            triggerBuyDialog(currP->getPosition());
 
-    if (phase == GamePhase::AWAITING_TAX && !taxDialog.visible)
-        triggerTaxDialog();
+        if (phase == GamePhase::AWAITING_TAX && !taxDialog.visible)
+            triggerTaxDialog();
 
-    if (phase == GamePhase::AWAITING_PBM && !pbmDialog.visible)
-        triggerPbmDialog();
+        if (phase == GamePhase::AWAITING_PBM && !pbmDialog.visible)
+            triggerPbmDialog();
 
-    if (phase == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
-        triggerFestivalDialog();
+        if (phase == GamePhase::AWAITING_FESTIVAL && !festivalDialog.visible)
+            triggerFestivalDialog();
 
-    if (phase == GamePhase::AWAITING_RENT && !sewaDialog.visible)
-        triggerSewaDialog();
+        if (phase == GamePhase::AWAITING_RENT && !sewaDialog.visible)
+            triggerSewaDialog();
 
-    if (phase == GamePhase::SHOW_CARD && !cardDialog.visible)
-        triggerCardDialog();
+        if (phase == GamePhase::SHOW_CARD && !cardDialog.visible)
+            triggerCardDialog();
 
-    if (phase == GamePhase::AUCTION && !auctionDialog.visible)
-        triggerAuctionDialog();
+        if (phase == GamePhase::AUCTION && !auctionDialog.visible)
+            triggerAuctionDialog();
 
-    if (phase == GamePhase::AWAITING_JAIL && !jailDialog.visible)
-        triggerJailDialog();
+        if (phase == GamePhase::AWAITING_JAIL && !jailDialog.visible)
+            triggerJailDialog();
 
-    if (phase == GamePhase::BANKRUPTCY && !bankruptcyDialog.visible && !bankruptcyDialog.notifVisible)
-        triggerBankruptcyDialog();
+        if (phase == GamePhase::BANKRUPTCY && !bankruptcyDialog.visible && !bankruptcyDialog.notifVisible)
+            triggerBankruptcyDialog();
 
-    if (phase == GamePhase::AWAITING_DROP_SKILL_CARD && !dropSkillCardDialog.visible)
-        triggerDropSkillCardDialog();
+        if (phase == GamePhase::AWAITING_DROP_SKILL_CARD && !dropSkillCardDialog.visible)
+            triggerDropSkillCardDialog();
+    }
 
-    // Lanjut lelang berikutnya jika antrian masih ada
+    // Lelang tetap jalan tanpa diblokir
     if (phase == GamePhase::PLAYER_TURN && !gs.getPendingAuctionQueue().empty() && !auctionDialog.visible)
     {
         Property *next = gs.popPendingAuction();
@@ -164,9 +164,6 @@ void GameScreen::syncFromGameMaster()
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  syncDiceResult() — hanya animasi dadu, tidak ada trigger dialog
-// ─────────────────────────────────────────────────────────────────────────────
 void GameScreen::syncDiceResult()
 {
     if (!isRealMode())
