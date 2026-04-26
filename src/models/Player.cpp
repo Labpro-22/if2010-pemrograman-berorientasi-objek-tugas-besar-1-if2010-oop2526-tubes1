@@ -25,7 +25,7 @@ bool Player::canAfford(int amount) const {
     return this->money >= amount;
 }
 void Player::addProperty(PropertyTile* prop) {
-    return this->ownedProperties.push_back(prop);
+    this->ownedProperties.push_back(prop);
 }
 void Player::removeProperty(PropertyTile* prop) {
     this->ownedProperties.erase(
@@ -70,13 +70,6 @@ bool Player::isBankrupt() const {
     return this->status == PlayerStatus::BANKRUPT;
 }
 std::string Player::toString() const {
-    // TODO: FORMAT STRING
-    // <USERNAME> <UANG> <KODE_PETAK> <STATUS>
-    // <JUMLAH_KARTU_TANGAN>
-    // <JENIS_KARTU_1> <NILAI_KARTU_1> <SISA_DURASI_1>
-    // <JENIS_KARTU_2> <NILAI_KARTU_2> <SISA_DURASI_2>
-    // yang ngerjain kamu? ok thanks
-
     return getUsername() + " " + std::to_string(this->money);
 }
 void Player::useAbilityCard(int index, Game* game) {
