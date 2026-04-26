@@ -320,7 +320,7 @@ int main()
                 Player *creditor = state.getPendingCreditor();
                 int debt = state.getPendingDebt();
 
-                while (com->getBalance() < debt && com->getPropertyCount() > 0)
+                while (com->getBalance() < debt && com->getPropertyCount() > 0 && com->getWealth() >= debt)
                 {
                     Property *propToSell = nullptr;
                     for (int pi = 0; pi < com->getPropertyCount(); ++pi)
