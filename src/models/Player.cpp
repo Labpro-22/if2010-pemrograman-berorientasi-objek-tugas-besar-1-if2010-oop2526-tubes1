@@ -118,3 +118,21 @@ int Player::getId() const {
 int Player::getPosition() const {
     return this->position;
 }
+
+
+void Player::activateShield() {
+    this->shieldActive = true;
+}
+
+void Player::applyDiscount(int percentage) {
+    if (percentage < 0) {
+        percentage = 0;
+    }
+
+    if (percentage > 100) {
+        percentage = 100;
+    }
+
+    this->discountPercent = percentage;
+    this->discountDuration = 1;
+}

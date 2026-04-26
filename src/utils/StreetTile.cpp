@@ -59,6 +59,11 @@ void StreetTile::buildHotel() {
     hasHotel = true;
 }
 
+void StreetTile::demolish() {
+    houseCount = 0;
+    hasHotel = false;
+}
+
 bool StreetTile::hasMonopoly(Game* game) {
     (void) game;
     return false;

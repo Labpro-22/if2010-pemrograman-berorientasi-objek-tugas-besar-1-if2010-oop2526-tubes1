@@ -1,5 +1,7 @@
 #include "utils/PropertyTile.hpp"
+#include "models/Player.hpp"
 #include <sstream>
+#include <algorithm>
 
 PropertyTile::PropertyTile(int id, std::string code, std::string name, int mortgageValue)
 : Tile(id, code, name),
@@ -10,12 +12,22 @@ PropertyTile::PropertyTile(int id, std::string code, std::string name, int mortg
       festivalDuration(0) {}
 
 void PropertyTile::onLand(Player* player, Game* game) {
-    if (status == BANK) {
+    if (player == nullptr || status != OWNED || owner == nullptr || owner == player) {
         return;
     }
 
-    if (status == OWNED && owner != player) {
-        (void) calculateRent(player, game);
+    if (player->isShieldActive()) {
+        return;
+    }
+
+    int rent = calculateRent(player, game);
+
+    int discount = std::clamp(player->getDiscountPercent(), 0, 100);
+    rent = rent * (100 - discount) / 100;
+
+    if (rent > 0) {
+        player->pay(rent);
+        owner->receive(rent);
     }
 }
 

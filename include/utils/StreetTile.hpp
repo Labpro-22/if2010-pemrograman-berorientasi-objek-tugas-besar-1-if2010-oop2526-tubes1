@@ -38,6 +38,7 @@ public:
 
     void buildHouse();
     void buildHotel();
+    void demolish();
     int sellBuildingsToBank();
 
     int getBuildingLevel() const;

@@ -5,77 +5,58 @@ class ShieldCard : public AbilityCard
 {
 public:
     ShieldCard();
-    void use(Player* target, Game* game);
-    std::string serialize() const; 
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
 };
 
 class TeleportCard : public AbilityCard
 {
 public:
     TeleportCard();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
 };
 
 class MoveCard : public AbilityCard
 {
 private:
     int steps;
+
 public:
     MoveCard();
-    void setup();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
+    explicit MoveCard(int steps);
+
+    void setup() override;
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
 };
 
 class LassoCard : public AbilityCard
 {
 public:
     LassoCard();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
 };
-
-// class DiscountCard : public AbilityCard
-// {
-// private:
-//     int percentage;
-// public:
-//     DiscountCard();
-//     void setup();
-//     void use(Player* target, Game* game);
-//     std::string serialize() const;
-// };
-
-class DemolitionCard : public AbilityCard
-{
-public:
-    DemolitionCard();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
-};
-
-// class MoveCard : public AbilityCard
-// {
-// private:
-//     int steps;
-// public:
-//     MoveCard();
-//     explicit MoveCard(int steps);
-//     void setup();
-//     void use(Player* target, Game* game);
-//     std::string serialize() const;
-// };
 
 class DiscountCard : public AbilityCard
 {
 private:
     int percentage;
+
 public:
     DiscountCard();
     explicit DiscountCard(int percentage);
-    void setup();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
+
+    void setup() override;
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
 };
 
+class DemolitionCard : public AbilityCard
+{
+public:
+    DemolitionCard();
+    void use(Player* target, Game* game) override;
+    std::string serialize() const override;
+};
