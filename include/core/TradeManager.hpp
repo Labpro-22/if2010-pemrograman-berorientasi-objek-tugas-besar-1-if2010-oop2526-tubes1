@@ -25,4 +25,13 @@ public:
     void rejectTrade(TradeToPlayer* trade);
     
     std::vector<TradeToPlayer*> getTradesForPlayer(Player* target) const;
+
+    const std::vector<TradeToPlayer*>& getActiveTrades() const;
+
+    void clearActiveTrades();
+
+    void restoreTrade(Player* proposer, Player* target,
+                    const std::vector<PropertyTile*>& offeredProps, int offeredMoney,
+                    const std::vector<PropertyTile*>& requestedProps, int requestedMoney);
+
 };

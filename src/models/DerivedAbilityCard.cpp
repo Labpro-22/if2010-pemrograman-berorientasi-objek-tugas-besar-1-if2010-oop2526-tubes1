@@ -31,23 +31,12 @@ std::string AbilityCard::serializeCommonAbilityFields(
            "|DESCRIPTION=" + escapeSerializedValue(description);
 }
 
-MoveCard::MoveCard() : AbilityCard("MoveCard", "Maju x petak.") {}
-void MoveCard::setup() {
-    std::mt19937 randomizer(std::random_device{}());
-    std::uniform_int_distribution picker(1, 12);
-    steps = picker(randomizer);
-    description = "Maju " + std::to_string(steps) + " petak.";
-}
-void MoveCard::use(Player* target, Game* game) {
-    // TODO: MOVE PLAYER
-}
-
 std::string MoveCard::serialize() const 
 {
     return serializeCommonAbilityFields(this->name, this->description) + "|STEPS=" + std::to_string(this->steps);
 }
 
-DiscountCard::DiscountCard() : AbilityCard("DiscountCard", "Dapatkan diskon selama 1 giliran.") {}
+// DiscountCard::DiscountCard() : AbilityCard("DiscountCard", "Dapatkan diskon selama 1 giliran.") {}
 void DiscountCard::setup() {
     std::mt19937 randomizer(std::random_device{}());
     std::uniform_int_distribution picker(1, 100);
@@ -104,3 +93,17 @@ std::string DemolitionCard::serialize() const
 {
     return serializeCommonAbilityFields(this->name, this-> description);
 }
+
+MoveCard::MoveCard() : AbilityCard("MoveCard", "Maju x petak."), steps(0) {}
+
+MoveCard::MoveCard(int steps)
+    : AbilityCard("MoveCard", "Maju " + std::to_string(steps) + " petak."),
+      steps(steps) {}
+
+DiscountCard::DiscountCard()
+    : AbilityCard("DiscountCard", "Dapatkan diskon selama 1 giliran."),
+      percentage(0) {}
+
+DiscountCard::DiscountCard(int percentage)
+    : AbilityCard("DiscountCard", "Dapatkan diskon " + std::to_string(percentage) + "%% selama 1 giliran."),
+      percentage(percentage) {}

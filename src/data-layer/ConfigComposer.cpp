@@ -1,7 +1,15 @@
 #include "../../include/data-layer/ConfigComposer.hpp"
 using namespace std;
 
-Config ConfigComposer::buildConfig(const string &pathProp, const string &pathRail, const string &pathUtil, const string &pathTax, const string &pathAction, const string &pathSpecial, const string &pathMisc)
+Config ConfigComposer::buildConfig(
+    const string &pathProp,
+    const string &pathRail,
+    const string &pathUtil,
+    const string &pathTax,
+    const string &pathAction,
+    const string &pathSpecial,
+    const string &pathMisc
+)
 {
     PropertyConfig propHandler(pathProp);
     RailroadConfig railHandler(pathRail);
@@ -11,7 +19,15 @@ Config ConfigComposer::buildConfig(const string &pathProp, const string &pathRai
     SpecialTileConfig specialHandler(pathSpecial);
     MiscTileConfig miscHandler(pathMisc);
 
-    Config config (
+    propHandler.loadConfig();
+    railHandler.loadConfig();
+    utilHandler.loadConfig();
+    taxHandler.loadConfig();
+    actionHandler.loadConfig();
+    specialHandler.loadConfig();
+    miscHandler.loadConfig();
+
+    Config config(
         propHandler.getData(),
         railHandler.getRailRoadRentTable(),
         utilHandler.getUtilityMultiplier(),
@@ -20,6 +36,7 @@ Config ConfigComposer::buildConfig(const string &pathProp, const string &pathRai
         miscHandler.getMiscTileConfig(),
         actionHandler.getActionTileConfig()
     );
+
     return config;
 }
 

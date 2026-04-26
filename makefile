@@ -51,6 +51,7 @@ SRCS := \
 	$(SRC_DIR)/core/TurnManager.cpp \
 	$(SRC_DIR)/utils/ActionTile.cpp \
 	$(SRC_DIR)/utils/Board.cpp \
+	$(SRC_DIR)/utils/BoardBuilder.cpp \
 	$(SRC_DIR)/utils/CardTile.cpp \
 	$(SRC_DIR)/utils/FestivalTile.cpp \
 	$(SRC_DIR)/utils/LogEntry.cpp \
@@ -74,7 +75,8 @@ SRCS := \
 	$(SRC_DIR)/data-layer/ConfigComposer.cpp \
 	$(SRC_DIR)/data-layer/ConfigHandler.cpp \
 	$(SRC_DIR)/data-layer/FileIOException.cpp \
-	$(SRC_DIR)/data-layer/GameStateSaver.cpp
+	$(SRC_DIR)/data-layer/GameStateSaver.cpp \
+	$(SRC_DIR)/data-layer/GameStateLoader.cpp
 
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 

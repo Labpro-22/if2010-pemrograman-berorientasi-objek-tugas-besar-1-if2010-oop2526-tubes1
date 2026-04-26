@@ -67,9 +67,42 @@ int TurnManager::getMaxTurn() const {
 }
 
 void TurnManager::setCurrentPlayerIndex(int currIdx) {
-    this->currentPlayerIndex = currIdx;
+    if (turnOrder.empty()) {
+        currentPlayerIndex = 0;
+        return;
+    }
+
+    if (currIdx < 0 || currIdx >= static_cast<int>(turnOrder.size())) {
+        currentPlayerIndex = 0;
+        return;
+    }
+
+    currentPlayerIndex = currIdx;
 }
 
 void TurnManager::setCurrentTurn(int currTurn) {
     this->currentTurn = currTurn;
+}
+
+const vector<int>& TurnManager::getTurnOrder() const {
+    return turnOrder;
+}
+
+int TurnManager::getCurrentPlayerOrderIndex() const {
+    return currentPlayerIndex;
+}
+
+void TurnManager::setMaxTurn(int maxTurn) {
+    this->maxTurn = maxTurn;
+}
+
+void TurnManager::setTurnOrder(const vector<int>& turnOrder) {
+    this->turnOrder = turnOrder;
+
+    if (this->turnOrder.empty()) {
+        this->currentPlayerIndex = 0;
+    } else if (this->currentPlayerIndex < 0 ||
+               this->currentPlayerIndex >= static_cast<int>(this->turnOrder.size())) {
+        this->currentPlayerIndex = 0;
+    }
 }

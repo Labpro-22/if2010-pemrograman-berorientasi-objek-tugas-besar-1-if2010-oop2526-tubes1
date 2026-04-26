@@ -25,10 +25,14 @@ CardManager::CardManager() {
     this->communityDeck = DrawCardDeck<CommunityChestCard>(communityPile);    
 }
 
-CardManager::CardManager(DrawCardDeck<ChanceCard> chanceDeck,
+CardManager::CardManager(
+    DrawCardDeck<ChanceCard> chanceDeck,
     DrawCardDeck<CommunityChestCard> communityDeck,
-    AbilityCardDeck abilityDeck) : chanceDeck(chanceDeck),
-    communityDeck(communityDeck), abilityDeck(abilityDeck) {}
+    AbilityCardDeck&& abilityDeck
+)
+    : chanceDeck(chanceDeck),
+      communityDeck(communityDeck),
+      abilityDeck(std::move(abilityDeck)) {}
 
 ChanceCard* CardManager::drawChanceCard() {
     return this->chanceDeck.draw();
@@ -44,4 +48,16 @@ void CardManager::giveTurnStartAbility(Player* player) {
 }
 void CardManager::discardAbilityCard(std::unique_ptr<AbilityCard> card) {
     this->abilityDeck.discard(std::move(card));
+}
+void CardManager::setChanceDeck(DrawCardDeck<ChanceCard> chanceDeck)
+{
+    this->chanceDeck = std::move(chanceDeck);
+}
+void CardManager::setCommunityDeck(DrawCardDeck<CommunityChestCard> comunityDeck)
+{
+    this->communityDeck = std::move(comunityDeck);
+}
+void CardManager::setAbilityDeck(AbilityCardDeck&& abilityDeck)
+{
+    this->abilityDeck = std::move(abilityDeck);
 }

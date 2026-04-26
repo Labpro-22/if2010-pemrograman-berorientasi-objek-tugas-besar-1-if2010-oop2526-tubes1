@@ -10,6 +10,9 @@
 #include "../../include/utils/LogEntry.hpp"
 #include "../../include/utils/PropertyTile.hpp"
 #include "../../include/utils/Tile.hpp"
+#include "../../include/core/TurnManager.hpp"
+#include "../../include/core/TradeManager.hpp"
+#include "../../include/models/TradeToPlayer.hpp"
 
 #include <fstream>
 #include <memory>
@@ -272,12 +275,97 @@ bool GameStateSaver::save(Game& game, const std::string& filePath)
     writeRaw(out, "=== GAME STATE SAVE ===");
     writeBool(out, "GAME_OVER", game.isGameOver());
 
+    saveTurnManager(out, game);
     savePlayers(out, game);
     saveProperties(out, game);
     saveCardManager(out, game);
+    saveTradeManager(out, game);
     saveLogs(out, game);
 
     writeRaw(out, "=== END GAME STATE SAVE ===");
 
     return out.good();
+}
+
+void GameStateSaver::saveTurnManager(std::ofstream& out, Game& game)
+{
+    TurnManager& turnManager = game.getTurnManager();
+    const std::vector<int>& turnOrder = turnManager.getTurnOrder();
+
+    writeRaw(out, "[TURN_MANAGER]");
+    writeInt(out, "CURRENT_PLAYER_INDEX", turnManager.getCurrentPlayerOrderIndex());
+    writeInt(out, "CURRENT_PLAYER_ID", turnManager.getCurrentPlayerIndex());
+    writeInt(out, "CURRENT_TURN", turnManager.getCurrentTurn());
+    writeInt(out, "MAX_TURN", turnManager.getMaxTurn());
+
+    writeSize(out, "TURN_ORDER_COUNT", turnOrder.size());
+
+    for (std::size_t i = 0; i < turnOrder.size(); ++i)
+    {
+        writeInt(out, "TURN_ORDER_" + std::to_string(i), turnOrder[i]);
+    }
+
+    writeRaw(out, "[/TURN_MANAGER]");
+}
+
+void GameStateSaver::saveTradeManager(std::ofstream& out, Game& game)
+{
+    TradeManager& tradeManager = game.getTradeManager();
+    const std::vector<TradeToPlayer*>& trades = tradeManager.getActiveTrades();
+
+    writeRaw(out, "[TRADE_MANAGER]");
+    writeSize(out, "COUNT", trades.size());
+
+    for (std::size_t i = 0; i < trades.size(); ++i)
+    {
+        TradeToPlayer* trade = trades[i];
+
+        if (trade == nullptr)
+        {
+            continue;
+        }
+
+        Player* proposer = trade->getProposer();
+        Player* target = trade->getTarget();
+
+        writeRaw(out, "BEGIN_TRADE");
+        writeSize(out, "INDEX", i);
+
+        writeInt(out, "PROPOSER_ID", proposer == nullptr ? -1 : proposer->getId());
+        writeString(out, "PROPOSER_USERNAME", proposer == nullptr ? "NONE" : proposer->getUsername());
+
+        writeInt(out, "TARGET_ID", target == nullptr ? -1 : target->getId());
+        writeString(out, "TARGET_USERNAME", target == nullptr ? "NONE" : target->getUsername());
+
+        writeInt(out, "OFFERED_MONEY", trade->getOfferedMoney());
+        writeInt(out, "REQUESTED_MONEY", trade->getRequestedMoney());
+
+        std::vector<PropertyTile*> offeredProperties = trade->getOfferedProperties();
+        writeSize(out, "OFFERED_PROPERTY_COUNT", offeredProperties.size());
+
+        for (std::size_t j = 0; j < offeredProperties.size(); ++j)
+        {
+            writeString(
+                out,
+                "OFFERED_PROPERTY_" + std::to_string(j),
+                offeredProperties[j] == nullptr ? "NONE" : offeredProperties[j]->getCode()
+            );
+        }
+
+        std::vector<PropertyTile*> requestedProperties = trade->getRequestedProperties();
+        writeSize(out, "REQUESTED_PROPERTY_COUNT", requestedProperties.size());
+
+        for (std::size_t j = 0; j < requestedProperties.size(); ++j)
+        {
+            writeString(
+                out,
+                "REQUESTED_PROPERTY_" + std::to_string(j),
+                requestedProperties[j] == nullptr ? "NONE" : requestedProperties[j]->getCode()
+            );
+        }
+
+        writeRaw(out, "END_TRADE");
+    }
+
+    writeRaw(out, "[/TRADE_MANAGER]");
 }

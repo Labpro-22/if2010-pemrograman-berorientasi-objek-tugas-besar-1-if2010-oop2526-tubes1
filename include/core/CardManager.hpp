@@ -4,6 +4,8 @@
 #include "../models/ChanceCard.hpp"
 #include "../models/CommunityChestCard.hpp"
 #include "../models/AbilityCardDeck.hpp"
+#include "../data-layer/GameStateLoader.hpp"
+#include "../data-layer/GameStateSaver.hpp"
 
 class CardManager
 {
@@ -14,9 +16,10 @@ private:
 
 public:
     CardManager();
-    CardManager(DrawCardDeck<ChanceCard> chanceDeck,
+    CardManager(
+        DrawCardDeck<ChanceCard> chanceDeck,
         DrawCardDeck<CommunityChestCard> communityDeck,
-        AbilityCardDeck abilityDeck);
+        AbilityCardDeck&& abilityDeckDrawCardDeck);
     ChanceCard* drawChanceCard();
     CommunityChestCard* drawCommunityCard();
     std::unique_ptr<AbilityCard> drawAbilityCard();
@@ -25,4 +28,7 @@ public:
     DrawCardDeck<ChanceCard>& getChanceDeck() { return chanceDeck; }
     DrawCardDeck<CommunityChestCard>& getCommunityDeck() { return communityDeck; }
     AbilityCardDeck& getAbilityDeck() { return abilityDeck; }
+    void setChanceDeck(DrawCardDeck<ChanceCard> chanceDeck);
+    void setCommunityDeck(DrawCardDeck<CommunityChestCard> comunityDeck);
+    void setAbilityDeck(AbilityCardDeck&& abilityDeck);
 };

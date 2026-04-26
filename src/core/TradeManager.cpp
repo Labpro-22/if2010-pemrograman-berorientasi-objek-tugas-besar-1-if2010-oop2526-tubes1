@@ -10,10 +10,7 @@
 using namespace std;
 
 TradeManager::~TradeManager() {
-    for (TradeToPlayer* trade : activeTrades) {
-        delete trade;
-    }
-    activeTrades.clear();
+    clearActiveTrades();
 }
 
 TradeToPlayer* TradeManager::proposeTrade(Player* proposer, Player* target,
@@ -111,4 +108,29 @@ vector<TradeToPlayer*> TradeManager::getTradesForPlayer(Player* target) const {
         }
     }
     return result;
+}
+
+const vector<TradeToPlayer*>& TradeManager::getActiveTrades() const {
+    return activeTrades;
+}
+
+void TradeManager::clearActiveTrades() {
+    for (TradeToPlayer* trade : activeTrades) {
+        delete trade;
+    }
+
+    activeTrades.clear();
+}
+
+void TradeManager::restoreTrade(Player* proposer, Player* target,
+                                const vector<PropertyTile*>& offeredProps, int offeredMoney,
+                                const vector<PropertyTile*>& requestedProps, int requestedMoney) {
+    activeTrades.push_back(new TradeToPlayer(
+        proposer,
+        target,
+        offeredProps,
+        offeredMoney,
+        requestedProps,
+        requestedMoney
+    ));
 }

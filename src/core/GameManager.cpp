@@ -1,53 +1,158 @@
 #include "../../include/core/GameManager.hpp"
-#include "../../include/models/AbilityCard.hpp"
+
+#include "../../include/core/Game.hpp"
+#include "../../include/data-layer/Config.hpp"
+#include "../../include/data-layer/ConfigComposer.hpp"
+#include "../../include/data-layer/FileIOException.hpp"
+#include "../../include/data-layer/GameStateLoader.hpp"
+#include "../../include/data-layer/GameStateSaver.hpp"
+#include "../../include/utils/BoardBuilder.hpp"
 
 #include <fstream>
-#include "../../include/core/Game.hpp"
-#include "../../include/data-layer/FileIOException.hpp"
+#include <map>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
+
+static const std::string CONFIG_DIR = "config/basic";
+
+static Config loadBasicConfig()
+{
+    ConfigComposer composer(
+        CONFIG_DIR + "/property.txt",
+        CONFIG_DIR + "/railroad.txt",
+        CONFIG_DIR + "/utility.txt",
+        CONFIG_DIR + "/tax.txt",
+        CONFIG_DIR + "/aksi.txt",
+        CONFIG_DIR + "/special.txt",
+        CONFIG_DIR + "/misc.txt"
+    );
+
+    return composer.getConfig();
+}
+
+static std::map<int, int> makeRailroadRentMap(Config& config)
+{
+    std::map<int, int> railroadRent;
+
+    railroadRent[1] = config.getRailroadRent(1);
+    railroadRent[2] = config.getRailroadRent(2);
+    railroadRent[3] = config.getRailroadRent(3);
+    railroadRent[4] = config.getRailroadRent(4);
+
+    return railroadRent;
+}
+
+static std::map<int, int> makeUtilityMultiplierMap(Config& config)
+{
+    std::map<int, int> utilityMultiplier;
+
+    utilityMultiplier[1] = config.getUtilityMultiplier(1);
+    utilityMultiplier[2] = config.getUtilityMultiplier(2);
+
+    return utilityMultiplier;
+}
+
+static void initializeGameFromConfig(Game& game)
+{
+    Config config = loadBasicConfig();
+    game.setConfig(config);
+
+    Config& gameConfig = game.getConfig();
+
+    BoardBuilder::build(
+        game.getBoard(),
+        gameConfig.getPropertyConfigAll(),
+        gameConfig.getActionTileConfigAll(),
+        makeRailroadRentMap(gameConfig),
+        makeUtilityMultiplierMap(gameConfig)
+    );
+}
 
 GameManager::GameManager() : currentGame(nullptr) {}
 
-GameManager::~GameManager() {
+GameManager::~GameManager()
+{
     quitCurrentGame();
 }
 
-void GameManager::startNewGame() {
+void GameManager::startNewGame()
+{
     quitCurrentGame();
+
     currentGame = new Game();
+    initializeGameFromConfig(*currentGame);
 }
 
-void GameManager::loadGame(const string& fileName) {
-    ifstream input(fileName);
-    if (!input.is_open()) {
-        throw FileIOException("Gagal memuat game: file tidak ditemukan atau tidak dapat dibuka: " + fileName);
+void GameManager::loadGame(const string& fileName)
+{
+    {
+        std::ifstream input(fileName);
+
+        if (!input.is_open())
+        {
+            throw FileIOException(
+                "Gagal memuat game: file tidak ditemukan atau tidak dapat dibuka: " + fileName
+            );
+        }
     }
 
+    std::unique_ptr<Game> loadedGame = std::make_unique<Game>();
+
+    initializeGameFromConfig(*loadedGame);
+
+    const bool success = GameStateLoader::load(*loadedGame, fileName);
+
+    if (!success)
+    {
+        throw FileIOException(
+            "Gagal memuat game: format save file tidak valid atau data tidak lengkap: " + fileName
+        );
+    }
+
+    loadedGame->getLogger().log(
+        0,
+        "System",
+        "LOAD",
+        "Game berhasil dimuat dari " + fileName
+    );
+
     quitCurrentGame();
-    currentGame = new Game();
-    currentGame->getLogger().log(0, "System", "LOAD", "Load placeholder dari " + fileName);
+    currentGame = loadedGame.release();
 }
 
-void GameManager::saveGame(const string& fileName) const {
-    if (currentGame == nullptr) {
+void GameManager::saveGame(const string& fileName) const
+{
+    if (currentGame == nullptr)
+    {
         throw FileIOException("Gagal menyimpan game: tidak ada game aktif.");
     }
 
-    ofstream output(fileName);
-    if (!output.is_open()) {
-        throw FileIOException("Gagal menyimpan game: file tidak dapat ditulis: " + fileName);
-    }
+    currentGame->getLogger().log(
+        currentGame->getTurnManager().getCurrentTurn(),
+        "System",
+        "SAVE",
+        "Game disimpan ke " + fileName
+    );
 
-    output << "NIMONSPOLI_SAVE_PLACEHOLDER\n";
-    output << "turn " << currentGame->getTurnManager().getCurrentTurn() << "\n";
-    output << "players " << currentGame->getPlayers().size() << "\n";
-    output << "game_over " << (currentGame->isGameOver() ? 1 : 0) << "\n";
+    const bool success = GameStateSaver::save(*currentGame, fileName);
+
+    if (!success)
+    {
+        throw FileIOException(
+            "Gagal menyimpan game: file tidak dapat ditulis: " + fileName
+        );
+    }
 }
 
-void GameManager::quitCurrentGame() {
+void GameManager::quitCurrentGame()
+{
     delete currentGame;
     currentGame = nullptr;
 }
 
-Game* GameManager::getCurrentGame() const {
+Game* GameManager::getCurrentGame() const
+{
     return currentGame;
 }

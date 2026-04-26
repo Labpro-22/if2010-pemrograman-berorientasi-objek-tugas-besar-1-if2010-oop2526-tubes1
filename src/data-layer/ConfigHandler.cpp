@@ -16,46 +16,73 @@ PropertyConfig::PropertyConfig(string path) : ConfigHandler(path, "propertyConfi
 
 void PropertyConfig::loadConfig()
 {
-  string line, token;
-  int idProp, hargaLahan, nilaiGadai, upgRmh, upgHtl, ren0, ren1, ren2, ren3, ren4, ren5;
-  string kode, nama, jenis, warna;
+  string line;
 
-  if (!getline(this->configStream, line)) throw FileIOException("File input untuk " + this->type + " tidak valid.\n");
-
-  while(getline(this->configStream, line))
+  if (!getline(this->configStream, line))
   {
-    istringstream iss(line);
-    int ctr = 0;
-    while (iss >> token)
+    throw FileIOException("File input untuk " + this->type + " tidak valid.\n");
+  }
+
+  while (getline(this->configStream, line))
+  {
+    if (line.empty())
     {
-      switch (ctr) {
-        case 0: idProp = stoi(token); break;
-        case 1: kode = token; break;
-        case 2: jenis = token; break;
-        case 3: warna = token; break;
-        case 4: hargaLahan = stoi(token); break;
-        case 5: nilaiGadai = stoi(token); break;
-        case 6: upgRmh = stoi(token); break;
-        case 7: upgHtl = stoi(token); break;
-        case 8: ren0 = stoi(token); break;
-        case 9: ren1 = stoi(token); break;
-        case 10: ren2 = stoi(token); break;
-        case 11: ren3 = stoi(token); break;
-        case 12: ren4 = stoi(token); break;
-        case 13: ren5 = stoi(token); break;
-        default:
-          throw FileIOException("Jumlah input line untuk " + this->type + " tidak valid.\n");
-          break;
-      }
-      ctr++;
+      continue;
     }
 
-    vector<int> rent = {upgRmh, upgHtl, ren0, ren1, ren2, ren3, ren4, ren5};
-    this->propertyConfigs.push_back(make_tuple
-    (
-      idProp, kode, nama, jenis, warna, hargaLahan, nilaiGadai, rent
-    ));
+    istringstream iss(line);
 
+    int idProp = 0;
+    int hargaLahan = 0;
+    int nilaiGadai = 0;
+
+    string kode;
+    string nama;
+    string jenis;
+    string warna;
+
+    if (!(iss >> idProp >> kode >> nama >> jenis >> warna >> hargaLahan >> nilaiGadai))
+    {
+      throw FileIOException("Format input line untuk " + this->type + " tidak valid.\n");
+    }
+
+    vector<int> rent;
+
+    if (jenis == "STREET")
+    {
+      int upgRmh = 0;
+      int upgHtl = 0;
+      int ren0 = 0;
+      int ren1 = 0;
+      int ren2 = 0;
+      int ren3 = 0;
+      int ren4 = 0;
+      int ren5 = 0;
+
+      if (!(iss >> upgRmh >> upgHtl >> ren0 >> ren1 >> ren2 >> ren3 >> ren4 >> ren5))
+      {
+        throw FileIOException("Format STREET pada " + this->type + " tidak valid.\n");
+      }
+
+      rent = {upgRmh, upgHtl, ren0, ren1, ren2, ren3, ren4, ren5};
+    }
+
+    string extraToken;
+    if (iss >> extraToken)
+    {
+      throw FileIOException("Jumlah input line untuk " + this->type + " tidak valid.\n");
+    }
+
+    this->propertyConfigs.push_back(make_tuple(
+      idProp,
+      kode,
+      nama,
+      jenis,
+      warna,
+      hargaLahan,
+      nilaiGadai,
+      rent
+    ));
   }
 }
 
@@ -246,7 +273,7 @@ tuple<int, int> SpecialTileConfig::getSpecialTileConfig()
 
 //MiscTileConfig
 
-MiscTileConfig::MiscTileConfig(string path): ConfigHandler(path, "taxConfig"){}
+MiscTileConfig::MiscTileConfig(string path): ConfigHandler(path, "miscTileConfig"){}
 
 void MiscTileConfig::loadConfig()
 {

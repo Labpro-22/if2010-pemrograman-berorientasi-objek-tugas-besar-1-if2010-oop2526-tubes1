@@ -36,16 +36,16 @@ public:
     std::string serialize() const;
 };
 
-class DiscountCard : public AbilityCard
-{
-private:
-    int percentage;
-public:
-    DiscountCard();
-    void setup();
-    void use(Player* target, Game* game);
-    std::string serialize() const;
-};
+// class DiscountCard : public AbilityCard
+// {
+// private:
+//     int percentage;
+// public:
+//     DiscountCard();
+//     void setup();
+//     void use(Player* target, Game* game);
+//     std::string serialize() const;
+// };
 
 class DemolitionCard : public AbilityCard
 {
@@ -54,3 +54,28 @@ public:
     void use(Player* target, Game* game);
     std::string serialize() const;
 };
+
+// class MoveCard : public AbilityCard
+// {
+// private:
+//     int steps;
+// public:
+//     MoveCard();
+//     explicit MoveCard(int steps);
+//     void setup();
+//     void use(Player* target, Game* game);
+//     std::string serialize() const;
+// };
+
+class DiscountCard : public AbilityCard
+{
+private:
+    int percentage;
+public:
+    DiscountCard();
+    explicit DiscountCard(int percentage);
+    void setup();
+    void use(Player* target, Game* game);
+    std::string serialize() const;
+};
+

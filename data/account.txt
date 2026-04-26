@@ -1,0 +1,7 @@
+=== Account Data ===
+admin admin123 999
+guest guest123 0
+guest123 guest123 0
+ishak pass123 100
+marcel oop2026 250
+player1 monopoly 50

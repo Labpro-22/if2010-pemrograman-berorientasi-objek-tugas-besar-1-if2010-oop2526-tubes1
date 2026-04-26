@@ -31,8 +31,8 @@ void AccountDataManager::saveData(const AccountManager &accountManager)
 
 void AccountDataManager::loadData(AccountManager &manager)
 {
-    AccountManager accountManager;
-
+    manager.accounts.clear();
+    
     accountDataStream.open(filePath, std::ios::in);
 
     if (!accountDataStream.is_open())
@@ -50,7 +50,7 @@ void AccountDataManager::loadData(AccountManager &manager)
     while (accountDataStream >> username >> password >> score)
     {
         Account account(username, password, score);
-        accountManager.addAccount(account);
+        manager.addAccount(account);
     }
 
     accountDataStream.close();

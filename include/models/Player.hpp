@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <algorithm>
+#include "AbilityCard.hpp"
 
 class Game;
 class AuctionManager;

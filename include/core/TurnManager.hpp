@@ -31,4 +31,10 @@ public:
     //Setters
     void setCurrentPlayerIndex(int CurrIdx);
     void setCurrentTurn(int CurrentTurn);
+
+    const vector<int>& getTurnOrder() const;
+    int getCurrentPlayerOrderIndex() const;
+
+    void setMaxTurn(int maxTurn);
+    void setTurnOrder(const vector<int>& turnOrder);
 };

@@ -38,6 +38,8 @@ private:
 
     static void savePlayers(std::ofstream& out, Game& game);
     static void saveProperties(std::ofstream& out, Game& game);
+    static void saveTurnManager(std::ofstream& out, Game& game);
+    static void saveTradeManager(std::ofstream& out, Game& game);
 
     template <typename T>
     static void saveDrawCardDeck(std::ofstream& out, const std::string& sectionName, DrawCardDeck<T>& deck);

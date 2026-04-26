@@ -67,25 +67,37 @@ int Config::getUtilityMultiplier(int count)
     int minQt = 99;
     int maxQtVal = 0;
     int minQtVal = 0;
-    for (auto i : this->utilityMultiplier){
-        if (i.first > maxQt) {
-           maxQt = i.first; 
-           maxQtVal = i.second;
+
+    for (auto i : this->utilityMultiplier)
+    {
+        if (i.first > maxQt)
+        {
+            maxQt = i.first;
+            maxQtVal = i.second;
         }
-        if (i.first < minQt) {
+
+        if (i.first < minQt)
+        {
             minQt = i.first;
             minQtVal = i.second;
         }
     }
 
-    if (count >= minQt && count <= maxQt) {
-        auto iter = railroadRentTable.find(count);
-        if (iter != railroadRentTable.end()){
+    if (count >= minQt && count <= maxQt)
+    {
+        auto iter = utilityMultiplier.find(count);
+
+        if (iter != utilityMultiplier.end())
+        {
             return iter->second;
         }
     }
-    
-    if (count < minQt) return minQtVal;
+
+    if (count < minQt)
+    {
+        return minQtVal;
+    }
+
     return maxQtVal;
 }
 
