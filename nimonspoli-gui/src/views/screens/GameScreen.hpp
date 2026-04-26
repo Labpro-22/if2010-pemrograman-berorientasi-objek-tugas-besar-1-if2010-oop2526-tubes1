@@ -401,6 +401,7 @@ private:
     std::vector<TileDef>             tiles;
     std::map<std::string, Texture2D> tileTextures;
     Texture2D deckKSP{}, deckDNU{};
+    std::map<std::string, Texture2D> cardTextures;
 
     float   zoomLevel  = 1.f;
     Vector2 zoomOffset = {};
