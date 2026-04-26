@@ -107,19 +107,16 @@ void GameScreen::drawJailDialog()
     Vector2 mouse = GetMousePosition();
 
     // ── Tombol 1: BAYAR DENDA ────────────────────────────────────────────
-    bool payDisabled = !jailDialog.canAffordFine;
+    bool payDisabled = false; // Never disable
     Rectangle payBtn = {px + 16, btnY1, btnW, btnH};
-    bool payHover = CheckCollisionPointRec(mouse, payBtn) && !payDisabled;
-    Color payBg = payDisabled ? Color{40, 42, 54, 255}
-                  : payHover  ? Color{60, 160, 80, 255}
-                              : Color{40, 120, 60, 255};
+    bool payHover = CheckCollisionPointRec(mouse, payBtn);
+    Color payBg = payHover ? Color{60, 160, 80, 255}
+                           : Color{40, 120, 60, 255};
     DrawRectangleRec(payBtn, payBg);
-    DrawRectangleLinesEx(payBtn, 1.5f,
-                         payDisabled ? Color{60, 60, 80, 255} : Color{80, 200, 110, 255});
+    DrawRectangleLinesEx(payBtn, 1.5f, Color{80, 200, 110, 255});
     std::string payLbl = "BAYAR DENDA  (M" + std::to_string(jailDialog.jailFine) + ")";
     int plw = MeasureText(payLbl.c_str(), 13);
-    DrawText(payLbl.c_str(), (int)(payBtn.x + btnW / 2 - plw / 2), (int)(btnY1 + 15), 13,
-             payDisabled ? Color{80, 80, 100, 255} : WHITE);
+    DrawText(payLbl.c_str(), (int)(payBtn.x + btnW / 2 - plw / 2), (int)(btnY1 + 15), 13, WHITE);
 
     // ── Tombol 2: COBA LEMPAR DADU / TUTUP (jika sudah roll) ─────────────
     bool rollDisabled = jailDialog.forcedPay || jailDialog.rolledThisTurn;
@@ -157,7 +154,7 @@ void GameScreen::drawJailDialog()
     {
 
         // BAYAR DENDA
-        if (payHover && !payDisabled)
+        if (payHover)
         {
             if (guiManager && guiManager->getGameMaster())
             {
@@ -175,14 +172,19 @@ void GameScreen::drawJailDialog()
                         if (jt)
                         {
                             jt->payFine(*p, gm->getState());
-                            gm->log(p->getUsername(), "JAIL",
-                                    "Membayar denda M" +
-                                        std::to_string(jailDialog.jailFine) +
-                                        " untuk keluar penjara");
+                            if (gm->getState().getPendingDebt() <= 0) {
+                                gm->log(p->getUsername(), "JAIL",
+                                        "Membayar denda M" +
+                                            std::to_string(jailDialog.jailFine) +
+                                            " untuk keluar penjara");
+                            }
                             break;
                         }
                     }
-                    gm->getState().setPhase(GamePhase::PLAYER_TURN);
+                    if (gm->getState().getPendingDebt() > 0)
+                        gm->getState().setPhase(GamePhase::BANKRUPTCY);
+                    else
+                        gm->getState().setPhase(GamePhase::PLAYER_TURN);
                 }
             }
             jailDialog.visible = false;

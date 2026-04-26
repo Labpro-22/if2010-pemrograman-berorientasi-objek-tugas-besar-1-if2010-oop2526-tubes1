@@ -66,13 +66,12 @@ void GameScreen::drawTaxDialog()
 
     // ── Tombol BAYAR FLAT ─────────────────────────────────────────────────
     Rectangle flatBtn = {px + 16, btnY, btnW, 52};
-    bool flatHov = CheckCollisionPointRec(mouse, flatBtn) && taxDialog.canAffordFlat;
-    bool flatDis = !taxDialog.canAffordFlat;
-    Color flatBg = flatDis   ? Color{40, 42, 54, 255}
-                   : flatHov ? Color{60, 170, 90, 255}
-                             : Color{40, 130, 70, 255};
+    bool flatHov = CheckCollisionPointRec(mouse, flatBtn);
+    bool flatDis = false; // Never disable
+    Color flatBg = flatHov ? Color{60, 170, 90, 255}
+                           : Color{40, 130, 70, 255};
     DrawRectangleRec(flatBtn, flatBg);
-    DrawRectangleLinesEx(flatBtn, 1.5f, flatDis ? Color{60, 60, 80, 255} : Color{80, 210, 110, 255});
+    DrawRectangleLinesEx(flatBtn, 1.5f, Color{80, 210, 110, 255});
     std::string fl1s = "BAYAR FLAT";
     std::string fl2s = "M" + std::to_string(taxDialog.flatAmount);
     int fl1 = MeasureText(fl1s.c_str(), 11), fl2 = MeasureText(fl2s.c_str(), 16);
@@ -89,13 +88,12 @@ void GameScreen::drawTaxDialog()
 
     // ── Tombol BAYAR PERSEN ───────────────────────────────────────────────
     Rectangle pctBtn = {px + 16 + btnW + 16, btnY, btnW, 52};
-    bool pctHov = CheckCollisionPointRec(mouse, pctBtn) && taxDialog.canAffordPct;
-    bool pctDis = !taxDialog.canAffordPct;
-    Color pctBg = pctDis   ? Color{40, 42, 54, 255}
-                  : pctHov ? Color{60, 110, 200, 255}
-                           : Color{40, 80, 160, 255};
+    bool pctHov = CheckCollisionPointRec(mouse, pctBtn);
+    bool pctDis = false; // Never disable
+    Color pctBg = pctHov ? Color{60, 110, 200, 255}
+                         : Color{40, 80, 160, 255};
     DrawRectangleRec(pctBtn, pctBg);
-    DrawRectangleLinesEx(pctBtn, 1.5f, pctDis ? Color{60, 60, 80, 255} : Color{100, 150, 240, 255});
+    DrawRectangleLinesEx(pctBtn, 1.5f, Color{100, 150, 240, 255});
     std::string pl1s = std::to_string(taxDialog.pctAmount) + "% dari kekayaan";
     std::string pl2s = "M" + std::to_string(taxDialog.taxAmtPct);
     int pl1 = MeasureText(pl1s.c_str(), 11), pl2 = MeasureText(pl2s.c_str(), 16);
@@ -138,7 +136,10 @@ void GameScreen::drawTaxDialog()
                 return;
             }
             delete cmd;
-            gs.setPhase(GamePhase::PLAYER_TURN);
+            if (gs.getPendingDebt() > 0)
+                gs.setPhase(GamePhase::BANKRUPTCY);
+            else
+                gs.setPhase(GamePhase::PLAYER_TURN);
             taxDialog.visible = false;
         }
         else if (pctHov && !pctDis && player && bank && taxTile)
@@ -157,7 +158,10 @@ void GameScreen::drawTaxDialog()
                 return;
             }
             delete cmd;
-            gs.setPhase(GamePhase::PLAYER_TURN);
+            if (gs.getPendingDebt() > 0)
+                gs.setPhase(GamePhase::BANKRUPTCY);
+            else
+                gs.setPhase(GamePhase::PLAYER_TURN);
             taxDialog.visible = false;
         }
     }
