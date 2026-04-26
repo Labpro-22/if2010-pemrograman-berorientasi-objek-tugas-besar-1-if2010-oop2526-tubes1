@@ -139,6 +139,9 @@ AuctionDecision ComputerController::decideAuction(int currentBid, Money money) {
 }
 
 TaxChoice ComputerController::decideTax(int flatAmount, int percentAmount) {
+    if (percentAmount <= 0) {
+        return TaxChoice::FLAT;
+    }
     return flatAmount <= percentAmount ? TaxChoice::FLAT : TaxChoice::PERCENTAGE;
 }
 

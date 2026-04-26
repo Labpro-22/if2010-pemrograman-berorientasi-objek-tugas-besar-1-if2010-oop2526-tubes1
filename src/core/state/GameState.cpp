@@ -128,11 +128,15 @@ void GameState::resetTurnFlags() {
 }
 
 bool GameState::canSave() const {
+	const Player* activePlayer = getActivePlayer();
 	return phase == GamePhase::RUNNING &&
 		!players.empty() &&
+		activePlayer != nullptr &&
+		!turnOrder.empty() &&
 		!hasRolledDice &&
 		!hasUsedSkillCard &&
-		!extraRollAvailable;
+		!extraRollAvailable &&
+		consecutiveDoubles == 0;
 }
 
 GameStateView GameState::toView() const {

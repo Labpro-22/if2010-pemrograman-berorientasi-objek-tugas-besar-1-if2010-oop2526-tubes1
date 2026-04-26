@@ -77,7 +77,15 @@ public:
     string name;
     string ownerName;
     PropertyStatus status;
+    TileType type{TileType::STREET};
+    Color colorGroup{Color::DEFAULT};
+    int purchasePrice{0};
+    int mortgageValue{0};
     int buildingLevel;
+    bool isMortgaged{false};
+    bool monopolyComplete{false};
+    int festivalMultiplier{1};
+    int festivalTurnsRemaining{0};
 };
 
 class TileData{
@@ -98,6 +106,8 @@ public:
     int buildingLevel{0};
     int houseCount{0};
     bool hasHotel{false};
+    int festivalMultiplier{1};
+    int festivalTurnsRemaining{0};
 };
 
 using TileView = TileData;

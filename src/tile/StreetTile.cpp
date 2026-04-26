@@ -67,6 +67,10 @@ bool StreetTile::canBeDeveloped() const {
 	return true;
 }
 
+const std::vector<int>& StreetTile::getRentLevels() const {
+	return rentLevels;
+}
+
 bool StreetTile::isMonopolyComplete() const {
 	return monopolyComplete;
 }

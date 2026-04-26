@@ -7,6 +7,7 @@
 #include "utils/Types.hpp"
 
 class Board;
+class FestivalEffectSnapshot;
 
 // Read-only snapshot passed to IGameView::showBoard() and other render calls.
 // Task 5 (GameEngine) populates this; UI layer only reads it.
@@ -27,7 +28,9 @@ public:
 	GameStateView();
 	explicit GameStateView(const GameState& state);
 
-	void refresh(const GameState& state, const Board* board = nullptr);
+	void refresh(const GameState& state,
+		const Board* board = nullptr,
+		const std::vector<FestivalEffectSnapshot>* festivalEffects = nullptr);
 
 	int getCurrentTurn() const;
 	int getMaxTurn() const;

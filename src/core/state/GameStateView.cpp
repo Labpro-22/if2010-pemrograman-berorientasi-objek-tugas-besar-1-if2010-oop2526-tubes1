@@ -1,5 +1,8 @@
 #include "core/state/header/GameStateView.hpp"
 
+#include <map>
+
+#include "core/FestivalEffectSnapshot.hpp"
 #include "models/Player.hpp"
 #include "models/board/header/Board.hpp"
 #include "tile/header/PropertyTile.hpp"
@@ -16,12 +19,27 @@ namespace {
 		}
 	}
 
-	void populatePropertyView(PropertyView& snapshot, const PropertyTile& property) {
+	void populatePropertyView(PropertyView& snapshot,
+		const PropertyTile& property,
+		int festivalMultiplier,
+		int festivalTurnsRemaining) {
 		snapshot.code = property.getCode();
 		snapshot.name = property.getName();
 		snapshot.ownerName = property.getOwner() ? property.getOwner()->getUsername() : "";
 		snapshot.status = property.getStatus();
+		snapshot.type = property.getType();
+		snapshot.purchasePrice = property.getPrice().getAmount();
+		snapshot.mortgageValue = property.getMortgageValue().getAmount();
 		snapshot.buildingLevel = property.getBuildingLevel();
+		snapshot.isMortgaged = property.isMortgaged();
+		snapshot.monopolyComplete = false;
+		snapshot.colorGroup = Color::DEFAULT;
+		if (const auto* street = dynamic_cast<const StreetTile*>(&property)) {
+			snapshot.colorGroup = street->getColor();
+			snapshot.monopolyComplete = street->isMonopolyComplete();
+		}
+		snapshot.festivalMultiplier = festivalMultiplier;
+		snapshot.festivalTurnsRemaining = festivalTurnsRemaining;
 	}
 }
 
@@ -33,7 +51,10 @@ GameStateView::GameStateView(const GameState& state) : GameStateView() {
 	refresh(state);
 }
 
-void GameStateView::refresh(const GameState& state, const Board* board) {
+void GameStateView::refresh(
+	const GameState& state,
+	const Board* board,
+	const std::vector<FestivalEffectSnapshot>* festivalEffects) {
 	currentTurn = state.getCurrentTurn();
 	maxTurn = state.getMaxTurn();
 	activePlayerIndex = state.getActivePlayerIndex();
@@ -61,10 +82,29 @@ void GameStateView::refresh(const GameState& state, const Board* board) {
 		players.push_back(view);
 	}
 
+	std::map<std::string, int> ownerColorIndexByName;
+	for (std::size_t i = 0; i < players.size(); ++i) {
+		ownerColorIndexByName[players[i].username] = static_cast<int>(i);
+	}
+
 	properties.clear();
 
 	tiles.clear();
 	if (board) {
+		std::map<std::string, std::pair<int, int>> festivalByCode;
+		if (festivalEffects) {
+			for (const FestivalEffectSnapshot& snapshot : *festivalEffects) {
+				PropertyTile* property = snapshot.getProperty();
+				if (!property || snapshot.getTurnsRemaining() <= 0) {
+					continue;
+				}
+				festivalByCode[property->getCode()] = {
+					snapshot.getMultiplier(),
+					snapshot.getTurnsRemaining()
+				};
+			}
+		}
+
 		for (int i = 0; i < board->getSize(); ++i) {
 			Tile* tile = board->getTile(i);
 			if (!tile) continue;
@@ -77,16 +117,28 @@ void GameStateView::refresh(const GameState& state, const Board* board) {
 			tv.subtitle = tileSubtitle(*tile);
 
 			if (auto* property = dynamic_cast<PropertyTile*>(tile)) {
+				int festivalMultiplier = 1;
+				int festivalTurnsRemaining = 0;
+				const auto festivalIt = festivalByCode.find(property->getCode());
+				if (festivalIt != festivalByCode.end()) {
+					festivalMultiplier = festivalIt->second.first;
+					festivalTurnsRemaining = festivalIt->second.second;
+				}
+
 				tv.isOwnable = true;
 				tv.price = property->getPrice().getAmount();
 				tv.mortgageValue = property->getMortgageValue().getAmount();
 				tv.propertyStatus = property->getStatus();
 				tv.ownerName = property->getOwner() ? property->getOwner()->getUsername() : "";
+				const auto ownerIt = ownerColorIndexByName.find(tv.ownerName);
+				tv.ownerColorIndex = ownerIt != ownerColorIndexByName.end() ? ownerIt->second : -1;
 				tv.isMortgaged = property->isMortgaged();
 				tv.buildingLevel = property->getBuildingLevel();
+				tv.festivalMultiplier = festivalMultiplier;
+				tv.festivalTurnsRemaining = festivalTurnsRemaining;
 
 				PropertyView propertySnapshot;
-				populatePropertyView(propertySnapshot, *property);
+				populatePropertyView(propertySnapshot, *property, festivalMultiplier, festivalTurnsRemaining);
 				properties.push_back(propertySnapshot);
 			}
 
