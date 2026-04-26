@@ -2,6 +2,7 @@
 #include "GameScreenTiles.hpp"
 #include "../../../lib/raylib/include/raylib.h"
 #include "../../core/GameMaster/GameMaster.hpp"
+#include "../../core/Player/Player.hpp"
 #include <string>
 
 extern const TileDef TILE_DEFS[40];
@@ -103,6 +104,9 @@ void GameScreen::drawRightPanel()
         case GamePhase::AWAITING_FESTIVAL:
             phaseStr = "AWAITING_FESTIVAL";
             break;
+        case GamePhase::AWAITING_DROP_SKILL_CARD:
+            phaseStr = "AWAITING_DROP_SKILL_CARD";
+            break;
         case GamePhase::SHOW_CARD:
             phaseStr = "SHOW_CARD";
             break;
@@ -118,6 +122,18 @@ void GameScreen::drawRightPanel()
         default:
             phaseStr = "OTHER";
             break;
+        }
+        // Info hutang saat BANKRUPTCY
+        if (ph == GamePhase::BANKRUPTCY)
+        {
+            const GameState &gs = guiManager->getGameMaster()->getState();
+            int debt = gs.getPendingDebt();
+            Player *cred = gs.getPendingCreditor();
+            std::string credName = cred ? cred->getUsername() : "Bank";
+            std::string debtInfo = "Hutang: M" + std::to_string(debt);
+            std::string credInfo = "ke: " + credName;
+            DrawText(debtInfo.c_str(), (int)rx + 10, SCREEN_H - 65, 11, {220, 100, 100, 255});
+            DrawText(credInfo.c_str(), (int)rx + 10, SCREEN_H - 50, 11, {200, 140, 140, 255});
         }
     }
     DrawText(phaseStr, (int)rx + 10, SCREEN_H - 35, 10, {200, 200, 100, 255});
@@ -156,8 +172,12 @@ void GameScreen::drawRightPanel()
 
         if (isRealMode())
         {
-            GamePhase phase = guiManager->getGameMaster()->getState().getPhase();
-            bool hasRolled = guiManager->getGameMaster()->getState().getHasRolled();
+            GameState &gs = guiManager->getGameMaster()->getState();
+
+            GamePhase phase = gs.getPhase();
+            bool hasRolled = gs.getHasRolled();
+            bool hasUsedCard = gs.getHasUsedCard();
+            Player *cur = gs.getCurrPlayer();
             switch (i)
             {
             case 0:
@@ -165,7 +185,12 @@ void GameScreen::drawRightPanel()
                 disabled = hasRolled || diceState.animating || phase != GamePhase::PLAYER_TURN;
                 break;
             case 2:
-                disabled = phase != GamePhase::PLAYER_TURN || hasRolled;
+                disabled =
+                    phase != GamePhase::PLAYER_TURN ||
+                    hasRolled ||
+                    hasUsedCard ||
+                    cur == nullptr ||
+                    cur->getHandSize() == 0;
                 break;
             case 3:
                 disabled = phase != GamePhase::PLAYER_TURN;
@@ -283,5 +308,4 @@ void GameScreen::drawRightPanel()
         showLogPopup = !showLogPopup;
     int lw = MeasureText("LOG TRANSAKSI", 11);
     DrawText("LOG TRANSAKSI", (int)(rx + RIGHT_PANEL / 2 - lw / 2), (int)footerY + 88, 11, {150, 150, 200, 255});
-    ;
 }
