@@ -37,12 +37,12 @@ void MuatCommand::execute(GameMaster& gm) {
         return;
     }
 
-    // 4. Load dan restore ke GameState
+        // 4. Load dan restore ke GameState
     try {
         saveLoad.load(filename, state);
 
-        // Log ke TransactionLogger
-        gm.log("SYSTEM", "MUAT", "Game dimuat dari " + filename);
+        // Log ke TransactionLogger agar tersimpan di save berikutnya
+        gm.log("SYSTEM", "MUAT", "Game_dimuat_dari_" + filename);
 
         display.print("Game berhasil dimuat dari '" + filename + "'.");
         display.print("Melanjutkan giliran: " +

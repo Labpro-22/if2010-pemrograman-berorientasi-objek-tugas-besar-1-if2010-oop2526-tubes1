@@ -139,6 +139,7 @@ void GameScreen::doSave(const std::string& filepath)
                 std::filesystem::create_directories("data");
                 SaveLoadManager slm;
                 slm.save(gm->getState(), filepath);
+                gm->log("SYSTEM", "SIMPAN", "Game disimpan ke " + filepath);
                 ok = true;
             } catch (const std::exception& e) {
                 std::cerr << "[SIMPAN] Exception: " << e.what() << std::endl;

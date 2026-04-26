@@ -56,6 +56,10 @@ public:
         { 50, 200, 220, 255}, // P4 cyan
     };
 
+
+    bool isWantsMainMenu() const { return wantsMainMenu; }
+    void resetWantsMainMenu() { wantsMainMenu = false; }
+    bool wantsMainMenu = false;
 private:
     // ════════════════════════════════════════════════════════════════
     //  Nested classes — pengganti semua struct
@@ -97,6 +101,13 @@ private:
         bool dnuGlow = false;
     };
 
+    struct MainMenuConfirmState {
+        bool visible = false;
+        bool wantSave = false;
+    } mainMenuConfirm;
+
+
+    void drawMainMenuConfirm();
 
     // ── Player Visual ────────────────────────────────────────────────────
     class PlayerVisual {

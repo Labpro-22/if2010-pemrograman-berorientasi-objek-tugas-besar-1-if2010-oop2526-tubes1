@@ -42,7 +42,6 @@ public:
     bool isBot;
     COMDifficulty diff;
 };
-std::vector<PlayerInfo> infos;
 
 
 int main()
@@ -129,40 +128,43 @@ int main()
 
             if (setup.isLoadGame)
             {
-                std::vector<PlayerInfo> infos;
+                std::vector<PlayerInfo> loadedInfos;
                 {
                     std::ifstream peek(setup.saveFile);
-                    std::string line;
-                    std::getline(peek, line);
-                    std::getline(peek, line);
-                    int savedCount = std::stoi(line);
-                    for (int i = 0; i < savedCount; i++)
-                    {
-                        std::getline(peek, line);
-                        std::vector<std::string> tok;
-                        std::istringstream ss(line);
-                        std::string w;
-                        while (ss >> w)
-                            tok.push_back(w);
-                        PlayerInfo info;
-                        info.name = tok.size() > 0 ? tok[0] : "_tmp_";
-                        info.isBot = tok.size() > 4 && tok[4] == "COM";
-                        info.diff = COMDifficulty::MEDIUM;
-                        if (tok.size() > 5)
-                        {
-                            if (tok[5] == "EASY")
-                                info.diff = COMDifficulty::EASY;
-                            if (tok[5] == "HARD")
-                                info.diff = COMDifficulty::HARD;
+                    if (peek.is_open()) {
+                        std::string line;
+                        std::getline(peek, line); // SKIP TURN
+                        std::getline(peek, line); // PLAYER COUNT
+                        if (!line.empty()) {
+                            int savedCount = std::stoi(line);
+                            for (int i = 0; i < savedCount; i++)
+                            {
+                                if (!std::getline(peek, line)) break;
+                                std::vector<std::string> tok;
+                                std::istringstream ss(line);
+                                std::string w;
+                                while (ss >> w) tok.push_back(w);
+                                
+                                PlayerInfo info;
+                                info.name = tok.size() > 0 ? tok[0] : "_tmp_";
+                                info.isBot = tok.size() > 4 && tok[4] == "COM";
+                                info.diff = COMDifficulty::MEDIUM;
+                                if (tok.size() > 5)
+                                {
+                                    if (tok[5] == "EASY") info.diff = COMDifficulty::EASY;
+                                    if (tok[5] == "HARD") info.diff = COMDifficulty::HARD;
+                                }
+                                loadedInfos.push_back(info);
+                                
+                                if (!std::getline(peek, line)) break;
+                                int cardCount = line.empty() ? 0 : std::stoi(line);
+                                for (int c = 0; c < cardCount; c++)
+                                    std::getline(peek, line);
+                            }
                         }
-                        infos.push_back(info);
-                        std::getline(peek, line);
-                        int cardCount = line.empty() ? 0 : std::stoi(line);
-                        for (int c = 0; c < cardCount; c++)
-                            std::getline(peek, line);
                     }
                 }
-                for (auto &info : infos)
+                for (auto &info : loadedInfos)
                 {
                     Player *p = info.isBot
                                     ? new ComputerPlayer(info.name, miscCfg.initialBalance, info.diff)
@@ -170,13 +172,14 @@ int main()
                     p->setPosition(0);
                     players.push_back(p);
                 }
-                GameState gs(miscCfg.maxTurn, players, board, bank, dice,
-                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData);
-                gameMaster = new GameMaster(gs);
+                
+                gameMaster = new GameMaster(GameState(miscCfg.maxTurn, players, board, bank, dice,
+                                                      auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData));
                 try
                 {
                     SaveLoadManager slm;
                     slm.load(setup.saveFile, gameMaster->getState());
+                    gameMaster->log("SYSTEM", "MUAT", "Game_dimuat_dari_" + setup.saveFile); 
                     gameMaster->beginTurn();
                 }
                 catch (const std::exception &e)
@@ -198,9 +201,9 @@ int main()
                     p->setPosition(0);
                     players.push_back(p);
                 }
-                GameState gs(miscCfg.maxTurn, players, board, bank, dice,
-                             auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData);
-                gameMaster = new GameMaster(gs);
+                
+                gameMaster = new GameMaster(GameState(miscCfg.maxTurn, players, board, bank, dice,
+                                                      auctionMgr, chanceDeck, communityDeck, skillDeck, logger, taxData));
                 gameMaster->beginTurn();
             }
 
@@ -239,9 +242,15 @@ int main()
         if (winScreen->goToExit())
             break;
 
+        // ── Transisi: Game → Menu ─────────────────────────────────────────
+        if (gameScreen->isWantsMainMenu())
+        {
+            gameScreen->resetWantsMainMenu();
+            cleanupGame();
+            gui.setScreen(menuScreen);
+        }
+
         // ── COM auto-play ─────────────────────────────────────────────────
-        // Dilakukan SEBELUM flushCommands agar command yang di-push COM
-        // langsung di-flush di frame yang sama.
         if (gameMaster)
         {
             GameState &state = gameMaster->getState();
@@ -252,17 +261,15 @@ int main()
             {
                 comHasActed = true;
                 com->executeTurn(*gameMaster);
-                // endTurn/beginTurn hanya jika tidak ada dialog pending
                 GamePhase p = state.getPhase();
                 if (p == GamePhase::PLAYER_TURN)
                 {
                     gameMaster->endTurn();
                     gameMaster->beginTurn();
                 }
-                gui.clearCommands(); // buang command sisa COM yang tidak relevan
+                gui.clearCommands();
             }
 
-            // COM bankruptcy handling
             if (com && state.getPhase() == GamePhase::BANKRUPTCY)
             {
                 Player *creditor = state.getPendingCreditor();
@@ -280,22 +287,14 @@ int main()
                             break;
                         }
                     }
-                    if (!propToSell)
-                        break;
+                    if (!propToSell) break;
                     gameMaster->sellPropertyToBank(com, propToSell);
                 }
 
                 if (com->getBalance() >= debt)
                 {
-                    if (creditor)
-                    {
-                        *com -= debt;
-                        *creditor += debt;
-                    }
-                    else
-                    {
-                        *com -= debt;
-                    }
+                    if (creditor) { *com -= debt; *creditor += debt; }
+                    else { *com -= debt; }
                     gameMaster->log(com->getUsername(), "BAYAR_HUTANG_BOT",
                                     "Bot membayar M" + std::to_string(debt));
                     state.setPendingDebt(0);
@@ -304,14 +303,11 @@ int main()
                 }
                 else
                 {
-                    if (creditor)
-                        gameMaster->handleBankruptcy(com, creditor);
-                    else
-                        gameMaster->handleBankruptcy(com, state.getBank());
+                    if (creditor) gameMaster->handleBankruptcy(com, creditor);
+                    else gameMaster->handleBankruptcy(com, state.getBank());
                 }
             }
 
-            // Reset guard saat giliran berganti ke pemain baru
             if (!com || !state.getHasRolled())
                 comHasActed = false;
         }
@@ -319,9 +315,7 @@ int main()
         BeginDrawing();
         if (gui.getCurrentScreen())
         {
-            // flush SEBELUM update
             gui.flushCommands();
-
             gui.getCurrentScreen()->update(dt);
             gui.getCurrentScreen()->render(gui.getWindow());
         }

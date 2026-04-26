@@ -175,6 +175,7 @@ void GameScreen::render(Window &window)
     drawBankruptcyDialog();
     drawAktaDialog();
     drawCetakPropertiDialog();
+    drawMainMenuConfirm();
 
     DrawFPS(LEFT_PANEL + 4, 4);
 }
@@ -357,7 +358,6 @@ void GameScreen::handleInput()
             }
 
             selectedTile = hit;
-            showPopup = true;
         }
         else
         {

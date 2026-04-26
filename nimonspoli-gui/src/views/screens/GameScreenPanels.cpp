@@ -308,4 +308,13 @@ void GameScreen::drawRightPanel()
         showLogPopup = !showLogPopup;
     int lw = MeasureText("LOG TRANSAKSI", 11);
     DrawText("LOG TRANSAKSI", (int)(rx + RIGHT_PANEL / 2 - lw / 2), (int)footerY + 88, 11, {150, 150, 200, 255});
+
+    // 4. MAIN MENU
+    Rectangle menuBtn = {rx + 10, footerY + 112, RIGHT_PANEL - 20, 28};
+    DrawRectangleRec(menuBtn, {40, 20, 20, 255});
+    DrawRectangleLinesEx(menuBtn, 1, {180, 60, 60, 255});
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), menuBtn))
+        mainMenuConfirm.visible = true;
+    int mw = MeasureText("MAIN MENU", 10);
+    DrawText("MAIN MENU", (int)(rx + RIGHT_PANEL / 2 - mw / 2), (int)footerY + 121, 10, {220, 80, 80, 255});
 }

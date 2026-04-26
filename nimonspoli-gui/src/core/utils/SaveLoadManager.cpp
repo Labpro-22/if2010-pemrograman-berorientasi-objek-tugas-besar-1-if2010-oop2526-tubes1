@@ -340,6 +340,8 @@ void SaveLoadManager::load(const std::string &filename, GameState &state)
 
     // <TURN> <MAX_TURN>
     std::getline(in, line);
+    std::cout << "[DEBUG load] baris 1: " << line << std::endl;
+
     auto tok = tokenize(line);
     if (tok.size() < 2)
         throw std::runtime_error("SaveLoadManager: Format file rusak (baris 1)");
@@ -354,17 +356,21 @@ void SaveLoadManager::load(const std::string &filename, GameState &state)
     // Baris 2: <JUMLAH_PEMAIN>
     std::getline(in, line);
     int playerCount = std::stoi(line);
+    std::cout << "[DEBUG load] jumlah pemain: " << line << std::endl;
 
     // Load state tiap pemain
     loadPlayers(in, state);
+    std::cout << "[DEBUG load] setelah loadPlayers" << std::endl;
 
     // Urutan giliran
     std::getline(in, line);
     // tok = username-username dalam urutan giliran
     // Untuk sekarang skip — urutan sudah ada di listPlayer
+    std::cout << "[DEBUG load] urutan giliran: " << line << std::endl;
 
     // Giliran aktif
     std::getline(in, line);
+    std::cout << "[DEBUG load] giliran aktif: " << line << std::endl;
     std::string activeUsername = tokenize(line)[0];
     // Cari index pemain aktif dan set ke state
     auto players = state.getPlayers();
@@ -379,12 +385,15 @@ void SaveLoadManager::load(const std::string &filename, GameState &state)
 
     // Load properti
     loadProperties(in, state);
+    std::cout << "[DEBUG load] setelah loadProperties" << std::endl;
 
     // Load deck
     loadDeck(in, state);
+      std::cout << "[DEBUG load] setelah loadDeck" << std::endl;
 
     // Load log
     loadLogs(in, state);
+    std::cout << "[DEBUG load] setelah loadLogs" << std::endl;
 
     in.close();
 }
@@ -562,52 +571,72 @@ void SaveLoadManager::loadProperties(std::ifstream &in, GameState &state)
 
 // ─── loadDeck ────────────────────────────────────────────────────────────────
 // Baca urutan drawPile + discardPile, restore ke skill deck
-// Catatan: kartu sudah dibuat saat init game, kita hanya re-arrange urutannya
-// TODO: butuh CardFactory untuk recreate kartu dari type string
 void SaveLoadManager::loadDeck(std::ifstream &in, GameState &state)
 {
-    int deckCount;
-    in >> deckCount;
+    auto loadPile = [&](std::vector<SkillCard*>& pile) {
+        int count;
+        if (!(in >> count)) return;
+
+        for (int i = 0; i < count; ++i)
+        {
+            std::string type;
+            double value = 0;
+            int duration = 0;
+
+            in >> type;
+
+            if (type == "MoveCard")
+            {
+                in >> value;
+            }
+            else if (type == "DiscountCard")
+            {
+                in >> value >> duration;
+            }
+
+            SkillCard *card = CardFactory::createSkillCard(type, value, duration);
+            if (card)
+            {
+                pile.push_back(card);
+            }
+        }
+    };
 
     std::vector<SkillCard *> newDrawPile;
+    std::vector<SkillCard *> newDiscardPile;
 
-    for (int i = 0; i < deckCount; ++i)
-    {
-        std::string type;
-        double value = 0;
-        int duration = 0;
-
-        in >> type;
-
-        if (type == "MoveCard")
-        {
-            in >> value;
-        }
-        else if (type == "DiscountCard")
-        {
-            in >> value >> duration;
-        }
-
-        SkillCard *card = CardFactory::createSkillCard(type, value, duration);
-        if (card)
-        {
-            newDrawPile.push_back(card);
-        }
-    }
+    loadPile(newDrawPile);
+    loadPile(newDiscardPile);
 
     CardDeck<SkillCard> *skillDeck = state.getSkillDeck();
     if (!skillDeck)
         return;
 
     skillDeck->setCardsNoShuffle(newDrawPile);
+    skillDeck->setDiscardPileNoShuffle(newDiscardPile);
+
+    // Consume trailing newline to not break next getline
+    std::string dummy;
+    std::getline(in, dummy);
 }
 
 // loadLogs
 void SaveLoadManager::loadLogs(std::ifstream &in, GameState &state)
 {
     std::string line;
-    std::getline(in, line);
-    int count = std::stoi(line);
+    // Skip any leading whitespace (like the newline from loadDeck)
+    in >> std::ws; 
+    if (!std::getline(in, line) || line.empty()) return;
+
+    int count = 0;
+    try {
+        count = std::stoi(line);
+    } catch (...) {
+        std::cout << "[ERROR loadLogs] Gagal parsing jumlah log dari: " << line << std::endl;
+        return;
+    }
+
+    std::cout << "[DEBUG loadLogs] akan load " << count << " log" << std::endl;
 
     auto *logger = state.getLogger();
     if (logger)
@@ -635,4 +664,6 @@ void SaveLoadManager::loadLogs(std::ifstream &in, GameState &state)
         if (logger)
             logger->addLog(turn, user, act, detail);
     }
+     std::cout << "[DEBUG loadLogs] setelah load: " 
+              << (logger ? logger->getLogs().size() : 0) << " log" << std::endl;
 }

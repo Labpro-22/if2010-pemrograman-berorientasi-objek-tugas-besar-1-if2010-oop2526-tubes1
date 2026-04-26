@@ -75,10 +75,14 @@ public:
     const std::vector<T*>& getDiscardPile() const { return discardPile; }
 
     void setCardsNoShuffle(const std::vector<T*>& cards) {
-    drawPile    = cards;
-    discardPile.clear();
-    // tidak memanggil shuffle()
-}
+        drawPile    = cards;
+        discardPile.clear();
+        // tidak memanggil shuffle()
+    }
+
+    void setDiscardPileNoShuffle(const std::vector<T*>& cards) {
+        discardPile = cards;
+    }
 };
 
 #endif
