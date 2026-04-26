@@ -7,6 +7,7 @@
 #include "../Card/TeleportCard.hpp"
 #include "../Card/LassoCard.hpp"
 #include "../Card/DemolitionCard.hpp"
+#include "../Card/FreeFromJailCard.hpp"
 
 //  CardFactory
 //  Buat SkillCard dari string type + nilai
@@ -38,6 +39,9 @@ public:
 
         if (type == "DemolitionCard")
             return new DemolitionCard();
+
+        if (type == "FreeFromJailCard")
+            return new FreeFromJailCard();
 
         return nullptr;
     }

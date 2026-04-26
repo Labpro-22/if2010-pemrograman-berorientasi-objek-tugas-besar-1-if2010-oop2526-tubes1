@@ -9,7 +9,6 @@
 #include "../Card/GoToJailCard.hpp"
 #include "../Card/MoveBackThreeCard.hpp"
 #include "../Card/NearestStationCard.hpp"
-#include "../Card/FreeFromJailCard.hpp"
 
 // General Fund Cards / DNU
 #include "../Card/BirthdayCard.hpp"
@@ -23,6 +22,7 @@
 #include "../Card/TeleportCard.hpp"
 #include "../Card/LassoCard.hpp"
 #include "../Card/DemolitionCard.hpp"
+#include "FreeFromJailCard.hpp"
 
 #include <vector>
 
@@ -38,7 +38,6 @@ public:
         cards.push_back(new GoToJailCard());
         cards.push_back(new MoveToBackThreeCard());
         cards.push_back(new NearestStationCard());
-        cards.push_back(new FreeFromJailCard());
 
         deck->setCards(cards);
         return deck;
@@ -101,6 +100,11 @@ public:
         for (int i = 0; i < 2; ++i)
         {
             cards.push_back(new DemolitionCard());
+        }
+
+        for (int i = 0; i < 2; ++i)
+        {
+            cards.push_back(new FreeFromJailCard());
         }
 
         deck->setCards(cards);
