@@ -3,6 +3,8 @@
 #include "../GameState/GameState.hpp"
 #include "../Property/Property.hpp"
 
+class GameState;
+
 #include <iostream>
 using namespace std;
 

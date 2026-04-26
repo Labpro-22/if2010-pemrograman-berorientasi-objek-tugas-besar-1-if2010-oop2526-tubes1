@@ -4,17 +4,23 @@
 #include "../Player/Player.hpp"
 
 #include <iostream>
+#include <string>
+
 using namespace std;
 
-void CetakPropertiCommand::execute(GameMaster &gm)
+string CetakPropertiCommand::getOutput(GameMaster &gm)
 {
     Player *player = gm.getState().getCurrPlayer();
 
     if (player == nullptr)
     {
-        cout << "Tidak ada pemain aktif.\n";
-        return;
+        return "Tidak ada pemain aktif.\n";
     }
 
-    cout << player->cetakProperti();
+    return player->cetakProperti();
+}
+
+void CetakPropertiCommand::execute(GameMaster &gm)
+{
+    cout << getOutput(gm);
 }

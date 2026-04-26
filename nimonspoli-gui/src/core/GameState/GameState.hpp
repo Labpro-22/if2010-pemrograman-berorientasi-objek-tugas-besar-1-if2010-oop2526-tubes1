@@ -53,7 +53,7 @@ public:
     // Antrian pembayaran multi-pemain (ElectionCard / BirthdayCard)
     class PendingPayment
     {
-        public:
+    public:
         Player *debtor;   // yang harus bayar
         Player *creditor; // yang menerima (nullptr = Bank)
         int amount;
@@ -149,6 +149,7 @@ public:
 
     // ── Getter: entitas ──────────────────────────
     Board *getBoard() const;
+    Property *getPropertyByCode(const std::string &code) const;
     Bank *getBank() const;
     Dice *getDice() const;
     AuctionManager *getAuctionManager() const;
