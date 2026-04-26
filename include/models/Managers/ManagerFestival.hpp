@@ -18,4 +18,5 @@ public:
     int getSisaDurasi(PetakProperti* properti) const;
     bool isAktif(PetakProperti* properti) const;
     std::string getFestivalString(PetakProperti* properti) const;
+    void setEfekFestival(PetakProperti* properti, int pengali, int durasi);
 };

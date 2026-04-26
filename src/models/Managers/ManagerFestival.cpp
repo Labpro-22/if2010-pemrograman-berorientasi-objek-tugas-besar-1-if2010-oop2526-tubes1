@@ -52,3 +52,11 @@ bool ManagerFestival::isAktif(PetakProperti* properti) const {
 std::string ManagerFestival::getFestivalString(PetakProperti* properti) const {
     return std::to_string(getPengali(properti)) + " " + std::to_string(getSisaDurasi(properti));
 }
+
+void ManagerFestival::setEfekFestival(PetakProperti* properti, int pengali, int durasi) {
+    if (durasi > 0 && pengali > 1) {
+        efekAktif[properti] = {pengali, durasi};
+    } else {
+        efekAktif.erase(properti);
+    }
+}

@@ -23,6 +23,7 @@ public:
     int hitungSewa(int dadu, ManagerProperti& manager) override;
     void bangun(ManagerProperti& manager); // maks 4 rumah + 1 hotel
     int getJumlahBangunan() const;
+    void setJumlahBangunan(int n) { level = n; } // digunakan saat load game (bypass validasi)
     int getHargaBangun() const;
     std::string getJenisString() const override;
     std::string getBangunanString() const override;
