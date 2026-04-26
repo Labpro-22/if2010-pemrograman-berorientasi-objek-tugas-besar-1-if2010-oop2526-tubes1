@@ -224,10 +224,7 @@ bool GameEngine::startTurn(Pemain* p, int currentTurn, int& doubleCount) {
                     continue;
                 }
                 if (configData) {
-                    OutputHandler::tampilkanPropertiYangBisaDigadai(p, *configData);
-                    // Panggil PlayerActionService
-                    // (Isi aktual gadaiProperti akan diimplementasikan di Tahap 2)
-                    // actionService->gadaiProperti(*p, properti); // STUB (akan diimplementasikan di tahap 2)
+                    actionService->gadaiProperti(*p);
                 }
                 awalGiliran = false;
                 continue;
@@ -235,8 +232,7 @@ bool GameEngine::startTurn(Pemain* p, int currentTurn, int& doubleCount) {
 
             if (cmd == "TEBUS") {
                 if (configData) {
-                    OutputHandler::tampilkanPropertiYangBisaDitebus(p, *configData);
-                    // Panggil PlayerActionService (flow untuk batal gadai)
+                    actionService->tebusProperti(*p);
                 }
                 awalGiliran = false;
                 continue;
@@ -244,9 +240,7 @@ bool GameEngine::startTurn(Pemain* p, int currentTurn, int& doubleCount) {
 
             if (cmd == "BANGUN") {
                 if (configData) {
-                    OutputHandler::tampilkanPropertiYangBisaDibangun(p, *managerProperti, *configData);
-                    // Panggil PlayerActionService
-                    // actionService->bangunProperti(*p, lahan); // STUB (akan diimplementasikan di tahap 2)
+                    actionService->bangunProperti(*p);
                 }
                 awalGiliran = false;
                 continue;

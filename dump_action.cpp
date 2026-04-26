@@ -1,13 +1,8 @@
 #include "models/Managers/ManagerTransaksi.hpp"
 #include "models/PlayerActionService.hpp"
 #include "models/Managers/ManagerProperti.hpp"
-#include "models/Managers/ManagerFestival.hpp"
-#include "models/Managers/ManagerPenjara.hpp"
-#include "models/Managers/ManagerLelang.hpp"
 #include "models/Pemain.hpp"
 #include "models/Petak/PetakProperti.hpp"
-#include "models/Petak/PetakLahan.hpp"
-#include "models/Petak/PetakStasiun.hpp"
 #include "models/Papan.hpp"
 #include "views/InputHandler.hpp"
 #include "views/OutputHandler.hpp"
@@ -75,61 +70,21 @@ void PlayerActionService::movePlayerRelative(Pemain& p, int n) {
 }
 
 void PlayerActionService::teleportByInput(Pemain& p, const std::string& kodeOrIndeks) {
-    if (!papan) return;
-    Petak* petak = nullptr;
-    try {
-        int idx = std::stoi(kodeOrIndeks);
-        petak = papan->getPetak(idx);
-    } catch (...) {
-        petak = papan->getPetak(kodeOrIndeks);
-    }
-
-    if (petak) {
-        p.setPosisi(petak->getIndeks());
-        OutputHandler::cetakAksi(p.getUsername(), "teleport ke " + petak->getNama());
-        logAksi(p, "TELEPORT", petak->getNama());
-        petak->onLanded(p, *this);
-    } else {
-        OutputHandler::cetakError("Petak tidak ditemukan.");
-    }
+    // stub: validasi kode petak di Papan akan dilakukan saat integrasi
+    OutputHandler::cetakAksi(p.getUsername(), "teleport ke " + kodeOrIndeks);
+    logAksi(p, "TELEPORT", kodeOrIndeks);
 }
 
 void PlayerActionService::moveToNearestStation(Pemain& p) {
-    if (!papan) return;
-    int current = p.getPosisi();
-    int nearest = -1;
-    int minJarak = 999;
-    int totalPetak = papan->getTotalPetak();
-    for (int i = 1; i <= totalPetak; ++i) {
-        Petak* petak = papan->getPetak(i);
-        if (dynamic_cast<PetakStasiun*>(petak)) {
-            int jarak = (i - current + totalPetak) % totalPetak;
-            if (jarak > 0 && jarak < minJarak) {
-                minJarak = jarak;
-                nearest = i;
-            }
-        }
-    }
-    if (nearest != -1) {
-        p.setPosisi(nearest);
-        OutputHandler::cetakAksi(p.getUsername(), "berangkat ke stasiun terdekat.");
-        logAksi(p, "GERAK", "stasiun terdekat");
-        papan->getPetak(nearest)->onLanded(p, *this);
-    }
+    // stub: MovementController::findNearestStation() saat integrasi
+    OutputHandler::cetakAksi(p.getUsername(), "bergerak ke stasiun terdekat.");
+    logAksi(p, "GERAK", "stasiun terdekat");
 }
 
 void PlayerActionService::sendToJail(Pemain& p) {
+    // stub: ManagerPenjara::masukkanKePenjara() saat integrasi
     p.setStatus(StatusPemain::JAILED);
     p.resetPercobaanPenjara();
-    if (papan) {
-        for (int i=1; i<=papan->getTotalPetak(); ++i) {
-            Petak* petak = papan->getPetak(i);
-            if (petak->getKode() == "PEN") {
-                p.setPosisi(i);
-                break;
-            }
-        }
-    }
     OutputHandler::cetakAksi(p.getUsername(), "masuk penjara!");
     logAksi(p, "PENJARA", "masuk penjara");
 }
@@ -159,146 +114,16 @@ void PlayerActionService::jailOpponent(Pemain& pemain) {
 }
 
 void PlayerActionService::bayarSewa(Pemain& penyewa, PetakProperti& properti, int nilaiDadu) {
-    Pemain* pemilik = properti.getPemilik();
-    if (!pemilik || pemilik == &penyewa || properti.getStatus() == PetakProperti::StatusProperti::MORTGAGED) {
-        return; 
-    }
-    if (pemilik->getStatus() == StatusPemain::JAILED) {
-        OutputHandler::cetakPesan("Pemilik sedang di penjara. Bebas sewa!");
-        return;
-    }
-    
-    int sewaDasar = properti.hitungSewa(nilaiDadu, *managerProperti);
-    int pengaliFestival = 1;
-    if (managerFestival && managerFestival->isAktif(&properti)) {
-        pengaliFestival = managerFestival->getPengali(&properti);
-    }
-    int totalSewa = sewaDasar * pengaliFestival;
-    
-    OutputHandler::cetakPesan(penyewa.getUsername() + " harus membayar sewa M" + std::to_string(totalSewa) + " ke " + pemilik->getUsername());
-    managerTransaksi->transferMoney(&penyewa, pemilik, totalSewa);
-    logAksi(penyewa, "BAYAR_SEWA", properti.getKode() + " M" + std::to_string(totalSewa));
+    (void)nilaiDadu;
 }
-
 void PlayerActionService::beliProperti(Pemain& pemain, PetakProperti& properti) {
-    if (properti.getStatus() != PetakProperti::StatusProperti::BANK) {
-        return;
-    }
-    
-    int hargaBeli = properti.getConfigProperti()->getHargaLahan();
-    OutputHandler::cetakPesan(properti.getNama() + " (" + properti.getKode() + ") belum dimiliki.");
-    OutputHandler::cetakPesan("Harga: M" + std::to_string(hargaBeli));
-    
-    std::string respon = InputHandler::promptString("Apakah Anda ingin membeli properti ini? (Y/N): ");
-    if (respon == "Y" || respon == "y") {
-        if (pemain.getSaldo() >= hargaBeli) {
-            managerTransaksi->transferMoney(&pemain, nullptr, hargaBeli);
-            properti.setPemilik(&pemain);
-            pemain.tambahAset(&properti);
-            OutputHandler::cetakAksi(pemain.getUsername(), "membeli " + properti.getNama() + " seharga M" + std::to_string(hargaBeli));
-            logAksi(pemain, "BELI", properti.getKode() + " (-" + std::to_string(hargaBeli) + ")");
-            return;
-        } else {
-            OutputHandler::cetakError("Uang tidak mencukupi untuk membeli properti ini.");
-        }
-    }
-    
-    OutputHandler::cetakPesan("Properti akan dilelang!");
-    ManagerLelang lelang(managerTransaksi);
-    lelang.mulaiLelang(&properti, *daftarPemain, &pemain);
+    (void)pemain; (void)properti;
 }
-
-void PlayerActionService::gadaiProperti(Pemain& pemain) {
-    std::vector<PetakProperti*> bisaDigadai;
-    for (PetakProperti* prop : pemain.getAsetPemain()) {
-        if (prop->getStatus() == PetakProperti::StatusProperti::OWNED) {
-            PetakLahan* street = dynamic_cast<PetakLahan*>(prop);
-            if (!street || street->getJumlahBangunan() == 0) {
-                bisaDigadai.push_back(prop);
-            }
-        }
-    }
-    if (bisaDigadai.empty()) {
-        OutputHandler::cetakError("Tidak ada properti yang bisa digadai.");
-        return;
-    }
-    OutputHandler::cetakPesan("Pilih properti yang ingin digadai:");
-    for (size_t i = 0; i < bisaDigadai.size(); ++i) {
-        OutputHandler::cetakPesan("  " + std::to_string(i+1) + ". " + bisaDigadai[i]->getNama() + " (" + bisaDigadai[i]->getKode() + ") — Nilai: M" + std::to_string(bisaDigadai[i]->getNilaiGadai()));
-    }
-    int pilihan = InputHandler::promptAngka("Pilih (1-" + std::to_string(bisaDigadai.size()) + ", 0 batal): ", 0, bisaDigadai.size());
-    if (pilihan == 0) return;
-    
-    PetakProperti* prop = bisaDigadai[pilihan - 1];
-    prop->gadai();
-    int nilaiGadai = prop->getNilaiGadai();
-    managerTransaksi->transferMoney(nullptr, &pemain, nilaiGadai);
-    OutputHandler::cetakPesan(pemain.getUsername() + " menggadaikan " + prop->getNama() + " dan mendapat M" + std::to_string(nilaiGadai));
-    logAksi(pemain, "GADAI", prop->getKode() + " (+" + std::to_string(nilaiGadai) + ")");
+void PlayerActionService::gadaiProperti(Pemain& pemain, PetakProperti& properti) {
+    (void)pemain; (void)properti;
 }
-
-void PlayerActionService::tebusProperti(Pemain& pemain) {
-    std::vector<PetakProperti*> bisaDitebus;
-    for (PetakProperti* prop : pemain.getAsetPemain()) {
-        if (prop->getStatus() == PetakProperti::StatusProperti::MORTGAGED) {
-            bisaDitebus.push_back(prop);
-        }
-    }
-    if (bisaDitebus.empty()) {
-        OutputHandler::cetakError("Tidak ada properti yang bisa ditebus.");
-        return;
-    }
-    OutputHandler::cetakPesan("Pilih properti yang ingin ditebus:");
-    for (size_t i = 0; i < bisaDitebus.size(); ++i) {
-        int biaya = bisaDitebus[i]->getConfigProperti()->getHargaLahan(); // Tebus harga beli penuh
-        OutputHandler::cetakPesan("  " + std::to_string(i+1) + ". " + bisaDitebus[i]->getNama() + " (" + bisaDitebus[i]->getKode() + ") — Biaya Tebus: M" + std::to_string(biaya));
-    }
-    int pilihan = InputHandler::promptAngka("Pilih (1-" + std::to_string(bisaDitebus.size()) + ", 0 batal): ", 0, bisaDitebus.size());
-    if (pilihan == 0) return;
-    
-    PetakProperti* prop = bisaDitebus[pilihan - 1];
-    int biaya = prop->getConfigProperti()->getHargaLahan(); 
-    if (pemain.getSaldo() < biaya) {
-        OutputHandler::cetakError("Uang tidak cukup.");
-        return;
-    }
-    managerTransaksi->transferMoney(&pemain, nullptr, biaya);
-    prop->batalGadai();
-    OutputHandler::cetakPesan(pemain.getUsername() + " menebus " + prop->getNama() + " dengan membayar M" + std::to_string(biaya));
-    logAksi(pemain, "TEBUS", prop->getKode() + " (-" + std::to_string(biaya) + ")");
-}
-
-void PlayerActionService::bangunProperti(Pemain& pemain) {
-    std::vector<PetakLahan*> bisaDibangun;
-    for (PetakProperti* prop : pemain.getAsetPemain()) {
-        PetakLahan* lahan = dynamic_cast<PetakLahan*>(prop);
-        if (lahan && managerProperti->isMonopoly(&pemain, lahan->getWarnaString()) && managerProperti->isBisaBangun(lahan)) {
-            bisaDibangun.push_back(lahan);
-        }
-    }
-    if (bisaDibangun.empty()) {
-        OutputHandler::cetakError("Tidak ada lahan yang dapat dibangun saat ini. Syarat: Monopoli warna, properti tidak digadai, maksimal 1 Hotel.");
-        return;
-    }
-    OutputHandler::cetakPesan("Pilih lahan untuk dibangun:");
-    for (size_t i = 0; i < bisaDibangun.size(); ++i) {
-        int harga = bisaDibangun[i]->getHargaBangun();
-        std::string target = (bisaDibangun[i]->getJumlahBangunan() == 4) ? "Hotel" : "Rumah ke-" + std::to_string(bisaDibangun[i]->getJumlahBangunan() + 1);
-        OutputHandler::cetakPesan("  " + std::to_string(i+1) + ". " + bisaDibangun[i]->getNama() + " (" + bisaDibangun[i]->getKode() + ") — Bangun " + target + ": M" + std::to_string(harga));
-    }
-    int pilihan = InputHandler::promptAngka("Pilih (1-" + std::to_string(bisaDibangun.size()) + ", 0 batal): ", 0, bisaDibangun.size());
-    if (pilihan == 0) return;
-    
-    PetakLahan* lahan = bisaDibangun[pilihan - 1];
-    int biaya = lahan->getHargaBangun();
-    if (pemain.getSaldo() < biaya) {
-        OutputHandler::cetakError("Uang tidak cukup.");
-        return;
-    }
-    managerTransaksi->transferMoney(&pemain, nullptr, biaya);
-    lahan->bangun(*managerProperti);
-    OutputHandler::cetakAksi(pemain.getUsername(), "berhasil membangun di " + lahan->getNama() + " dengan biaya M" + std::to_string(biaya));
-    logAksi(pemain, "BANGUN", lahan->getKode() + " (-" + std::to_string(biaya) + ")");
+void PlayerActionService::bangunProperti(Pemain& pemain, PetakLahan& properti) {
+    (void)pemain; (void)properti;
 }
 
 void PlayerActionService::demolishOpponentProperty(Pemain& pemain) {

@@ -1,5 +1,6 @@
 #include "models/Pemain.hpp"
 #include "models/Petak/PetakProperti.hpp"
+#include "models/PlayerActionService.hpp"
 #include <iostream>
 
 PetakProperti::PetakProperti(int indeks, const std::string& kode, const std::string& nama, const PropertiConfig& config) : 

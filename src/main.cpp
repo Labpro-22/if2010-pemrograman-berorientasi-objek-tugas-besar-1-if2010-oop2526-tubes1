@@ -99,6 +99,7 @@ int main() {
             &engine.getListPemain(),
             &turnIdxRef
         );
+        svc->setDadu(dadu);
         engine.setActionService(svc);
 
         engine.startGame();

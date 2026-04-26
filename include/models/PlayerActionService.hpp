@@ -19,6 +19,7 @@ class LogTransaksiGame;
 class PlayerActionService {
 private:
     MovementController* movementController;
+    Dadu* dadu = nullptr;
     ManagerPenjara* managerPenjara;
     ManagerProperti* managerProperti;
     ManagerFestival* managerFestival;
@@ -60,9 +61,11 @@ public:
     /** Eksekusi pembelian properti oleh pemain. */
     void beliProperti(Pemain& pemain, PetakProperti& properti);
     /** Eksekusi gadai properti ke bank. */
-    void gadaiProperti(Pemain& pemain, PetakProperti& properti);
+    void gadaiProperti(Pemain& pemain);
+    /** Eksekusi tebus properti dari bank. */
+    void tebusProperti(Pemain& pemain);
     /** Eksekusi bangun rumah/hotel pada properti street. */
-    void bangunProperti(Pemain& pemain, PetakLahan& properti);
+    void bangunProperti(Pemain& pemain);
 
     void demolishOpponentProperty(Pemain& pemain); // untuk DemolitionCard
     void pullPlayerAhead(Pemain& pemain); // untuk LassoCard
@@ -78,4 +81,6 @@ public:
     const std::vector<Pemain*>& getDaftarPemain() const { return *daftarPemain; }
 
     ConfigData* getConfig() { return config; }
+    void setDadu(Dadu* d) { dadu = d; }
+    Dadu* getDadu() const { return dadu; }
 };
