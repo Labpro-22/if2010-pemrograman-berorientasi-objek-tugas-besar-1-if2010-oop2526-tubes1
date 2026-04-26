@@ -664,7 +664,7 @@ void GameScreen::drawLassoTargetDialog()
         std::string label = p->getUsername() + " - posisi " + std::to_string(p->getPosition());
         DrawText(label.c_str(), (int)row.x + 14, (int)row.y + 11, 13, WHITE);
 
-        if (hover && IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
             int idx = lassoTargetDialog.selectedCardIdx;
             const auto &hand = cur->getHand();
