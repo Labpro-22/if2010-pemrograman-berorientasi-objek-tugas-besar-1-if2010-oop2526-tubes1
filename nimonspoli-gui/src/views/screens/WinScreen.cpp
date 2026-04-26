@@ -210,7 +210,8 @@ void WinScreen::drawRankingBankruptcy() {
 
     // Stats pemenang
     std::string stats = "M " + std::to_string(winner->money) +
-                        "   " + std::to_string(winner->propertyCount) + " properti";
+                        "   " + std::to_string(winner->propertyCount) + " properti" +
+                        "   " + std::to_string(winner->cardCount) + " kartu";
     int stw = MeasureText(stats.c_str(), 16);
     DrawText(stats.c_str(), SCREEN_W/2-stw/2, 315, 16, {120,120,160,255});
 
@@ -221,8 +222,11 @@ void WinScreen::drawRankingBankruptcy() {
         if (r.bankrupt) {
             int rw = MeasureText(r.username.c_str(), 14);
             DrawText(r.username.c_str(), SCREEN_W/2-rw/2, (int)by, 14, {80,80,100,255});
-            int bw = MeasureText("BANGKRUT", 11);
-            DrawText("BANGKRUT", SCREEN_W/2-bw/2, (int)(by+18), 11, {120,40,40,255});
+            
+            std::string bStats = "BANGKRUT (Aset: " + std::to_string(r.propertyCount) + " prop, " + 
+                                 std::to_string(r.cardCount) + " kartu)";
+            int bw = MeasureText(bStats.c_str(), 11);
+            DrawText(bStats.c_str(), SCREEN_W/2-bw/2, (int)(by+18), 11, {120,40,40,255});
             by += 48;
         }
     }

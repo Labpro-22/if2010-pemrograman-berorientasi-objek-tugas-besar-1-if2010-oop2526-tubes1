@@ -200,7 +200,7 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
 {
     float sw = STRIP_W, sh = STRIP_H;
     // localY diubah jadi negatif agar strip digambar di sisi "dalam" (menghadap tengah papan)
-    float localY = -(TILE_H/2.f - sh/2.f); 
+    float localY = (TILE_H/2.f - sh/2.f); 
     float rad = rotation * DEG2RAD;
     float cosR = cosf(rad), sinR = sinf(rad);
     float sx = cx - localY * sinR;
@@ -210,13 +210,13 @@ void GameScreen::drawBuildingStrip(float cx, float cy, float rotation,
     if (buildings == 0) return;
 
     // bangunan digambar lebih "dalam" lagi (offset ditambah sh karena localY negatif)
-    float bldLocalY = localY + sh;
+    float bldLocalY = localY ;
     bool  isHotel   = (buildings == 5);
     if (isHotel) {
         float hw = sw * 0.85f, hh = sh * 0.7f;
         float bsx = cx - bldLocalY * sinR;
         float bsy = cy + bldLocalY * cosR;
-        DrawRectanglePro({bsx, bsy, hw, hh}, {hw/2.f, hh/2.f}, rotation, ownerColor);
+        DrawRectanglePro({bsx, bsy, hw, hh}, {hw/2.f, hh/2.f}, rotation, WHITE);
         DrawRectanglePro({bsx, bsy, hw, hh}, {hw/2.f, hh/2.f}, rotation, {0,0,0,80});
     } else {
         float sqSz   = sh * 0.75f;

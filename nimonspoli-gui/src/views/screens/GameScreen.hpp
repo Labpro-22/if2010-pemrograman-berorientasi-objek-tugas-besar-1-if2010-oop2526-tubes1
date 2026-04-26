@@ -80,14 +80,13 @@ private:
         int price = 0, mortgageVal = 0, houseUpg = 0, hotelUpg = 0;
     };
 
-    class MockPlayer
-    {
+    class MockPlayer {
     public:
         std::string username;
-        int money = 0;
-        int position = 0;
+        int  money         = 0;
+        int  position      = 0;
         std::string status;
-        int cardCount = 0;
+        int  cardCount     = 0;
         bool isCurrentTurn = false;
     };
 

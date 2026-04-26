@@ -10,6 +10,8 @@
 #include "../Card/TeleportCard.hpp"
 #include "../Dice/Dice.hpp"
 #include "../Bank/Bank.hpp"
+#include "../Commands/BeliCommand.hpp"
+#include "../Commands/FestivalCommand.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -916,14 +918,9 @@ void ComputerPlayer::executeTurn(GameMaster& gm) {
         Tile* landed = gs.getBoard()->getTile(getPosition());
         PropertyTile* pt = dynamic_cast<PropertyTile*>(landed);
         if (pt && pt->getProperty()) {
-            if (decideAndBuy(pt->getProperty(), gs)) {
-                // Execute beli via Command atau langsung
-                // (Untuk COM, biasanya langsung execute di GM)
-                gm.handlePropertyLanding(this, pt->getProperty());
-            } else {
-                // Dilempar ke lelang
-                gm.startAuction(pt->getProperty(), this);
-            }
+            bool wantToBuy = decideAndBuy(pt->getProperty(), gs);
+            BeliCommand cmd(this, pt->getProperty(), wantToBuy);
+            cmd.execute(gm);
         }
     } else if (currentPhase == GamePhase::AWAITING_FESTIVAL) {
         Property* best = chooseBestFestivalProperty(gs);

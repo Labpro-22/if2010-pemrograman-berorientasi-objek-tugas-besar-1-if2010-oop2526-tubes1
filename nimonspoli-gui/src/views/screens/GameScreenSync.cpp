@@ -90,6 +90,7 @@ void GameScreen::syncFromGameMaster()
 
             if (prop->getStatus() != PropertyStatus::BANK)
             {
+                mp.owner = -1; // default if not found
                 for (int pi = 0; pi < (int)realPlayers.size(); ++pi)
                 {
                     if (realPlayers[pi]->getUsername() == ownerId)

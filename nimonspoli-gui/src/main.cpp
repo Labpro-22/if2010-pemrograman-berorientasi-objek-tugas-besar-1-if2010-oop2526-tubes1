@@ -3,6 +3,7 @@
 #include "views/screens/GameScreen.hpp"
 #include "views/screens/MainMenuScreen.hpp"
 #include "views/screens/WinScreen.hpp"
+#include "core/Commands/BeliCommand.hpp"
 
 #include "core/GameMaster/GameMaster.hpp"
 #include "core/GameState/GameState.hpp"
@@ -126,6 +127,8 @@ int main()
             board = BoardFactory::createBoard(propData, actData, specialCfg,
                                               chanceDeck, communityDeck, properties);
 
+            players.clear();
+
             if (setup.isLoadGame)
             {
                 std::vector<PlayerInfo> loadedInfos;
@@ -215,18 +218,31 @@ int main()
         }
 
         // ── Transisi: Game → Win ──────────────────────────────────────────
-        if (gameScreen->isGameOver())
-        {
+        if (gameScreen->isGameOver()) {
             std::vector<PlayerResult> results;
-            for (int i = 0; i < (int)players.size(); ++i)
-            {
+            auto& gs = gameMaster->getState();
+            
+            for (int i = 0; i < (int)players.size(); ++i) {
+                Player* p = players[i];
                 PlayerResult r;
-                r.username = players[i]->getUsername();
-                r.money = players[i]->getBalance();
-                r.color = gameScreen->playerColors[i];
+                r.username      = p->getUsername();
+                r.money         = p->getBalance();
+                r.propertyCount = p->getPropertyCount();
+                r.cardCount     = p->getHandSize();
+                r.bankrupt      = (p->getStatus() == PlayerStatus::BANKRUPT);
+                r.rank          = 0;
+                r.isWinner      = false;
+                r.color         = gameScreen->playerColors[i];
                 results.push_back(r);
             }
-            winScreen->setResults(results, WinScenario::MAX_TURN);
+            
+            // Tentukan scenario
+            int activePlayers = gs.countActivePlayers();
+            WinScenario sc = (activePlayers <= 1) 
+                            ? WinScenario::BANKRUPTCY 
+                            : WinScenario::MAX_TURN;
+            
+            winScreen->setResults(results, sc);
             gameScreen->gameOver = false;
             gui.setGameMaster(nullptr);
             gui.setScreen(winScreen);
@@ -256,6 +272,35 @@ int main()
             GameState &state = gameMaster->getState();
             Player *curr = state.getCurrPlayer();
             ComputerPlayer *com = dynamic_cast<ComputerPlayer *>(curr);
+
+            
+                // Tambah setelah blok BANKRUPTCY handling:
+
+            // ── COM drop skill card ───────────────────────────────────────────
+            if (com && state.getPhase() == GamePhase::AWAITING_DROP_SKILL_CARD) {
+                Player* dropPlayer = state.getPendingSkillDropPlayer();
+                // Pastikan yang harus drop adalah COM ini
+                if (dropPlayer == com) {
+                    // COM pilih kartu yang dibuang
+                    // Kartu baru belum masuk tangan, tapi hand sudah penuh
+                    // decideDropCard dipanggil dengan hand saat ini
+                    int dropIdx = com->decideDropCard(com->getHand(), nullptr);
+                    
+                    // Validasi index
+                    if (dropIdx >= 0 && dropIdx < com->getHandSize()) {
+                        SkillCard* removed = com->discardSkillCard(dropIdx);
+                        if (removed) {
+                            if (state.getSkillDeck()) {
+                                state.getSkillDeck()->discard(removed);
+                            }
+                            gameMaster->log(com->getUsername(), "DROP_CARD",
+                                "Bot membuang kartu: " + removed->getType());
+                        }
+                        state.clearPendingSkillDrop();
+                        state.setPhase(GamePhase::PLAYER_TURN);
+                    }
+                }
+            }
 
             if (com && state.getPhase() == GamePhase::PLAYER_TURN && !state.getHasRolled() && !comHasActed)
             {
@@ -306,6 +351,7 @@ int main()
                     if (creditor) gameMaster->handleBankruptcy(com, creditor);
                     else gameMaster->handleBankruptcy(com, state.getBank());
                 }
+
             }
 
             if (!com || !state.getHasRolled())
