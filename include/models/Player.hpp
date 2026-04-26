@@ -2,6 +2,8 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <utility>
+#include <algorithm>
 
 class Game;
 class PropertyTile;
@@ -39,7 +41,7 @@ public:
         std::vector<std::unique_ptr<AbilityCard>> handCards, int jailTurnsAttempted, bool usedAbilityThisTurn, bool shieldActive,
         int discountPercent, int discountDuration, int consecutiveDoubleCount)
             : id(id), account(account), money(money),
-            position(position), status(status), ownedProperties(ownedProperties), handCards(handCards),
+            position(position), status(status), ownedProperties(std::move(ownedProperties)), handCards(std::move(handCards)),
             jailTurnsAttempted(jailTurnsAttempted), usedAbilityThisTurn(usedAbilityThisTurn), shieldActive(shieldActive),
             discountPercent(discountPercent), discountDuration(discountDuration), consecutiveDoubleCount(consecutiveDoubleCount) {}
     void moveTo(int position);

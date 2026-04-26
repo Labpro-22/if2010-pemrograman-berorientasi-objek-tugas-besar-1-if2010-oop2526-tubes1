@@ -6,6 +6,7 @@ class ShieldCard : public AbilityCard
 public:
     ShieldCard();
     void use(Player* target, Game* game);
+    std::string serialize() const; 
 };
 
 class TeleportCard : public AbilityCard
@@ -13,6 +14,7 @@ class TeleportCard : public AbilityCard
 public:
     TeleportCard();
     void use(Player* target, Game* game);
+    std::string serialize() const;
 };
 
 class MoveCard : public AbilityCard
@@ -23,6 +25,7 @@ public:
     MoveCard();
     void setup();
     void use(Player* target, Game* game);
+    std::string serialize() const;
 };
 
 class LassoCard : public AbilityCard
@@ -30,6 +33,7 @@ class LassoCard : public AbilityCard
 public:
     LassoCard();
     void use(Player* target, Game* game);
+    std::string serialize() const;
 };
 
 class DiscountCard : public AbilityCard
@@ -40,6 +44,7 @@ public:
     DiscountCard();
     void setup();
     void use(Player* target, Game* game);
+    std::string serialize() const;
 };
 
 class DemolitionCard : public AbilityCard
@@ -47,4 +52,5 @@ class DemolitionCard : public AbilityCard
 public:
     DemolitionCard();
     void use(Player* target, Game* game);
+    std::string serialize() const;
 };

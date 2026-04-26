@@ -18,7 +18,6 @@ public:
     std::string getName() const {
         return name;
     }
-    std::string serialize() const;
     virtual std::string serialize() const;
     virtual ~AbilityCard() = default;
 };
