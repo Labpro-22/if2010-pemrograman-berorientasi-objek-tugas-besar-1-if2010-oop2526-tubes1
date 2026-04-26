@@ -81,6 +81,9 @@ void GameScreen::onExit()
         UnloadTexture(deckKSP);
     if (deckDNU.id != 0)
         UnloadTexture(deckDNU);
+    for (auto &[k, v] : cardTextures)
+        UnloadTexture(v);
+    cardTextures.clear();
     tiles.clear();
     tileTextures.clear();
 }
@@ -204,7 +207,18 @@ Color GameScreen::getGroupColor(const std::string &g)
 // ─── Load textures ────────────────────────────────────────────────────────────
 void GameScreen::loadTextures()
 {
+    std::vector<std::string> cardKeys = {
+        "DNU-Birthday", "DNU-DoctorFee", "DNU-RunForOffice",
+        "KKS-Demolition", "KKS-Discount", "KKS-Lasso",
+        "KKS-Move", "KKS-Shield", "KKS-Teleport",
+        "KSP-GoToJail", "KSP-MoveBack", "KSP-NearStation"};
     std::vector<std::string> codes;
+    for (auto &key : cardKeys)
+    {
+        std::string path = "assets/card/" + key + ".png";
+        if (FileExists(path.c_str()))
+            cardTextures[key] = LoadTexture(path.c_str());
+    }
     for (auto &t : tiles)
     {
         bool found = false;

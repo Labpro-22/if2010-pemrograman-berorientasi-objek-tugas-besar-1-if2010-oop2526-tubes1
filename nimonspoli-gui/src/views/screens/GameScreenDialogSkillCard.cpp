@@ -136,6 +136,19 @@ static bool discardUsedSkillCard(GameMaster *gm, Player *player, int idx)
     return true;
 }
 
+bool GameScreen::hasBlockingTileEffectDialog() const
+{
+    return cardDialog.visible ||
+           buyDialog.visible ||
+           auctionDialog.visible ||
+           taxDialog.visible ||
+           pbmDialog.visible ||
+           festivalDialog.visible ||
+           sewaDialog.visible ||
+           jailDialog.visible ||
+           bankruptcyDialog.visible;
+}
+
 void GameScreen::drawSkillCardDialog()
 {
     if (!skillCardDialog.visible)
@@ -204,10 +217,12 @@ void GameScreen::drawSkillCardDialog()
             std::string successMessage = buildSkillCardSuccessMessage(selectedCard);
 
             skillCardDialog.visible = false;
-
-            skillCardResultDialog.visible = true;
-            skillCardResultDialog.title = successTitle;
-            skillCardResultDialog.message = successMessage;
+            if (!hasBlockingTileEffectDialog())
+            {
+                skillCardResultDialog.visible = true;
+                skillCardResultDialog.title = successTitle;
+                skillCardResultDialog.message = successMessage;
+            }
         }
         catch (const std::exception &e)
         {
@@ -255,12 +270,15 @@ void GameScreen::drawSkillCardDialog()
 
     for (int i = 0; i < static_cast<int>(hand.size()); ++i)
     {
-        float rowY = listY + i * 48.f;
+        const float ROW_H = 64.f;
+        const float ROW_GAP = 8.f;
 
-        if (rowY + 42 > py + PH - 16)
+        float rowY = listY + i * (ROW_H + ROW_GAP);
+
+        if (rowY + ROW_H > py + PH - 16)
             break;
 
-        Rectangle row = {px + 16, rowY, PW - 32, 42};
+        Rectangle row = {px + 16, rowY, PW - 32, ROW_H};
         bool hover = CheckCollisionPointRec(GetMousePosition(), row);
 
         DrawRectangleRec(row, hover ? Color{45, 50, 75, 255} : Color{30, 32, 48, 255});
@@ -268,6 +286,12 @@ void GameScreen::drawSkillCardDialog()
 
         SkillCard *card = hand[i];
         std::string type = card ? card->getType() : "UnknownCard";
+        std::string desc = card ? card->getDescription() : "";
+
+        int titleFont = 14;
+        int descFont = 11;
+        int gap = 6;
+
 
         constexpr float THUMB = 36.f;
         float thumbX = row.x + 4.f;
@@ -293,21 +317,23 @@ void GameScreen::drawSkillCardDialog()
 
         // Teks type & deskripsi (geser ke kanan setelah thumbnail)
         float labelX = row.x + THUMB + 10.f;
-        DrawText(type.c_str(),
-                 (int)labelX, (int)(row.y + 8), 13, WHITE);
-        if (card)
+        float maxDescW = row.width - THUMB - 18.f;
+        int blockH = titleFont + gap + descFont;
+        int textY = (int)(row.y + row.height / 2 - blockH / 2 + 2);
+        DrawText(type.c_str(), (int)labelX, textY, titleFont, WHITE);
+        if (!desc.empty())
         {
-            std::string desc = card->getDescription();
+            std::string descTrunc = desc;
             // Potong kalau terlalu panjang
-            if (MeasureText(desc.c_str(), 11) > (int)(row.width - THUMB - 18))
+            if (MeasureText(descTrunc.c_str(), descFont) > (int)maxDescW)
             {
-                while (!desc.empty() &&
-                       MeasureText((desc + "...").c_str(), 11) > (int)(row.width - THUMB - 18))
-                    desc.pop_back();
-                desc += "...";
+                while (!descTrunc.empty() &&
+                       MeasureText((descTrunc + "...").c_str(), descFont) > (int)maxDescW)
+                    descTrunc.pop_back();
+                descTrunc += "...";
             }
-            DrawText(desc.c_str(),
-                     (int)labelX, (int)(row.y + 26), 11, {160, 165, 200, 255});
+            DrawText(descTrunc.c_str(), (int)labelX,
+                     textY + titleFont + gap, descFont, {175, 178, 205, 255});
         }
 
         if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -481,11 +507,14 @@ void GameScreen::drawDemolitionTargetDialog()
                     demolitionTargetDialog.selectedCardIdx = -1;
                     demolitionTargetDialog.errorMsg.clear();
 
-                    skillCardResultDialog.visible = true;
-                    skillCardResultDialog.title = "DemolitionCard";
-                    skillCardResultDialog.message =
-                        "DemolitionCard berhasil digunakan pada " +
-                        propName + " milik " + ownerName + ".";
+                    if (!hasBlockingTileEffectDialog())
+                    {
+                        skillCardResultDialog.visible = true;
+                        skillCardResultDialog.title = "DemolitionCard";
+                        skillCardResultDialog.message =
+                            "DemolitionCard berhasil digunakan pada " +
+                            propName + " milik " + ownerName + ".";
+                    }
                 }
                 catch (const std::exception &e)
                 {
@@ -626,9 +655,12 @@ void GameScreen::handleTeleportTargetClick(int selectedTile)
         skillCardDialog.selectedCardIdx = -1;
         skillTargetHint.visible = false;
 
-        skillCardResultDialog.visible = true;
-        skillCardResultDialog.title = "TeleportCard";
-        skillCardResultDialog.message = "TeleportCard berhasil digunakan. Bidak dipindahkan ke petak tujuan.";
+        if (!hasBlockingTileEffectDialog())
+        {
+            skillCardResultDialog.visible = true;
+            skillCardResultDialog.title = "TeleportCard";
+            skillCardResultDialog.message = "TeleportCard berhasil digunakan. Bidak dipindahkan ke petak tujuan.";
+        }
     }
     catch (const std::exception &e)
     {
@@ -751,11 +783,14 @@ void GameScreen::drawLassoTargetDialog()
                 lassoTargetDialog.selectedCardIdx = -1;
                 lassoTargetDialog.errorMsg.clear();
 
-                skillCardResultDialog.visible = true;
-                skillCardResultDialog.title = "LassoCard";
-                skillCardResultDialog.message =
-                    "LassoCard berhasil digunakan. " + p->getUsername() +
-                    " ditarik ke petak Anda.";
+                if (!hasBlockingTileEffectDialog())
+                {
+                    skillCardResultDialog.visible = true;
+                    skillCardResultDialog.title = "LassoCard";
+                    skillCardResultDialog.message =
+                        "LassoCard berhasil digunakan. " + p->getUsername() +
+                        " ditarik ke petak Anda.";
+                }
             }
             catch (const std::exception &e)
             {

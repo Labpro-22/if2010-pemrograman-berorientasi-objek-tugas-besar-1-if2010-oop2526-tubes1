@@ -3,16 +3,15 @@
 #include "../GameState/GameState.hpp"
 #include "../GameMaster/GameMaster.hpp"
 #include "../Board/Board.hpp"
-#include "../Board/Board.hpp"
 
-class Board;
-class GameMaster;
+#include <stdexcept>
 
 LassoCard::LassoCard() : SkillCard("Tarik lawan ke petakmu", "LassoCard")
 {
 }
 
-LassoCard::LassoCard(const string &type, const string &description, bool used) : SkillCard(type, description, used), targetPlayerUsername("")
+LassoCard::LassoCard(const string &type, const string &description, bool used)
+    : SkillCard(type, description, used), targetPlayerUsername("")
 {
 }
 
@@ -29,7 +28,7 @@ void LassoCard::execute(Player &p, GameState &gs)
 {
     Board *board = gs.getBoard();
     if (!board)
-        return;
+        throw runtime_error("LassoCard gagal digunakan: Board tidak tersedia.");
 
     int currPos = p.getPosition();
     int boardSize = board->getSize();
@@ -52,9 +51,11 @@ void LassoCard::execute(Player &p, GameState &gs)
 
             if (other->getUsername() == targetPlayerUsername)
             {
+                if (other->getStatus() == PlayerStatus::JAILED)
+                    throw runtime_error("LassoCard gagal digunakan: pemain target sedang dipenjara.");
+
                 int steps = (other->getPosition() - currPos + boardSize) % boardSize;
 
-                // Lasso hanya valid untuk pemain lawan yang ada di depan
                 if (steps > 0)
                     target = other;
 
@@ -82,11 +83,11 @@ void LassoCard::execute(Player &p, GameState &gs)
     }
 
     if (!target)
-        return;
+        throw runtime_error("LassoCard gagal digunakan: tidak ada pemain target yang valid.");
 
     GameMaster *gm = gs.getGameMaster();
     if (!gm)
-        return;
+        throw runtime_error("LassoCard gagal digunakan: GameMaster tidak tersedia.");
 
     gm->teleportPlayer(target, currPos, false);
 

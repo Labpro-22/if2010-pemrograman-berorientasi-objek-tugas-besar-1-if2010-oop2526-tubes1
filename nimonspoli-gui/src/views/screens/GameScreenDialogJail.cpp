@@ -298,6 +298,7 @@ void GameScreen::drawJailDialog()
                     {
                         // Berhasil double → keluar penjara, gerak
                         gm->releaseFromJail(p);
+                        p->releaseFromJail();
                         gm->log(p->getUsername(), "JAIL",
                                 "Keluar penjara dengan double " +
                                     std::to_string(v1) + "+" + std::to_string(v2));
@@ -309,6 +310,7 @@ void GameScreen::drawJailDialog()
                     else
                     {
                         // Update forced pay jika sekarang giliran ke-4
+                        p->incrementJailTurns();
                         if (p->getJailTurns() >= 3)
                         {
                             jailDialog.forcedPay = true;
@@ -316,7 +318,7 @@ void GameScreen::drawJailDialog()
                             p->setJailTurns(0);
                         }
                         // Gagal double → tidak bergerak, tandai sudah roll
-                        p->incrementJailTurns();
+                      
                         gm->log(p->getUsername(), "JAIL",
                                 "Gagal double " + std::to_string(v1) +
                                     "+" + std::to_string(v2) + " — tidak bergerak");
@@ -334,14 +336,16 @@ void GameScreen::drawJailDialog()
         else if (closeHover && closeActive)
         {
             jailDialog.visible = false;
-            GameMaster *gm = guiManager->getGameMaster();
-            Player *p = gm->getState().getCurrPlayer();
-            if(p && p->getHandSize() > 3){
-                    gm->getState().setPhase(GamePhase::AWAITING_DROP_SKILL_CARD);
-               
+            if (guiManager && guiManager->getGameMaster())
+            {
+                GameMaster *gm = guiManager->getGameMaster();
+                Player *p = gm->getState().getCurrPlayer();
+
+                if (p && p->getHandSize() > 3)
+                    gm->handleSkillCardOverflow(p); 
+                else
+                    gm->getState().setPhase(GamePhase::PLAYER_TURN);
             }
-            if (guiManager && gm)
-                guiManager->getGameMaster()->getState().setPhase(GamePhase::PLAYER_TURN);
         }
     }
 }

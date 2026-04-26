@@ -22,10 +22,26 @@ int MoveCard::getSteps() const
 void MoveCard::execute(Player &p, GameState &gs)
 {
     GameMaster *gm = gs.getGameMaster();
-    if (gm)
-    {
-        gm->movePlayer(&p, steps);
-    }
+
+    if (!gm)
+        throw runtime_error("GameMaster tidak tersedia.");
+
+    Board *board = gs.getBoard();
+
+    if (!board)
+        throw runtime_error("Board tidak tersedia.");
+
+    int boardSize = board->getSize();
+
+    if (boardSize <= 0)
+        throw runtime_error("Ukuran board tidak valid.");
+
+    int curPos = p.getPosition();
+    int targetPos = (curPos + steps) % boardSize;
+
+    gm->teleportPlayer(&p, targetPos, true);
+
+    markUsed();
 }
 
 string MoveCard::successMessage() const
