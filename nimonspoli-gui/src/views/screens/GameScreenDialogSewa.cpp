@@ -27,7 +27,7 @@ void GameScreen::triggerSewaDialog()
     Player *cur = gs.getCurrPlayer();
 
     PropertyTile *pt = gs.getPendingRentTile();
-    if (!pt || !cur || !pt->getProperty())
+    if (!pt || !cur)
         return;
 
     Property *prop = pt->getProperty();
