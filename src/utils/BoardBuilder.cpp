@@ -8,6 +8,7 @@
 #include "../../include/utils/FestivalTile.hpp"
 #include <algorithm>
 #include <map>
+#include <stdexcept>
 
 void BoardBuilder::build(
     Board& board,
@@ -39,6 +40,9 @@ void BoardBuilder::build(
         t.mortgageValue = std::get<6>(pc);
         t.rentTable     = std::get<7>(pc);
         t.isProperty    = true;
+        if (tileMap.count(t.id) != 0U) {
+            throw std::invalid_argument("Duplicate tile ID in config: " + std::to_string(t.id));
+        }
         tileMap[t.id]   = t;
     }
 
@@ -51,7 +55,14 @@ void BoardBuilder::build(
         t.type = std::get<3>(ac);
         t.color= std::get<4>(ac);
         t.isProperty = false;
+        if (tileMap.count(t.id) != 0U) {
+            throw std::invalid_argument("Duplicate tile ID in config: " + std::to_string(t.id));
+        }
         tileMap[t.id] = t;
+    }
+
+    if (tileMap.empty()) {
+        throw std::invalid_argument("Board config tidak menghasilkan petak apa pun.");
     }
 
     // Sort by ID dan masukkan ke board
@@ -64,20 +75,11 @@ void BoardBuilder::build(
 
         if (t.isProperty) {
             if (t.type == "STREET") {
-                // rentTable: [rent_l0..l5], houseBuildCost dan hotelBuildCost ada di index 6,7 dari propConfig tapi sudah di-extract
-                // Di property.txt format: ... UPG_RUMAH UPG_HT RENT_L0..L5
-                // tapi di Config tuple format: (id, code, name, type, color, landPrice, mortgageValue, rentTable)
-                // rentTable sudah berisi semua rent values
-                // Kita perlu houseBuildCost dan hotelBuildCost — tapi di tuple tidak ada field terpisah...
-                // Berdasarkan property.txt, UPG_RUMAH dan UPG_HT ada sebelum rent values
-                // Tapi Config menyimpannya di rentTable[0..N]
-                // Dari property.txt: UPG_RUMAH=rentTable[0], UPG_HT=rentTable[1], RENT_L0..L5=rentTable[2..7]
-                // Wait — mari cek ulang format Config tuple
-                
-                // Config stores: (id, code, name, type, color, landPrice, mortgageValue, {UPG_RUMAH, UPG_HT, RENT_L0..L5})
-                // So rentTable = {upgRumah, upgHotel, rent0, rent1, rent2, rent3, rent4, rent5}
-                int houseCost = t.rentTable.size() > 0 ? t.rentTable[0] : 50;
-                int hotelCost = t.rentTable.size() > 1 ? t.rentTable[1] : 50;
+                if (t.rentTable.size() != 8U) {
+                    throw std::invalid_argument("Street tile " + t.code + " harus memiliki UPG_RUMAH, UPG_HT, dan 6 nilai rent.");
+                }
+                int houseCost = t.rentTable[0];
+                int hotelCost = t.rentTable[1];
                 std::vector<int> rents;
                 for (size_t i = 2; i < t.rentTable.size(); ++i) rents.push_back(t.rentTable[i]);
 
@@ -90,6 +92,9 @@ void BoardBuilder::build(
             }
             else if (t.type == "UTILITY") {
                 board.addTile(new UtilityTile(id, t.code, t.name, t.mortgageValue, utilityMult));
+            }
+            else {
+                throw std::invalid_argument("Jenis property tile tidak dikenal: " + t.type + " (" + t.code + ")");
             }
         }
         else {
@@ -107,16 +112,21 @@ void BoardBuilder::build(
                 board.addTile(new CardTile(id, t.code, t.name, ct));
             }
             else if (t.type == "PAJAK") {
-                TaxType tt = (t.code == "PBM") ? PBM : PPH;
+                TaxType tt = (t.code == "PBM") ? TAX_PBM : TAX_PPH;
                 board.addTile(new TaxTile(id, t.code, t.name, tt));
             }
             else if (t.type == "FESTIVAL") {
                 board.addTile(new FestivalTile(id, t.code, t.name));
             }
             else {
-                // Fallback: special tile
-                board.addTile(new SpecialTile(id, t.code, t.name, FREE_PARKING));
+                throw std::invalid_argument("Jenis action tile tidak dikenal: " + t.type + " (" + t.code + ")");
             }
         }
+    }
+
+    if (board.size() != static_cast<int>(tileMap.size())) {
+        throw std::invalid_argument("Board tidak lengkap setelah build. Expected " +
+                                    std::to_string(tileMap.size()) + " tile, got " +
+                                    std::to_string(board.size()) + ".");
     }
 }

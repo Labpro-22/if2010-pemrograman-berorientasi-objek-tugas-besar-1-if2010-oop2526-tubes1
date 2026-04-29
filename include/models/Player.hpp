@@ -9,7 +9,6 @@
 class Game;
 class AuctionManager;
 class PropertyTile;
-class AbilityCard;
 class Account;
 
 enum class PlayerStatus {

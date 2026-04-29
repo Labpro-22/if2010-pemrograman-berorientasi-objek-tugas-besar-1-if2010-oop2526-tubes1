@@ -1,20 +1,13 @@
-#ifndef REAL_GAME_FACADE_HPP
-#define REAL_GAME_FACADE_HPP
+#ifndef COREDUMMY_MOCK_GAME_FACADE_HPP
+#define COREDUMMY_MOCK_GAME_FACADE_HPP
 
 #include <string>
 #include <vector>
-#include "../coredummy/IGameFacade.hpp"
-#include "../coredummy/GameViewModel.hpp"
-#include "../core/GameManager.hpp"
-#include "../core/AccountManager.hpp"
-#include "../data-layer/AccountDataManager.hpp"
-#include "../data-layer/ConfigComposer.hpp"
+#include "IGameFacade.hpp"
 
-
-class RealGameFacade : public IGameFacade {
+class MockGameFacade : public IGameFacade {
 public:
-    RealGameFacade();
-    ~RealGameFacade() override = default;
+    MockGameFacade();
 
     const GameViewModel& getViewModel() const override;
     void tick(float deltaSeconds) override;
@@ -41,20 +34,19 @@ public:
     void showVictoryPopup() override;
     void closeOverlay() override;
 
-    // Akses langsung ke GameManager dan AccountManager untuk InGameScene
-    GameManager& getGameManager() { return gameManager; }
-    AccountManager& getAccountManager() { return accountManager; }
-
 private:
-    GameManager gameManager;
-    AccountManager accountManager;
     GameViewModel vm;
+    float elapsedSeconds = 0.0f;
+    int rollCounter = 0;
+    int salary = 200;
 
-    void rebuildViewModel();
-    void showOverlay(OverlayType type, const std::string& title,
-                     const std::vector<std::string>& lines,
-                     const std::string& footer);
-    TileKind tileKindFromCode(const std::string& code, const std::string& colorGroup) const;
+    void loadDummyBoard();
+    void addLog(const std::string& actor, const std::string& type, const std::string& detail);
+    void showOverlay(OverlayType type, const std::string& title, const std::vector<std::string>& lines, const std::string& footer);
+    void normalizeCurrentPlayer();
+    void applyDummyLandingEffect(PlayerViewData& player, int previousPosition, int diceTotal);
+    std::string tileKindToText(TileKind kind) const;
+    std::string propertyStatusToText(PropertyStatusView status) const;
 };
 
 #endif

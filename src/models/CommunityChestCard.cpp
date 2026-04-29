@@ -8,19 +8,9 @@
 BirthdayCard::BirthdayCard() : CommunityChestCard(
     "Ini adalah hari ulang tahun Anda. Dapatkan M100 dari setiap pemain.",
     [](Player* p, Game* g) {
-        for (auto& player : g->getPlayers()) {
+        for (Player& player : g->getPlayers()) {
             if (player.getId() != p->getId()) {
-                try {
-                    try {
-                        player.pay(100);
-                    } catch (InsufficientFundException e) {
-                        auto lm = g->getLiquidationManager();
-                        // TODO: TRY LIQUIDATION
-                    }
-                } catch (BankruptException e) {
-                    g->getBankruptcyManager().declareBankruptToPlayer(player, *p, *g);
-                }
-                p->receive(100);
+                g->payPlayerOrBankrupt(player, *p, 100, "Kartu ulang tahun");
             }
         }
     }
@@ -29,35 +19,16 @@ BirthdayCard::BirthdayCard() : CommunityChestCard(
 PayDoctorCard::PayDoctorCard() : CommunityChestCard(
     "Biaya dokter. Bayar M700.",
     [](Player* p, Game* g) {
-        try {
-            try {
-                p->pay(700);
-            } catch (InsufficientFundException e) {
-                auto lm = g->getLiquidationManager();
-                // TODO: TRY LIQUIDATION
-            }
-        } catch (BankruptException e) {
-            g->getBankruptcyManager().declareBankruptToBank(*p, *g);
-        }
+        g->payBankOrBankrupt(*p, 700, "Biaya dokter");
     }
 ) {}
 
 NyalegCard::NyalegCard() : CommunityChestCard(
     "Anda mau nyaleg. Bayar M200 kepada setiap pemain.",
     [](Player* p, Game* g) {
-        for (auto& player : g->getPlayers()) {
+        for (Player& player : g->getPlayers()) {
             if (player.getId() != p->getId()) {
-                try {
-                    try {
-                        p->pay(200);
-                    } catch (InsufficientFundException e) {
-                        auto lm = g->getLiquidationManager();
-                        // TODO: TRY LIQUIDATION
-                    }
-                } catch (BankruptException e) {
-                    g->getBankruptcyManager().declareBankruptToPlayer(*p, player, *g);
-                }
-                player.receive(200);
+                g->payPlayerOrBankrupt(*p, player, 200, "Kartu nyaleg");
             }
         }
     }

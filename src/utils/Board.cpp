@@ -18,9 +18,7 @@ void Board::addTile(Tile* tile) {
     }
 
     const std::string code = tile->getCode();
-    int newIndex = static_cast<int>(tilesVector.size());
-
-    codeToIndices[code].push_back(newIndex);
+    codeToIndices[code].push_back(static_cast<int>(tilesVector.size()));
     tilesVector.push_back(tile);
 }
 
@@ -40,7 +38,6 @@ Tile* Board::getTileByIndex(int index) const {
 
 Tile* Board::getTileByCode(const std::string& code) const {
     const auto it = codeToIndices.find(code);
-
     if (it == codeToIndices.end() || it->second.empty()) {
         throw std::out_of_range("Unknown tile code: " + code);
     }
@@ -49,6 +46,11 @@ Tile* Board::getTileByCode(const std::string& code) const {
 }
 
 std::vector<Tile*> Board::getTilesByCode(const std::string& code) const {
+    const auto it = codeToIndices.find(code);
+    if (it == codeToIndices.end() || it->second.empty()) {
+        throw std::out_of_range("Unknown tile code: " + code);
+    }
+    
     std::vector<Tile*> result;
 
     const auto it = codeToIndices.find(code);
@@ -64,6 +66,14 @@ std::vector<Tile*> Board::getTilesByCode(const std::string& code) const {
     return result;
 }
 
+std::vector<int> Board::getTileIndicesByCode(const std::string& code) const {
+    const auto it = codeToIndices.find(code);
+    if (it == codeToIndices.end()) {
+        return {};
+    }
+    return it->second;
+}
+
 int Board::calculateNewPosition(int pos, int step, bool& passedGo) const {
     if (tilesVector.empty()) {
         throw std::out_of_range("Board has no tiles.");
@@ -76,7 +86,7 @@ int Board::calculateNewPosition(int pos, int step, bool& passedGo) const {
         newPos += boardSize;
     }
 
-    passedGo = (rawPosition >= boardSize);
+    passedGo = (step > 0 && rawPosition > boardSize);
     return newPos;
 }
 

@@ -26,6 +26,9 @@ private:
 
     std::vector<TextField> playerFields;
     bool  showSetupModal;
+    TextField configPathField;
+    std::string formError;
+    bool  showNewGameModal;
     int   playerCount;
     float sceneTime;
     float modalVis;

@@ -27,7 +27,7 @@ Config ConfigComposer::buildConfig(
     specialHandler.loadConfig();
     miscHandler.loadConfig();
 
-    Config config(
+    Config config (
         propHandler.getData(),
         railHandler.getRailRoadRentTable(),
         utilHandler.getUtilityMultiplier(),
