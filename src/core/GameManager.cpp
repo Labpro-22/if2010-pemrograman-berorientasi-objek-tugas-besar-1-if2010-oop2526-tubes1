@@ -17,16 +17,30 @@
 
 static const std::string CONFIG_DIR = "config/basic";
 
-static Config loadBasicConfig()
+static std::string joinConfigPath(const std::string& directory, const std::string& fileName)
+{
+    if (directory.empty()) {
+        return fileName;
+    }
+
+    const char last = directory[directory.size() - 1];
+    if (last == '/' || last == '\\') {
+        return directory + fileName;
+    }
+
+    return directory + "/" + fileName;
+}
+
+static Config loadConfigFromDirectory(const std::string& configDirectory)
 {
     ConfigComposer composer(
-        CONFIG_DIR + "/property.txt",
-        CONFIG_DIR + "/railroad.txt",
-        CONFIG_DIR + "/utility.txt",
-        CONFIG_DIR + "/tax.txt",
-        CONFIG_DIR + "/aksi.txt",
-        CONFIG_DIR + "/special.txt",
-        CONFIG_DIR + "/misc.txt"
+        joinConfigPath(configDirectory, "property.txt"),
+        joinConfigPath(configDirectory, "railroad.txt"),
+        joinConfigPath(configDirectory, "utility.txt"),
+        joinConfigPath(configDirectory, "tax.txt"),
+        joinConfigPath(configDirectory, "aksi.txt"),
+        joinConfigPath(configDirectory, "special.txt"),
+        joinConfigPath(configDirectory, "misc.txt")
     );
 
     return composer.getConfig();
@@ -54,9 +68,9 @@ static std::map<int, int> makeUtilityMultiplierMap(Config& config)
     return utilityMultiplier;
 }
 
-static void initializeGameFromConfig(Game& game)
+static void initializeGameFromConfig(Game& game, const std::string& configDirectory)
 {
-    Config config = loadBasicConfig();
+    Config config = loadConfigFromDirectory(configDirectory);
     game.setConfig(config);
 
     Config& gameConfig = game.getConfig();
@@ -79,10 +93,15 @@ GameManager::~GameManager()
 
 void GameManager::startNewGame()
 {
+    startNewGame(CONFIG_DIR);
+}
+
+void GameManager::startNewGame(const string& configDirectory)
+{
     quitCurrentGame();
 
     currentGame = new Game();
-    initializeGameFromConfig(*currentGame);
+    initializeGameFromConfig(*currentGame, configDirectory);
 }
 
 void GameManager::loadGame(const string& fileName)
@@ -100,7 +119,7 @@ void GameManager::loadGame(const string& fileName)
 
     std::unique_ptr<Game> loadedGame = std::make_unique<Game>();
 
-    initializeGameFromConfig(*loadedGame);
+    initializeGameFromConfig(*loadedGame, CONFIG_DIR);
 
     const bool success = GameStateLoader::load(*loadedGame, fileName);
 

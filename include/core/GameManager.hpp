@@ -23,6 +23,7 @@ public:
 
     // Core Functionalities
     void startNewGame();
+    void startNewGame(const string& configDirectory);
     void loadGame(const string& fileName);
     void saveGame(const string& fileName) const;
     

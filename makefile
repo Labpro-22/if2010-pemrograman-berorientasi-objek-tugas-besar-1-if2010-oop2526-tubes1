@@ -38,9 +38,6 @@ SRCS := \
     $(SRC_DIR)/views/MainMenuScene.cpp \
     $(SRC_DIR)/views/InGameScene.cpp \
     $(SRC_DIR)/views/Nimonspoli.cpp \
-    $(SRC_DIR)/coredummy/DummyBoardFactory.cpp \
-    $(SRC_DIR)/coredummy/MockGameFacade.cpp \
-    $(SRC_DIR)/core/RealGameFacade.cpp \
     $(SRC_DIR)/core/Account.cpp \
     $(SRC_DIR)/core/AccountManager.cpp \
     $(SRC_DIR)/core/AuctionManager.cpp \
@@ -81,6 +78,7 @@ SRCS := \
     $(SRC_DIR)/data-layer/ConfigComposer.cpp \
     $(SRC_DIR)/data-layer/ConfigHandler.cpp \
     $(SRC_DIR)/data-layer/FileIOException.cpp \
+    $(SRC_DIR)/data-layer/GameStateLoader.cpp \
     $(SRC_DIR)/data-layer/GameStateSaver.cpp
 
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))

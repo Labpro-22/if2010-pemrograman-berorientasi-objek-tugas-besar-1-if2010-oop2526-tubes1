@@ -46,15 +46,9 @@ Tile* Board::getTileByCode(const std::string& code) const {
 }
 
 std::vector<Tile*> Board::getTilesByCode(const std::string& code) const {
-    const auto it = codeToIndices.find(code);
-    if (it == codeToIndices.end() || it->second.empty()) {
-        throw std::out_of_range("Unknown tile code: " + code);
-    }
-    
     std::vector<Tile*> result;
 
     const auto it = codeToIndices.find(code);
-
     if (it == codeToIndices.end()) {
         return result;
     }

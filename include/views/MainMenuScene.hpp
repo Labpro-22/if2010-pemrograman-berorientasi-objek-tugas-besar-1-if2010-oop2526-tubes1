@@ -14,9 +14,6 @@ public:
     void draw()   override;
     void onEnter() override;
 private:
-    // Config folder
-    TextField configPathField;
-    // Player setup
     Button newGameButton;
     Button quitButton;
     Button startGameButton;
@@ -31,7 +28,7 @@ private:
     bool  showNewGameModal;
     int   playerCount;
     float sceneTime;
-    float modalVis;
+    float modalVisibility;
     std::string errorMsg;
 
     void layoutButtons(Rectangle sr);
