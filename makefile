@@ -2,7 +2,8 @@
 
 # Compiler settings
 CXX      := g++
-CXXFLAGS := -Wall -Wextra -std=c++17 -I include
+CXXFLAGS := -Wall -Wextra -std=c++17 -I include -I include/core -I include/models -I include/views -I/opt/homebrew/opt/raylib/include
+LDFLAGS  := -L/opt/homebrew/opt/raylib/lib -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreAudio -framework CoreVideo
 
 # Directories
 SRC_DIR     := src
@@ -17,7 +18,7 @@ TARGET := $(BIN_DIR)/game
 
 # 1. Recursive Source Finding
 # Secara otomatis mencari semua file .cpp di dalam src/ dan semua sub-foldernya
-SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+SRCS := $(shell find $(SRC_DIR) -name '*.cpp' ! -name 'test_*' ! -name 'SaveLoadManager.cpp')
 
 # 2. Dynamic Object Mapping
 # Mengubah path src/xxx/yyy.cpp menjadi build/xxx/yyy.o
@@ -32,7 +33,7 @@ directories:
 
 # Link object files to create executable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 	@echo "Build successful! Executable is at $(TARGET)"
 
 # Compile source files into object files
